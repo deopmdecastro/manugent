@@ -5431,26 +5431,9 @@ function sendMessage() {
   appendChatMessage(msg, 'user');
   input.value = '';
   setTimeout(function() {
-    var res = getAIResponse(msg);
-    if (res.startsWith('ACTION_CREATE_OT:')) {
-      var summary = res.replace('ACTION_CREATE_OT:', '');
-      showAIApproval(
-        '<p class="font-medium mb-2">Criar nova Ordem de Trabalho:</p><p class="text-slate-300">Título: <strong>"' + summary + '"</strong></p><p class="text-slate-300 mt-1">Tipo: Preventiva &bull; Prioridade: Média</p>',
-        function() {
-          openNewOTModal();
-          document.getElementById('ot-title').value = summary;
-          document.getElementById('ot-type').value = 'Preventiva';
-          appendChatMessage('OT criada. Preencha os detalhes no formulário que abriu.', 'ai');
-        }
-      );
-    } else if (res.startsWith('ACTION_CHECKLIST:')) {
-      showAIApproval(
-        '<p class="font-medium mb-2">Criar Checklist de Ronda Diária AVAC</p><p class="text-slate-300">8 tarefas de verificação diária serão criadas automaticamente.</p>',
-        function() { showPage('checklists'); appendChatMessage('Checklist disponível em Checklists no menu lateral.', 'ai'); }
-      );
-    } else {
-      appendChatMessage(res, 'ai');
-    }
+    var result = runInternalAICommand(msg, APP.currentPage || 'ai-assistant');
+    appendChatMessage(result.text, 'ai');
+    if (result.action) requestAIAction(result.action, appendChatMessage);
   }, 800);
 }
 function appendChatMessage(text, type) {
@@ -5473,6 +5456,205 @@ function quickPrompt(text) {
 function clearChat() {
   document.getElementById('chat-messages').innerHTML = '';
   appendChatMessage('Chat limpo. Como posso ajudar?', 'ai');
+}
+
+// ======================== INTERNAL MANUGENT IA ========================
+function runInternalAICommand(msg, page) {
+  var text = String(msg || '').trim();
+  var m = normalizeText(text);
+  var target = detectAICommandTarget(m, page || 'dashboard');
+  var intent = detectAIIntent(m);
+  if (intent === 'create') return buildAICreatePlan(text, m, target);
+  if (intent === 'list') return { text: buildAIListResponse(target) };
+  if (intent === 'report') return { text: buildAIReport(target) };
+  if (intent === 'analyze') return { text: buildAIAnalysis(target) };
+  if (intent === 'edit') return { text: 'Posso ajudar a editar em ' + getAIContexts()[target].title + '. Abra o registo pretendido ou diga exatamente o que quer alterar, por exemplo: "editar cliente ACME" ou "priorizar OT urgente".' };
+  var legacy = getAIResponse(text);
+  if (legacy.indexOf('ACTION_CREATE_OT:') === 0) return buildAICreatePlan(text, m, 'ots');
+  if (legacy.indexOf('ACTION_CHECKLIST:') === 0) return buildAICreatePlan(text, m, 'checklists');
+  return { text: legacy + '\n\nTambém posso executar ações internas. Experimente: "criar OT para bomba principal", "listar ficheiros", "analisar backlog", "gerar relatório de cliente" ou "criar material fusível 63A".' };
+}
+function normalizeText(value) {
+  return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+function detectAIIntent(m) {
+  if (/\b(criar|registar|adicionar|abrir|gerar pedido|nova|novo)\b/.test(m)) return 'create';
+  if (/\b(listar|mostrar|ver|procurar|pesquisar)\b/.test(m)) return 'list';
+  if (/\b(relatorio|relatório|resumo|exportar)\b/.test(m)) return 'report';
+  if (/\b(analisar|diagnosticar|otimizar|optimizar|priorizar|sugerir|detetar|detectar)\b/.test(m)) return 'analyze';
+  if (/\b(editar|alterar|atualizar|actualizar)\b/.test(m)) return 'edit';
+  return 'answer';
+}
+function detectAICommandTarget(m, fallbackPage) {
+  if (/\b(ot|ordem|ordens|trabalho|backlog)\b/.test(m)) return 'ots';
+  if (/\b(equipamento|ativo|activos|ativos|maquina|máquina)\b/.test(m)) return 'equipment';
+  if (/\b(cliente|clientes)\b/.test(m)) return 'clients';
+  if (/\b(edificio|edifício|local|instalacao|instalação)\b/.test(m)) return 'buildings';
+  if (/\b(tecnico|técnico|equipa|carga)\b/.test(m)) return 'technicians';
+  if (/\b(conhecimento|artigo|procedimento|documentacao|documentação)\b/.test(m)) return 'knowledge';
+  if (/\b(ficheiro|ficheiro|documento|pdf|pasta)\b/.test(m)) return 'files';
+  if (/\b(calendario|calendário|agenda|evento|reagendar)\b/.test(m)) return 'calendar';
+  if (/\b(checklist|rotina|ronda)\b/.test(m)) return 'checklists';
+  if (/\b(incidente|alarme|falha|avaria)\b/.test(m)) return 'incidents';
+  if (/\b(material|stock|inventario|inventário|peca|peça)\b/.test(m)) return 'materials';
+  if (/\b(compra|compras|fornecedor|requisicao|requisição)\b/.test(m)) return 'purchases';
+  if (/\b(orcamento|orçamento|proposta|fatura|factura)\b/.test(m)) return 'quotes';
+  return fallbackPage && getAIContexts()[fallbackPage] ? fallbackPage : 'dashboard';
+}
+function buildAICreatePlan(original, normalized, target) {
+  var ctx = getAIContexts()[target] || getAIContexts().dashboard;
+  var title = cleanAIEntityName(original, target);
+  var action = { type: target, title: title || ctx.primary, source: original };
+  var labels = {
+    ots:'Criar OT',
+    equipment:'Criar equipamento',
+    clients:'Criar cliente',
+    buildings:'Criar edifício',
+    technicians:'Criar técnico',
+    knowledge:'Criar artigo de conhecimento',
+    files:'Criar pasta/abrir ficheiro',
+    calendar:'Agendar intervenção',
+    checklists:'Criar checklist',
+    incidents:'Registar incidente',
+    materials:'Adicionar material',
+    purchases:'Criar requisição de compra',
+    quotes:'Gerar orçamento'
+  };
+  return {
+    text: 'Preparei uma ação interna: ' + (labels[target] || ctx.primary) + '.\n\nContexto: ' + ctx.title + '\nDados atuais: ' + getContextSummary(target) + '\nNome/descrição sugerida: ' + action.title + '\n\nVou pedir confirmação antes de executar.',
+    action: action
+  };
+}
+function cleanAIEntityName(original, target) {
+  var value = String(original || '').replace(/^(criar|registar|adicionar|abrir|nova|novo|gerar)\s+/i, '').trim();
+  value = value.replace(/^(ot|ordem de trabalho|equipamento|cliente|edifício|edificio|técnico|tecnico|artigo|procedimento|incidente|material|pasta|orçamento|orcamento|requisição|requisicao)\s*/i, '').trim();
+  if (!value) {
+    var defaults = {
+      ots:'Intervenção criada pela IA',
+      equipment:'Equipamento criado pela IA',
+      clients:'Cliente criado pela IA',
+      buildings:'Edifício criado pela IA',
+      technicians:'Técnico criado pela IA',
+      knowledge:'Procedimento criado pela IA',
+      incidents:'Incidente registado pela IA',
+      materials:'Material criado pela IA',
+      checklists:'Checklist criada pela IA'
+    };
+    return defaults[target] || 'Registo criado pela IA';
+  }
+  return value;
+}
+function buildAIListResponse(target) {
+  if (target === 'ots') return 'OTs:\n' + (APP.ots.length ? APP.ots.slice().reverse().map(function(o) { return '- ' + o.id + ' · ' + o.title + ' · ' + o.status + ' · ' + o.priority; }).join('\n') : 'Sem OTs registadas.');
+  if (target === 'equipment') return 'Equipamentos:\n' + (APP.equipment.length ? APP.equipment.map(function(e) { return '- ' + e.name + ' · ' + e.status + ' · ' + (e.location || 'sem local'); }).join('\n') : 'Sem equipamentos registados.');
+  if (target === 'clients') return 'Clientes:\n' + (APP.clients.length ? APP.clients.map(function(c) { return '- ' + c.name + ' · ' + (c.email || 'sem email'); }).join('\n') : 'Sem clientes registados.');
+  if (target === 'files') return 'Ficheiros:\n' + ((APP.files || []).length ? APP.files.map(function(f) { return '- ' + f.name + ' · ' + f.type + ' · ' + (getFolderPath(f.folderId) || 'Raiz'); }).join('\n') : 'Sem ficheiros registados.');
+  if (target === 'materials') return 'Material:\n' + ((APP.stockMaterials || []).length ? APP.stockMaterials.map(function(m) { return '- ' + m.name + ' · stock ' + m.stock + ' · ' + formatCurrency(m.cost || 0); }).join('\n') : 'Sem material em stock.');
+  if (target === 'purchases') return 'Compras:\n' + ((APP.purchases || []).length ? APP.purchases.map(function(p) { return '- ' + p.id + ' · ' + p.item + ' · ' + p.status + ' · ' + formatCurrency(p.value || 0); }).join('\n') : 'Sem pedidos de compra.');
+  if (target === 'quotes') return 'Orçamentos/documentos:\n' + ((APP.invoices || []).length ? APP.invoices.map(function(i) { return '- ' + i.id + ' · ' + i.type + ' · ' + formatCurrency(i.value || 0); }).join('\n') : 'Sem documentos comerciais.');
+  return 'Resumo de ' + getAIContexts()[target].title + ': ' + getContextSummary(target);
+}
+function buildAIAnalysis(target) {
+  var lines = ['Análise ManuGent · ' + (getAIContexts()[target] || getAIContexts().dashboard).title, '', getContextSummary(target), ''];
+  lines.push('Recomendações:');
+  lines.push('- ' + getContextSuggestion(target));
+  if (APP.ots.some(function(o) { return ['Urgente','Alta'].includes(o.priority) && o.status !== 'Concluída'; })) lines.push('- Rever OTs críticas antes de novas tarefas de baixa prioridade.');
+  if (APP.equipment.some(function(e) { return e.criticality === 'Crítico'; })) lines.push('- Validar planos preventivos dos equipamentos críticos.');
+  if ((APP.stockMaterials || []).some(function(m) { return Number(m.stock || 0) <= 2; })) lines.push('- Existem materiais com stock baixo; criar compra preventiva.');
+  return lines.join('\n');
+}
+function buildAIReport(target) {
+  return 'Relatório gerado pela IA\n\n' +
+    'Módulo: ' + ((getAIContexts()[target] || {}).title || 'Sistema') + '\n' +
+    'Data: ' + new Date().toLocaleString('pt-PT') + '\n\n' +
+    'Indicadores:\n' +
+    '- OTs: ' + APP.ots.length + '\n' +
+    '- Equipamentos: ' + APP.equipment.length + '\n' +
+    '- Clientes: ' + APP.clients.length + '\n' +
+    '- Ficheiros: ' + (APP.files || []).length + '\n' +
+    '- Incidentes: ' + APP.incidents.length + '\n\n' +
+    'Leitura IA:\n' + buildAIAnalysis(target);
+}
+function requestAIAction(action, respond) {
+  var ctx = getAIContexts()[action.type] || getAIContexts().dashboard;
+  showAIApproval(
+    '<p class="font-medium mb-2">' + escapeHtml(ctx.primary) + '</p>' +
+    '<p class="text-slate-300">A IA vai executar esta ação no módulo <strong>' + escapeHtml(ctx.title) + '</strong>.</p>' +
+    '<p class="text-slate-400 mt-2">Descrição: ' + escapeHtml(action.title || action.source || 'Ação IA') + '</p>',
+    function() {
+      var result = executeAIAction(action);
+      if (respond) respond(result, 'ai');
+    }
+  );
+}
+function executeAIAction(action) {
+  if (!action) return 'Nenhuma ação para executar.';
+  if (action.type === 'ots') return createAIWorkOrder(action.title);
+  if (action.type === 'equipment') return openAIPrefilledModal('equipment', action.title);
+  if (action.type === 'clients') return openAIPrefilledModal('client', action.title);
+  if (action.type === 'technicians') return openAIPrefilledModal('technician', action.title);
+  if (action.type === 'knowledge') return openAIPrefilledModal('knowledge', action.title);
+  if (action.type === 'incidents') return createAIIncident(action.title);
+  if (action.type === 'materials') return createAIMaterial(action.title);
+  if (action.type === 'files') return createAIFileFolder(action.title);
+  if (action.type === 'buildings') { createBuilding(); return 'Abri o fluxo de criação de edifício.'; }
+  if (action.type === 'purchases') { createPurchaseRequest(); return 'Pedido de compra criado pela IA.'; }
+  if (action.type === 'quotes') { generateBillingDocuments(); return 'Orçamento/documentos comerciais gerados pela IA.'; }
+  if (action.type === 'checklists') { showPage('checklists'); return 'Abri Checklists. Pode usar a rotina sugerida pela IA.'; }
+  if (action.type === 'calendar') { showPage('calendar'); return 'Abri o calendário para otimizar agenda.'; }
+  return 'Ação executada.';
+}
+function createAIWorkOrder(title) {
+  if (!requirePermission('create', 'ots', 'criar OT')) return 'Sem permissão para criar OT.';
+  var equip = APP.equipment[0] || null;
+  var tech = APP.technicians.find(function(t) { return t.availability === 'Disponível'; }) || APP.technicians[0] || null;
+  var ot = {
+    id: generateId('OT'), title: title || 'Intervenção criada pela IA',
+    type: /preventiva/i.test(title) ? 'Preventiva' : 'Corretiva',
+    priority: /urgente|critica|crítica|alta/i.test(title) ? 'Alta' : 'Média',
+    status: 'Aberta',
+    equipmentId: equip ? equip.id : '', equipmentName: equip ? equip.name : '—',
+    technicianId: tech ? tech.id : '', technicianName: tech ? tech.name : '—',
+    date: new Date().toISOString().slice(0,16),
+    description: 'Criada pela IA interna ManuGent a partir de comando do utilizador.',
+    location: equip ? equip.location : '',
+    image: '', imageName: '',
+    nfcTag: 'NFC-OT-' + Date.now().toString(36).toUpperCase(),
+    tasks: [], materials: [], timeLogs: [], comments: [], report: '',
+    activity: [{ text: 'OT criada pela IA', time: new Date().toLocaleString('pt-PT') }],
+    createdAt: new Date().toISOString()
+  };
+  APP.ots.push(ot);
+  saveData(); updateDashboard(); renderOTs(); populateOTSelects(); showPage('ots');
+  return 'OT criada: ' + ot.id + ' · ' + ot.title + '.';
+}
+function createAIIncident(title) {
+  if (!requirePermission('create', 'incidents', 'registar incidente')) return 'Sem permissão para registar incidente.';
+  var equip = APP.equipment[0] || null;
+  APP.incidents.push({ id: generateId('INC'), description: title || 'Incidente registado pela IA', severity: /critica|crítica|urgente/i.test(title) ? 'Crítica' : 'Média', status: 'Aberto', equipmentId: equip ? equip.id : '', equipmentName: equip ? equip.name : '—', createdAt: new Date().toISOString() });
+  saveData(); renderIncidents(); showPage('incidents');
+  return 'Incidente registado pela IA.';
+}
+function createAIMaterial(title) {
+  if (!requirePermission('create', 'materials', 'adicionar material')) return 'Sem permissão para adicionar material.';
+  APP.stockMaterials = APP.stockMaterials || [];
+  APP.stockMaterials.push({ id: generateId('MAT'), name: title || 'Material criado pela IA', category: 'Geral', stock: 1, cost: 0, location: 'Armazém central', createdAt: new Date().toISOString() });
+  saveData(); renderMaterials(); showPage('materials');
+  return 'Material adicionado ao stock.';
+}
+function createAIFileFolder(title) {
+  if (!requirePermission('create', 'files', 'criar pasta')) return 'Sem permissão para criar pasta/ficheiro.';
+  APP.fileFolders = APP.fileFolders || [];
+  APP.fileFolders.push({ id: generateId('FOLDER'), name: title || 'Pasta criada pela IA', parentId: APP.currentFileFolder !== 'all' ? (APP.currentFileFolder || '') : '', createdAt: new Date().toISOString() });
+  saveData(); renderFiles(); populateOTSelects(); showPage('files');
+  return 'Pasta criada pela IA em Ficheiros.';
+}
+function openAIPrefilledModal(type, title) {
+  if (type === 'equipment') { openNewEquipModal(); setTimeout(function() { document.getElementById('equip-name').value = title || ''; }, 50); return 'Abri o formulário de equipamento com dados sugeridos.'; }
+  if (type === 'client') { openNewClientModal(); setTimeout(function() { document.getElementById('client-name').value = title || ''; }, 50); return 'Abri o formulário de cliente com dados sugeridos.'; }
+  if (type === 'technician') { openNewTechModal(); setTimeout(function() { document.getElementById('tech-name').value = title || ''; }, 50); return 'Abri o formulário de técnico com dados sugeridos.'; }
+  if (type === 'knowledge') { openNewKnowledgeModal(); setTimeout(function() { document.getElementById('know-title').value = title || ''; document.getElementById('know-solution').value = 'Procedimento sugerido pela IA. Rever e completar antes de publicar.'; }, 50); return 'Abri o formulário de conhecimento com dados sugeridos.'; }
+  return 'Formulário aberto.';
 }
 
 // ======================== CONTEXT IA ========================
@@ -5548,7 +5730,9 @@ function sendContextAIMessage() {
   appendContextAIMessage(msg, 'user');
   input.value = '';
   setTimeout(function() {
-    appendContextAIMessage(getContextAIResponse(msg), 'ai');
+    var result = runInternalAICommand(msg, APP.currentPage || APP.aiContextPage || 'dashboard');
+    appendContextAIMessage(result.text, 'ai');
+    if (result.action) requestAIAction(result.action, appendContextAIMessage);
   }, 250);
 }
 function appendContextAIMessage(text, type) {
@@ -5563,18 +5747,7 @@ function appendContextAIMessage(text, type) {
   chat.scrollTop = chat.scrollHeight;
 }
 function getContextAIResponse(msg) {
-  var ctx = getCurrentAIContext();
-  var lower = msg.toLowerCase();
-  var summary = getContextSummary(APP.currentPage);
-  if (lower.includes('criar') || lower.includes('registar') || lower.includes('adicionar')) {
-    return 'Posso executar agora: ' + ctx.primary + '.\n\nContexto: ' + ctx.title + '\n' + summary + '\n\nUse “Executar agora” para abrir o formulário/ação correspondente.';
-  }
-  if (lower.includes('listar')) return 'Lista contextual em ' + ctx.title + ':\n' + summary;
-  if (lower.includes('relatório') || lower.includes('relatorio') || lower.includes('analisar') || lower.includes('otimizar')) {
-    return 'Análise rápida de ' + ctx.title + ':\n' + summary + '\n\nSugestão: ' + getContextSuggestion(APP.currentPage);
-  }
-  if (lower.includes('editar')) return 'Posso ajudar a editar itens em ' + ctx.title + '. Selecione um registo na página ou use “Executar agora” para abrir a ação principal disponível.';
-  return 'Entendi. No contexto de ' + ctx.title + ', posso: ' + ctx.actions.join(', ') + '.\n\nComando recebido: "' + msg + '".';
+  return runInternalAICommand(msg, APP.currentPage || APP.aiContextPage || 'dashboard').text;
 }
 function getContextSummary(page) {
   if (page === 'dashboard') return 'OTs: ' + APP.ots.length + ' · Equipamentos: ' + APP.equipment.length + ' · Incidentes: ' + APP.incidents.length;
@@ -5611,6 +5784,13 @@ function getContextSuggestion(page) {
 }
 function executeContextAIAction() {
   var page = APP.aiContextPage || APP.currentPage;
+  if (APP.lastContextAICommand) {
+    var result = runInternalAICommand(APP.lastContextAICommand, page);
+    if (result.action) {
+      appendContextAIMessage('Vou executar o último comando aprovado: ' + APP.lastContextAICommand, 'ai');
+      return requestAIAction(result.action, appendContextAIMessage);
+    }
+  }
   appendContextAIMessage('A executar ação principal para: ' + getCurrentAIContext().title, 'ai');
   if (page === 'ots') return openNewOTModal();
   if (page === 'equipment') return openNewEquipModal();
