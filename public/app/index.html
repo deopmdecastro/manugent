@@ -54,6 +54,32 @@
       border-radius: 12px;
     }
     .card:hover { border-color: var(--border-light); }
+    .empty-state {
+      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-secondary);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 196px;
+      padding: 32px 20px;
+      text-align: center;
+      width: 100%;
+    }
+    .empty-state i {
+      color: var(--text-muted);
+      font-size: 30px;
+      margin-bottom: 16px;
+    }
+    .empty-state p {
+      margin-bottom: 18px;
+    }
+    .empty-state.compact {
+      min-height: 140px;
+      padding: 24px 18px;
+    }
     .sidebar-item {
       display: flex; align-items: center; gap: 10px;
       padding: 10px 16px; border-radius: 8px;
@@ -68,23 +94,35 @@
       background: var(--accent-purple);
       color: white; border: none; padding: 10px 20px;
       border-radius: 8px; cursor: pointer; font-weight: 500;
-      transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+      transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
       font-family: 'Inter', sans-serif;
+      line-height: 1.2;
     }
     .btn-primary:hover { background: #5254cc; }
+    .btn-primary i, .btn-secondary i, .btn-ghost i {
+      align-items: center;
+      display: inline-flex;
+      flex: 0 0 auto;
+      justify-content: center;
+      line-height: 1;
+      min-width: 16px;
+      text-align: center;
+    }
     .btn-secondary {
       background: transparent; color: var(--text-secondary);
       border: 1px solid var(--border-light); padding: 10px 20px;
       border-radius: 8px; cursor: pointer; font-weight: 500;
-      transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+      transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
       font-family: 'Inter', sans-serif;
+      line-height: 1.2;
     }
     .btn-secondary:hover { border-color: var(--accent-purple); color: var(--text-primary); }
     .btn-ghost {
       background: transparent; color: var(--text-secondary);
       border: none; padding: 8px 12px; border-radius: 6px;
-      cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+      cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
       font-family: 'Inter', sans-serif;
+      line-height: 1.2;
     }
     .btn-ghost:hover { background: var(--bg-card-hover); color: var(--text-primary); }
 
@@ -124,16 +162,38 @@
     .folder-row {
       align-items: center;
       border: 1px solid transparent;
-      border-radius: 8px;
+      border-radius: 6px;
       color: var(--text-secondary);
       cursor: pointer;
       display: flex;
       gap: 8px;
-      padding: 8px 10px;
+      min-height: 30px;
+      padding: 5px 8px;
       transition: all 0.2s;
+      user-select: none;
     }
     .folder-row:hover { background: rgba(99,102,241,0.08); color: var(--text-primary); }
     .folder-row.active { background: rgba(99,102,241,0.16); border-color: rgba(99,102,241,0.32); color: var(--accent-purple-light); }
+    .folder-row.drop-target {
+      background: rgba(16,185,129,0.14);
+      border-color: rgba(52,211,153,0.55);
+      color: #d1fae5;
+    }
+    .folder-toggle {
+      align-items: center;
+      color: var(--text-muted);
+      display: inline-flex;
+      height: 16px;
+      justify-content: center;
+      width: 16px;
+    }
+    .folder-name {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
     input[type="file"].input-field {
       height: 1px;
       opacity: 0;
@@ -145,34 +205,103 @@
     }
     .file-picker {
       align-items: center;
-      background: rgba(99,102,241,0.08);
-      border: 1px dashed rgba(129,140,248,0.5);
+      background: rgba(99,102,241,0.18);
+      border: 1px solid rgba(129,140,248,0.68);
       border-radius: 8px;
-      color: var(--text-secondary);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.08);
+      color: var(--text-primary);
       cursor: pointer;
       display: flex;
       gap: 10px;
-      min-height: 42px;
-      padding: 10px 14px;
+      justify-content: center;
+      min-height: 48px;
+      padding: 12px 16px;
       transition: all 0.2s;
       width: 100%;
+      font-weight: 600;
     }
     .file-picker:hover {
-      background: rgba(99,102,241,0.14);
+      background: rgba(99,102,241,0.26);
       border-color: var(--accent-purple-light);
       color: var(--text-primary);
+      transform: translateY(-1px);
     }
     .file-picker.active {
-      background: rgba(16,185,129,0.12);
-      border-color: rgba(52,211,153,0.55);
-      color: #d1fae5;
+      background: rgba(99,102,241,0.18);
+      border-color: rgba(129,140,248,0.68);
+      color: var(--text-primary);
     }
     .file-picker i { color: var(--accent-purple-light); }
-    .file-picker.active i { color: var(--accent-green); }
+    .file-picker.active i { color: var(--accent-purple-light); }
     .file-picker span {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+    .upload-preview {
+      display: none;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .upload-preview.active {
+      display: flex;
+      flex-direction: column;
+    }
+    .upload-preview-item {
+      align-items: center;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      display: flex;
+      gap: 10px;
+      min-width: 0;
+      padding: 9px 10px;
+    }
+    .upload-preview-thumb {
+      align-items: center;
+      background: rgba(99,102,241,0.14);
+      border: 1px solid rgba(129,140,248,0.22);
+      border-radius: 7px;
+      color: var(--accent-purple-light);
+      display: flex;
+      flex: 0 0 auto;
+      height: 38px;
+      justify-content: center;
+      overflow: hidden;
+      width: 38px;
+    }
+    .upload-preview-thumb img {
+      height: 100%;
+      object-fit: cover;
+      width: 100%;
+    }
+    .upload-preview-meta {
+      flex: 1;
+      min-width: 0;
+    }
+    .upload-preview-name {
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .upload-preview-info {
+      color: var(--text-muted);
+      font-size: 11px;
+      margin-top: 2px;
+    }
+    .btn-action {
+      background: rgba(99,102,241,0.14);
+      border: 1px solid rgba(129,140,248,0.38);
+      color: var(--text-primary);
+      justify-content: center;
+    }
+    .btn-action:hover {
+      background: rgba(99,102,241,0.24);
+      border-color: var(--accent-purple-light);
+      color: #fff;
     }
 
     .badge {
@@ -407,6 +536,47 @@
       background: #12122a; border-left: 1px solid var(--border-light);
       z-index: 1200; box-shadow: -24px 0 60px rgba(0,0,0,0.35);
       overflow-y: auto; padding: 24px; display: none;
+    }
+    .global-ai-button {
+      background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+      border: 1px solid rgba(129,140,248,0.7);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.14), 0 12px 32px rgba(99,102,241,0.24);
+      color: #fff;
+      flex-shrink: 0;
+      font-weight: 700;
+    }
+    .global-ai-button:hover {
+      box-shadow: 0 0 0 4px rgba(129,140,248,0.2), 0 18px 44px rgba(99,102,241,0.36);
+      transform: translateY(-1px);
+    }
+    .ai-context-panel {
+      background: #12122a;
+      border-left: 1px solid var(--border-light);
+      box-shadow: -24px 0 60px rgba(0,0,0,0.42);
+      display: none;
+      height: 100vh;
+      max-width: 96vw;
+      padding: 0;
+      position: fixed;
+      right: 0;
+      top: 0;
+      width: 520px;
+      z-index: 1300;
+    }
+    .ai-context-panel.open { display: flex; flex-direction: column; }
+    .ai-chip {
+      background: rgba(99,102,241,0.14);
+      border: 1px solid rgba(129,140,248,0.36);
+      border-radius: 999px;
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 12px;
+      padding: 7px 11px;
+      transition: all 0.2s;
+    }
+    .ai-chip:hover {
+      background: rgba(99,102,241,0.26);
+      border-color: var(--accent-purple-light);
     }
     .source-pill { border: 1px solid var(--border-light); border-radius: 999px; padding: 4px 8px; font-size: 11px; color: var(--text-secondary); }
     @media print {
@@ -739,9 +909,12 @@
   <main id="app-main">
     <!-- Top bar -->
     <div class="app-topbar flex items-center justify-between px-6 py-3 border-b border-white/5 sticky top-0 z-50">
-      <div class="search-bar w-64">
-        <i class="fas fa-search text-slate-500 text-sm"></i>
-        <input type="text" placeholder="Pesquisar equipamentos, OTs..." onkeyup="globalSearch(this.value)">
+      <div class="flex items-center gap-3">
+        <button class="btn-primary global-ai-button" onclick="openContextAI()"><i class="fas fa-robot"></i> Assistente IA</button>
+        <div class="search-bar w-64">
+          <i class="fas fa-search text-slate-500 text-sm"></i>
+          <input type="text" placeholder="Pesquisar equipamentos, OTs..." onkeyup="globalSearch(this.value)">
+        </div>
       </div>
       <div class="flex items-center gap-3">
         <button class="btn-ghost" style="position:relative" onclick="toggleNotifications()">
@@ -1703,7 +1876,7 @@
           </div>
           <div class="flex gap-2 mt-4">
             <input type="file" id="ot-cover-upload" class="input-field" accept="image/*" onchange="updateOTCoverFromInput()">
-            <button class="btn-secondary text-sm" onclick="document.getElementById('ot-cover-upload').click()"><i class="fas fa-image"></i> Alterar capa</button>
+            <button class="btn-secondary btn-action text-sm" onclick="document.getElementById('ot-cover-upload').click()"><i class="fas fa-image"></i> Alterar capa</button>
           </div>
         </div>
         <div class="card p-4">
@@ -1726,7 +1899,7 @@
         <div class="card p-4">
           <div class="flex items-center justify-between mb-3">
             <h4 class="font-medium text-sm">Ficheiros associados</h4>
-            <button class="btn-ghost text-xs" onclick="openNewFileModal()"><i class="fas fa-upload"></i> Anexar à OT</button>
+            <button class="btn-secondary btn-action text-xs" onclick="openNewFileModal()"><i class="fas fa-upload"></i> Anexar à OT</button>
           </div>
           <div id="ot-files-list" class="text-sm text-slate-400">Nenhum ficheiro associado.</div>
         </div>
@@ -1748,11 +1921,11 @@
             <div class="text-2xl font-bold mono mb-1" id="ot-time-total">0h 0m</div>
             <div class="text-xs text-slate-500 mb-3">Tempo total de intervenção</div>
             <div class="grid grid-cols-2 gap-2">
-              <button class="btn-ghost text-xs" onclick="workOrderTimeAction('join')"><i class="fas fa-user-plus"></i> Juntar-me</button>
-              <button class="btn-ghost text-xs" onclick="workOrderTimeAction('start')"><i class="fas fa-play"></i> Iniciar</button>
-              <button class="btn-ghost text-xs" onclick="workOrderTimeAction('pause')"><i class="fas fa-pause"></i> Pausar</button>
-              <button class="btn-ghost text-xs" onclick="workOrderTimeAction('resume')"><i class="fas fa-redo"></i> Retomar</button>
-              <button class="btn-ghost text-xs col-span-2" style="color:var(--accent-red)" onclick="workOrderTimeAction('exit')"><i class="fas fa-sign-out-alt"></i> Sair</button>
+              <button class="btn-secondary btn-action text-xs" onclick="workOrderTimeAction('join')"><i class="fas fa-user-plus"></i> Juntar-me</button>
+              <button class="btn-secondary btn-action text-xs" onclick="workOrderTimeAction('start')"><i class="fas fa-play"></i> Iniciar</button>
+              <button class="btn-secondary btn-action text-xs" onclick="workOrderTimeAction('pause')"><i class="fas fa-pause"></i> Pausar</button>
+              <button class="btn-secondary btn-action text-xs" onclick="workOrderTimeAction('resume')"><i class="fas fa-redo"></i> Retomar</button>
+              <button class="btn-secondary btn-action text-xs col-span-2" style="color:#f87171;border-color:rgba(248,113,113,0.35);background:rgba(239,68,68,0.1)" onclick="workOrderTimeAction('exit')"><i class="fas fa-sign-out-alt"></i> Sair</button>
             </div>
           </div>
         </div>
@@ -2011,7 +2184,7 @@
         <div class="card p-4">
           <div class="flex items-center justify-between mb-3">
             <h4 class="font-medium text-sm">Ficheiros associados</h4>
-            <button class="btn-ghost text-xs" onclick="openNewFileModal()"><i class="fas fa-plus"></i> Associar</button>
+            <button class="btn-secondary btn-action text-xs" onclick="openNewFileModal()"><i class="fas fa-plus"></i> Associar</button>
           </div>
           <div id="equip-files-list" class="text-sm text-slate-400">Nenhum ficheiro associado.</div>
         </div>
@@ -2055,7 +2228,7 @@
         <div class="card p-4">
           <h4 class="font-medium mb-3 text-sm">Documentação</h4>
           <div class="text-sm text-slate-400 mb-3">Nenhum documento associado.</div>
-          <button class="btn-ghost w-full text-sm"><i class="fas fa-upload"></i> Anexar documento</button>
+          <button class="btn-secondary btn-action w-full text-sm"><i class="fas fa-upload"></i> Anexar documento</button>
         </div>
       </div>
     </div>
@@ -2278,6 +2451,29 @@
   <div id="howto-content"></div>
 </div>
 
+<!-- Global Context IA -->
+<div id="context-ai-panel" class="ai-context-panel">
+  <div class="p-5 border-b border-white/10">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <div class="text-xs text-slate-500 uppercase tracking-wider mb-1">Assistente IA contextual</div>
+        <h2 class="text-xl font-bold mono" id="context-ai-title">Assistente IA</h2>
+        <p class="text-sm text-slate-400 mt-1" id="context-ai-subtitle">Contexto automático da página atual</p>
+      </div>
+      <button class="btn-ghost" onclick="closeContextAI()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="flex flex-wrap gap-2 mt-4" id="context-ai-chips"></div>
+  </div>
+  <div class="flex-1 overflow-y-auto p-5 flex flex-col gap-4" id="context-ai-messages"></div>
+  <div class="p-4 border-t border-white/10">
+    <div class="flex gap-2">
+      <input type="text" id="context-ai-input" class="input-field" placeholder="Ex: criar, listar, analisar, gerar relatório..." onkeypress="if(event.key==='Enter')sendContextAIMessage()">
+      <button class="btn-primary px-4" onclick="sendContextAIMessage()"><i class="fas fa-paper-plane"></i></button>
+    </div>
+    <button class="btn-secondary btn-action w-full text-sm mt-3" onclick="executeContextAIAction()"><i class="fas fa-bolt"></i> Executar agora</button>
+  </div>
+</div>
+
 <script>
 // ======================== APP STATE ========================
 var APP = {
@@ -2285,12 +2481,16 @@ var APP = {
   clients: [], knowledge: [], files: [], incidents: [],
   buildings: [], stockMaterials: [],
   fileFolders: [], currentFileFolder: 'all',
+  fileTreeOpen: { root: true },
   purchases: [], suppliers: [], contracts: [], invoices: [],
   currentOT: null, currentEquip: null,
   currentFile: null,
   lastNfcPayload: null,
   aiApprovalCallback: null,
   calendarDate: new Date(),
+  currentPage: 'dashboard',
+  aiContextPage: 'dashboard',
+  lastContextAICommand: '',
   otFilter: 'agendadas', otStatusFilter: '', otPriorityFilter: '', otTypeFilter: '',
   backendOnline: false, demoTechnicianId: localStorage.getItem('manugentTechnicianId') || '',
   timeTicker: null,
@@ -2372,6 +2572,7 @@ function scrollToSection(id) {
   if (el) el.scrollIntoView({ behavior: 'smooth' });
 }
 function showPage(page) {
+  APP.currentPage = page;
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
   document.querySelectorAll('.sidebar-item').forEach(function(i) { i.classList.remove('active'); });
   var pageEl = document.getElementById('page-' + page);
@@ -2390,6 +2591,7 @@ function showPage(page) {
   if (page === 'purchases') renderPurchases();
   if (page === 'quotes') renderQuotes();
   if (page === 'calendar') renderCalendar();
+  refreshContextAIHeader();
 }
 
 function setupDetailPages() {
@@ -2410,6 +2612,7 @@ function setupDetailPages() {
 }
 function showDetailPage(id) {
   setupDetailPages();
+  APP.currentPage = id === 'modal-ot-detail' ? 'ots' : id === 'modal-equip-detail' ? 'equipment' : APP.currentPage;
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
   document.querySelectorAll('.sidebar-item').forEach(function(i) { i.classList.remove('active'); });
   var el = document.getElementById(id);
@@ -2678,7 +2881,7 @@ function renderBuildings() {
   if (!el) return;
   APP.buildings = APP.buildings || [];
   if (APP.buildings.length === 0) {
-    el.innerHTML = '<div class="card p-8 text-center text-slate-500" style="grid-column:1/-1"><i class="fas fa-building text-3xl mb-3 text-slate-600 block"></i><p>Nenhum edifício registado.</p><button class="btn-primary mt-4" onclick="createBuilding()"><i class="fas fa-plus"></i> Adicionar edifício</button></div>';
+    el.innerHTML = emptyGridState('fa-building', 'Nenhum edifício registado.', 'Adicionar edifício', 'createBuilding()');
     return;
   }
   el.innerHTML = APP.buildings.map(function(b) {
@@ -2717,7 +2920,7 @@ function renderMaterials() {
     });
   });
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-slate-500 py-8">Nenhum material registado.</td></tr>';
+    tbody.innerHTML = emptyTableState(5, 'fa-boxes-stacked', 'Nenhum material registado.', 'Adicionar material', 'createStockMaterial()');
     return;
   }
   tbody.innerHTML = rows.map(function(m) {
@@ -2740,7 +2943,7 @@ function renderPurchases() {
   if (!tbody) return;
   var rows = APP.purchases || [];
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-slate-500 py-8">Nenhum pedido de compra registado.</td></tr>';
+    tbody.innerHTML = emptyTableState(6, 'fa-cart-shopping', 'Nenhum pedido de compra registado.', 'Adicionar pedido', 'createPurchaseRequest()');
     return;
   }
   tbody.innerHTML = rows.slice().reverse().map(function(p) {
@@ -2752,7 +2955,7 @@ function renderQuotes() {
   if (!tbody) return;
   var rows = APP.invoices && APP.invoices.length ? APP.invoices : [];
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-slate-500 py-8">Nenhum orçamento ou documento comercial gerado.</td></tr>';
+    tbody.innerHTML = emptyTableState(4, 'fa-file-invoice-dollar', 'Nenhum orçamento ou documento comercial gerado.', 'Gerar orçamento', 'generateBillingDocuments()');
     return;
   }
   tbody.innerHTML = rows.slice().reverse().map(function(d) {
@@ -2842,7 +3045,7 @@ function renderOTs() {
   var tbody = document.getElementById('ot-table-body');
   if (!tbody) return;
   if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="9" class="text-center text-slate-500 py-8">Nenhuma OT encontrada.</td></tr>';
+    tbody.innerHTML = emptyTableState(9, 'fa-screwdriver-wrench', 'Nenhuma OT encontrada.', 'Adicionar OT', 'openNewOTModal()');
   } else {
     tbody.innerHTML = filtered.map(function(o) {
       return '<tr onclick="openOTDetail(\'' + o.id + '\')">' +
@@ -3624,7 +3827,7 @@ function renderEquipment(list) {
   var el = document.getElementById('equipment-grid');
   if (!el) return;
   if (items.length === 0) {
-    el.innerHTML = '<div class="card p-8 text-center text-slate-500" style="grid-column:1/-1"><i class="fas fa-microchip text-3xl mb-3 text-slate-600 block"></i><p>Nenhum equipamento registado.</p><button class="btn-primary mt-4" onclick="openNewEquipModal()"><i class="fas fa-plus"></i> Adicionar</button></div>';
+    el.innerHTML = emptyGridState('fa-microchip', 'Nenhum equipamento registado.', 'Adicionar equipamento', 'openNewEquipModal()');
     return;
   }
   var catBg = {AVAC:'rgba(59,130,246,0.2)',Elétrico:'rgba(245,158,11,0.2)',Automação:'rgba(99,102,241,0.2)',UPS:'rgba(16,185,129,0.2)',Gerador:'rgba(249,115,22,0.2)',Compressor:'rgba(6,182,212,0.2)'};
@@ -3954,7 +4157,7 @@ function renderClients() {
   var el = document.getElementById('clients-grid');
   if (!el) return;
   if (APP.clients.length === 0) {
-    el.innerHTML = '<div class="card p-8 text-center text-slate-500" style="grid-column:1/-1"><i class="fas fa-briefcase text-3xl mb-3 text-slate-600 block"></i><p>Nenhum cliente registado.</p><button class="btn-primary mt-4" onclick="openNewClientModal()"><i class="fas fa-plus"></i> Adicionar</button></div>';
+    el.innerHTML = emptyGridState('fa-briefcase', 'Nenhum cliente registado.', 'Adicionar cliente', 'openNewClientModal()');
     return;
   }
   el.innerHTML = APP.clients.map(function(c) {
@@ -4035,7 +4238,7 @@ function renderTechnicians() {
   var el = document.getElementById('technicians-grid');
   if (!el) return;
   if (APP.technicians.length === 0) {
-    el.innerHTML = '<div class="card p-8 text-center text-slate-500" style="grid-column:1/-1"><i class="fas fa-hard-hat text-3xl mb-3 text-slate-600 block"></i><p>Nenhum técnico registado.</p><button class="btn-primary mt-4" onclick="openNewTechModal()"><i class="fas fa-plus"></i> Adicionar</button></div>';
+    el.innerHTML = emptyGridState('fa-hard-hat', 'Nenhum técnico registado.', 'Adicionar técnico', 'openNewTechModal()');
     return;
   }
   var availColors = {'Disponível':'badge-green','Em campo':'badge-blue','Em férias':'badge-yellow','Indisponível':'badge-red'};
@@ -4099,7 +4302,7 @@ function renderKnowledge(list) {
   var el = document.getElementById('knowledge-grid');
   if (!el) return;
   if (items.length === 0) {
-    el.innerHTML = '<div class="card p-8 text-center text-slate-500" style="grid-column:1/-1"><i class="fas fa-book text-3xl mb-3 text-slate-600 block"></i><p>Nenhum artigo na base de conhecimento.</p><button class="btn-primary mt-4" onclick="openNewKnowledgeModal()"><i class="fas fa-plus"></i> Criar artigo</button></div>';
+    el.innerHTML = emptyGridState('fa-book', 'Nenhum artigo na base de conhecimento.', 'Criar artigo', 'openNewKnowledgeModal()');
     return;
   }
   el.innerHTML = items.map(function(a) {
@@ -4132,6 +4335,7 @@ function openArticleDetail(id) {
   showPage('article-detail');
   var nav = document.getElementById('nav-knowledge');
   if (nav) nav.classList.add('active');
+  refreshContextAIHeader();
 }
 function renderArticleSteps(solution) {
   var lines = splitArticleLines(solution);
@@ -4416,12 +4620,12 @@ function renderFiles() {
   var el = document.getElementById('files-table-body');
   if (!el) return;
   if (items.length === 0) {
-    el.innerHTML = '<tr><td colspan="8" class="text-center text-slate-500 py-8">Nenhum ficheiro encontrado.</td></tr>';
+    el.innerHTML = emptyTableState(8, 'fa-folder-open', 'Nenhum ficheiro encontrado.', 'Adicionar ficheiro', 'openNewFileModal()');
     return;
   }
   el.innerHTML = items.map(function(f) {
     var refLabel = f.fileName || getAssetName(f.ref);
-    return '<tr onclick="openFileDetail(\'' + f.id + '\')">' +
+    return '<tr draggable="true" ondragstart="dragFileItem(event,\'' + f.id + '\')" onclick="openFileDetail(\'' + f.id + '\')">' +
       '<td><div class="flex items-center gap-3"><div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:rgba(99,102,241,0.18)"><i class="' + getFileIcon(f.type) + ' text-purple-400"></i></div><div><div class="font-medium text-slate-100">' + escapeHtml(f.name) + '</div><div class="text-xs text-slate-500">' + escapeHtml(refLabel) + '</div></div></div></td>' +
       '<td><span class="badge ' + getFileTypeClass(f.type) + '">' + escapeHtml(f.type) + '</span></td>' +
       '<td><span class="text-xs text-slate-400">' + escapeHtml(getFolderPath(f.folderId) || 'Raiz') + '</span></td>' +
@@ -4429,7 +4633,7 @@ function renderFiles() {
       '<td>' + getFileAssociations(f) + '</td>' +
       '<td><span class="mono text-xs">' + ((f.versions || []).length || 1) + '</span></td>' +
       '<td>' + new Date(f.updatedAt || f.createdAt).toLocaleDateString('pt-PT') + '</td>' +
-      '<td><button class="btn-ghost text-xs" onclick="event.stopPropagation(); addFileVersion(\'' + f.id + '\')"><i class="fas fa-code-branch"></i> Nova versão</button></td>' +
+      '<td><button class="btn-secondary btn-action text-xs" onclick="event.stopPropagation(); addFileVersion(\'' + f.id + '\')"><i class="fas fa-code-branch"></i> Nova versão</button></td>' +
       '</tr>';
   }).join('');
 }
@@ -4444,24 +4648,140 @@ function renderFolderTree() {
   var el = document.getElementById('files-folder-tree');
   if (!el) return;
   var rootCount = (APP.files || []).filter(function(f) { return !f.folderId; }).length;
-  var html = '<div class="folder-row ' + (APP.currentFileFolder === 'all' ? 'active' : '') + '" onclick="selectFileFolder(\'all\')"><i class="fas fa-layer-group"></i><span class="flex-1">Todos</span><span class="badge badge-gray text-xs">' + (APP.files || []).length + '</span></div>' +
-    '<div class="folder-row ' + (APP.currentFileFolder === '' ? 'active' : '') + '" onclick="selectFileFolder(\'\')"><i class="fas fa-folder"></i><span class="flex-1">Raiz</span><span class="badge badge-gray text-xs">' + rootCount + '</span></div>';
-  html += renderFolderBranch('');
+  APP.fileTreeOpen = APP.fileTreeOpen || { root: true };
+  var rootOpen = APP.fileTreeOpen.root !== false;
+  var html = '<div class="folder-row ' + (APP.currentFileFolder === 'all' ? 'active' : '') + '" onclick="selectFileFolder(\'all\')" ondragover="allowFileTreeDrop(event)" ondragleave="leaveFileTreeDrop(event)" ondrop="dropOnFolder(event,\'\')">' +
+    '<span class="folder-toggle" onclick="event.stopPropagation();toggleFileTreeFolder(\'root\')"><i class="fas ' + (rootOpen ? 'fa-chevron-down' : 'fa-chevron-right') + ' text-[10px]"></i></span>' +
+    '<i class="fas fa-folder-tree text-yellow-400"></i><span class="folder-name font-semibold text-slate-200">manugent</span><span class="badge badge-gray text-xs">' + (APP.files || []).length + '</span></div>';
+  if (rootOpen) {
+    html += '<div class="folder-row ' + (APP.currentFileFolder === '' ? 'active' : '') + '" style="padding-left:28px" onclick="selectFileFolder(\'\')" ondragover="allowFileTreeDrop(event)" ondragleave="leaveFileTreeDrop(event)" ondrop="dropOnFolder(event,\'\')">' +
+      '<span class="folder-toggle"></span><i class="fas fa-folder text-yellow-400"></i><span class="folder-name">Raiz</span><span class="badge badge-gray text-xs">' + rootCount + '</span></div>';
+    html += renderFolderBranch('', 1);
+  }
   el.innerHTML = html;
 }
 function renderFolderBranch(parentId, level) {
   level = level || 0;
   return (APP.fileFolders || []).filter(function(f) { return (f.parentId || '') === (parentId || ''); }).map(function(folder) {
     var count = (APP.files || []).filter(function(file) { return file.folderId === folder.id; }).length;
-    var children = renderFolderBranch(folder.id, level + 1);
-    return '<div class="folder-row ' + (APP.currentFileFolder === folder.id ? 'active' : '') + '" style="padding-left:' + (10 + level * 18) + 'px" onclick="selectFileFolder(\'' + folder.id + '\')">' +
-      '<i class="fas ' + (children ? 'fa-folder-open' : 'fa-folder') + '"></i><span class="flex-1">' + escapeHtml(folder.name) + '</span><span class="badge badge-gray text-xs">' + count + '</span></div>' +
-      (children ? '<div style="border-left:1px solid rgba(99,102,241,0.18);margin-left:' + (14 + level * 18) + 'px">' + children + '</div>' : '');
+    var hasChildren = (APP.fileFolders || []).some(function(f) { return (f.parentId || '') === folder.id; });
+    var isOpen = APP.fileTreeOpen && APP.fileTreeOpen[folder.id] !== false;
+    var children = hasChildren && isOpen ? renderFolderBranch(folder.id, level + 1) : '';
+    return '<div class="folder-row ' + (APP.currentFileFolder === folder.id ? 'active' : '') + '" draggable="true" style="padding-left:' + (10 + level * 18) + 'px" onclick="selectFileFolder(\'' + folder.id + '\')" ondragstart="dragFolderItem(event,\'' + folder.id + '\')" ondragover="allowFileTreeDrop(event)" ondragleave="leaveFileTreeDrop(event)" ondrop="dropOnFolder(event,\'' + folder.id + '\')">' +
+      '<span class="folder-toggle" onclick="event.stopPropagation();toggleFileTreeFolder(\'' + folder.id + '\')">' + (hasChildren ? '<i class="fas ' + (isOpen ? 'fa-chevron-down' : 'fa-chevron-right') + ' text-[10px]"></i>' : '') + '</span>' +
+      '<i class="fas ' + (isOpen && hasChildren ? 'fa-folder-open' : 'fa-folder') + ' text-yellow-400"></i><span class="folder-name">' + escapeHtml(folder.name) + '</span><span class="badge badge-gray text-xs">' + count + '</span></div>' +
+      (children ? '<div>' + children + '</div>' : '');
   }).join('');
 }
 function selectFileFolder(id) {
   APP.currentFileFolder = id;
   renderFiles();
+}
+function toggleFileTreeFolder(id) {
+  APP.fileTreeOpen = APP.fileTreeOpen || { root: true };
+  APP.fileTreeOpen[id] = APP.fileTreeOpen[id] === false;
+  renderFolderTree();
+}
+function dragFileItem(event, id) {
+  event.dataTransfer.setData('text/plain', JSON.stringify({ type: 'file', id: id }));
+  event.dataTransfer.effectAllowed = 'move';
+}
+function dragFolderItem(event, id) {
+  event.stopPropagation();
+  event.dataTransfer.setData('text/plain', JSON.stringify({ type: 'folder', id: id }));
+  event.dataTransfer.effectAllowed = 'move';
+}
+function allowFileTreeDrop(event) {
+  event.preventDefault();
+  event.currentTarget.classList.add('drop-target');
+}
+function leaveFileTreeDrop(event) {
+  event.currentTarget.classList.remove('drop-target');
+}
+function dropOnFolder(event, targetFolderId) {
+  event.preventDefault();
+  event.stopPropagation();
+  event.currentTarget.classList.remove('drop-target');
+  if (event.dataTransfer.files && event.dataTransfer.files.length) {
+    importDroppedFiles(event.dataTransfer.files, targetFolderId);
+    return;
+  }
+  var payload;
+  try { payload = JSON.parse(event.dataTransfer.getData('text/plain') || '{}'); } catch(e) { payload = {}; }
+  if (!payload.id) return;
+  if (payload.type === 'file') moveFileToFolder(payload.id, targetFolderId);
+  if (payload.type === 'folder') moveFolderToFolder(payload.id, targetFolderId);
+}
+function moveFileToFolder(fileId, targetFolderId) {
+  var file = (APP.files || []).find(function(f) { return f.id === fileId; });
+  if (!file) return;
+  file.folderId = targetFolderId || '';
+  file.updatedAt = new Date().toISOString();
+  APP.currentFileFolder = targetFolderId || '';
+  saveData(); renderFiles(); showToast('Ficheiro movido para ' + (getFolderPath(targetFolderId) || 'Raiz') + '.');
+}
+function moveFolderToFolder(folderId, targetFolderId) {
+  if (folderId === targetFolderId) return;
+  if (targetFolderId && isFolderDescendant(targetFolderId, folderId)) {
+    showToast('Não é possível mover uma pasta para dentro dela própria.');
+    return;
+  }
+  var folder = (APP.fileFolders || []).find(function(f) { return f.id === folderId; });
+  if (!folder) return;
+  folder.parentId = targetFolderId || '';
+  APP.fileTreeOpen = APP.fileTreeOpen || { root: true };
+  APP.fileTreeOpen[targetFolderId || 'root'] = true;
+  APP.currentFileFolder = folderId;
+  saveData(); renderFiles(); populateOTSelects(); showToast('Pasta movida para ' + (getFolderPath(targetFolderId) || 'Raiz') + '.');
+}
+function importDroppedFiles(fileList, targetFolderId) {
+  var files = Array.prototype.slice.call(fileList || []);
+  if (!files.length) return;
+  var remaining = files.length;
+  files.forEach(function(file) {
+    var reader = new FileReader();
+    reader.onload = function() {
+      var type = file.type.indexOf('image/') === 0 ? 'Imagem' : file.type.indexOf('video/') === 0 ? 'Vídeo' : file.type === 'application/pdf' ? 'PDF' : 'Ficheiro';
+      APP.files = APP.files || [];
+      APP.files.push({
+        id: generateId('FILE'),
+        name: file.name,
+        type: type,
+        ref: reader.result,
+        fileName: file.name,
+        folderId: targetFolderId || '',
+        description: 'Ficheiro carregado por arrastar e soltar.',
+        permission: 'all',
+        userIds: [],
+        teams: [],
+        clientId: '',
+        clientName: '',
+        equipmentId: '',
+        equipmentName: '',
+        otId: '',
+        otTitle: '',
+        versions: [{ version: 'v1.0', notes: 'Carregado por drag-and-drop', ref: reader.result, createdAt: new Date().toISOString(), author: APP.user ? APP.user.name : 'Gestor' }],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        owner: APP.user ? APP.user.name : 'Gestor'
+      });
+      remaining -= 1;
+      if (remaining === 0) {
+        APP.currentFileFolder = targetFolderId || '';
+        saveData(); renderFiles(); showToast(files.length + ' ficheiro(s) carregado(s) para ' + (getFolderPath(targetFolderId) || 'Raiz') + '.');
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function isFolderDescendant(folderId, possibleAncestorId) {
+  var folders = APP.fileFolders || [];
+  var current = folders.find(function(f) { return f.id === folderId; });
+  while (current) {
+    if (current.parentId === possibleAncestorId) return true;
+    current = folders.find(function(f) { return f.id === current.parentId; });
+  }
+  return false;
 }
 function getFolderOptionsHtml() {
   return renderFolderOptions('', 0);
@@ -4580,7 +4900,7 @@ function renderAssociatedFiles(target, id, elId) {
   el.innerHTML = items.map(function(f) {
     return '<div class="flex items-center justify-between py-2 border-b border-white/5">' +
       '<div class="flex items-center gap-2"><i class="' + getFileIcon(f.type) + ' text-purple-400"></i><div><div class="text-slate-200">' + escapeHtml(f.name) + '</div><div class="text-xs text-slate-500">' + escapeHtml(f.type) + ' · ' + ((f.versions || []).length || 1) + ' versão(ões)</div></div></div>' +
-      '<button class="btn-ghost text-xs" onclick="openFileDetail(\'' + f.id + '\')"><i class="fas fa-eye"></i></button>' +
+      '<button class="btn-secondary btn-action text-xs" onclick="openFileDetail(\'' + f.id + '\')"><i class="fas fa-eye"></i></button>' +
       '</div>';
   }).join('');
 }
@@ -4613,7 +4933,7 @@ function renderIncidents() {
   var tbody = document.getElementById('incidents-table-body');
   if (!tbody) return;
   if (APP.incidents.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-slate-500 py-8">Nenhum incidente registado.</td></tr>';
+    tbody.innerHTML = emptyTableState(6, 'fa-triangle-exclamation', 'Nenhum incidente registado.', 'Adicionar incidente', 'openNewIncidentModal()');
     return;
   }
   tbody.innerHTML = APP.incidents.slice().reverse().map(function(inc) {
@@ -4811,6 +5131,160 @@ function clearChat() {
   appendChatMessage('Chat limpo. Como posso ajudar?', 'ai');
 }
 
+// ======================== CONTEXT IA ========================
+function getAIContexts() {
+  return {
+    dashboard: { title:'Visão Geral', actions:['Gerar dashboard resumido','Analisar KPIs','Detetar problemas operacionais'], primary:'Gerar resumo operacional' },
+    ots: { title:'Ordens de Trabalho', actions:['Criar ordem de trabalho','Atribuir técnico','Priorizar tarefas','Resumir backlog'], primary:'Criar OT' },
+    equipment: { title:'Equipamentos', actions:['Criar equipamento','Analisar histórico de falhas','Sugerir manutenção preventiva'], primary:'Criar equipamento' },
+    clients: { title:'Clientes', actions:['Criar cliente','Resumir histórico de interações','Gerar relatório por cliente'], primary:'Criar cliente' },
+    buildings: { title:'Edifícios', actions:['Criar edifício/local','Mapear ativos por edifício','Listar intervenções por localização'], primary:'Criar edifício' },
+    technicians: { title:'Técnicos', actions:['Criar técnico','Distribuir carga de trabalho','Analisar performance'], primary:'Criar técnico' },
+    knowledge: { title:'Conhecimento', actions:['Criar artigo de conhecimento','Responder pergunta técnica','Sugerir documentação'], primary:'Criar artigo' },
+    files: { title:'Ficheiros', actions:['Organizar ficheiros','Procurar documentos','Resumir PDFs'], primary:'Adicionar ficheiro' },
+    'ai-assistant': { title:'Assistente IA', actions:['Comando global','Criar automação','Listar dados do sistema'], primary:'Comando global' },
+    calendar: { title:'Calendário', actions:['Criar eventos','Reagendar tarefas','Otimizar agenda'], primary:'Otimizar agenda' },
+    checklists: { title:'Checklists', actions:['Criar checklist','Validar execução','Automatizar rotinas'], primary:'Criar checklist' },
+    incidents: { title:'Incidentes', actions:['Registar incidente','Classificar severidade','Sugerir resolução'], primary:'Registar incidente' },
+    materials: { title:'Material', actions:['Criar inventário','Controlar stock','Alertar faltas'], primary:'Adicionar material' },
+    purchases: { title:'Compras', actions:['Criar requisição de compra','Sugerir fornecedores','Analisar custos'], primary:'Criar requisição' },
+    quotes: { title:'Orçamentos', actions:['Criar orçamento','Simular cenários','Gerar PDF de proposta'], primary:'Criar orçamento' },
+    settings: { title:'Definições', actions:['Rever perfil','Listar permissões','Sugerir configuração'], primary:'Analisar configuração' }
+  };
+}
+function getCurrentAIContext() {
+  var contexts = getAIContexts();
+  return contexts[APP.currentPage] || contexts.dashboard;
+}
+function refreshContextAIHeader() {
+  var panel = document.getElementById('context-ai-panel');
+  if (!panel || !panel.classList.contains('open')) return;
+  var ctx = getCurrentAIContext();
+  APP.aiContextPage = APP.currentPage;
+  document.getElementById('context-ai-title').textContent = 'IA · ' + ctx.title;
+  document.getElementById('context-ai-subtitle').textContent = 'Contexto ativo: ' + ctx.title + ' · posso criar, editar, listar, analisar, otimizar e gerar relatórios.';
+  renderContextAIChips(ctx);
+}
+function openContextAI() {
+  var panel = document.getElementById('context-ai-panel');
+  APP.aiContextPage = APP.currentPage || 'dashboard';
+  panel.classList.add('open');
+  refreshContextAIHeader();
+  var messages = document.getElementById('context-ai-messages');
+  if (messages && !messages.dataset.started) {
+    messages.dataset.started = 'true';
+    appendContextAIMessage(getContextAIIntro(), 'ai');
+  }
+  var input = document.getElementById('context-ai-input');
+  if (input) setTimeout(function() { input.focus(); }, 50);
+}
+function closeContextAI() {
+  document.getElementById('context-ai-panel').classList.remove('open');
+}
+function renderContextAIChips(ctx) {
+  var el = document.getElementById('context-ai-chips');
+  if (!el) return;
+  el.innerHTML = ctx.actions.map(function(action) {
+    return '<button class="ai-chip" onclick="runContextAIChip(\'' + action.replace(/'/g, "\\'") + '\')">' + action + '</button>';
+  }).join('');
+}
+function getContextAIIntro() {
+  var ctx = getCurrentAIContext();
+  return 'Estou no contexto de ' + ctx.title + '.\n\nAções rápidas:\n- ' + ctx.actions.join('\n- ') + '\n\nPode escrever comandos como: criar, editar, listar, analisar, otimizar ou gerar relatório.';
+}
+function runContextAIChip(text) {
+  document.getElementById('context-ai-input').value = text;
+  sendContextAIMessage();
+}
+function sendContextAIMessage() {
+  var input = document.getElementById('context-ai-input');
+  var msg = input.value.trim();
+  if (!msg) return;
+  APP.lastContextAICommand = msg;
+  appendContextAIMessage(msg, 'user');
+  input.value = '';
+  setTimeout(function() {
+    appendContextAIMessage(getContextAIResponse(msg), 'ai');
+  }, 250);
+}
+function appendContextAIMessage(text, type) {
+  var chat = document.getElementById('context-ai-messages');
+  if (!chat) return;
+  var div = document.createElement('div');
+  div.className = (type === 'user' ? 'chat-bubble-user' : 'chat-bubble-ai') + ' fade-in';
+  div.innerHTML = type === 'ai'
+    ? '<div class="flex items-center gap-2 mb-2"><div class="w-6 h-6 rounded flex items-center justify-center" style="background:var(--accent-purple)"><i class="fas fa-robot text-xs text-white"></i></div><span class="text-xs font-semibold" style="color:var(--accent-purple-light)">IA contextual</span></div><div class="text-sm" style="white-space:pre-line">' + escapeHtml(text) + '</div>'
+    : '<div class="text-sm">' + escapeHtml(text) + '</div>';
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+function getContextAIResponse(msg) {
+  var ctx = getCurrentAIContext();
+  var lower = msg.toLowerCase();
+  var summary = getContextSummary(APP.currentPage);
+  if (lower.includes('criar') || lower.includes('registar') || lower.includes('adicionar')) {
+    return 'Posso executar agora: ' + ctx.primary + '.\n\nContexto: ' + ctx.title + '\n' + summary + '\n\nUse “Executar agora” para abrir o formulário/ação correspondente.';
+  }
+  if (lower.includes('listar')) return 'Lista contextual em ' + ctx.title + ':\n' + summary;
+  if (lower.includes('relatório') || lower.includes('relatorio') || lower.includes('analisar') || lower.includes('otimizar')) {
+    return 'Análise rápida de ' + ctx.title + ':\n' + summary + '\n\nSugestão: ' + getContextSuggestion(APP.currentPage);
+  }
+  if (lower.includes('editar')) return 'Posso ajudar a editar itens em ' + ctx.title + '. Selecione um registo na página ou use “Executar agora” para abrir a ação principal disponível.';
+  return 'Entendi. No contexto de ' + ctx.title + ', posso: ' + ctx.actions.join(', ') + '.\n\nComando recebido: "' + msg + '".';
+}
+function getContextSummary(page) {
+  if (page === 'dashboard') return 'OTs: ' + APP.ots.length + ' · Equipamentos: ' + APP.equipment.length + ' · Incidentes: ' + APP.incidents.length;
+  if (page === 'ots') return 'OTs totais: ' + APP.ots.length + ' · abertas: ' + APP.ots.filter(function(o) { return o.status !== 'Concluída' && o.status !== 'Cancelada'; }).length;
+  if (page === 'equipment') return 'Equipamentos: ' + APP.equipment.length + ' · críticos: ' + APP.equipment.filter(function(e) { return e.criticality === 'Crítico'; }).length;
+  if (page === 'clients') return 'Clientes: ' + APP.clients.length;
+  if (page === 'buildings') return 'Edifícios: ' + (APP.buildings || []).length;
+  if (page === 'technicians') return 'Técnicos: ' + APP.technicians.length + ' · disponíveis: ' + APP.technicians.filter(function(t) { return t.availability === 'Disponível'; }).length;
+  if (page === 'knowledge') return 'Artigos: ' + APP.knowledge.length;
+  if (page === 'files') return 'Ficheiros: ' + (APP.files || []).length + ' · pastas: ' + (APP.fileFolders || []).length;
+  if (page === 'incidents') return 'Incidentes: ' + APP.incidents.length;
+  if (page === 'materials') return 'Materiais em stock: ' + (APP.stockMaterials || []).length;
+  if (page === 'purchases') return 'Pedidos de compra: ' + (APP.purchases || []).length;
+  if (page === 'quotes') return 'Documentos comerciais: ' + (APP.invoices || []).length;
+  if (page === 'calendar') return 'Eventos previstos ligados às OTs: ' + APP.ots.filter(function(o) { return o.date; }).length;
+  if (page === 'checklists') return 'Checklists base disponíveis no módulo.';
+  return 'Modo geral do sistema ManuGent.';
+}
+function getContextSuggestion(page) {
+  return {
+    dashboard:'priorizar OTs abertas e rever equipamentos críticos.',
+    ots:'atribuir técnico às OTs sem responsável e ordenar por prioridade.',
+    equipment:'criar preventiva para ativos críticos com histórico recente.',
+    clients:'gerar relatório por cliente com OTs, ficheiros e equipamentos associados.',
+    buildings:'mapear equipamentos por localização para facilitar rondas.',
+    technicians:'balancear carga de trabalho por disponibilidade.',
+    knowledge:'converter procedimentos frequentes em artigos com ficheiros anexos.',
+    files:'organizar documentos por cliente, equipamento e OT.',
+    incidents:'classificar severidade e criar OT corretiva quando necessário.',
+    materials:'criar alerta para stock baixo.',
+    purchases:'comparar custo dos pedidos pendentes.',
+    quotes:'gerar proposta com horas, deslocações e material.'
+  }[page] || 'usar comandos globais para criar, listar e analisar dados.';
+}
+function executeContextAIAction() {
+  var page = APP.aiContextPage || APP.currentPage;
+  appendContextAIMessage('A executar ação principal para: ' + getCurrentAIContext().title, 'ai');
+  if (page === 'ots') return openNewOTModal();
+  if (page === 'equipment') return openNewEquipModal();
+  if (page === 'clients') return openNewClientModal();
+  if (page === 'buildings') return createBuilding();
+  if (page === 'technicians') return openNewTechModal();
+  if (page === 'knowledge') return openNewKnowledgeModal();
+  if (page === 'files') return openNewFileModal();
+  if (page === 'incidents') return openNewIncidentModal();
+  if (page === 'materials') return createStockMaterial();
+  if (page === 'purchases') return createPurchaseRequest();
+  if (page === 'quotes') return generateBillingDocuments();
+  if (page === 'calendar') { showPage('calendar'); return showToast('IA pronta para otimizar a agenda.'); }
+  if (page === 'checklists') { showPage('checklists'); return showToast('IA pronta para criar/checkar rotinas.'); }
+  quickPrompt(APP.lastContextAICommand || 'Analisar sistema');
+  showPage('ai-assistant');
+}
+
 // ======================== AI APPROVAL ========================
 function showAIApproval(content, callback) {
   document.getElementById('ai-approval-content').innerHTML = content;
@@ -4865,6 +5339,19 @@ function showToast(msg) {
   document.body.appendChild(toast);
   setTimeout(function() { toast.remove(); }, 3000);
 }
+function emptyStateHtml(icon, message, actionText, actionHandler, compact) {
+  return '<div class="empty-state' + (compact ? ' compact' : '') + '">' +
+    '<i class="fas ' + icon + '"></i>' +
+    '<p>' + message + '</p>' +
+    (actionText ? '<button class="btn-primary" onclick="' + actionHandler + '"><i class="fas fa-plus"></i> ' + actionText + '</button>' : '') +
+    '</div>';
+}
+function emptyGridState(icon, message, actionText, actionHandler) {
+  return '<div style="grid-column:1/-1">' + emptyStateHtml(icon, message, actionText, actionHandler) + '</div>';
+}
+function emptyTableState(colspan, icon, message, actionText, actionHandler) {
+  return '<tr><td colspan="' + colspan + '" style="padding:0;border-bottom:none">' + emptyStateHtml(icon, message, actionText, actionHandler) + '</td></tr>';
+}
 function toggleNotifications() {
   var p = document.getElementById('notifications-panel');
   p.style.display = p.style.display === 'none' ? 'block' : 'none';
@@ -4875,6 +5362,7 @@ function enhanceFileInputs() {
     input.classList.add('upload-hidden');
     if (input.dataset.enhanced === 'true') {
       updateFilePickerLabel(input);
+      renderUploadPreview(input);
       return;
     }
     input.dataset.enhanced = 'true';
@@ -4883,8 +5371,13 @@ function enhanceFileInputs() {
     label.htmlFor = input.id;
     label.innerHTML = '<i class="fas fa-cloud-arrow-up"></i><span>Carregar ficheiro</span>';
     input.insertAdjacentElement('afterend', label);
+    var preview = document.createElement('div');
+    preview.className = 'upload-preview';
+    preview.id = input.id + '-preview';
+    label.insertAdjacentElement('afterend', preview);
     input.addEventListener('change', function() {
       updateFilePickerLabel(input);
+      renderUploadPreview(input);
     });
   });
 }
@@ -4892,9 +5385,58 @@ function updateFilePickerLabel(input) {
   var label = input.nextElementSibling && input.nextElementSibling.classList.contains('file-picker') ? input.nextElementSibling : null;
   if (!label) return;
   var files = Array.prototype.slice.call(input.files || []);
-  var text = files.length > 1 ? files.length + ' ficheiros selecionados' : (files[0] ? files[0].name : 'Carregar ficheiro');
+  var context = (input.id || '').toLowerCase();
+  var isPhoto = context.includes('image') || context.includes('photo') || context.includes('cover') || (input.accept || '').includes('image');
+  var idleText = context.includes('cover') ? 'Carregar capa' : isPhoto ? 'Carregar foto' : 'Carregar ficheiro';
+  var selectedText = context.includes('cover') ? 'Alterar capa' : isPhoto ? 'Alterar foto' : 'Alterar ficheiro';
+  var text = files.length ? selectedText : idleText;
   label.querySelector('span').textContent = text;
   label.classList.toggle('active', files.length > 0);
+}
+function renderUploadPreview(input) {
+  var preview = document.getElementById(input.id + '-preview');
+  if (!preview) return;
+  var files = Array.prototype.slice.call(input.files || []);
+  preview.classList.toggle('active', files.length > 0);
+  if (!files.length) {
+    preview.innerHTML = '';
+    return;
+  }
+  preview.innerHTML = files.map(function(file, index) {
+    var isImg = file.type && file.type.indexOf('image/') === 0;
+    var thumb = isImg
+      ? '<img src="' + URL.createObjectURL(file) + '" alt="' + escapeHtml(file.name) + '">'
+      : '<i class="fas ' + getUploadIcon(file) + '"></i>';
+    return '<div class="upload-preview-item">' +
+      '<div class="upload-preview-thumb">' + thumb + '</div>' +
+      '<div class="upload-preview-meta"><div class="upload-preview-name">' + escapeHtml(file.name) + '</div><div class="upload-preview-info">' + escapeHtml(file.type || 'ficheiro') + ' · ' + formatFileSize(file.size) + '</div></div>' +
+      '<button type="button" class="btn-ghost text-xs" style="color:#f87171" onclick="removeSelectedUploadFile(\'' + input.id + '\',' + index + ')"><i class="fas fa-trash"></i></button>' +
+      '</div>';
+  }).join('');
+}
+function getUploadIcon(file) {
+  var type = file.type || '';
+  if (type.indexOf('video/') === 0) return 'fa-video';
+  if (type === 'application/pdf') return 'fa-file-pdf';
+  if (type.indexOf('audio/') === 0) return 'fa-file-audio';
+  return 'fa-file';
+}
+function formatFileSize(bytes) {
+  if (!bytes) return '0 KB';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+function removeSelectedUploadFile(inputId, index) {
+  var input = document.getElementById(inputId);
+  if (!input || !input.files) return;
+  var dt = new DataTransfer();
+  Array.prototype.slice.call(input.files).forEach(function(file, i) {
+    if (i !== index) dt.items.add(file);
+  });
+  input.files = dt.files;
+  updateFilePickerLabel(input);
+  renderUploadPreview(input);
 }
 function globalSearch(q) {
   if (!q || q.length < 2) return;
