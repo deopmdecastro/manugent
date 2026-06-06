@@ -159,6 +159,104 @@
       color: var(--text-primary);
       padding: 10px 12px;
     }
+    .native-select-hidden {
+      height: 1px !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      position: absolute !important;
+      width: 1px !important;
+    }
+    .select-enhanced {
+      position: relative;
+      width: 100%;
+    }
+    .select-trigger {
+      align-items: center;
+      background: rgba(255,255,255,0.055);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      gap: 10px;
+      justify-content: space-between;
+      min-height: 42px;
+      padding: 10px 12px 10px 14px;
+      transition: all 0.2s;
+      width: 100%;
+    }
+    .select-trigger:hover {
+      background: rgba(99,102,241,0.08);
+      border-color: rgba(129,140,248,0.55);
+    }
+    .select-enhanced.open .select-trigger {
+      background: rgba(99,102,241,0.1);
+      border-color: var(--accent-purple-light);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.16);
+    }
+    .select-trigger-value {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .select-trigger i {
+      color: var(--accent-purple-light);
+      flex: 0 0 auto;
+      font-size: 12px;
+      transition: transform 0.2s;
+    }
+    .select-enhanced.open .select-trigger i {
+      transform: rotate(180deg);
+    }
+    .select-menu {
+      background: #14142f;
+      border: 1px solid rgba(129,140,248,0.42);
+      border-radius: 10px;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.42);
+      display: none;
+      left: 0;
+      max-height: 240px;
+      overflow-y: auto;
+      padding: 6px;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 6px);
+      z-index: 1600;
+    }
+    .select-enhanced.open .select-menu {
+      display: block;
+    }
+    .select-option {
+      align-items: center;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      font-size: 14px;
+      justify-content: space-between;
+      padding: 9px 10px;
+      transition: all 0.16s;
+    }
+    .select-option:hover {
+      background: rgba(99,102,241,0.12);
+      color: var(--text-primary);
+    }
+    .select-option.selected {
+      background: rgba(99,102,241,0.22);
+      border-color: rgba(129,140,248,0.42);
+      color: #fff;
+    }
+    .select-option.selected::after {
+      color: var(--accent-green);
+      content: '\f00c';
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      margin-left: 10px;
+    }
     .folder-row {
       align-items: center;
       border: 1px solid transparent;
@@ -499,6 +597,24 @@
       background: #0e0e26; border: 1px solid var(--border-light);
       border-radius: 16px; padding: 36px; width: 100%; max-width: 440px;
     }
+    .auth-message {
+      align-items: flex-start;
+      background: rgba(239,68,68,0.12);
+      border: 1px solid rgba(248,113,113,0.38);
+      border-radius: 10px;
+      color: #fecaca;
+      display: none;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding: 11px 12px;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    .auth-message.success {
+      background: rgba(16,185,129,0.12);
+      border-color: rgba(52,211,153,0.42);
+      color: #bbf7d0;
+    }
     .logo-icon {
       width: 36px; height: 36px; background: var(--accent-purple);
       border-radius: 8px; display: flex; align-items: center; justify-content: center;
@@ -619,7 +735,7 @@
     </div>
     <div class="flex items-center gap-3">
       <button class="btn-ghost" onclick="showAuth('login')">Entrar</button>
-      <button class="btn-primary" onclick="showAuth('signup')">Começar grátis</button>
+      <button class="btn-primary" onclick="openAccessRequestModal()">Começar grátis</button>
     </div>
   </nav>
 
@@ -636,7 +752,7 @@
       ManuGent é o agente inteligente de manutenção industrial: CMMS, base de conhecimento e técnico sénior digital — tudo numa plataforma que aprende com a sua equipa.
     </p>
     <div class="flex items-center justify-center gap-4 flex-wrap">
-      <button class="btn-primary text-base px-6 py-3" onclick="showAuth('signup')">
+      <button class="btn-primary text-base px-6 py-3" onclick="openAccessRequestModal()">
         Começar grátis <i class="fas fa-arrow-right"></i>
       </button>
       <button class="btn-secondary text-base px-6 py-3" onclick="scrollToSection('features')">
@@ -762,7 +878,7 @@
     <div class="card p-12" style="background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1));">
       <h2 class="text-3xl font-bold mb-4">Pronto para começar?</h2>
       <p class="text-slate-400 mb-8">Junte-se a centenas de equipas que já transformaram a sua manutenção com IA.</p>
-      <button class="btn-primary text-base px-8 py-3 glow-purple" onclick="showAuth('signup')">
+      <button class="btn-primary text-base px-8 py-3 glow-purple" onclick="openAccessRequestModal()">
         Começar grátis <i class="fas fa-arrow-right"></i>
       </button>
     </div>
@@ -790,10 +906,7 @@
         <div class="text-xs text-slate-400">Agente IA de manutenção</div>
       </div>
     </div>
-    <div class="flex bg-white/5 rounded-lg p-1 mb-6">
-      <button class="flex-1 tab-btn active" id="tab-login" onclick="switchAuthTab('login')">Entrar</button>
-      <button class="flex-1 tab-btn" id="tab-signup" onclick="switchAuthTab('signup')">Criar conta</button>
-    </div>
+    <div id="auth-message" class="auth-message"><i class="fas fa-circle-exclamation mt-0.5"></i><span id="auth-message-text"></span></div>
     <div id="login-form">
       <div class="mb-4">
         <label class="block text-sm mb-2 text-slate-300">Email</label>
@@ -808,25 +921,11 @@
       <button class="btn-secondary w-full justify-center py-3" onclick="doGoogleLogin()">
         <i class="fab fa-google"></i> Continuar com Google
       </button>
-    </div>
-    <div id="signup-form" style="display:none">
-      <div class="mb-4">
-        <label class="block text-sm mb-2 text-slate-300">Nome completo</label>
-        <input type="text" id="signup-name" class="input-field" placeholder="João Silva">
+      <div class="mt-5 p-3 rounded-lg border border-white/10 bg-white/5 text-xs text-slate-400">
+        <div class="font-semibold text-slate-300 mb-1">Acesso inicial</div>
+        <div>Admin seed: <span class="mono text-slate-200">admin@manugent.local</span></div>
+        <div>Password: <span class="mono text-slate-200">admin123</span></div>
       </div>
-      <div class="mb-4">
-        <label class="block text-sm mb-2 text-slate-300">Email</label>
-        <input type="email" id="signup-email" class="input-field" placeholder="email@empresa.com">
-      </div>
-      <div class="mb-6">
-        <label class="block text-sm mb-2 text-slate-300">Password</label>
-        <input type="password" id="signup-pass" class="input-field" placeholder="••••••••">
-      </div>
-      <button class="btn-primary w-full justify-center py-3" onclick="doSignup()">Criar conta</button>
-      <div class="divider my-4">ou</div>
-      <button class="btn-secondary w-full justify-center py-3" onclick="doGoogleLogin()">
-        <i class="fab fa-google"></i> Continuar com Google
-      </button>
     </div>
   </div>
 </div>
@@ -1611,6 +1710,7 @@
               <div>
                 <div class="font-semibold" id="settings-name">—</div>
                 <div class="text-sm text-slate-400" id="settings-email">—</div>
+                <div class="mt-2"><span class="badge badge-purple" id="settings-role-badge">Admin</span></div>
               </div>
             </div>
             <div class="space-y-4">
@@ -1621,6 +1721,15 @@
               <div>
                 <label class="block text-sm mb-2 text-slate-300">Email</label>
                 <input type="email" id="settings-email-input" class="input-field" placeholder="email@empresa.com" disabled>
+              </div>
+              <div id="settings-role-field" style="display:none">
+                <label class="block text-sm mb-2 text-slate-300">Nível de permissões</label>
+                <select id="settings-role-input" class="input-field">
+                  <option value="admin">Admin - acesso total</option>
+                  <option value="gestor">Gestor - gestão operacional</option>
+                  <option value="tecnico">Técnico - execução técnica</option>
+                  <option value="cliente">Cliente - consulta e pedidos</option>
+                </select>
               </div>
               <button class="btn-primary" onclick="saveProfile()"><i class="fas fa-save"></i> Guardar</button>
             </div>
@@ -1983,11 +2092,48 @@
           <h4 class="font-medium mb-3 text-sm">Assinatura</h4>
           <div class="text-xs text-slate-400 mb-3">Assinatura do cliente após conclusão</div>
           <button class="btn-secondary w-full text-sm" onclick="requestSignature()"><i class="fas fa-pen"></i> Solicitar assinatura</button>
+              </div>
+            </div>
+          </div>
+          <div class="card p-6 md:col-span-2" id="admin-users-card">
+            <div class="flex items-center justify-between gap-4 mb-4">
+              <div>
+                <h3 class="font-semibold">Gestão de Utilizadores</h3>
+                <p class="text-xs text-slate-500 mt-1">Apenas Admin pode criar contas para gestores, técnicos e clientes.</p>
+              </div>
+              <span class="badge badge-purple"><i class="fas fa-shield-halved"></i> Admin</span>
+            </div>
+            <div class="grid md:grid-cols-4 gap-3 mb-5">
+              <input type="text" id="managed-user-name" class="input-field" placeholder="Nome">
+              <input type="email" id="managed-user-email" class="input-field" placeholder="email@empresa.com">
+              <input type="password" id="managed-user-pass" class="input-field" placeholder="Password inicial">
+              <select id="managed-user-role" class="input-field">
+                <option value="gestor">Gestor</option>
+                <option value="tecnico">Técnico</option>
+                <option value="cliente">Cliente</option>
+              </select>
+            </div>
+            <div class="flex justify-end mb-5">
+              <button class="btn-primary" onclick="createManagedUser()"><i class="fas fa-user-plus"></i> Criar utilizador</button>
+            </div>
+            <div class="card overflow-hidden">
+              <table class="data-table">
+                <thead><tr><th>Utilizador</th><th>Perfil</th><th>Criado em</th></tr></thead>
+                <tbody id="managed-users-table"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card p-6 md:col-span-2">
+            <h3 class="font-semibold mb-4">Níveis de Permissão</h3>
+            <div class="grid md:grid-cols-4 gap-3 text-sm">
+              <div class="p-4 rounded-lg border border-white/10 bg-white/5"><div class="badge badge-purple mb-2">Admin</div><p class="text-slate-400">Acesso total a todas as abas, ações, gestão e eliminação.</p></div>
+              <div class="p-4 rounded-lg border border-white/10 bg-white/5"><div class="badge badge-blue mb-2">Gestor</div><p class="text-slate-400">Gestão operacional, equipas, clientes, ficheiros, compras e orçamentos.</p></div>
+              <div class="p-4 rounded-lg border border-white/10 bg-white/5"><div class="badge badge-green mb-2">Técnico</div><p class="text-slate-400">Execução técnica: OTs, equipamentos, incidentes, conhecimento, ficheiros e material.</p></div>
+              <div class="p-4 rounded-lg border border-white/10 bg-white/5"><div class="badge badge-yellow mb-2">Cliente</div><p class="text-slate-400">Consulta controlada, pedidos/OTs, calendário, ficheiros e orçamentos.</p></div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-</div>
 
 <!-- Add Task Modal -->
 <div id="modal-add-task" class="modal-overlay" style="display:none">
@@ -2372,6 +2518,29 @@
   </div>
 </div>
 
+<!-- Access Request Modal -->
+<div id="modal-access-request" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h2 class="text-lg font-semibold">Pedido de acesso</h2>
+        <p class="text-sm text-slate-400 mt-1">Envie os dados para o administrador criar a conta.</p>
+      </div>
+      <button class="btn-ghost" onclick="closeModal('modal-access-request')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div><label class="block text-sm mb-2 text-slate-300">Nome completo *</label><input type="text" id="access-name" class="input-field" placeholder="João Silva"></div>
+      <div><label class="block text-sm mb-2 text-slate-300">Email profissional *</label><input type="email" id="access-email" class="input-field" placeholder="email@empresa.com"></div>
+      <div><label class="block text-sm mb-2 text-slate-300">Empresa</label><input type="text" id="access-company" class="input-field" placeholder="Nome da empresa"></div>
+      <div><label class="block text-sm mb-2 text-slate-300">Mensagem</label><textarea id="access-message" class="input-field" rows="3" placeholder="Perfil pretendido, equipa ou motivo do acesso..."></textarea></div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-access-request')">Cancelar</button>
+      <button class="btn-primary flex-1" onclick="submitAccessRequest()"><i class="fas fa-paper-plane"></i> Enviar pedido</button>
+    </div>
+  </div>
+</div>
+
 <!-- Incident Modal -->
 <div id="modal-new-incident" class="modal-overlay" style="display:none">
   <div class="modal-content">
@@ -2477,6 +2646,7 @@
 <script>
 // ======================== APP STATE ========================
 var APP = {
+  users: [],
   user: null, ots: [], equipment: [], technicians: [],
   clients: [], knowledge: [], files: [], incidents: [],
   buildings: [], stockMaterials: [],
@@ -2495,11 +2665,18 @@ var APP = {
   backendOnline: false, demoTechnicianId: localStorage.getItem('manugentTechnicianId') || '',
   timeTicker: null,
 };
+var SEEDED_ADMIN = {
+  name: 'Administrador',
+  email: 'admin@manugent.local',
+  password: 'admin123',
+  role: 'admin',
+  seeded: true
+};
 
 function saveData() {
   try {
     localStorage.setItem('mg_data', JSON.stringify({
-      user: APP.user, ots: APP.ots, equipment: APP.equipment,
+      users: APP.users, user: APP.user, ots: APP.ots, equipment: APP.equipment,
       technicians: APP.technicians, clients: APP.clients,
       knowledge: APP.knowledge, files: APP.files, fileFolders: APP.fileFolders, incidents: APP.incidents,
       buildings: APP.buildings, stockMaterials: APP.stockMaterials, purchases: APP.purchases, suppliers: APP.suppliers, contracts: APP.contracts, invoices: APP.invoices,
@@ -2511,6 +2688,7 @@ function loadData() {
     var raw = localStorage.getItem('mg_data');
     if (raw) {
       var d = JSON.parse(raw);
+      APP.users = d.users || [];
       APP.user = d.user || null;
       APP.ots = d.ots || [];
       APP.equipment = d.equipment || [];
@@ -2526,11 +2704,25 @@ function loadData() {
       APP.suppliers = d.suppliers || [];
       APP.contracts = d.contracts || [];
       APP.invoices = d.invoices || [];
+      if (APP.user && APP.user.provider !== 'google' && !APP.users.some(function(u) { return u.email === APP.user.email; })) APP.user = null;
     }
   } catch(e) {}
 }
+function ensureSeedAdmin() {
+  APP.users = APP.users || [];
+  var admin = APP.users.find(function(u) { return u.email === SEEDED_ADMIN.email; });
+  if (!admin) {
+    APP.users.unshift(Object.assign({ createdAt: new Date().toISOString() }, SEEDED_ADMIN));
+    saveData();
+  } else {
+    admin.role = 'admin';
+    admin.name = admin.name || SEEDED_ADMIN.name;
+    admin.password = admin.password || SEEDED_ADMIN.password;
+  }
+}
 
 loadData();
+ensureSeedAdmin();
 window.onload = function() {
   if (APP.user) { showApp(); }
   else { showLanding(); }
@@ -2538,6 +2730,7 @@ window.onload = function() {
   syncBackendWorkOrders();
   renderCalendar();
   enhanceFileInputs();
+  enhanceSelects();
 };
 
 function showLanding() {
@@ -2549,7 +2742,8 @@ function showAuth(tab) {
   document.getElementById('landing-page').style.display = 'none';
   document.getElementById('auth-page').style.display = 'flex';
   document.getElementById('app-layout').style.display = 'none';
-  if (tab) switchAuthTab(tab);
+  switchAuthTab('login');
+  setTimeout(enhanceSelects, 20);
 }
 function showApp() {
   document.getElementById('landing-page').style.display = 'none';
@@ -2557,6 +2751,7 @@ function showApp() {
   document.getElementById('app-layout').style.display = 'flex';
   setupDetailPages();
   updateUserUI();
+  applyPermissions();
   updateDashboard();
   renderCalendar();
   populateOTSelects();
@@ -2565,6 +2760,7 @@ function showApp() {
     renderBuildings(); renderTechnicians(); renderKnowledge(); renderFiles(); renderIncidents();
     renderMaterials(); renderPurchases(); renderQuotes();
     enhanceFileInputs();
+    enhanceSelects();
   }, 50);
 }
 function scrollToSection(id) {
@@ -2572,6 +2768,10 @@ function scrollToSection(id) {
   if (el) el.scrollIntoView({ behavior: 'smooth' });
 }
 function showPage(page) {
+  if (!canAccessPage(page)) {
+    showToast('O perfil ' + getRoleLabel(getUserRole()) + ' não tem acesso a esta aba.');
+    page = getDefaultPageForRole();
+  }
   APP.currentPage = page;
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
   document.querySelectorAll('.sidebar-item').forEach(function(i) { i.classList.remove('active'); });
@@ -2626,28 +2826,56 @@ function showDetailPage(id) {
 
 // ======================== AUTH ========================
 function switchAuthTab(tab) {
-  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
-  document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
-  document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
-  document.getElementById('signup-form').style.display = tab === 'signup' ? 'block' : 'none';
+  var loginForm = document.getElementById('login-form');
+  var signupForm = document.getElementById('signup-form');
+  if (loginForm) loginForm.style.display = 'block';
+  if (signupForm) signupForm.style.display = 'none';
+  clearAuthMessage();
+}
+function openAccessRequestModal() {
+  ['access-name','access-email','access-company','access-message'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('modal-access-request').style.display = 'flex';
+}
+function submitAccessRequest() {
+  var name = document.getElementById('access-name').value.trim();
+  var email = document.getElementById('access-email').value.trim();
+  if (!name || !email) { showToast('Preencha nome e email para enviar o pedido.'); return; }
+  closeModal('modal-access-request');
+  showToast('Pedido de acesso enviado para o administrador.');
+}
+function showAuthMessage(msg, type) {
+  var box = document.getElementById('auth-message');
+  var text = document.getElementById('auth-message-text');
+  if (!box || !text) return;
+  box.classList.toggle('success', type === 'success');
+  text.textContent = msg;
+  box.style.display = 'flex';
+}
+function clearAuthMessage() {
+  var box = document.getElementById('auth-message');
+  if (box) box.style.display = 'none';
 }
 function doLogin() {
-  var email = document.getElementById('login-email').value;
+  var email = document.getElementById('login-email').value.trim().toLowerCase();
   var pass = document.getElementById('login-pass').value;
-  if (!email || !pass) { alert('Preencha email e password.'); return; }
-  APP.user = { name: email.split('@')[0], email: email, role: 'admin' };
+  if (!email || !pass) { showAuthMessage('Preencha email e password.'); return; }
+  APP.users = APP.users || [];
+  var account = APP.users.find(function(u) { return u.email === email; });
+  if (!account || account.password !== pass) {
+    showAuthMessage('Conta não encontrada ou password incorreta. Crie uma conta antes de entrar.');
+    return;
+  }
+  APP.user = { name: account.name, email: account.email, role: account.role || 'cliente' };
   saveData(); showApp();
 }
 function doSignup() {
-  var name = document.getElementById('signup-name').value;
-  var email = document.getElementById('signup-email').value;
-  var pass = document.getElementById('signup-pass').value;
-  if (!name || !email || !pass) { alert('Preencha todos os campos.'); return; }
-  APP.user = { name: name, email: email, role: 'admin' };
-  saveData(); showApp();
+  showAuthMessage('A criação de contas é feita apenas pelo Admin em Definições > Gestão de Utilizadores.');
 }
 function doGoogleLogin() {
-  APP.user = { name: 'Utilizador Google', email: 'utilizador@google.com', role: 'admin' };
+  APP.user = { name: 'Utilizador Google', email: 'utilizador@google.com', role: 'admin', provider: 'google' };
   saveData(); showApp();
 }
 function doLogout() {
@@ -2655,6 +2883,7 @@ function doLogout() {
 }
 function updateUserUI() {
   if (!APP.user) return;
+  APP.user.role = APP.user.role || 'admin';
   var n = APP.user.name || APP.user.email;
   document.getElementById('sidebar-user-name').textContent = n;
   document.getElementById('sidebar-user-email').textContent = APP.user.email;
@@ -2664,14 +2893,104 @@ function updateUserUI() {
   document.getElementById('settings-avatar').textContent = av;
   document.getElementById('settings-name').textContent = n;
   document.getElementById('settings-email').textContent = APP.user.email;
+  document.getElementById('settings-role-badge').textContent = getRoleLabel(APP.user.role);
   document.getElementById('settings-name-input').value = n;
   document.getElementById('settings-email-input').value = APP.user.email;
+  document.getElementById('settings-role-input').value = APP.user.role;
+  document.getElementById('settings-role-input').disabled = APP.user.role !== 'admin';
+  renderManagedUsers();
 }
 function saveProfile() {
   var name = document.getElementById('settings-name-input').value;
   if (!name) return;
   APP.user.name = name;
-  saveData(); updateUserUI(); showToast('Perfil guardado!');
+  if (APP.user.role === 'admin') APP.user.role = document.getElementById('settings-role-input').value || APP.user.role || 'cliente';
+  var account = (APP.users || []).find(function(u) { return u.email === APP.user.email; });
+  if (account) {
+    account.name = APP.user.name;
+    account.role = APP.user.role;
+  }
+  saveData(); updateUserUI(); applyPermissions(); showToast('Perfil e permissões guardados!');
+}
+function createManagedUser() {
+  if (getUserRole() !== 'admin') { showToast('Apenas Admin pode criar contas.'); return; }
+  var name = document.getElementById('managed-user-name').value.trim();
+  var email = document.getElementById('managed-user-email').value.trim().toLowerCase();
+  var pass = document.getElementById('managed-user-pass').value;
+  var role = document.getElementById('managed-user-role').value;
+  if (!name || !email || !pass) { showToast('Preencha nome, email e password.'); return; }
+  APP.users = APP.users || [];
+  if (APP.users.some(function(u) { return u.email === email; })) { showToast('Já existe uma conta com este email.'); return; }
+  APP.users.push({ name: name, email: email, password: pass, role: role, createdAt: new Date().toISOString() });
+  ['managed-user-name','managed-user-email','managed-user-pass'].forEach(function(id) { document.getElementById(id).value = ''; });
+  saveData(); renderManagedUsers(); showToast('Utilizador criado com perfil ' + getRoleLabel(role) + '.');
+}
+function renderManagedUsers() {
+  var card = document.getElementById('admin-users-card');
+  if (card) card.style.display = getUserRole() === 'admin' ? 'block' : 'none';
+  var tbody = document.getElementById('managed-users-table');
+  if (!tbody) return;
+  var users = (APP.users || []).slice();
+  if (!users.length) {
+    tbody.innerHTML = '<tr><td colspan="3" class="text-center text-slate-500 py-6">Nenhum utilizador registado.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = users.map(function(u) {
+    return '<tr><td><div class="font-medium text-slate-100">' + escapeHtml(u.name) + '</div><div class="text-xs text-slate-500">' + escapeHtml(u.email) + '</div></td>' +
+      '<td><span class="badge ' + getRoleBadgeClass(u.role) + '">' + getRoleLabel(u.role) + '</span></td>' +
+      '<td class="text-slate-400 text-xs">' + (u.createdAt ? new Date(u.createdAt).toLocaleDateString('pt-PT') : 'Seed') + '</td></tr>';
+  }).join('');
+}
+function getRoleBadgeClass(role) {
+  return { admin:'badge-purple', gestor:'badge-blue', tecnico:'badge-green', cliente:'badge-yellow' }[role] || 'badge-gray';
+}
+
+// ======================== PERMISSIONS ========================
+var ROLE_LABELS = { admin:'Admin', gestor:'Gestor', tecnico:'Técnico', cliente:'Cliente' };
+var PAGE_PERMISSIONS = {
+  admin: ['dashboard','ots','equipment','clients','buildings','technicians','knowledge','files','ai-assistant','calendar','checklists','incidents','materials','purchases','quotes','settings'],
+  gestor: ['dashboard','ots','equipment','clients','buildings','technicians','knowledge','files','ai-assistant','calendar','checklists','incidents','materials','purchases','quotes','settings'],
+  tecnico: ['dashboard','ots','equipment','knowledge','files','ai-assistant','calendar','checklists','incidents','materials','settings'],
+  cliente: ['dashboard','ots','equipment','files','ai-assistant','calendar','quotes','settings']
+};
+var ACTION_PERMISSIONS = {
+  admin: ['*'],
+  gestor: ['create:*','edit:*','delete:*','view:*','commercial:*'],
+  tecnico: ['view:*','create:ots','edit:ots','create:incidents','create:files','create:knowledge','create:materials','edit:materials'],
+  cliente: ['view:*','create:ots','create:files']
+};
+function getUserRole() {
+  return (APP.user && APP.user.role) || 'cliente';
+}
+function getRoleLabel(role) {
+  return ROLE_LABELS[role] || role || 'Cliente';
+}
+function canAccessPage(page) {
+  var pages = PAGE_PERMISSIONS[getUserRole()] || PAGE_PERMISSIONS.cliente;
+  return pages.indexOf(page) !== -1;
+}
+function canDo(action, scope) {
+  var role = getUserRole();
+  var grants = ACTION_PERMISSIONS[role] || [];
+  var key = action + ':' + scope;
+  return grants.indexOf('*') !== -1 || grants.indexOf(key) !== -1 || grants.indexOf(action + ':*') !== -1 || grants.indexOf('view:*') !== -1 && action === 'view';
+}
+function requirePermission(action, scope, label) {
+  if (canDo(action, scope)) return true;
+  showToast('Sem permissão para ' + (label || action) + '. Perfil atual: ' + getRoleLabel(getUserRole()) + '.');
+  return false;
+}
+function getDefaultPageForRole() {
+  var pages = PAGE_PERMISSIONS[getUserRole()] || PAGE_PERMISSIONS.cliente;
+  return pages[0] || 'dashboard';
+}
+function applyPermissions() {
+  var pages = ['dashboard','ots','equipment','clients','buildings','technicians','knowledge','files','ai-assistant','calendar','checklists','incidents','materials','purchases','quotes','settings'];
+  pages.forEach(function(page) {
+    var nav = document.getElementById('nav-' + page);
+    if (nav) nav.style.display = canAccessPage(page) ? 'flex' : 'none';
+  });
+  if (!canAccessPage(APP.currentPage || 'dashboard')) showPage(getDefaultPageForRole());
 }
 
 // ======================== DASHBOARD ========================
@@ -2854,6 +3173,7 @@ function getDefaultBillingDocs() {
   ];
 }
 function createPurchaseRequest() {
+  if (!requirePermission('create', 'purchases', 'criar requisição de compra')) return;
   APP.purchases = APP.purchases || [];
   var sourceOT = APP.ots.slice().reverse().find(function(o) { return ['Alta','Urgente'].includes(o.priority); }) || APP.ots[APP.ots.length - 1];
   APP.purchases.push({
@@ -2867,6 +3187,7 @@ function createPurchaseRequest() {
   saveData(); renderCommercialWidgets(); renderPurchases(); showToast('Pedido de compra criado e enviado para aprovação.');
 }
 function generateBillingDocuments() {
+  if (!requirePermission('create', 'quotes', 'criar orçamento')) return;
   APP.invoices = APP.invoices || [];
   var billable = APP.ots.slice(-3);
   var value = billable.reduce(function(sum, ot) { return sum + getOTCost(ot) + 35; }, 0) || 850;
@@ -2898,6 +3219,7 @@ function renderBuildings() {
   }).join('');
 }
 function createBuilding() {
+  if (!requirePermission('create', 'buildings', 'criar edifício')) return;
   if (!APP.clients.length) { showToast('Crie um cliente antes de adicionar edifícios.'); showPage('clients'); return; }
   var name = prompt('Nome do edifício / instalação');
   if (!name) return;
@@ -2928,6 +3250,7 @@ function renderMaterials() {
   }).join('');
 }
 function createStockMaterial() {
+  if (!requirePermission('create', 'materials', 'adicionar material')) return;
   var name = prompt('Nome do material');
   if (!name) return;
   var category = prompt('Categoria', 'Elétrico') || 'Geral';
@@ -2969,6 +3292,7 @@ function generateId(prefix) {
   return prefix + '-' + String(Date.now()).slice(-6);
 }
 function openNewOTModal() {
+  if (!requirePermission('create', 'ots', 'criar OT')) return;
   populateOTSelects();
   document.getElementById('ot-date').value = new Date().toISOString().slice(0,16);
   document.getElementById('ot-image-upload').value = '';
@@ -2998,10 +3322,11 @@ function populateOTSelects() {
   if (fileOtSel) fileOtSel.innerHTML = '<option value="">Sem OT</option>' + APP.ots.map(function(o) { return '<option value="' + o.id + '">' + o.id + ' - ' + o.title + '</option>'; }).join('');
   if (fileFolderSel) fileFolderSel.innerHTML = '<option value="">Raiz</option>' + getFolderOptionsHtml();
   if (folderParentSel) folderParentSel.innerHTML = '<option value="">Raiz</option>' + getFolderOptionsHtml();
+  enhanceSelects();
 }
 async function createOT() {
   var title = document.getElementById('ot-title').value.trim();
-  if (!title) { alert('Título é obrigatório.'); return; }
+  if (!title) { showToast('Título é obrigatório.'); return; }
   var image = await readSingleUpload('ot-image-upload');
   var equipId = document.getElementById('ot-equipment').value;
   var techId = document.getElementById('ot-technician').value;
@@ -3572,7 +3897,7 @@ function updateTaskFileAccept() {
 }
 async function addTaskToOT() {
   var desc = document.getElementById('task-desc').value.trim();
-  if (!desc) { alert('Descrição é obrigatória.'); return; }
+  if (!desc) { showToast('Descrição é obrigatória.'); return; }
   var type = document.getElementById('task-type').value;
   var uploaded = await readSingleUpload('task-file-upload');
   var fileRef = uploaded ? uploaded.dataUrl : document.getElementById('task-file-ref').value.trim();
@@ -3778,6 +4103,7 @@ function renderDetailImage(wrapId, imageId, src) {
 
 // ======================== EQUIPMENT ========================
 function openNewEquipModal() {
+  if (!requirePermission('create', 'equipment', 'criar equipamento')) return;
   populateOTSelects();
   document.getElementById('equip-image-upload').value = '';
   enhanceFileInputs();
@@ -3785,11 +4111,11 @@ function openNewEquipModal() {
 }
 async function createEquipment() {
   var name = document.getElementById('equip-name').value.trim();
-  if (!name) { alert('Nome é obrigatório.'); return; }
+  if (!name) { showToast('Nome é obrigatório.'); return; }
   var image = await readSingleUpload('equip-image-upload');
   var clientId = document.getElementById('equip-client').value;
   var client = APP.clients.find(function(c) { return c.id === clientId; });
-  if (!clientId) { alert('Cliente proprietário é obrigatório.'); return; }
+  if (!clientId) { showToast('Cliente proprietário é obrigatório.'); return; }
   var code = document.getElementById('equip-code').value || generateId('EQ');
   var equip = {
     id: generateId('EQ'), name: name,
@@ -4104,6 +4430,7 @@ function runPreventiveAutomation() {
 
 // ======================== CLIENTS ========================
 function openNewClientModal() {
+  if (!requirePermission('create', 'clients', 'criar cliente')) return;
   APP.editingClientId = null;
   document.getElementById('client-modal-title').textContent = 'Novo Cliente';
   document.getElementById('client-submit-btn').innerHTML = '<i class="fas fa-plus"></i> Adicionar cliente';
@@ -4114,6 +4441,7 @@ function openNewClientModal() {
   document.getElementById('modal-new-client').style.display = 'flex';
 }
 function openEditClientModal(id) {
+  if (!requirePermission('edit', 'clients', 'editar cliente')) return;
   var c = APP.clients.find(function(x) { return x.id === id; });
   if (!c) return;
   APP.editingClientId = id;
@@ -4131,7 +4459,7 @@ function openEditClientModal(id) {
 }
 async function createClient() {
   var name = document.getElementById('client-name').value.trim();
-  if (!name) { alert('Nome é obrigatório.'); return; }
+  if (!name) { showToast('Nome é obrigatório.'); return; }
   var image = await readSingleUpload('client-image-upload');
   var client = APP.editingClientId ? APP.clients.find(function(c) { return c.id === APP.editingClientId; }) : null;
   if (!client) {
@@ -4179,6 +4507,7 @@ function openOTFromClient(id) {
   document.getElementById('ot-location').value = c.address || '';
 }
 function deleteClient(id) {
+  if (!requirePermission('delete', 'clients', 'apagar cliente')) return;
   if (!confirm('Remover este cliente?')) return;
   APP.clients = APP.clients.filter(function(c) { return c.id !== id; });
   saveData(); renderClients();
@@ -4186,6 +4515,7 @@ function deleteClient(id) {
 
 // ======================== TECHNICIANS ========================
 function openNewTechModal() {
+  if (!requirePermission('create', 'technicians', 'criar técnico')) return;
   APP.editingTechId = null;
   document.getElementById('tech-modal-title').textContent = 'Novo Técnico';
   document.getElementById('tech-submit-btn').innerHTML = '<i class="fas fa-plus"></i> Adicionar técnico';
@@ -4197,6 +4527,7 @@ function openNewTechModal() {
   document.getElementById('modal-new-tech').style.display = 'flex';
 }
 function openEditTechModal(id) {
+  if (!requirePermission('edit', 'technicians', 'editar técnico')) return;
   var t = APP.technicians.find(function(x) { return x.id === id; });
   if (!t) return;
   APP.editingTechId = id;
@@ -4213,7 +4544,7 @@ function openEditTechModal(id) {
 }
 async function createTechnician() {
   var name = document.getElementById('tech-name').value.trim();
-  if (!name) { alert('Nome é obrigatório.'); return; }
+  if (!name) { showToast('Nome é obrigatório.'); return; }
   var photo = await readSingleUpload('tech-photo-upload');
   var tech = APP.editingTechId ? APP.technicians.find(function(t) { return t.id === APP.editingTechId; }) : null;
   if (!tech) {
@@ -4254,6 +4585,7 @@ function renderTechnicians() {
   }).join('');
 }
 function deleteTech(id) {
+  if (!requirePermission('delete', 'technicians', 'apagar técnico')) return;
   if (!confirm('Remover este técnico?')) return;
   APP.technicians = APP.technicians.filter(function(t) { return t.id !== id; });
   saveData(); renderTechnicians(); populateOTSelects();
@@ -4261,6 +4593,7 @@ function deleteTech(id) {
 
 // ======================== KNOWLEDGE ========================
 function openNewKnowledgeModal() {
+  if (!requirePermission('create', 'knowledge', 'criar artigo')) return;
   ['know-photos-upload','know-videos-upload','know-pdf-upload'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.value = '';
@@ -4271,7 +4604,7 @@ function openNewKnowledgeModal() {
 async function createKnowledgeArticle() {
   var title = document.getElementById('know-title').value.trim();
   var solution = document.getElementById('know-solution').value.trim();
-  if (!title || !solution) { alert('Título e solução são obrigatórios.'); return; }
+  if (!title || !solution) { showToast('Título e solução são obrigatórios.'); return; }
   var photos = await mergeTextAndUploads('know-photos', 'know-photos-upload');
   var videos = await mergeTextAndUploads('know-videos', 'know-videos-upload');
   var pdfs = await mergeTextAndUploads('know-pdf', 'know-pdf-upload');
@@ -4479,6 +4812,7 @@ function escapeHtml(value) {
   });
 }
 function openNewFileModal() {
+  if (!requirePermission('create', 'files', 'adicionar ficheiro')) return;
   populateOTSelects();
   document.getElementById('file-type').value = 'Ficheiro';
   document.getElementById('file-version').value = 'v1.0';
@@ -4509,14 +4843,16 @@ function openNewFileModal() {
   document.getElementById('modal-new-file').style.display = 'flex';
 }
 function openNewFolderModal() {
+  if (!requirePermission('create', 'files', 'criar pasta')) return;
   populateOTSelects();
   document.getElementById('folder-name').value = '';
   document.getElementById('folder-parent').value = APP.currentFileFolder !== 'all' ? (APP.currentFileFolder || '') : '';
   document.getElementById('modal-new-folder').style.display = 'flex';
 }
 function createFileFolder() {
+  if (!requirePermission('create', 'files', 'criar pasta')) return;
   var name = document.getElementById('folder-name').value.trim();
-  if (!name) { alert('Nome da pasta é obrigatório.'); return; }
+  if (!name) { showToast('Nome da pasta é obrigatório.'); return; }
   APP.fileFolders.push({ id: generateId('FOLDER'), name: name, parentId: document.getElementById('folder-parent').value, createdAt: new Date().toISOString() });
   saveData(); closeModal('modal-new-folder'); renderFiles(); populateOTSelects(); showToast('Pasta criada.');
 }
@@ -4556,12 +4892,13 @@ function getSelectedValues(id) {
   return Array.prototype.slice.call(el.selectedOptions).map(function(o) { return o.value; });
 }
 async function createSharedFile() {
+  if (!requirePermission('create', 'files', 'partilhar ficheiro')) return;
   var name = document.getElementById('file-name').value.trim();
   var type = document.getElementById('file-type').value;
   var uploaded = type === 'Credencial' ? null : await readSingleUpload('file-upload');
   var ref = type === 'Credencial' ? document.getElementById('file-credential-vault').value.trim() : (uploaded ? uploaded.dataUrl : document.getElementById('file-ref').value.trim());
-  if (!name || !ref) { alert('Nome e referência são obrigatórios.'); return; }
-  if (type === 'Credencial' && !document.getElementById('file-credential-service').value.trim()) { alert('Serviço / sistema é obrigatório para credenciais.'); return; }
+  if (!name || !ref) { showToast('Nome e referência são obrigatórios.'); return; }
+  if (type === 'Credencial' && !document.getElementById('file-credential-service').value.trim()) { showToast('Serviço / sistema é obrigatório para credenciais.'); return; }
   var clientId = document.getElementById('file-client').value;
   var equipmentId = document.getElementById('file-equipment').value;
   var otId = document.getElementById('file-ot').value;
@@ -4713,6 +5050,7 @@ function dropOnFolder(event, targetFolderId) {
   if (payload.type === 'folder') moveFolderToFolder(payload.id, targetFolderId);
 }
 function moveFileToFolder(fileId, targetFolderId) {
+  if (!requirePermission('edit', 'files', 'mover ficheiro')) return;
   var file = (APP.files || []).find(function(f) { return f.id === fileId; });
   if (!file) return;
   file.folderId = targetFolderId || '';
@@ -4721,6 +5059,7 @@ function moveFileToFolder(fileId, targetFolderId) {
   saveData(); renderFiles(); showToast('Ficheiro movido para ' + (getFolderPath(targetFolderId) || 'Raiz') + '.');
 }
 function moveFolderToFolder(folderId, targetFolderId) {
+  if (!requirePermission('edit', 'files', 'mover pasta')) return;
   if (folderId === targetFolderId) return;
   if (targetFolderId && isFolderDescendant(targetFolderId, folderId)) {
     showToast('Não é possível mover uma pasta para dentro dela própria.');
@@ -4735,6 +5074,7 @@ function moveFolderToFolder(folderId, targetFolderId) {
   saveData(); renderFiles(); populateOTSelects(); showToast('Pasta movida para ' + (getFolderPath(targetFolderId) || 'Raiz') + '.');
 }
 function importDroppedFiles(fileList, targetFolderId) {
+  if (!requirePermission('create', 'files', 'carregar ficheiro')) return;
   var files = Array.prototype.slice.call(fileList || []);
   if (!files.length) return;
   var remaining = files.length;
@@ -4912,10 +5252,14 @@ function stripTags(html) {
 }
 
 // ======================== INCIDENTS ========================
-function openNewIncidentModal() { populateOTSelects(); document.getElementById('modal-new-incident').style.display = 'flex'; }
+function openNewIncidentModal() {
+  if (!requirePermission('create', 'incidents', 'registar incidente')) return;
+  populateOTSelects(); document.getElementById('modal-new-incident').style.display = 'flex';
+}
 function createIncident() {
+  if (!requirePermission('create', 'incidents', 'registar incidente')) return;
   var desc = document.getElementById('incident-desc').value.trim();
-  if (!desc) { alert('Descrição é obrigatória.'); return; }
+  if (!desc) { showToast('Descrição é obrigatória.'); return; }
   var equipId = document.getElementById('incident-equip').value;
   var equip = APP.equipment.find(function(e) { return e.id === equipId; });
   APP.incidents.push({
@@ -5357,6 +5701,61 @@ function toggleNotifications() {
   p.style.display = p.style.display === 'none' ? 'block' : 'none';
 }
 function closeNotifications() { document.getElementById('notifications-panel').style.display = 'none'; }
+function enhanceSelects() {
+  document.querySelectorAll('select.input-field:not([multiple])').forEach(function(select) {
+    if (select.dataset.enhancedSelect !== 'true') {
+      select.dataset.enhancedSelect = 'true';
+      select.classList.add('native-select-hidden');
+      var wrap = document.createElement('div');
+      wrap.className = 'select-enhanced';
+      if (select.style.width) wrap.style.width = select.style.width;
+      var trigger = document.createElement('button');
+      trigger.type = 'button';
+      trigger.className = 'select-trigger';
+      trigger.innerHTML = '<span class="select-trigger-value"></span><i class="fas fa-chevron-down"></i>';
+      var menu = document.createElement('div');
+      menu.className = 'select-menu';
+      select.insertAdjacentElement('afterend', wrap);
+      wrap.appendChild(select);
+      wrap.appendChild(trigger);
+      wrap.appendChild(menu);
+      trigger.addEventListener('click', function(event) {
+        event.stopPropagation();
+        closeEnhancedSelects(wrap);
+        wrap.classList.toggle('open');
+      });
+      select.addEventListener('change', function() { syncEnhancedSelect(select); });
+    }
+    syncEnhancedSelect(select);
+  });
+}
+function syncEnhancedSelect(select) {
+  var wrap = select.parentElement && select.parentElement.classList.contains('select-enhanced') ? select.parentElement : null;
+  if (!wrap) return;
+  var valueEl = wrap.querySelector('.select-trigger-value');
+  var menu = wrap.querySelector('.select-menu');
+  var selected = select.options[select.selectedIndex];
+  if (valueEl) valueEl.textContent = selected ? selected.textContent : '';
+  if (!menu) return;
+  menu.innerHTML = Array.prototype.slice.call(select.options).map(function(option) {
+    return '<div class="select-option ' + (option.selected ? 'selected' : '') + '" data-value="' + escapeHtml(option.value) + '">' + escapeHtml(option.textContent) + '</div>';
+  }).join('');
+  menu.querySelectorAll('.select-option').forEach(function(optionEl) {
+    optionEl.addEventListener('click', function(event) {
+      event.stopPropagation();
+      select.value = optionEl.dataset.value;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      wrap.classList.remove('open');
+      syncEnhancedSelect(select);
+    });
+  });
+}
+function closeEnhancedSelects(except) {
+  document.querySelectorAll('.select-enhanced.open').forEach(function(wrap) {
+    if (wrap !== except) wrap.classList.remove('open');
+  });
+}
+document.addEventListener('click', function() { closeEnhancedSelects(); });
 function enhanceFileInputs() {
   document.querySelectorAll('input[type="file"].input-field').forEach(function(input) {
     input.classList.add('upload-hidden');
