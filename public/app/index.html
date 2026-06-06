@@ -97,7 +97,83 @@
     .input-field:focus { outline: none; border-color: var(--accent-purple); background: rgba(99,102,241,0.05); }
     .input-field::placeholder { color: var(--text-muted); }
 
-    select.input-field option { background: #1a1a35; }
+    select.input-field {
+      appearance: none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, var(--text-secondary) 50%),
+        linear-gradient(135deg, var(--text-secondary) 50%, transparent 50%);
+      background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
+      background-repeat: no-repeat;
+      background-size: 5px 5px, 5px 5px;
+      cursor: pointer;
+      padding-right: 38px;
+    }
+    select.input-field:focus {
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.16);
+    }
+    select.input-field[multiple] {
+      background-image: none;
+      min-height: 92px;
+      padding: 10px;
+    }
+    select.input-field option {
+      background: #161631;
+      color: var(--text-primary);
+      padding: 10px 12px;
+    }
+    .folder-row {
+      align-items: center;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      gap: 8px;
+      padding: 8px 10px;
+      transition: all 0.2s;
+    }
+    .folder-row:hover { background: rgba(99,102,241,0.08); color: var(--text-primary); }
+    .folder-row.active { background: rgba(99,102,241,0.16); border-color: rgba(99,102,241,0.32); color: var(--accent-purple-light); }
+    input[type="file"].input-field {
+      height: 1px;
+      opacity: 0;
+      overflow: hidden;
+      padding: 0;
+      position: absolute;
+      width: 1px;
+      z-index: -1;
+    }
+    .file-picker {
+      align-items: center;
+      background: rgba(99,102,241,0.08);
+      border: 1px dashed rgba(129,140,248,0.5);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      gap: 10px;
+      min-height: 42px;
+      padding: 10px 14px;
+      transition: all 0.2s;
+      width: 100%;
+    }
+    .file-picker:hover {
+      background: rgba(99,102,241,0.14);
+      border-color: var(--accent-purple-light);
+      color: var(--text-primary);
+    }
+    .file-picker.active {
+      background: rgba(16,185,129,0.12);
+      border-color: rgba(52,211,153,0.55);
+      color: #d1fae5;
+    }
+    .file-picker i { color: var(--accent-purple-light); }
+    .file-picker.active i { color: var(--accent-green); }
+    .file-picker span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
 
     .badge {
       padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
@@ -163,6 +239,16 @@
     }
     .modal-lg { max-width: 900px; }
     .modal-xl { max-width: 1100px; }
+    .detail-page .modal-content {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      max-height: none;
+      max-width: none;
+      overflow: visible;
+      padding: 0;
+      width: 100%;
+    }
 
     .tab-btn {
       padding: 8px 18px; border-radius: 8px; cursor: pointer;
@@ -204,7 +290,26 @@
       display: flex; flex-direction: column; position: fixed; left: 0; top: 0;
       overflow-y: auto; z-index: 100;
     }
-    #app-main { margin-left: 220px; min-height: 100vh; }
+    #app-main {
+      background: var(--bg-primary);
+      bottom: 0;
+      left: 220px;
+      min-width: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      position: fixed;
+      right: 0;
+      top: 0;
+    }
+    .app-topbar {
+      background: var(--bg-primary);
+      min-height: 64px;
+      width: 100%;
+    }
+    .app-content {
+      min-width: 0;
+      width: 100%;
+    }
 
     .notif-dot {
       width: 6px; height: 6px; background: var(--accent-red);
@@ -245,11 +350,13 @@
       min-width: 260px; background: var(--bg-card);
       border: 1px solid var(--border); border-radius: 12px; padding: 14px;
     }
+    .kanban-col.drag-over { border-color: var(--accent-purple); background: rgba(99,102,241,0.08); }
     .kanban-card {
       background: var(--bg-card-hover); border: 1px solid var(--border);
       border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer;
       transition: all 0.2s;
     }
+    .kanban-card:active { cursor: grabbing; opacity: 0.72; }
     .kanban-card:hover { border-color: var(--accent-purple); }
 
     .activity-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
@@ -283,6 +390,47 @@
     }
     .tooltip:hover .tooltip-text { visibility: visible; }
     .tooltip { position: relative; }
+    .qr-box {
+      width: 116px; height: 116px; border-radius: 8px;
+      border: 8px solid white; background-color: #fff;
+      display: grid; grid-template-columns: repeat(9, 1fr); grid-template-rows: repeat(9, 1fr);
+      gap: 2px; padding: 4px; box-shadow: 0 10px 28px rgba(0,0,0,0.28);
+    }
+    .qr-cell { background: #0f172a; border-radius: 1px; }
+    .qr-cell.off { background: #fff; }
+    .print-label {
+      background: #fff; color: #111827; border-radius: 8px;
+      padding: 14px; border: 1px solid #d1d5db;
+    }
+    .ai-side-panel {
+      position: fixed; top: 0; right: 0; width: min(520px, 96vw); height: 100vh;
+      background: #12122a; border-left: 1px solid var(--border-light);
+      z-index: 1200; box-shadow: -24px 0 60px rgba(0,0,0,0.35);
+      overflow-y: auto; padding: 24px; display: none;
+    }
+    .source-pill { border: 1px solid var(--border-light); border-radius: 999px; padding: 4px 8px; font-size: 11px; color: var(--text-secondary); }
+    @media print {
+      body * { visibility: hidden; }
+      #equipment-print-label, #equipment-print-label * { visibility: visible; }
+      #equipment-print-label { position: fixed; left: 20px; top: 20px; width: 340px; }
+    }
+
+    @media (max-width: 768px) {
+      #app-sidebar {
+        position: static;
+        width: 100%;
+        min-width: 0;
+        height: auto;
+      }
+      #app-main {
+        bottom: auto;
+        left: 0;
+        min-height: 100vh;
+        position: relative;
+        right: auto;
+        top: auto;
+      }
+    }
   </style>
 </head>
 <body>
@@ -541,11 +689,17 @@
       <div class="sidebar-item" onclick="showPage('clients')" id="nav-clients">
         <i class="fas fa-briefcase"></i> Clientes
       </div>
+      <div class="sidebar-item" onclick="showPage('buildings')" id="nav-buildings">
+        <i class="fas fa-building"></i> Edifícios
+      </div>
       <div class="sidebar-item" onclick="showPage('technicians')" id="nav-technicians">
         <i class="fas fa-hard-hat"></i> Técnicos
       </div>
       <div class="sidebar-item" onclick="showPage('knowledge')" id="nav-knowledge">
         <i class="fas fa-book"></i> Conhecimento
+      </div>
+      <div class="sidebar-item" onclick="showPage('files')" id="nav-files">
+        <i class="fas fa-folder-open"></i> Ficheiros
       </div>
       <div class="sidebar-item" onclick="showPage('ai-assistant')" id="nav-ai-assistant">
         <i class="fas fa-robot"></i> Assistente IA
@@ -561,6 +715,16 @@
       <div class="sidebar-item" onclick="showPage('incidents')" id="nav-incidents">
         <i class="fas fa-exclamation-triangle"></i> Incidentes
       </div>
+      <div class="mt-4 mb-1 px-2 text-xs text-slate-600 uppercase tracking-wider">Comercial</div>
+      <div class="sidebar-item" onclick="showPage('materials')" id="nav-materials">
+        <i class="fas fa-boxes-stacked"></i> Material
+      </div>
+      <div class="sidebar-item" onclick="showPage('purchases')" id="nav-purchases">
+        <i class="fas fa-cart-shopping"></i> Compras
+      </div>
+      <div class="sidebar-item" onclick="showPage('quotes')" id="nav-quotes">
+        <i class="fas fa-file-invoice-dollar"></i> Orçamentos
+      </div>
     </nav>
     <div class="p-3 border-t border-white/5">
       <div class="sidebar-item" onclick="showPage('settings')" id="nav-settings">
@@ -574,7 +738,7 @@
 
   <main id="app-main">
     <!-- Top bar -->
-    <div class="flex items-center justify-between px-6 py-3 border-b border-white/5 sticky top-0 z-50" style="background: var(--bg-primary);">
+    <div class="app-topbar flex items-center justify-between px-6 py-3 border-b border-white/5 sticky top-0 z-50">
       <div class="search-bar w-64">
         <i class="fas fa-search text-slate-500 text-sm"></i>
         <input type="text" placeholder="Pesquisar equipamentos, OTs..." onkeyup="globalSearch(this.value)">
@@ -588,7 +752,7 @@
       </div>
     </div>
 
-    <div class="p-6">
+    <div class="app-content p-6">
 
       <!-- DASHBOARD -->
       <div id="page-dashboard" class="page active fade-in">
@@ -629,6 +793,75 @@
             </div>
             <div class="text-3xl font-bold mono" id="metric-equip">0</div>
             <div class="text-xs text-slate-500 mt-1">Ativos registados</div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+          <div class="metric-card"><div class="text-xs text-slate-500 uppercase">MTTR</div><div id="kpi-mttr" class="text-2xl font-bold mono mt-2">0h</div></div>
+          <div class="metric-card"><div class="text-xs text-slate-500 uppercase">MTBF</div><div id="kpi-mtbf" class="text-2xl font-bold mono mt-2">0d</div></div>
+          <div class="metric-card"><div class="text-xs text-slate-500 uppercase">Disponibilidade</div><div id="kpi-availability" class="text-2xl font-bold mono mt-2">0%</div></div>
+          <div class="metric-card"><div class="text-xs text-slate-500 uppercase">SLA cumpridos</div><div id="kpi-sla" class="text-2xl font-bold mono mt-2">0%</div></div>
+          <div class="metric-card"><div class="text-xs text-slate-500 uppercase">Custos clientes</div><div id="kpi-client-costs" class="text-2xl font-bold mono mt-2">€0</div></div>
+          <div class="metric-card"><div class="text-xs text-slate-500 uppercase">Custos ativos</div><div id="kpi-equipment-costs" class="text-2xl font-bold mono mt-2">€0</div></div>
+          <div class="metric-card"><div class="text-xs text-slate-500 uppercase">Horas técnicos</div><div id="kpi-tech-hours" class="text-2xl font-bold mono mt-2">0h</div></div>
+        </div>
+        <div class="grid lg:grid-cols-3 gap-6 mb-6">
+          <div class="card p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold mono">Histórico KPI</h3>
+              <span class="badge badge-blue">7d · 30d · 12m</span>
+            </div>
+            <div id="kpi-history-chart" class="space-y-3"></div>
+          </div>
+          <div class="card p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold mono">Equipamentos Críticos</h3>
+              <i class="fas fa-triangle-exclamation text-yellow-400"></i>
+            </div>
+            <div id="critical-equipment-ranking" class="space-y-2"></div>
+          </div>
+          <div class="card p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold mono">Rentabilidade</h3>
+              <i class="fas fa-chart-line text-green-400"></i>
+            </div>
+            <div id="client-profitability" class="space-y-2"></div>
+          </div>
+        </div>
+        <div class="grid lg:grid-cols-3 gap-6 mb-6">
+          <div class="card p-5">
+            <h3 class="font-semibold mono mb-4">Workflow de Aprovação</h3>
+            <div id="approval-workflows" class="space-y-3"></div>
+          </div>
+          <div class="card p-5">
+            <h3 class="font-semibold mono mb-4">Notificações Inteligentes</h3>
+            <div id="smart-notifications" class="space-y-2"></div>
+          </div>
+          <div class="card p-5">
+            <h3 class="font-semibold mono mb-4">Stock Premium</h3>
+            <div id="stock-dashboard" class="space-y-2"></div>
+          </div>
+        </div>
+        <div class="grid lg:grid-cols-3 gap-6 mb-6">
+          <div class="card p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold mono">Compras e Fornecedores</h3>
+              <button class="btn-ghost text-xs" onclick="createPurchaseRequest()"><i class="fas fa-plus"></i> Pedido</button>
+            </div>
+            <div id="purchase-dashboard" class="space-y-2"></div>
+          </div>
+          <div class="card p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold mono">Contratos de Manutenção</h3>
+              <span class="badge badge-green">SLA</span>
+            </div>
+            <div id="contracts-dashboard" class="space-y-2"></div>
+          </div>
+          <div class="card p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold mono">Faturação</h3>
+              <button class="btn-ghost text-xs" onclick="generateBillingDocuments()"><i class="fas fa-file-invoice"></i> Gerar</button>
+            </div>
+            <div id="billing-dashboard" class="space-y-2"></div>
           </div>
         </div>
         <div class="grid md:grid-cols-2 gap-6 mb-6">
@@ -730,7 +963,7 @@
         </div>
         <div id="ot-kanban-view" style="display:none">
           <div class="flex gap-4 overflow-x-auto pb-4">
-            <div class="kanban-col">
+            <div class="kanban-col" ondragover="allowKanbanDrop(event)" ondragleave="leaveKanbanDrop(event)" ondrop="dropOTOnKanban(event,'Aberta')">
               <div class="flex items-center gap-2 mb-3">
                 <span class="status-dot dot-yellow"></span>
                 <span class="text-sm font-semibold">Aberta</span>
@@ -738,15 +971,31 @@
               </div>
               <div id="kanban-aberta"></div>
             </div>
-            <div class="kanban-col">
+            <div class="kanban-col" ondragover="allowKanbanDrop(event)" ondragleave="leaveKanbanDrop(event)" ondrop="dropOTOnKanban(event,'Em Curso')">
               <div class="flex items-center gap-2 mb-3">
                 <span class="status-dot dot-blue"></span>
-                <span class="text-sm font-semibold">Em andamento</span>
-                <span class="ml-auto badge badge-blue text-xs" id="kanban-count-andamento">0</span>
+                <span class="text-sm font-semibold">Em Curso</span>
+                <span class="ml-auto badge badge-blue text-xs" id="kanban-count-em-curso">0</span>
               </div>
-              <div id="kanban-andamento"></div>
+              <div id="kanban-em-curso"></div>
             </div>
-            <div class="kanban-col">
+            <div class="kanban-col" ondragover="allowKanbanDrop(event)" ondragleave="leaveKanbanDrop(event)" ondrop="dropOTOnKanban(event,'Pausada')">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="status-dot dot-yellow"></span>
+                <span class="text-sm font-semibold">Pausada</span>
+                <span class="ml-auto badge badge-yellow text-xs" id="kanban-count-pausada">0</span>
+              </div>
+              <div id="kanban-pausada"></div>
+            </div>
+            <div class="kanban-col" ondragover="allowKanbanDrop(event)" ondragleave="leaveKanbanDrop(event)" ondrop="dropOTOnKanban(event,'Aguarda Material')">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="status-dot dot-gray"></span>
+                <span class="text-sm font-semibold">Aguarda Material</span>
+                <span class="ml-auto badge badge-gray text-xs" id="kanban-count-aguarda-material">0</span>
+              </div>
+              <div id="kanban-aguarda-material"></div>
+            </div>
+            <div class="kanban-col" ondragover="allowKanbanDrop(event)" ondragleave="leaveKanbanDrop(event)" ondrop="dropOTOnKanban(event,'Concluída')">
               <div class="flex items-center gap-2 mb-3">
                 <span class="status-dot dot-green"></span>
                 <span class="text-sm font-semibold">Concluída</span>
@@ -754,7 +1003,7 @@
               </div>
               <div id="kanban-concluida"></div>
             </div>
-            <div class="kanban-col">
+            <div class="kanban-col" ondragover="allowKanbanDrop(event)" ondragleave="leaveKanbanDrop(event)" ondrop="dropOTOnKanban(event,'Cancelada')">
               <div class="flex items-center gap-2 mb-3">
                 <span class="status-dot dot-gray"></span>
                 <span class="text-sm font-semibold">Cancelada</span>
@@ -817,6 +1066,18 @@
         </div>
       </div>
 
+      <!-- EDIFÍCIOS -->
+      <div id="page-buildings" class="page fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold mono">Edifícios</h1>
+            <p class="text-slate-400 text-sm mt-1">Instalações associadas a clientes</p>
+          </div>
+          <button class="btn-primary" onclick="createBuilding()"><i class="fas fa-plus"></i> Novo Edifício</button>
+        </div>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="buildings-grid"></div>
+      </div>
+
       <!-- TÉCNICOS -->
       <div id="page-technicians" class="page fade-in">
         <div class="flex items-center justify-between mb-6">
@@ -839,10 +1100,10 @@
       <div id="page-knowledge" class="page fade-in">
         <div class="flex items-center justify-between mb-6">
           <div>
-            <h1 class="text-2xl font-bold mono">Base de Conhecimento</h1>
-            <p class="text-slate-400 text-sm mt-1">Artigos técnicos, procedimentos e soluções</p>
+            <h1 class="text-2xl font-bold mono">Procedimentos Técnicos</h1>
+            <p class="text-slate-400 text-sm mt-1">Passos, fotos, vídeos, PDFs e soluções por equipamento</p>
           </div>
-          <button class="btn-primary" onclick="openNewKnowledgeModal()"><i class="fas fa-plus"></i> Novo Artigo</button>
+          <button class="btn-primary" onclick="openNewKnowledgeModal()"><i class="fas fa-plus"></i> Novo Procedimento</button>
         </div>
         <div class="flex items-center gap-3 mb-5 flex-wrap">
           <div class="search-bar" style="max-width:300px">
@@ -864,6 +1125,115 @@
         </div>
       </div>
 
+      <!-- DETALHE DO ARTIGO -->
+      <div id="page-article-detail" class="page fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-3">
+            <button class="btn-ghost" onclick="showPage('knowledge')"><i class="fas fa-arrow-left"></i></button>
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span id="article-detail-category" class="badge badge-purple">Procedimento</span>
+                <span id="article-detail-id" class="text-xs text-slate-500 mono">KB</span>
+              </div>
+              <h1 id="article-detail-title" class="text-2xl font-bold mono">Artigo</h1>
+              <p id="article-detail-subtitle" class="text-slate-400 text-sm mt-1">Detalhe técnico do procedimento</p>
+            </div>
+          </div>
+          <button class="btn-secondary" onclick="openNewKnowledgeModal()"><i class="fas fa-plus"></i> Novo Procedimento</button>
+        </div>
+        <div class="grid lg:grid-cols-3 gap-5">
+          <div class="lg:col-span-2 space-y-5">
+            <div class="card p-5">
+              <h3 class="font-semibold mb-3">Passos do procedimento</h3>
+              <div id="article-detail-steps" class="space-y-2 text-sm text-slate-300"></div>
+            </div>
+            <div class="card p-5">
+              <h3 class="font-semibold mb-3">Checklist</h3>
+              <div id="article-detail-checklist" class="space-y-2 text-sm text-slate-300"></div>
+            </div>
+            <div class="card p-5">
+              <h3 class="font-semibold mb-3">Notas técnicas</h3>
+              <div id="article-detail-notes" class="text-sm text-slate-300 leading-relaxed"></div>
+            </div>
+          </div>
+          <div class="space-y-5">
+            <div class="card p-5">
+              <h3 class="font-semibold mb-3">Contexto</h3>
+              <div id="article-detail-meta" class="space-y-2 text-sm"></div>
+            </div>
+            <div class="card p-5">
+              <h3 class="font-semibold mb-3">Imagens</h3>
+              <div id="article-detail-photos" class="space-y-3"></div>
+            </div>
+            <div class="card p-5">
+              <h3 class="font-semibold mb-3">Vídeos</h3>
+              <div id="article-detail-videos" class="space-y-3"></div>
+            </div>
+            <div class="card p-5">
+              <h3 class="font-semibold mb-3">PDFs e documentos</h3>
+              <div id="article-detail-pdfs" class="space-y-3"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FICHEIROS -->
+      <div id="page-files" class="page fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold mono">Ficheiros</h1>
+            <p class="text-slate-400 text-sm mt-1">Documentos, links, vídeos, imagens, esquemas e credenciais partilhados</p>
+          </div>
+          <div class="flex gap-2">
+            <button class="btn-secondary" onclick="openNewFolderModal()"><i class="fas fa-folder-plus"></i> Nova Pasta</button>
+            <button class="btn-primary" onclick="openNewFileModal()"><i class="fas fa-plus"></i> Novo Ficheiro</button>
+          </div>
+        </div>
+        <div class="grid md:grid-cols-4 gap-4 mb-5">
+          <div class="metric-card"><div class="text-xs text-slate-500 uppercase">Total</div><div class="text-2xl font-bold mono mt-2" id="files-metric-total">0</div></div>
+          <div class="metric-card"><div class="text-xs text-slate-500 uppercase">Restritos</div><div class="text-2xl font-bold mono mt-2" id="files-metric-restricted">0</div></div>
+          <div class="metric-card"><div class="text-xs text-slate-500 uppercase">Com versões</div><div class="text-2xl font-bold mono mt-2" id="files-metric-versions">0</div></div>
+          <div class="metric-card"><div class="text-xs text-slate-500 uppercase">Associados</div><div class="text-2xl font-bold mono mt-2" id="files-metric-linked">0</div></div>
+        </div>
+        <div class="grid lg:grid-cols-[280px_1fr] gap-5">
+          <div class="card p-4">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-semibold text-sm">Pastas</h3>
+              <button class="btn-ghost text-xs" onclick="openNewFolderModal()"><i class="fas fa-plus"></i></button>
+            </div>
+            <div id="files-folder-tree" class="space-y-1"></div>
+          </div>
+          <div>
+            <div class="flex items-center gap-3 mb-5 flex-wrap">
+              <div class="search-bar" style="max-width:320px">
+                <i class="fas fa-search text-slate-500 text-sm"></i>
+                <input type="text" id="files-search" placeholder="Pesquisar ficheiros..." onkeyup="renderFiles()">
+              </div>
+              <select id="files-type-filter" class="input-field" onchange="renderFiles()" style="width:auto">
+                <option value="">Todos os tipos</option>
+                <option>Ficheiro</option><option>Link</option><option>Vídeo</option><option>Imagem</option><option>Esquema elétrico</option><option>Credencial</option><option>PDF</option><option>Outro documento</option>
+              </select>
+              <select id="files-permission-filter" class="input-field" onchange="renderFiles()" style="width:auto">
+                <option value="">Todas permissões</option>
+                <option value="all">Todos</option><option value="users">Utilizadores</option><option value="teams">Equipas</option><option value="restricted">Restrito</option>
+              </select>
+            </div>
+            <div class="card overflow-hidden">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Nome</th><th>Tipo</th><th>Pasta</th><th>Partilha</th><th>Associações</th><th>Versões</th><th>Atualizado</th><th></th>
+                  </tr>
+                </thead>
+                <tbody id="files-table-body">
+                  <tr><td colspan="8" class="text-center text-slate-500 py-8">Nenhum ficheiro partilhado.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ASSISTENTE IA -->
       <div id="page-ai-assistant" class="page fade-in">
         <div class="flex items-center justify-between mb-6">
@@ -881,6 +1251,8 @@
         </div>
         <div class="flex gap-2 mb-5 flex-wrap">
           <button class="badge badge-purple cursor-pointer" style="padding:8px 12px" onclick="quickPrompt('Criar OT preventiva para o gerador')"><i class="fas fa-plus"></i> Criar OT preventiva</button>
+          <button class="badge badge-red cursor-pointer" style="padding:8px 12px" onclick="quickPrompt('UPS em bypass, alarme bateria e temperatura elevada')"><i class="fas fa-brain"></i> Diagnóstico IA UPS</button>
+          <button class="badge badge-blue cursor-pointer" style="padding:8px 12px" onclick="quickPrompt('Como funciona a leitura NFC em equipamentos e OTs?')"><i class="fas fa-wifi"></i> Leitura NFC</button>
           <button class="badge badge-blue cursor-pointer" style="padding:8px 12px" onclick="quickPrompt('Diagnosticar erro SPC11 no atuador Festo')"><i class="fas fa-stethoscope"></i> Diagnosticar erro</button>
           <button class="badge badge-green cursor-pointer" style="padding:8px 12px" onclick="quickPrompt('Mostrar equipamentos registados')"><i class="fas fa-microchip"></i> Equipamentos</button>
           <button class="badge badge-yellow cursor-pointer" style="padding:8px 12px" onclick="quickPrompt('Criar checklist de ronda diária AVAC')"><i class="fas fa-check-square"></i> Criar checklist</button>
@@ -1010,6 +1382,48 @@
         </div>
       </div>
 
+      <!-- MATERIAL -->
+      <div id="page-materials" class="page fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold mono">Material</h1>
+            <p class="text-slate-400 text-sm mt-1">Stock, consumo e material usado em OTs</p>
+          </div>
+          <button class="btn-primary" onclick="createStockMaterial()"><i class="fas fa-plus"></i> Novo Material</button>
+        </div>
+        <div class="card overflow-hidden">
+          <table class="data-table"><thead><tr><th>Material</th><th>Categoria</th><th>Stock</th><th>Custo</th><th>Local</th></tr></thead><tbody id="materials-table-body"></tbody></table>
+        </div>
+      </div>
+
+      <!-- COMPRAS -->
+      <div id="page-purchases" class="page fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold mono">Compras</h1>
+            <p class="text-slate-400 text-sm mt-1">Pedidos, aprovações e receção de material</p>
+          </div>
+          <button class="btn-primary" onclick="createPurchaseRequest()"><i class="fas fa-plus"></i> Novo Pedido</button>
+        </div>
+        <div class="card overflow-hidden">
+          <table class="data-table"><thead><tr><th>ID</th><th>Item</th><th>Fornecedor</th><th>Estado</th><th>Valor</th><th>Data</th></tr></thead><tbody id="purchases-table-body"></tbody></table>
+        </div>
+      </div>
+
+      <!-- ORÇAMENTOS -->
+      <div id="page-quotes" class="page fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold mono">Orçamentos</h1>
+            <p class="text-slate-400 text-sm mt-1">Propostas, faturas e documentos comerciais</p>
+          </div>
+          <button class="btn-primary" onclick="generateBillingDocuments()"><i class="fas fa-file-circle-plus"></i> Gerar Orçamento</button>
+        </div>
+        <div class="card overflow-hidden">
+          <table class="data-table"><thead><tr><th>ID</th><th>Tipo</th><th>Origem</th><th>Valor</th></tr></thead><tbody id="quotes-table-body"></tbody></table>
+        </div>
+      </div>
+
       <!-- SETTINGS -->
       <div id="page-settings" class="page fade-in">
         <div class="mb-6">
@@ -1068,6 +1482,131 @@
 
 <!-- ======================== MODALS ======================== -->
 
+<!-- New File Modal -->
+<div id="modal-new-file" class="modal-overlay" style="display:none">
+  <div class="modal-content modal-lg">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-semibold">Novo Ficheiro Partilhado</h2>
+      <button class="btn-ghost" onclick="closeModal('modal-new-file')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div class="grid md:grid-cols-2 gap-4">
+        <div><label class="block text-sm mb-2 text-slate-300">Nome *</label><input type="text" id="file-name" class="input-field" placeholder="Ex: Manual UPS Galaxy VS"></div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Tipo</label>
+          <select id="file-type" class="input-field" onchange="updateFileTypeFields()">
+            <option>Ficheiro</option><option>Link</option><option>Vídeo</option><option>Imagem</option><option>Esquema elétrico</option><option>Credencial</option><option>PDF</option><option>Outro documento</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div><label class="block text-sm mb-2 text-slate-300">Pasta</label><select id="file-folder" class="input-field"><option value="">Raiz</option></select></div>
+        <div id="file-version-field"><label class="block text-sm mb-2 text-slate-300">Versão</label><input type="text" id="file-version" class="input-field" placeholder="v1.0"></div>
+      </div>
+      <div id="file-ref-field">
+        <label class="block text-sm mb-2 text-slate-300" id="file-ref-label">URL / referência *</label>
+        <div class="grid md:grid-cols-2 gap-3">
+          <input type="text" id="file-ref" class="input-field" placeholder="https://... ou nome do ficheiro interno">
+          <input type="file" id="file-upload" class="input-field">
+        </div>
+      </div>
+      <div id="file-credential-fields" style="display:none">
+        <div class="grid md:grid-cols-3 gap-4">
+          <div><label class="block text-sm mb-2 text-slate-300">Serviço / sistema *</label><input type="text" id="file-credential-service" class="input-field" placeholder="Ex: Portal Schneider"></div>
+          <div><label class="block text-sm mb-2 text-slate-300">Utilizador</label><input type="text" id="file-credential-user" class="input-field" placeholder="Ex: manutencao@empresa.pt"></div>
+          <div><label class="block text-sm mb-2 text-slate-300">Cofre / referência *</label><input type="text" id="file-credential-vault" class="input-field" placeholder="Ex: Cofre / SCHNEIDER-UPS-01"></div>
+        </div>
+      </div>
+      <div id="file-media-fields" style="display:none">
+        <label class="block text-sm mb-2 text-slate-300">Legenda / contexto do media</label>
+        <input type="text" id="file-media-caption" class="input-field" placeholder="Ex: Foto do banco de baterias antes da intervenção">
+      </div>
+      <div><label class="block text-sm mb-2 text-slate-300">Descrição</label><textarea id="file-desc" class="input-field" rows="2" placeholder="Contexto, notas de segurança ou instruções de utilização"></textarea></div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Permissão</label>
+          <select id="file-permission" class="input-field" onchange="updateFilePermissionFields()">
+            <option value="all">Todos</option><option value="users">Utilizadores selecionados</option><option value="teams">Equipas selecionadas</option><option value="restricted">Restrito ao gestor</option>
+          </select>
+        </div>
+        <div id="file-users-field">
+          <label class="block text-sm mb-2 text-slate-300">Utilizadores</label>
+          <select id="file-users" class="input-field" multiple size="4"></select>
+        </div>
+        <div id="file-teams-field">
+          <label class="block text-sm mb-2 text-slate-300">Equipas</label>
+          <select id="file-teams" class="input-field" multiple size="4"></select>
+        </div>
+      </div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div><label class="block text-sm mb-2 text-slate-300">Cliente associado</label><select id="file-client" class="input-field"><option value="">Sem cliente</option></select></div>
+        <div><label class="block text-sm mb-2 text-slate-300">Equipamento associado</label><select id="file-equipment" class="input-field"><option value="">Sem equipamento</option></select></div>
+        <div><label class="block text-sm mb-2 text-slate-300">OT associada</label><select id="file-ot" class="input-field"><option value="">Sem OT</option></select></div>
+      </div>
+      <div><label class="block text-sm mb-2 text-slate-300">Notas da versão</label><input type="text" id="file-version-notes" class="input-field" placeholder="Primeira publicação"></div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-new-file')">Cancelar</button>
+      <button class="btn-primary flex-1" onclick="createSharedFile()"><i class="fas fa-share-nodes"></i> Partilhar</button>
+    </div>
+  </div>
+</div>
+
+<!-- File Detail Modal -->
+<div id="modal-file-detail" class="modal-overlay" style="display:none">
+  <div class="modal-content modal-lg">
+    <div class="flex items-start justify-between gap-4 mb-5">
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          <span id="file-detail-type" class="badge badge-purple">Ficheiro</span>
+          <span id="file-detail-folder" class="text-xs text-slate-500">Raiz</span>
+        </div>
+        <h2 id="file-detail-title" class="text-xl font-bold">Ficheiro</h2>
+        <p id="file-detail-ref" class="text-sm text-slate-500 mt-1 break-all">—</p>
+      </div>
+      <button class="btn-ghost" onclick="closeModal('modal-file-detail')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="grid md:grid-cols-3 gap-5">
+      <div class="md:col-span-2 space-y-4">
+        <div id="file-detail-preview" class="card p-4"></div>
+        <div class="card p-4">
+          <h3 class="font-semibold mb-3 text-sm">Descrição</h3>
+          <p id="file-detail-description" class="text-sm text-slate-300">—</p>
+        </div>
+      </div>
+      <div class="space-y-4">
+        <div class="card p-4">
+          <h3 class="font-semibold mb-3 text-sm">Detalhes</h3>
+          <div id="file-detail-meta" class="space-y-2 text-sm"></div>
+        </div>
+        <div class="card p-4">
+          <h3 class="font-semibold mb-3 text-sm">Versões</h3>
+          <div id="file-detail-versions" class="space-y-2 text-sm"></div>
+        </div>
+        <button id="file-detail-open" class="btn-primary w-full justify-center" onclick="openCurrentFileAsset()"><i class="fas fa-arrow-up-right-from-square"></i> Abrir ficheiro</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New Folder Modal -->
+<div id="modal-new-folder" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-semibold">Nova Pasta</h2>
+      <button class="btn-ghost" onclick="closeModal('modal-new-folder')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div><label class="block text-sm mb-2 text-slate-300">Nome *</label><input type="text" id="folder-name" class="input-field" placeholder="Ex: Manuais UPS"></div>
+      <div><label class="block text-sm mb-2 text-slate-300">Pasta-mãe</label><select id="folder-parent" class="input-field"><option value="">Raiz</option></select></div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-new-folder')">Cancelar</button>
+      <button class="btn-primary flex-1" onclick="createFileFolder()"><i class="fas fa-folder-plus"></i> Criar pasta</button>
+    </div>
+  </div>
+</div>
+
 <!-- New OT Modal -->
 <div id="modal-new-ot" class="modal-overlay" style="display:none">
   <div class="modal-content">
@@ -1116,6 +1655,10 @@
         <label class="block text-sm mb-2 text-slate-300">Localização</label>
         <input type="text" id="ot-location" class="input-field" placeholder="Ex: Piso 2 - Sala técnica">
       </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Imagem da OT</label>
+        <input type="file" id="ot-image-upload" class="input-field" accept="image/*">
+      </div>
     </div>
     <div class="flex gap-3 mt-6">
       <button class="btn-secondary flex-1" onclick="closeModal('modal-new-ot')">Cancelar</button>
@@ -1137,7 +1680,7 @@
           <option>Aberta</option><option>Agendada</option><option>Em Curso</option><option>Pausada</option>
           <option>Aguarda Material</option><option>Aguarda Cliente</option><option>Concluída</option><option>Cancelada</option>
         </select>
-        <button class="btn-ghost" onclick="closeModal('modal-ot-detail')"><i class="fas fa-times"></i></button>
+        <button class="btn-ghost" onclick="showPage('ots')"><i class="fas fa-arrow-left"></i> Voltar</button>
       </div>
     </div>
     <div class="grid md:grid-cols-3 gap-5">
@@ -1155,6 +1698,37 @@
             <span class="text-slate-500 text-sm">Descrição:</span>
             <p id="ot-detail-desc" class="text-sm mt-1 text-slate-300">—</p>
           </div>
+          <div id="ot-detail-image-wrap" class="mt-4" style="display:none">
+            <img id="ot-detail-image" alt="Imagem da OT" class="w-full rounded-lg border border-white/10 object-cover" style="max-height:320px">
+          </div>
+          <div class="flex gap-2 mt-4">
+            <input type="file" id="ot-cover-upload" class="input-field" accept="image/*" onchange="updateOTCoverFromInput()">
+            <button class="btn-secondary text-sm" onclick="document.getElementById('ot-cover-upload').click()"><i class="fas fa-image"></i> Alterar capa</button>
+          </div>
+        </div>
+        <div class="card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-semibold text-sm">NFC da OT</h3>
+            <span class="badge badge-blue"><i class="fas fa-wifi"></i> Leitura rápida</span>
+          </div>
+          <div class="grid md:grid-cols-2 gap-3 text-sm">
+            <div>
+              <div class="text-slate-500 text-xs mb-1">Tag associada</div>
+              <div id="ot-nfc-token" class="mono text-slate-200">—</div>
+            </div>
+            <div class="flex gap-2 flex-wrap md:justify-end">
+              <button class="btn-secondary text-xs" onclick="assignNfcToCurrentOT()"><i class="fas fa-link"></i> Associar NFC</button>
+              <button class="btn-secondary text-xs" onclick="readNfcTag('ot')"><i class="fas fa-wifi"></i> Ler NFC</button>
+              <button class="btn-ghost text-xs" onclick="simulateNfcRead('ot')"><i class="fas fa-bolt"></i> Simular</button>
+            </div>
+          </div>
+        </div>
+        <div class="card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-medium text-sm">Ficheiros associados</h4>
+            <button class="btn-ghost text-xs" onclick="openNewFileModal()"><i class="fas fa-upload"></i> Anexar à OT</button>
+          </div>
+          <div id="ot-files-list" class="text-sm text-slate-400">Nenhum ficheiro associado.</div>
         </div>
         <div>
           <div class="flex items-center justify-between mb-3">
@@ -1203,6 +1777,23 @@
         </div>
       </div>
       <div class="space-y-4">
+        <div class="card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-medium text-sm">Copiloto Técnico</h4>
+            <span class="badge badge-purple"><i class="fas fa-robot"></i> Contextual</span>
+          </div>
+          <div id="ot-copilot-context" class="text-xs text-slate-500 mb-3">Baseado na OT, equipamento, procedimentos e histórico.</div>
+          <div id="ot-copilot-messages" class="space-y-2 mb-3 max-h-48 overflow-y-auto"></div>
+          <div class="flex gap-2">
+            <input type="text" id="ot-copilot-input" class="input-field text-sm" placeholder="Ex: Como testar o ATS deste gerador?">
+            <button class="btn-primary px-3" onclick="sendOTCopilotMessage()"><i class="fas fa-paper-plane text-xs"></i></button>
+          </div>
+          <div class="flex gap-2 flex-wrap mt-2">
+            <button class="btn-ghost text-xs" onclick="askOTCopilot('Como testar o ATS deste gerador?')"><i class="fas fa-bolt"></i> ATS</button>
+            <button class="btn-ghost text-xs" onclick="askOTCopilot('Que procedimento devo seguir?')"><i class="fas fa-book"></i> Procedimento</button>
+            <button class="btn-ghost text-xs" onclick="askOTCopilot('Existe histórico de falhas neste equipamento?')"><i class="fas fa-clock-rotate-left"></i> Histórico</button>
+          </div>
+        </div>
         <div class="card p-4">
           <h4 class="font-medium mb-3 text-sm">Histórico de Atividades</h4>
           <div id="ot-activity-log" class="space-y-1 text-xs max-h-64 overflow-y-auto"></div>
@@ -1279,6 +1870,22 @@
         <label class="block text-sm mb-2 text-slate-300">Ajuda técnica ("Saber como fazer")</label>
         <textarea id="task-help" class="input-field" rows="3" placeholder="Procedimento, ferramentas necessárias, precauções de segurança..."></textarea>
       </div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Tipo de ficheiro</label>
+          <select id="task-file-type" class="input-field" onchange="updateTaskFileAccept()">
+            <option value="">Sem ficheiro</option>
+            <option>Ficheiro</option><option>Link</option><option>Vídeo</option><option>Imagem</option><option>Esquema elétrico</option><option>PDF</option><option>Outro documento</option>
+          </select>
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-sm mb-2 text-slate-300">Ficheiro / URL de apoio</label>
+          <div class="grid md:grid-cols-2 gap-3">
+            <input type="text" id="task-file-ref" class="input-field" placeholder="Ex: esquema-fonte-24v.pdf ou https://...">
+            <input type="file" id="task-file-upload" class="input-field" accept="image/*,video/*,application/pdf">
+          </div>
+        </div>
+      </div>
     </div>
     <div class="flex gap-3 mt-6">
       <button class="btn-secondary flex-1" onclick="closeModal('modal-add-task')">Cancelar</button>
@@ -1298,6 +1905,10 @@
       <div class="grid grid-cols-2 gap-4">
         <div><label class="block text-sm mb-2 text-slate-300">Nome *</label><input type="text" id="equip-name" class="input-field" placeholder="Ex: UPS Galaxy VS"></div>
         <div><label class="block text-sm mb-2 text-slate-300">Código / TAG</label><input type="text" id="equip-code" class="input-field" placeholder="Ex: EQ-001"></div>
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Imagem do equipamento</label>
+        <input type="file" id="equip-image-upload" class="input-field" accept="image/*">
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div><label class="block text-sm mb-2 text-slate-300">Fabricante</label><input type="text" id="equip-brand" class="input-field" placeholder="Ex: Schneider Electric"></div>
@@ -1319,6 +1930,10 @@
           <label class="block text-sm mb-2 text-slate-300">Criticidade</label>
           <select id="equip-criticality" class="input-field"><option>Crítico</option><option>Alto</option><option>Médio</option><option>Baixo</option></select>
         </div>
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Cliente proprietário *</label>
+        <select id="equip-client" class="input-field"><option value="">Selecionar cliente...</option></select>
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div><label class="block text-sm mb-2 text-slate-300">Data de instalação</label><input type="date" id="equip-install-date" class="input-field"></div>
@@ -1346,25 +1961,92 @@
       </div>
       <div class="flex items-center gap-2">
         <span id="equip-detail-status-badge" class="badge badge-green">Operacional</span>
-        <button class="btn-ghost" onclick="closeModal('modal-equip-detail')"><i class="fas fa-times"></i></button>
+        <button class="btn-ghost" onclick="showPage('equipment')"><i class="fas fa-arrow-left"></i> Voltar</button>
       </div>
     </div>
     <div class="grid md:grid-cols-2 gap-5">
       <div class="space-y-4">
         <div class="card p-4">
           <h4 class="font-medium mb-3 text-sm">Dados Técnicos</h4>
+          <div id="equip-detail-image-wrap" class="mb-4" style="display:none">
+            <img id="equip-detail-image" alt="Imagem do equipamento" class="w-full rounded-lg border border-white/10 object-cover" style="max-height:260px">
+          </div>
           <div class="space-y-2 text-sm" id="equip-detail-info"></div>
+        </div>
+        <div class="card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-medium text-sm">QR / NFC do Equipamento</h4>
+            <button class="btn-ghost text-xs" onclick="printEquipmentLabel()"><i class="fas fa-print"></i> Imprimir etiqueta</button>
+          </div>
+          <div class="flex gap-4 items-center">
+            <div id="equip-qr-code" class="qr-box"></div>
+            <div class="text-xs text-slate-400">
+              <div class="font-medium text-slate-200 mb-1">Fluxo rápido</div>
+              <div>Técnico lê QR</div>
+              <div>Abre ficha técnica</div>
+              <div>Cria OT</div>
+              <div>Executa checklist</div>
+              <button class="btn-secondary text-xs mt-3" onclick="openEquipmentFichaFromQr()"><i class="fas fa-qrcode"></i> Simular leitura QR</button>
+            </div>
+          </div>
+          <div class="mt-4 pt-4 border-t border-white/5">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <div class="text-xs text-slate-500 mb-1">Tag NFC associada</div>
+                <div id="equip-nfc-token" class="mono text-sm text-slate-200">—</div>
+              </div>
+              <div class="flex gap-2 flex-wrap">
+                <button class="btn-secondary text-xs" onclick="assignNfcToCurrentEquip()"><i class="fas fa-link"></i> Associar NFC</button>
+                <button class="btn-secondary text-xs" onclick="readNfcTag('equipment')"><i class="fas fa-wifi"></i> Ler NFC</button>
+                <button class="btn-ghost text-xs" onclick="simulateNfcRead('equipment')"><i class="fas fa-bolt"></i> Simular</button>
+              </div>
+            </div>
+          </div>
+          <div id="equipment-print-label" class="print-label mt-4" style="display:none"></div>
         </div>
         <div class="card p-4">
           <h4 class="font-medium mb-3 text-sm">Histórico de Intervenções</h4>
           <div id="equip-history" class="text-sm text-slate-400">Nenhuma intervenção registada.</div>
         </div>
+        <div class="card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-medium text-sm">Ficheiros associados</h4>
+            <button class="btn-ghost text-xs" onclick="openNewFileModal()"><i class="fas fa-plus"></i> Associar</button>
+          </div>
+          <div id="equip-files-list" class="text-sm text-slate-400">Nenhum ficheiro associado.</div>
+        </div>
+        <div class="card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-medium text-sm">Histórico de Leituras</h4>
+            <span class="badge badge-blue">Valor · Diferença</span>
+          </div>
+          <div id="equip-readings-history" class="space-y-2"></div>
+        </div>
       </div>
       <div class="space-y-4">
         <div class="card p-4">
           <h4 class="font-medium mb-3 text-sm">Manutenção Preventiva</h4>
-          <div class="text-sm text-slate-400 mb-3">Próxima manutenção: <span class="text-white">—</span></div>
-          <button class="btn-primary w-full text-sm" onclick="schedulePreventive()"><i class="fas fa-calendar-plus"></i> Agendar manutenção</button>
+          <div class="grid grid-cols-2 gap-2 mb-3">
+            <select id="equip-preventive-frequency" class="input-field text-sm">
+              <option value="">Sem regra</option>
+              <option value="weekly">Semanal</option>
+              <option value="monthly">Mensal</option>
+              <option value="quarterly">Trimestral</option>
+              <option value="semiannual">Semestral</option>
+              <option value="operating_hours">Por horas</option>
+              <option value="cycles">Por ciclos</option>
+            </select>
+            <input type="number" id="equip-preventive-threshold" class="input-field text-sm" placeholder="Ex: 90 / 500h">
+          </div>
+          <div class="grid grid-cols-2 gap-2 mb-3">
+            <input type="number" id="equip-operating-hours" class="input-field text-sm" placeholder="Horas atuais">
+            <input type="number" id="equip-cycle-count" class="input-field text-sm" placeholder="Ciclos atuais">
+          </div>
+          <div class="text-sm text-slate-400 mb-3">Próxima manutenção: <span class="text-white" id="equip-next-preventive">—</span></div>
+          <div class="grid grid-cols-2 gap-2">
+            <button class="btn-secondary w-full text-sm" onclick="savePreventiveRule()"><i class="fas fa-save"></i> Guardar regra</button>
+            <button class="btn-primary w-full text-sm" onclick="runPreventiveAutomation()"><i class="fas fa-magic"></i> Gerar OT</button>
+          </div>
         </div>
         <div class="card p-4">
           <h4 class="font-medium mb-3 text-sm">Abrir pedido de assistência</h4>
@@ -1384,7 +2066,7 @@
 <div id="modal-new-client" class="modal-overlay" style="display:none">
   <div class="modal-content">
     <div class="flex items-center justify-between mb-5">
-      <h2 class="text-lg font-semibold">Novo Cliente</h2>
+      <h2 class="text-lg font-semibold" id="client-modal-title">Novo Cliente</h2>
       <button class="btn-ghost" onclick="closeModal('modal-new-client')"><i class="fas fa-times"></i></button>
     </div>
     <div class="space-y-4">
@@ -1395,6 +2077,10 @@
       </div>
       <div><label class="block text-sm mb-2 text-slate-300">Morada</label><input type="text" id="client-address" class="input-field" placeholder="Rua, cidade, código postal"></div>
       <div>
+        <label class="block text-sm mb-2 text-slate-300">Imagem da instalação</label>
+        <input type="file" id="client-image-upload" class="input-field" accept="image/*">
+      </div>
+      <div>
         <label class="block text-sm mb-2 text-slate-300">Contrato de manutenção</label>
         <select id="client-contract" class="input-field"><option>Sem contrato</option><option>Básico</option><option>Standard</option><option>Premium</option></select>
       </div>
@@ -1402,7 +2088,7 @@
     </div>
     <div class="flex gap-3 mt-6">
       <button class="btn-secondary flex-1" onclick="closeModal('modal-new-client')">Cancelar</button>
-      <button class="btn-primary flex-1" onclick="createClient()"><i class="fas fa-plus"></i> Adicionar cliente</button>
+      <button class="btn-primary flex-1" onclick="createClient()" id="client-submit-btn"><i class="fas fa-plus"></i> Adicionar cliente</button>
     </div>
   </div>
 </div>
@@ -1411,13 +2097,17 @@
 <div id="modal-new-tech" class="modal-overlay" style="display:none">
   <div class="modal-content">
     <div class="flex items-center justify-between mb-5">
-      <h2 class="text-lg font-semibold">Novo Técnico</h2>
+      <h2 class="text-lg font-semibold" id="tech-modal-title">Novo Técnico</h2>
       <button class="btn-ghost" onclick="closeModal('modal-new-tech')"><i class="fas fa-times"></i></button>
     </div>
     <div class="space-y-4">
       <div class="grid grid-cols-2 gap-4">
         <div><label class="block text-sm mb-2 text-slate-300">Nome *</label><input type="text" id="tech-name" class="input-field" placeholder="Nome completo"></div>
         <div><label class="block text-sm mb-2 text-slate-300">Email</label><input type="email" id="tech-email" class="input-field" placeholder="tecnico@empresa.com"></div>
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Foto</label>
+        <input type="file" id="tech-photo-upload" class="input-field" accept="image/*">
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
@@ -1433,7 +2123,7 @@
     </div>
     <div class="flex gap-3 mt-6">
       <button class="btn-secondary flex-1" onclick="closeModal('modal-new-tech')">Cancelar</button>
-      <button class="btn-primary flex-1" onclick="createTechnician()"><i class="fas fa-plus"></i> Adicionar técnico</button>
+      <button class="btn-primary flex-1" onclick="createTechnician()" id="tech-submit-btn"><i class="fas fa-plus"></i> Adicionar técnico</button>
     </div>
   </div>
 </div>
@@ -1442,25 +2132,46 @@
 <div id="modal-new-knowledge" class="modal-overlay" style="display:none">
   <div class="modal-content modal-lg">
     <div class="flex items-center justify-between mb-5">
-      <h2 class="text-lg font-semibold">Novo Artigo de Conhecimento</h2>
+      <h2 class="text-lg font-semibold">Novo Procedimento Técnico</h2>
       <button class="btn-ghost" onclick="closeModal('modal-new-knowledge')"><i class="fas fa-times"></i></button>
     </div>
     <div class="space-y-4">
-      <div><label class="block text-sm mb-2 text-slate-300">Título *</label><input type="text" id="know-title" class="input-field" placeholder="Ex: Erro SPC11 — Sequência de adição"></div>
+      <div><label class="block text-sm mb-2 text-slate-300">Título *</label><input type="text" id="know-title" class="input-field" placeholder="Ex: UPS Galaxy VS — Bypass manual"></div>
       <div class="grid grid-cols-2 gap-4">
         <div><label class="block text-sm mb-2 text-slate-300">Equipamento associado</label><input type="text" id="know-equip" class="input-field" placeholder="Ex: Festo SPC11"></div>
         <div>
           <label class="block text-sm mb-2 text-slate-300">Categoria</label>
-          <select id="know-category" class="input-field"><option>AVAC</option><option>Elétrico</option><option>Automação</option><option>UPS</option><option>Gerador</option><option>Procedimento</option><option>Diagnóstico</option><option>Outro</option></select>
+          <select id="know-category" class="input-field"><option>UPS</option><option>Geradores</option><option>AVAC</option><option>Bombas</option><option>Quadros Elétricos</option><option>Data Center</option><option>Energia Solar</option></select>
         </div>
       </div>
-      <div><label class="block text-sm mb-2 text-slate-300">Sintoma / Problema</label><input type="text" id="know-symptom" class="input-field" placeholder="Ex: Alarme Battery Charger Failure"></div>
-      <div><label class="block text-sm mb-2 text-slate-300">Solução / Procedimento *</label><textarea id="know-solution" class="input-field" rows="5" placeholder="Descreva o procedimento passo a passo..."></textarea></div>
-      <div><label class="block text-sm mb-2 text-slate-300">Ferramentas necessárias</label><input type="text" id="know-tools" class="input-field" placeholder="Ex: Multímetro, chave de fendas..."></div>
+      <div><label class="block text-sm mb-2 text-slate-300">Objetivo / Sintoma</label><input type="text" id="know-symptom" class="input-field" placeholder="Ex: Troca de baterias / alarme bateria"></div>
+      <div><label class="block text-sm mb-2 text-slate-300">Passos detalhados *</label><textarea id="know-solution" class="input-field" rows="5" placeholder="1. Isolar equipamento&#10;2. Confirmar bypass&#10;3. Executar procedimento..."></textarea></div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-sm mb-2 text-slate-300">Ferramentas necessárias</label><input type="text" id="know-tools" class="input-field" placeholder="Ex: Multímetro, chave isolada..."></div>
+        <div><label class="block text-sm mb-2 text-slate-300">Tempo estimado</label><input type="text" id="know-time" class="input-field" placeholder="Ex: 45 min"></div>
+      </div>
+      <div><label class="block text-sm mb-2 text-slate-300">Checklist</label><textarea id="know-checklist" class="input-field" rows="3" placeholder="Uma tarefa por linha"></textarea></div>
+      <div class="grid grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Fotos</label>
+          <input type="text" id="know-photos" class="input-field mb-2" placeholder="URLs ou referências">
+          <input type="file" id="know-photos-upload" class="input-field" accept="image/*" multiple>
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Vídeos</label>
+          <input type="text" id="know-videos" class="input-field mb-2" placeholder="URLs ou referências">
+          <input type="file" id="know-videos-upload" class="input-field" accept="video/*" multiple>
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">PDF</label>
+          <input type="text" id="know-pdf" class="input-field mb-2" placeholder="Manual / PDF">
+          <input type="file" id="know-pdf-upload" class="input-field" accept="application/pdf,.pdf" multiple>
+        </div>
+      </div>
     </div>
     <div class="flex gap-3 mt-6">
       <button class="btn-secondary flex-1" onclick="closeModal('modal-new-knowledge')">Cancelar</button>
-      <button class="btn-primary flex-1" onclick="createKnowledgeArticle()"><i class="fas fa-plus"></i> Publicar artigo</button>
+      <button class="btn-primary flex-1" onclick="createKnowledgeArticle()"><i class="fas fa-plus"></i> Publicar procedimento</button>
     </div>
   </div>
 </div>
@@ -1555,12 +2266,29 @@
   </div>
 </div>
 
+<!-- Smart How-To Panel -->
+<div id="howto-panel" class="ai-side-panel">
+  <div class="flex items-start justify-between gap-4 mb-4">
+    <div>
+      <div class="text-xs text-slate-500 uppercase tracking-wider mb-1">Assistente IA ManuGent</div>
+      <h2 class="text-xl font-bold mono">Como Fazer</h2>
+    </div>
+    <button class="btn-ghost" onclick="closeHowToPanel()"><i class="fas fa-times"></i></button>
+  </div>
+  <div id="howto-content"></div>
+</div>
+
 <script>
 // ======================== APP STATE ========================
 var APP = {
   user: null, ots: [], equipment: [], technicians: [],
-  clients: [], knowledge: [], incidents: [],
+  clients: [], knowledge: [], files: [], incidents: [],
+  buildings: [], stockMaterials: [],
+  fileFolders: [], currentFileFolder: 'all',
+  purchases: [], suppliers: [], contracts: [], invoices: [],
   currentOT: null, currentEquip: null,
+  currentFile: null,
+  lastNfcPayload: null,
   aiApprovalCallback: null,
   calendarDate: new Date(),
   otFilter: 'agendadas', otStatusFilter: '', otPriorityFilter: '', otTypeFilter: '',
@@ -1573,7 +2301,8 @@ function saveData() {
     localStorage.setItem('mg_data', JSON.stringify({
       user: APP.user, ots: APP.ots, equipment: APP.equipment,
       technicians: APP.technicians, clients: APP.clients,
-      knowledge: APP.knowledge, incidents: APP.incidents,
+      knowledge: APP.knowledge, files: APP.files, fileFolders: APP.fileFolders, incidents: APP.incidents,
+      buildings: APP.buildings, stockMaterials: APP.stockMaterials, purchases: APP.purchases, suppliers: APP.suppliers, contracts: APP.contracts, invoices: APP.invoices,
     }));
   } catch(e) {}
 }
@@ -1588,7 +2317,15 @@ function loadData() {
       APP.technicians = d.technicians || [];
       APP.clients = d.clients || [];
       APP.knowledge = d.knowledge || [];
+      APP.files = d.files || [];
+      APP.fileFolders = d.fileFolders || [];
       APP.incidents = d.incidents || [];
+      APP.buildings = d.buildings || [];
+      APP.stockMaterials = d.stockMaterials || [];
+      APP.purchases = d.purchases || [];
+      APP.suppliers = d.suppliers || [];
+      APP.contracts = d.contracts || [];
+      APP.invoices = d.invoices || [];
     }
   } catch(e) {}
 }
@@ -1600,6 +2337,7 @@ window.onload = function() {
   initSampleData();
   syncBackendWorkOrders();
   renderCalendar();
+  enhanceFileInputs();
 };
 
 function showLanding() {
@@ -1617,13 +2355,16 @@ function showApp() {
   document.getElementById('landing-page').style.display = 'none';
   document.getElementById('auth-page').style.display = 'none';
   document.getElementById('app-layout').style.display = 'flex';
+  setupDetailPages();
   updateUserUI();
   updateDashboard();
   renderCalendar();
   populateOTSelects();
   setTimeout(function() {
     renderOTs(); renderEquipment(); renderClients();
-    renderTechnicians(); renderKnowledge(); renderIncidents();
+    renderBuildings(); renderTechnicians(); renderKnowledge(); renderFiles(); renderIncidents();
+    renderMaterials(); renderPurchases(); renderQuotes();
+    enhanceFileInputs();
   }, 50);
 }
 function scrollToSection(id) {
@@ -1640,10 +2381,44 @@ function showPage(page) {
   if (page === 'ots') renderOTs();
   if (page === 'equipment') renderEquipment();
   if (page === 'clients') renderClients();
+  if (page === 'buildings') renderBuildings();
   if (page === 'technicians') renderTechnicians();
   if (page === 'knowledge') renderKnowledge();
+  if (page === 'files') renderFiles();
   if (page === 'incidents') renderIncidents();
+  if (page === 'materials') renderMaterials();
+  if (page === 'purchases') renderPurchases();
+  if (page === 'quotes') renderQuotes();
   if (page === 'calendar') renderCalendar();
+}
+
+function setupDetailPages() {
+  var content = document.querySelector('.app-content');
+  if (!content) return;
+  [
+    { id: 'modal-ot-detail', nav: 'nav-ots' },
+    { id: 'modal-equip-detail', nav: 'nav-equipment' }
+  ].forEach(function(cfg) {
+    var el = document.getElementById(cfg.id);
+    if (!el || el.dataset.pageReady === 'true') return;
+    el.className = 'page fade-in detail-page';
+    el.style.display = '';
+    el.dataset.pageReady = 'true';
+    el.dataset.navId = cfg.nav;
+    content.appendChild(el);
+  });
+}
+function showDetailPage(id) {
+  setupDetailPages();
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.sidebar-item').forEach(function(i) { i.classList.remove('active'); });
+  var el = document.getElementById(id);
+  if (el) el.classList.add('active');
+  var navId = el ? el.dataset.navId : '';
+  var nav = navId ? document.getElementById(navId) : null;
+  if (nav) nav.classList.add('active');
+  var main = document.getElementById('app-main');
+  if (main) main.scrollTop = 0;
 }
 
 // ======================== AUTH ========================
@@ -1731,6 +2506,259 @@ function updateDashboard() {
         '<div class="flex items-center gap-2"><span class="badge ' + getPriorityClass(o.priority) + '">' + o.priority + '</span><span class="badge ' + getStatusClass(o.status) + '">' + o.status + '</span></div></div>';
     }).join('');
   }
+  renderExecutiveDashboard();
+}
+function formatCurrency(value) {
+  return '€' + Math.round(value || 0).toLocaleString('pt-PT');
+}
+function getOTHours(ot) {
+  if (ot.timeLogs && ot.timeLogs.length) return ot.timeLogs.reduce(function(sum, t) { return sum + (parseFloat(t.hours) || 0); }, 0);
+  if (ot.timeEntry && ot.timeEntry.effective_seconds) return ot.timeEntry.effective_seconds / 3600;
+  return ot.status === 'Concluída' ? 2.5 : 1.25;
+}
+function getOTCost(ot) {
+  var materialCost = (ot.materials || []).reduce(function(sum, m) { return sum + ((parseFloat(m.cost) || 0) * (parseFloat(m.qty) || 1)); }, 0);
+  var urgencyFactor = ot.priority === 'Urgente' ? 1.8 : ot.priority === 'Alta' ? 1.35 : 1;
+  return materialCost + getOTHours(ot) * 42 * urgencyFactor;
+}
+function renderMiniBar(label, value, max, hint) {
+  var pct = max ? Math.max(6, Math.min(100, Math.round((value / max) * 100))) : 6;
+  return '<div><div class="flex items-center justify-between text-xs mb-1"><span class="text-slate-400">' + label + '</span><span class="mono text-slate-300">' + hint + '</span></div>' +
+    '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div></div>';
+}
+function renderExecutiveDashboard() {
+  var total = APP.ots.length || 1;
+  var done = APP.ots.filter(function(o) { return o.status === 'Concluída'; });
+  var failures = APP.ots.filter(function(o) { return ['Corretiva','Avaria','Emergência'].includes(o.type) || getOTOrigin(o) === 'request'; });
+  var totalHours = APP.ots.reduce(function(sum, o) { return sum + getOTHours(o); }, 0);
+  var totalCost = APP.ots.reduce(function(sum, o) { return sum + getOTCost(o); }, 0);
+  var slaOk = APP.ots.filter(function(o) { return o.priority !== 'Urgente' || o.status === 'Concluída' || o.status === 'Em Curso'; }).length;
+  var mttr = failures.length ? totalHours / failures.length : 0;
+  var mtbf = failures.length ? Math.max(1, Math.round(30 / failures.length)) : 30;
+  setText('kpi-mttr', mttr.toFixed(1) + 'h');
+  setText('kpi-mtbf', mtbf + 'd');
+  setText('kpi-availability', Math.max(92, 100 - failures.length * 1.7).toFixed(1) + '%');
+  setText('kpi-sla', Math.round((slaOk / total) * 100) + '%');
+  setText('kpi-client-costs', formatCurrency(totalCost));
+  setText('kpi-equipment-costs', formatCurrency(totalCost * 0.82));
+  setText('kpi-tech-hours', totalHours.toFixed(1) + 'h');
+  var chart = document.getElementById('kpi-history-chart');
+  if (chart) {
+    chart.innerHTML = [
+      renderMiniBar('7 dias', Math.min(total, 7), 7, Math.min(total, 7) + ' OTs'),
+      renderMiniBar('30 dias', total, Math.max(total, 10), total + ' OTs'),
+      renderMiniBar('12 meses', totalCost, Math.max(totalCost, 6000), formatCurrency(totalCost))
+    ].join('');
+  }
+  renderCriticalEquipmentRanking();
+  renderClientProfitability();
+  renderAutomationWidgets();
+  renderCommercialWidgets();
+}
+function setText(id, value) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+function renderCriticalEquipmentRanking() {
+  var el = document.getElementById('critical-equipment-ranking');
+  if (!el) return;
+  var rows = APP.equipment.map(function(eq) {
+    var related = APP.ots.filter(function(o) { return o.equipmentId === eq.id || o.equipmentName === eq.name; });
+    var failures = related.filter(function(o) { return ['Corretiva','Avaria','Emergência'].includes(o.type) || getOTOrigin(o) === 'request' || ['Alta','Urgente'].includes(o.priority); }).length;
+    return { name: eq.code || eq.name, failures: failures || (eq.criticality === 'Crítico' ? 3 : 1), cost: related.reduce(function(sum, o) { return sum + getOTCost(o); }, 0) || (eq.criticality === 'Crítico' ? 4500 : 1200) };
+  }).sort(function(a,b) { return b.failures - a.failures; }).slice(0,5);
+  el.innerHTML = rows.length ? rows.map(function(r) {
+    return '<div class="grid grid-cols-3 gap-2 text-sm py-2 border-b border-white/5"><div class="font-medium">' + r.name + '</div><div class="text-slate-400">' + r.failures + ' falhas</div><div class="text-right mono">' + formatCurrency(r.cost) + '</div></div>';
+  }).join('') : '<p class="text-slate-500 text-sm">Sem equipamentos críticos.</p>';
+}
+function renderClientProfitability() {
+  var el = document.getElementById('client-profitability');
+  if (!el) return;
+  var clients = APP.clients.length ? APP.clients : [{ name:'Contrato Demo UPS' }, { name:'Cliente Industrial' }];
+  el.innerHTML = clients.slice(0,4).map(function(c, idx) {
+    var hours = Math.max(4, Math.round((APP.ots.length + idx + 1) * 2.4));
+    var materials = 280 + idx * 160;
+    var revenue = 1800 + idx * 950;
+    var margin = revenue - materials - hours * 42;
+    return '<div class="border-b border-white/5 pb-2"><div class="flex justify-between text-sm"><span class="font-medium">' + c.name + '</span><span class="mono ' + (margin >= 0 ? 'text-green-400' : 'text-red-400') + '">' + formatCurrency(margin) + '</span></div>' +
+      '<div class="text-xs text-slate-500 mt-1">Receita ' + formatCurrency(revenue) + ' · ' + hours + 'h · Materiais ' + formatCurrency(materials) + '</div></div>';
+  }).join('');
+}
+function renderAutomationWidgets() {
+  var workflows = document.getElementById('approval-workflows');
+  if (workflows) workflows.innerHTML = [
+    { title:'OT > €500', status:'Enviar gestor', icon:'fa-user-check' },
+    { title:'Peça crítica', status:'Aprovação cliente', icon:'fa-cart-shopping' }
+  ].map(function(w) {
+    return '<div class="flex items-center justify-between p-3 rounded-lg" style="background:rgba(255,255,255,0.04)"><div><div class="text-sm font-medium">' + w.title + '</div><div class="text-xs text-slate-500">' + w.status + ' → Aprovar → Executar</div></div><i class="fas ' + w.icon + ' text-purple-400"></i></div>';
+  }).join('');
+  var smart = document.getElementById('smart-notifications');
+  if (smart) smart.innerHTML = ['OT atribuída','SLA perto do limite','Preventiva a vencer','Equipamento crítico parado','Escalonamento 30 min'].map(function(n, i) {
+    var channel = i % 3 === 0 ? 'Email' : i % 3 === 1 ? 'SMS' : 'WhatsApp';
+    return '<div class="flex items-center justify-between text-sm py-2 border-b border-white/5"><span>' + n + '</span><span class="badge badge-blue">' + channel + '</span></div>';
+  }).join('');
+  var stock = document.getElementById('stock-dashboard');
+  if (stock) stock.innerHTML = [
+    ['Armazém Central', '128 peças'],
+    ['Reservas para OTs', '6 reservas'],
+    ['Stock mínimo', '3 alertas'],
+    ['Entradas/Saídas', '24 movimentos']
+  ].map(function(r) {
+    return '<div class="flex items-center justify-between text-sm py-2 border-b border-white/5"><span>' + r[0] + '</span><span class="mono text-slate-300">' + r[1] + '</span></div>';
+  }).join('');
+}
+function renderCommercialWidgets() {
+  var purchases = document.getElementById('purchase-dashboard');
+  if (purchases) {
+    var pending = (APP.purchases || []).filter(function(p) { return p.status !== 'Recebido'; }).length;
+    var approvedSuppliers = (APP.suppliers || []).filter(function(s) { return s.approved; }).length;
+    purchases.innerHTML = [
+      ['Pedidos de compra', (APP.purchases || []).length + ' total', 'badge-blue'],
+      ['Aprovações pendentes', pending + ' pendente(s)', pending ? 'badge-yellow' : 'badge-green'],
+      ['Receção de material', ((APP.purchases || []).filter(function(p) { return p.status === 'Recebido'; }).length) + ' recebida(s)', 'badge-green'],
+      ['Fornecedores homologados', approvedSuppliers + ' ativo(s)', 'badge-purple']
+    ].map(function(r) {
+      return '<div class="flex items-center justify-between text-sm py-2 border-b border-white/5"><span>' + r[0] + '</span><span class="badge ' + r[2] + '">' + r[1] + '</span></div>';
+    }).join('');
+  }
+  var contracts = document.getElementById('contracts-dashboard');
+  if (contracts) {
+    var rows = APP.contracts && APP.contracts.length ? APP.contracts : getDefaultContracts();
+    contracts.innerHTML = rows.slice(0,3).map(function(c) {
+      return '<div class="border-b border-white/5 pb-2"><div class="flex justify-between text-sm"><span class="font-medium">' + c.client + '</span><span class="badge badge-green">' + c.sla + '</span></div>' +
+        '<div class="text-xs text-slate-500 mt-1">' + c.hoursIncluded + 'h incluídas · ' + c.preventivesIncluded + ' preventivas · Renovação ' + c.renewal + '</div></div>';
+    }).join('');
+  }
+  var billing = document.getElementById('billing-dashboard');
+  if (billing) {
+    var docs = APP.invoices && APP.invoices.length ? APP.invoices : getDefaultBillingDocs();
+    billing.innerHTML = docs.slice(-4).reverse().map(function(d) {
+      return '<div class="flex items-center justify-between text-sm py-2 border-b border-white/5"><div><div class="font-medium">' + d.type + ' ' + d.id + '</div><div class="text-xs text-slate-500">' + d.source + '</div></div><span class="mono">' + formatCurrency(d.value) + '</span></div>';
+    }).join('');
+  }
+}
+function getDefaultContracts() {
+  return [
+    { client:'Contrato UPS', sla:'4h', hoursIncluded:40, preventivesIncluded:12, renewal:'automática' },
+    { client:'Cliente Industrial', sla:'8h', hoursIncluded:24, preventivesIncluded:6, renewal:'30 dias antes' }
+  ];
+}
+function getDefaultBillingDocs() {
+  return [
+    { id:'ORC-001', type:'Orçamento', source:'Horas + material UPS', value:1250 },
+    { id:'FAT-001', type:'Fatura', source:'Contrato mensal', value:1800 },
+    { id:'REL-001', type:'Relatório', source:'Intervenção preventiva', value:0 }
+  ];
+}
+function createPurchaseRequest() {
+  APP.purchases = APP.purchases || [];
+  var sourceOT = APP.ots.slice().reverse().find(function(o) { return ['Alta','Urgente'].includes(o.priority); }) || APP.ots[APP.ots.length - 1];
+  APP.purchases.push({
+    id: 'PC-' + String(APP.purchases.length + 1).padStart(3, '0'),
+    item: sourceOT ? 'Material para ' + sourceOT.title : 'Material crítico',
+    supplier: 'Fornecedor homologado',
+    status: 'Aprovação',
+    value: sourceOT ? Math.max(520, Math.round(getOTCost(sourceOT))) : 650,
+    createdAt: new Date().toISOString()
+  });
+  saveData(); renderCommercialWidgets(); renderPurchases(); showToast('Pedido de compra criado e enviado para aprovação.');
+}
+function generateBillingDocuments() {
+  APP.invoices = APP.invoices || [];
+  var billable = APP.ots.slice(-3);
+  var value = billable.reduce(function(sum, ot) { return sum + getOTCost(ot) + 35; }, 0) || 850;
+  var next = APP.invoices.length + 1;
+  APP.invoices.push({ id:'ORC-' + String(next).padStart(3,'0'), type:'Orçamento', source:'Horas + deslocações + material', value:value });
+  APP.invoices.push({ id:'FAT-' + String(next).padStart(3,'0'), type:'Fatura', source:'OTs faturáveis', value:value });
+  APP.invoices.push({ id:'REL-' + String(next).padStart(3,'0'), type:'Relatório', source:'Resumo técnico automático', value:0 });
+  saveData(); renderCommercialWidgets(); renderQuotes(); showToast('Orçamento, fatura e relatório gerados automaticamente.');
+}
+function renderBuildings() {
+  var el = document.getElementById('buildings-grid');
+  if (!el) return;
+  APP.buildings = APP.buildings || [];
+  if (APP.buildings.length === 0) {
+    el.innerHTML = '<div class="card p-8 text-center text-slate-500" style="grid-column:1/-1"><i class="fas fa-building text-3xl mb-3 text-slate-600 block"></i><p>Nenhum edifício registado.</p><button class="btn-primary mt-4" onclick="createBuilding()"><i class="fas fa-plus"></i> Adicionar edifício</button></div>';
+    return;
+  }
+  el.innerHTML = APP.buildings.map(function(b) {
+    var client = APP.clients.find(function(c) { return c.id === b.clientId; });
+    var equipmentCount = APP.equipment.filter(function(e) { return e.clientId === b.clientId; }).length;
+    return '<div class="card p-5">' +
+      '<div class="flex items-start gap-3 mb-4"><div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:rgba(34,197,94,0.14);color:#4ade80"><i class="fas fa-building"></i></div>' +
+      '<div><div class="font-semibold">' + escapeHtml(b.name) + '</div><div class="text-xs text-slate-400">' + escapeHtml(client ? client.name : (b.clientName || 'Sem cliente')) + '</div></div></div>' +
+      '<div class="space-y-2 text-xs text-slate-400">' +
+      (b.address ? '<div><i class="fas fa-location-dot" style="margin-right:8px"></i>' + escapeHtml(b.address) + '</div>' : '') +
+      (b.zones ? '<div><i class="fas fa-layer-group" style="margin-right:8px"></i>' + escapeHtml(b.zones) + '</div>' : '') +
+      '<div><i class="fas fa-microchip" style="margin-right:8px"></i>' + equipmentCount + ' equipamento(s) do cliente</div>' +
+      '</div></div>';
+  }).join('');
+}
+function createBuilding() {
+  if (!APP.clients.length) { showToast('Crie um cliente antes de adicionar edifícios.'); showPage('clients'); return; }
+  var name = prompt('Nome do edifício / instalação');
+  if (!name) return;
+  var clientHint = APP.clients.map(function(c) { return c.name; }).join(', ');
+  var clientName = prompt('Cliente associado (nomes: ' + clientHint + ')', APP.clients[0].name) || APP.clients[0].name;
+  var client = APP.clients.find(function(c) { return c.name.toLowerCase() === clientName.toLowerCase(); }) || APP.clients[0];
+  var address = prompt('Morada / localização', client.address || '') || '';
+  var zones = prompt('Pisos, salas ou zonas técnicas', 'Piso 0, Sala técnica') || '';
+  APP.buildings = APP.buildings || [];
+  APP.buildings.push({ id: generateId('ED'), name: name, clientId: client.id, clientName: client.name, address: address, zones: zones, createdAt: new Date().toISOString() });
+  saveData(); renderBuildings(); showToast('Edifício associado ao cliente.');
+}
+function renderMaterials() {
+  var tbody = document.getElementById('materials-table-body');
+  if (!tbody) return;
+  var rows = (APP.stockMaterials || []).slice();
+  APP.ots.forEach(function(ot) {
+    (ot.materials || []).forEach(function(m) {
+      rows.push({ name: m.description || m.name || 'Material usado', category: 'Usado em OT', stock: m.qty || 1, cost: m.cost || 0, location: ot.title || ot.id });
+    });
+  });
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-slate-500 py-8">Nenhum material registado.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(function(m) {
+    return '<tr><td class="font-medium">' + escapeHtml(m.name || 'Material') + '</td><td><span class="badge badge-blue">' + escapeHtml(m.category || 'Geral') + '</span></td><td>' + escapeHtml(String(m.stock || 0)) + '</td><td class="mono">' + formatCurrency(Number(m.cost || 0)) + '</td><td class="text-slate-400">' + escapeHtml(m.location || 'Armazém') + '</td></tr>';
+  }).join('');
+}
+function createStockMaterial() {
+  var name = prompt('Nome do material');
+  if (!name) return;
+  var category = prompt('Categoria', 'Elétrico') || 'Geral';
+  var stock = Number(prompt('Quantidade em stock', '1') || 0);
+  var cost = Number(prompt('Custo unitário', '0') || 0);
+  var location = prompt('Localização', 'Armazém central') || 'Armazém central';
+  APP.stockMaterials = APP.stockMaterials || [];
+  APP.stockMaterials.push({ id: generateId('MAT'), name: name, category: category, stock: stock, cost: cost, location: location, createdAt: new Date().toISOString() });
+  saveData(); renderMaterials(); showToast('Material adicionado ao stock.');
+}
+function renderPurchases() {
+  var tbody = document.getElementById('purchases-table-body');
+  if (!tbody) return;
+  var rows = APP.purchases || [];
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-slate-500 py-8">Nenhum pedido de compra registado.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.slice().reverse().map(function(p) {
+    return '<tr><td class="mono">' + escapeHtml(p.id) + '</td><td>' + escapeHtml(p.item) + '</td><td>' + escapeHtml(p.supplier || 'Fornecedor') + '</td><td><span class="badge badge-yellow">' + escapeHtml(p.status || 'Aprovação') + '</span></td><td class="mono">' + formatCurrency(Number(p.value || 0)) + '</td><td class="text-slate-400">' + formatDate(p.createdAt) + '</td></tr>';
+  }).join('');
+}
+function renderQuotes() {
+  var tbody = document.getElementById('quotes-table-body');
+  if (!tbody) return;
+  var rows = APP.invoices && APP.invoices.length ? APP.invoices : [];
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-slate-500 py-8">Nenhum orçamento ou documento comercial gerado.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.slice().reverse().map(function(d) {
+    var badge = d.type === 'Orçamento' ? 'badge-purple' : d.type === 'Fatura' ? 'badge-green' : 'badge-blue';
+    return '<tr><td class="mono">' + escapeHtml(d.id) + '</td><td><span class="badge ' + badge + '">' + escapeHtml(d.type) + '</span></td><td>' + escapeHtml(d.source || 'Documento comercial') + '</td><td class="mono">' + formatCurrency(Number(d.value || 0)) + '</td></tr>';
+  }).join('');
 }
 
 // ======================== OTs ========================
@@ -1740,19 +2768,38 @@ function generateId(prefix) {
 function openNewOTModal() {
   populateOTSelects();
   document.getElementById('ot-date').value = new Date().toISOString().slice(0,16);
+  document.getElementById('ot-image-upload').value = '';
+  enhanceFileInputs();
   document.getElementById('modal-new-ot').style.display = 'flex';
 }
 function populateOTSelects() {
   var equipSel = document.getElementById('ot-equipment');
   var techSel = document.getElementById('ot-technician');
   var incidentEquipSel = document.getElementById('incident-equip');
+  var equipClientSel = document.getElementById('equip-client');
+  var fileUsersSel = document.getElementById('file-users');
+  var fileTeamsSel = document.getElementById('file-teams');
+  var fileClientSel = document.getElementById('file-client');
+  var fileEquipSel = document.getElementById('file-equipment');
+  var fileOtSel = document.getElementById('file-ot');
+  var fileFolderSel = document.getElementById('file-folder');
+  var folderParentSel = document.getElementById('folder-parent');
   if (equipSel) equipSel.innerHTML = '<option value="">Selecionar...</option>' + APP.equipment.map(function(e) { return '<option value="' + e.id + '">' + e.name + '</option>'; }).join('');
   if (techSel) techSel.innerHTML = '<option value="">Selecionar...</option>' + APP.technicians.map(function(t) { return '<option value="' + t.id + '">' + t.name + '</option>'; }).join('');
   if (incidentEquipSel) incidentEquipSel.innerHTML = '<option value="">Selecionar...</option>' + APP.equipment.map(function(e) { return '<option value="' + e.id + '">' + e.name + '</option>'; }).join('');
+  if (equipClientSel) equipClientSel.innerHTML = '<option value="">Selecionar cliente...</option>' + APP.clients.map(function(c) { return '<option value="' + c.id + '">' + c.name + '</option>'; }).join('');
+  if (fileUsersSel) fileUsersSel.innerHTML = APP.technicians.map(function(t) { return '<option value="' + t.id + '">' + t.name + '</option>'; }).join('');
+  if (fileTeamsSel) fileTeamsSel.innerHTML = getTeamOptions().map(function(t) { return '<option value="' + t + '">' + t + '</option>'; }).join('');
+  if (fileClientSel) fileClientSel.innerHTML = '<option value="">Sem cliente</option>' + APP.clients.map(function(c) { return '<option value="' + c.id + '">' + c.name + '</option>'; }).join('');
+  if (fileEquipSel) fileEquipSel.innerHTML = '<option value="">Sem equipamento</option>' + APP.equipment.map(function(e) { return '<option value="' + e.id + '">' + e.name + '</option>'; }).join('');
+  if (fileOtSel) fileOtSel.innerHTML = '<option value="">Sem OT</option>' + APP.ots.map(function(o) { return '<option value="' + o.id + '">' + o.id + ' - ' + o.title + '</option>'; }).join('');
+  if (fileFolderSel) fileFolderSel.innerHTML = '<option value="">Raiz</option>' + getFolderOptionsHtml();
+  if (folderParentSel) folderParentSel.innerHTML = '<option value="">Raiz</option>' + getFolderOptionsHtml();
 }
-function createOT() {
+async function createOT() {
   var title = document.getElementById('ot-title').value.trim();
   if (!title) { alert('Título é obrigatório.'); return; }
+  var image = await readSingleUpload('ot-image-upload');
   var equipId = document.getElementById('ot-equipment').value;
   var techId = document.getElementById('ot-technician').value;
   var equip = APP.equipment.find(function(e) { return e.id === equipId; });
@@ -1767,6 +2814,9 @@ function createOT() {
     date: document.getElementById('ot-date').value,
     description: document.getElementById('ot-desc').value,
     location: document.getElementById('ot-location').value,
+    image: image ? image.dataUrl : '',
+    imageName: image ? image.name : '',
+    nfcTag: 'NFC-OT-' + Date.now().toString(36).toUpperCase(),
     tasks: [], materials: [], timeLogs: [], comments: [], report: '',
     activity: [{ text: 'OT criada', time: new Date().toLocaleString('pt-PT') }],
     createdAt: new Date().toISOString(),
@@ -1775,6 +2825,7 @@ function createOT() {
   saveData();
   closeModal('modal-new-ot');
   ['ot-title','ot-desc','ot-location'].forEach(function(id) { document.getElementById(id).value = ''; });
+  document.getElementById('ot-image-upload').value = '';
   updateDashboard(); renderOTs(); showToast('OT criada com sucesso!');
 }
 function getFilteredOTs() {
@@ -1796,7 +2847,7 @@ function renderOTs() {
     tbody.innerHTML = filtered.map(function(o) {
       return '<tr onclick="openOTDetail(\'' + o.id + '\')">' +
         '<td class="mono text-xs text-slate-400">' + o.id + '</td>' +
-        '<td class="font-medium" style="color:var(--text-primary)">' + o.title + '</td>' +
+        '<td class="font-medium" style="color:var(--text-primary)"><div class="flex items-center gap-3">' + renderSmallImage(o.image, o.title, 'fa-wrench') + '<span>' + o.title + '</span></div></td>' +
         '<td>' + (o.equipmentName || '—') + '</td>' +
         '<td><span class="badge badge-purple">' + o.type + '</span></td>' +
         '<td><span class="badge ' + getPriorityClass(o.priority) + '">' + o.priority + '</span></td>' +
@@ -1828,7 +2879,7 @@ function setOTView(view) {
   document.getElementById('view-kanban').style.color = view === 'kanban' ? 'var(--accent-purple-light)' : '';
 }
 function renderKanban(list) {
-  var cols = [['Aberta','aberta'],['Em Curso','andamento'],['Concluída','concluida'],['Cancelada','cancelada']];
+  var cols = [['Aberta','aberta'],['Em Curso','em-curso'],['Pausada','pausada'],['Aguarda Material','aguarda-material'],['Concluída','concluida'],['Cancelada','cancelada']];
   cols.forEach(function(col) {
     var items = list.filter(function(o) { return o.status === col[0]; });
     var el = document.getElementById('kanban-' + col[1]);
@@ -1838,7 +2889,7 @@ function renderKanban(list) {
     el.innerHTML = items.length === 0
       ? '<div class="text-xs text-slate-600 text-center py-4">Vazio</div>'
       : items.map(function(o) {
-          return '<div class="kanban-card" onclick="openOTDetail(\'' + o.id + '\')">' +
+          return '<div class="kanban-card" draggable="true" ondragstart="dragOTFromKanban(event,\'' + o.id + '\')" onclick="openOTDetail(\'' + o.id + '\')">' +
             '<div class="text-xs text-slate-500 mono mb-1">' + o.id + '</div>' +
             '<div class="text-sm font-medium mb-2">' + o.title + '</div>' +
             '<div class="flex items-center justify-between"><span class="badge ' + getPriorityClass(o.priority) + ' text-xs">' + o.priority + '</span>' +
@@ -1846,10 +2897,35 @@ function renderKanban(list) {
         }).join('');
   });
 }
+function dragOTFromKanban(event, id) {
+  event.dataTransfer.setData('text/plain', id);
+  event.dataTransfer.effectAllowed = 'move';
+}
+function allowKanbanDrop(event) {
+  event.preventDefault();
+  event.currentTarget.classList.add('drag-over');
+}
+function leaveKanbanDrop(event) {
+  event.currentTarget.classList.remove('drag-over');
+}
+function dropOTOnKanban(event, status) {
+  event.preventDefault();
+  event.currentTarget.classList.remove('drag-over');
+  var id = event.dataTransfer.getData('text/plain');
+  var ot = APP.ots.find(function(o) { return o.id === id; });
+  if (!ot) return;
+  ot.status = status;
+  ot.activity = ot.activity || [];
+  ot.activity.push({ text: 'Estado alterado via Kanban para ' + status, time: new Date().toLocaleString('pt-PT') });
+  if (APP.currentOT && APP.currentOT.id === id) document.getElementById('ot-detail-status').value = status;
+  if (status === 'Concluída' && !ot.report) ot.report = generateAutoReport(ot);
+  saveData(); updateDashboard(); renderOTs(); showToast('OT movida para ' + status + '.');
+}
 function openOTDetail(id) {
   var ot = APP.ots.find(function(o) { return o.id === id; });
   if (!ot) return;
   APP.currentOT = ot;
+  ot.nfcTag = ot.nfcTag || ('NFC-OT-' + ot.id);
   document.getElementById('ot-detail-id').textContent = ot.id;
   document.getElementById('ot-detail-title').textContent = ot.title;
   document.getElementById('ot-detail-status').value = ot.status;
@@ -1860,17 +2936,37 @@ function openOTDetail(id) {
   document.getElementById('ot-detail-date').textContent = ot.date ? new Date(ot.date).toLocaleString('pt-PT') : '—';
   document.getElementById('ot-detail-location').textContent = ot.location || '—';
   document.getElementById('ot-detail-desc').textContent = ot.description || '—';
+  renderDetailImage('ot-detail-image-wrap', 'ot-detail-image', ot.image);
+  document.getElementById('ot-nfc-token').textContent = ot.nfcTag;
   document.getElementById('ot-report').value = ot.report || '';
   document.getElementById('ot-auto-request-result').style.display = 'none';
   updateOTTimeDisplay();
   renderOTTasks(); renderOTActivity(); renderOTComments(); renderOTMaterials();
-  document.getElementById('modal-ot-detail').style.display = 'flex';
+  renderAssociatedFiles('ot', ot.id, 'ot-files-list');
+  renderOTCopilot();
+  showDetailPage('modal-ot-detail');
 }
 function updateOTStatus(status) {
   if (!APP.currentOT) return;
   APP.currentOT.status = status;
+  if (status === 'Concluída') {
+    APP.currentOT.report = generateAutoReport(APP.currentOT);
+    var reportEl = document.getElementById('ot-report');
+    if (reportEl) reportEl.value = APP.currentOT.report;
+  }
   APP.currentOT.activity.push({ text: 'Estado alterado para ' + status, time: new Date().toLocaleString('pt-PT') });
   saveData(); updateDashboard(); renderOTs(); renderOTActivity();
+}
+async function updateOTCoverFromInput() {
+  if (!APP.currentOT) return;
+  var image = await readSingleUpload('ot-cover-upload');
+  if (!image) return;
+  APP.currentOT.image = image.dataUrl;
+  APP.currentOT.imageName = image.name;
+  saveData();
+  renderDetailImage('ot-detail-image-wrap', 'ot-detail-image', APP.currentOT.image);
+  renderOTs();
+  showToast('Capa da OT atualizada.');
 }
 
 var BACKEND_STATUS_TO_UI = {
@@ -1976,6 +3072,7 @@ function createScheduledDemoFlow() {
       equipmentName: 'Bomba Principal', technicianName: 'Técnico Demo',
       date: new Date(Date.now() + 86400000).toISOString(),
       description: 'Inspeção programada com medição de vibração no rolamento.',
+      nfcTag: 'NFC-OT-DEMO',
       tasks: [], materials: [], timeLogs: [], comments: [], report: '',
       activity: [{ text: 'OT preventiva criada localmente', time: new Date().toLocaleString('pt-PT') }]
     };
@@ -2111,9 +3208,9 @@ function renderTaskRow(t, i) {
     '<div class="task-check ' + (t.done ? 'checked' : '') + '" onclick="toggleTask(' + i + ')" style="margin-top:2px">' +
     (t.done ? '<i class="fas fa-check text-white text-xs"></i>' : '') + '</div>' +
     '<div class="flex-1"><div class="text-sm font-medium' + (t.done ? '" style="text-decoration:line-through;color:var(--text-muted)"' : '"') + '>' + t.description + '</div>' +
-    '<div class="text-xs text-slate-500 mt-1">' + typeLabel + '</div>' + valueSection + '</div></div>' +
+    '<div class="text-xs text-slate-500 mt-1">' + typeLabel + (t.fileRef ? ' · <i class="fas fa-paperclip"></i> ficheiro de apoio' : '') + '</div>' + valueSection + '</div></div>' +
     '<div class="flex items-center gap-2 ml-3">' + stateHtml +
-    (t.help ? '<button class="btn-ghost text-xs tooltip" onclick="showTaskHelp(' + i + ')"><i class="fas fa-question-circle" style="color:var(--accent-blue)"></i></button>' : '') +
+    '<button class="btn-ghost text-xs tooltip" onclick="showTaskHelp(' + i + ')"><i class="fas fa-circle-question" style="color:var(--accent-blue)"></i></button>' +
     '<button class="btn-ghost text-xs" onclick="removeTask(' + i + ')"><i class="fas fa-trash" style="color:var(--accent-red)"></i></button></div></div></div>';
 }
 function toggleTask(i) {
@@ -2134,13 +3231,129 @@ function removeTask(i) {
 }
 function showTaskHelp(i) {
   var t = APP.currentOT.tasks[i];
-  alert('Como fazer: ' + t.description + '\n\n' + t.help);
+  openHowToPanel(t);
+}
+function openHowToPanel(task) {
+  var panel = document.getElementById('howto-panel');
+  var content = document.getElementById('howto-content');
+  if (!panel || !content) return;
+  var response = buildHowToResponse(task || { description:'Tarefa técnica' });
+  content.innerHTML = response;
+  panel.style.display = 'block';
+}
+function closeHowToPanel() {
+  document.getElementById('howto-panel').style.display = 'none';
+}
+function buildHowToResponse(task) {
+  var source = findBestInternalProcedure(task);
+  var tools = source.tools || task.tools || inferToolsForTask(task.description);
+  var epis = inferSafetyForTask(task.description);
+  var steps = source.solution || task.help || '1. Preparação\n2. Segurança\n3. Execução\n4. Validação\n5. Encerramento';
+  var photos = source.photos || 'foto-checklist-equipamento.jpg';
+  var diagrams = source.diagram || source.pdf || 'esquema-tecnico-interno.pdf';
+  return '<div class="space-y-4">' +
+    '<div class="flex gap-2 flex-wrap">' + getHowToSources(source).map(function(s) { return '<span class="source-pill">' + s + '</span>'; }).join('') + '</div>' +
+    howToSection('Objetivo', 'Executar a tarefa "' + escapeHtml(task.description) + '" de forma segura, rastreável e conforme os procedimentos internos.') +
+    howToSection('Ferramentas Necessárias', listFromText(tools).map(function(x) { return '- ' + x; }).join('\n')) +
+    howToSection('Equipamentos de Segurança', epis.map(function(x) { return '- ' + x; }).join('\n')) +
+    howToSection('Passo a Passo', normalizeHowToSteps(steps)) +
+    renderTaskHelpAttachment(task) +
+    howToSection('Fotografias', '<div class="grid grid-cols-2 gap-2"><div class="card p-3 text-xs text-slate-400"><i class="fas fa-image text-blue-400"></i> ' + escapeHtml(photos) + '</div><div class="card p-3 text-xs text-slate-400"><i class="fas fa-camera text-blue-400"></i> Foto antes/depois</div></div>', true) +
+    howToSection('Diagramas', '<div class="card p-3 text-xs text-slate-400"><i class="fas fa-diagram-project text-purple-400"></i> ' + escapeHtml(diagrams) + '</div>', true) +
+    howToSection('Tempo Estimado', estimateTaskTime(task.description)) +
+    howToSection('Riscos', inferRisksForTask(task.description).map(function(x) { return '- ' + x; }).join('\n')) +
+    '</div>';
+}
+function howToSection(title, body, html) {
+  return '<section><h3 class="font-semibold mb-2">' + title + '</h3><div class="text-sm text-slate-300" style="white-space:pre-line">' + (html ? body : escapeHtml(body)) + '</div></section>';
+}
+function renderTaskHelpAttachment(task) {
+  if (!task || !task.fileRef) return '';
+  var type = task.fileType || 'Ficheiro';
+  var ref = getAssetHref(task.fileRef);
+  var displayName = task.fileName || getAssetName(task.fileRef);
+  var safeRef = escapeHtml(ref);
+  var safeName = escapeHtml(displayName);
+  var icon = getTaskFileIcon(type);
+  var preview = '';
+  if (type === 'Imagem' && isImageUrl(ref)) {
+    preview = '<a href="' + safeRef + '" target="_blank" class="block mt-3"><img src="' + safeRef + '" alt="' + safeName + '" class="w-full rounded-lg border border-white/10 object-cover" style="max-height:220px"></a>';
+  } else if (type === 'Vídeo' && isVideoUrl(ref)) {
+    preview = '<video controls class="w-full rounded-lg border border-white/10 mt-3"><source src="' + safeRef + '"></video>';
+  }
+  return howToSection('Ficheiro de apoio', '<a href="' + safeRef + '" target="_blank" class="flex items-center gap-3 p-3 rounded-lg border border-white/10 hover:border-purple-400/60 transition-all">' +
+    '<div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:rgba(99,102,241,0.18)"><i class="fas ' + icon + ' text-purple-400"></i></div>' +
+    '<div class="min-w-0"><div class="font-medium text-slate-200">' + escapeHtml(type) + '</div><div class="text-xs text-slate-500 truncate">' + safeName + '</div></div></a>' + preview, true);
+}
+function getTaskFileIcon(type) {
+  return {'Link':'fa-link','Vídeo':'fa-video','Imagem':'fa-image','Esquema elétrico':'fa-bolt','PDF':'fa-file-pdf','Outro documento':'fa-file-lines'}[type] || 'fa-paperclip';
+}
+function findBestInternalProcedure(task) {
+  var query = ((task.description || '') + ' ' + (APP.currentOT ? APP.currentOT.equipmentName || '' : '')).toLowerCase();
+  var ordered = (APP.knowledge || []).slice().sort(function(a,b) {
+    var ak = a.kind === 'Procedimento' ? 0 : 1;
+    var bk = b.kind === 'Procedimento' ? 0 : 1;
+    return ak - bk;
+  });
+  return ordered.find(function(k) {
+    var hay = ((k.title || '') + ' ' + (k.equipment || '') + ' ' + (k.category || '') + ' ' + (k.solution || '')).toLowerCase();
+    return query.split(/\s+/).some(function(w) { return w.length > 4 && hay.includes(w); });
+  }) || {};
+}
+function getHowToSources(source) {
+  var sources = ['1. Procedimentos Internos'];
+  sources.push(source.id ? '2. Base de Conhecimento: ' + source.id : '2. Base de Conhecimento');
+  sources.push('3. Catálogos Técnicos');
+  sources.push(source.pdf ? '4. Manual PDF: ' + source.pdf : '4. Manuais PDF');
+  sources.push('5. Websites Técnicos registados');
+  return sources;
+}
+function listFromText(text) {
+  return String(text || 'Multímetro, lanterna, chave isolada, tablet ManuGent').split(/[,;\n]/).map(function(x) { return x.trim(); }).filter(Boolean);
+}
+function normalizeHowToSteps(text) {
+  var clean = String(text || '').trim();
+  if (!clean) clean = 'Preparação\nSegurança\nExecução\nValidação\nEncerramento';
+  return '1. Preparação\n' + clean + '\n\n2. Segurança\nConfirmar EPI, isolamento e permissões.\n\n3. Execução\nExecutar a tarefa seguindo o procedimento interno.\n\n4. Validação\nRegistar leitura, estado OK/NOK e evidência fotográfica.\n\n5. Encerramento\nLimpar área, repor serviço e atualizar relatório.';
+}
+function inferToolsForTask(text) {
+  var t = (text || '').toLowerCase();
+  if (t.includes('bateria') || t.includes('tensão') || t.includes('ups')) return 'Multímetro, chave isolada, analisador de baterias, câmara térmica';
+  if (t.includes('ats') || t.includes('gerador')) return 'Multímetro, cronómetro, rádio, checklist ATS';
+  if (t.includes('pressão')) return 'Manómetro, chaves, detetor de fugas';
+  return 'Tablet ManuGent, lanterna, ferramentas manuais, checklist técnico';
+}
+function inferSafetyForTask(text) {
+  var t = (text || '').toLowerCase();
+  var base = ['Luvas de proteção', 'Óculos de segurança', 'Calçado de segurança'];
+  if (t.includes('ups') || t.includes('tensão') || t.includes('quadro') || t.includes('bateria')) base.push('Luvas isolantes', 'Viseira', 'Tapete isolante');
+  if (t.includes('gerador')) base.push('Proteção auditiva', 'Colete refletor');
+  return base;
+}
+function estimateTaskTime(text) {
+  var t = (text || '').toLowerCase();
+  if (t.includes('troca') || t.includes('bateria')) return '45 a 90 minutos';
+  if (t.includes('ats') || t.includes('teste')) return '20 a 30 minutos';
+  if (t.includes('limpeza')) return '15 a 25 minutos';
+  return '10 a 20 minutos';
+}
+function inferRisksForTask(text) {
+  var t = (text || '').toLowerCase();
+  var risks = ['Não executar sem autorização quando houver impacto no cliente', 'Registar qualquer NOK ou leitura fora do limite'];
+  if (t.includes('ups') || t.includes('tensão') || t.includes('bateria')) risks.push('Risco elétrico e arco elétrico', 'Baterias podem libertar gases ou ter corrente elevada');
+  if (t.includes('gerador') || t.includes('ats')) risks.push('Arranque automático inesperado', 'Transferência de carga pode afetar serviços críticos');
+  return risks;
 }
 function openAddTaskModal() {
   document.getElementById('task-desc').value = '';
   document.getElementById('task-help').value = '';
+  document.getElementById('task-file-type').value = '';
+  document.getElementById('task-file-ref').value = '';
+  document.getElementById('task-file-upload').value = '';
   document.getElementById('task-type').value = 'check';
   updateTaskTypeFields();
+  updateTaskFileAccept();
+  enhanceFileInputs();
   document.getElementById('modal-add-task').style.display = 'flex';
 }
 function updateTaskTypeFields() {
@@ -2148,11 +3361,29 @@ function updateTaskTypeFields() {
   document.getElementById('task-measure-fields').style.display = type === 'measure' ? 'block' : 'none';
   document.getElementById('task-lube-fields').style.display = type === 'lubrication' ? 'block' : 'none';
 }
-function addTaskToOT() {
+function updateTaskFileAccept() {
+  var type = document.getElementById('task-file-type').value;
+  var upload = document.getElementById('task-file-upload');
+  if (!upload) return;
+  upload.accept = getAcceptForFileType(type);
+}
+async function addTaskToOT() {
   var desc = document.getElementById('task-desc').value.trim();
   if (!desc) { alert('Descrição é obrigatória.'); return; }
   var type = document.getElementById('task-type').value;
-  var task = { description: desc, type: type, done: false, state: null, help: document.getElementById('task-help').value };
+  var uploaded = await readSingleUpload('task-file-upload');
+  var fileRef = uploaded ? uploaded.dataUrl : document.getElementById('task-file-ref').value.trim();
+  var fileType = document.getElementById('task-file-type').value || inferFileTypeFromUpload(uploaded);
+  var task = {
+    description: desc,
+    type: type,
+    done: false,
+    state: null,
+    help: document.getElementById('task-help').value,
+    fileType: fileType,
+    fileRef: fileRef,
+    fileName: uploaded ? uploaded.name : ''
+  };
   if (type === 'measure') {
     task.min = document.getElementById('task-min').value;
     task.max = document.getElementById('task-max').value;
@@ -2193,6 +3424,33 @@ function saveOTReport() {
   APP.currentOT.activity.push({ text: 'Relatório atualizado', time: new Date().toLocaleString('pt-PT') });
   saveData(); renderOTActivity(); showToast('Relatório guardado!');
 }
+function generateAutoReport(ot) {
+  ot = ot || APP.currentOT;
+  if (!ot) return '';
+  var tasks = ot.tasks || [];
+  var readings = tasks.filter(function(t) { return t.type === 'measure' || t.value; });
+  var materials = ot.materials || [];
+  var comments = ot.comments || [];
+  var done = tasks.filter(function(t) { return t.done || t.state === 'OK'; }).length;
+  var nok = tasks.filter(function(t) { return t.state === 'NOK'; }).length;
+  var parts = suggestPartsForOT(ot);
+  return 'RELATÓRIO TÉCNICO PROFISSIONAL\n\n' +
+    'OT: ' + ot.id + ' — ' + ot.title + '\n' +
+    'Equipamento: ' + (ot.equipmentName || '—') + '\n' +
+    'Técnico: ' + (ot.technicianName || '—') + '\n' +
+    'Estado final: ' + ot.status + '\n\n' +
+    'TAREFAS EXECUTADAS\n' + (tasks.length ? tasks.map(function(t) { return '- ' + t.description + ' · ' + (t.state || (t.done ? 'Executada' : 'Pendente')) + (t.value ? ' · Leitura: ' + t.value + (t.unit || '') : ''); }).join('\n') : '- Sem tarefas detalhadas') + '\n\n' +
+    'MATERIAIS USADOS\n' + (materials.length ? materials.map(function(m) { return '- ' + (m.description || m.name || m.item || 'Material') + (m.qty ? ' x' + m.qty : ''); }).join('\n') : '- Sem materiais registados') + '\n\n' +
+    'LEITURAS REGISTADAS\n' + (readings.length ? readings.map(function(t) { return '- ' + t.description + ': ' + (t.value || '—') + (t.unit || '') + ' · Limite ' + (t.min || '—') + '-' + (t.max || '—'); }).join('\n') : '- Sem leituras registadas') + '\n\n' +
+    'COMENTÁRIOS TÉCNICOS\n' + (comments.length ? comments.map(function(c) { return '- ' + c.author + ': ' + c.text; }).join('\n') : '- Sem comentários técnicos') + '\n\n' +
+    'CONCLUSÕES\n' +
+    '- ' + done + ' tarefa(s) executada(s) com validação.\n' +
+    '- ' + nok + ' anomalia(s) NOK identificada(s).\n\n' +
+    'RECOMENDAÇÕES\n' + (parts.length ? parts.map(function(p) { return '- Validar necessidade de ' + p; }).join('\n') : '- Manter monitorização normal e histórico de leituras.') + '\n\n' +
+    'PRÓXIMAS AÇÕES\n' +
+    '- Técnico valida este relatório antes de enviar ao cliente.\n' +
+    '- Agendar seguimento se existir NOK, leitura fora de limite ou material pendente.';
+}
 function addComment() {
   var text = document.getElementById('ot-comment-input').value.trim();
   if (!text) return;
@@ -2217,29 +3475,148 @@ function renderOTActivity() {
     : acts.slice().reverse().map(function(a) { return '<div class="py-1.5 border-b border-white/5"><div class="text-slate-300">' + a.text + '</div><div class="text-slate-600">' + a.time + '</div></div>'; }).join('');
 }
 function requestSignature() { showToast('Pedido de assinatura enviado ao cliente.'); }
+function renderOTCopilot() {
+  var context = document.getElementById('ot-copilot-context');
+  var messages = document.getElementById('ot-copilot-messages');
+  if (!context || !messages || !APP.currentOT) return;
+  var eq = getCurrentOTEquipment();
+  context.textContent = 'Contexto: ' + (APP.currentOT.equipmentName || 'sem equipamento') + ' · ' + APP.currentOT.type + ' · ' + APP.currentOT.status;
+  if (!APP.currentOT.copilotMessages) {
+    APP.currentOT.copilotMessages = [{
+      type: 'ai',
+      text: 'Estou a analisar esta OT, o equipamento associado, procedimentos técnicos e histórico interno. Pergunte, por exemplo: "Como testar o ATS deste gerador?"'
+    }];
+  }
+  messages.innerHTML = APP.currentOT.copilotMessages.map(function(m) {
+    var align = m.type === 'user' ? 'margin-left:auto;background:var(--accent-purple);color:white' : 'background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-primary)';
+    return '<div class="text-xs p-2 rounded-lg" style="max-width:92%;white-space:pre-line;' + align + '">' + escapeHtml(m.text) + '</div>';
+  }).join('');
+  messages.scrollTop = messages.scrollHeight;
+}
+function getCurrentOTEquipment() {
+  if (!APP.currentOT) return null;
+  return APP.equipment.find(function(e) { return e.id === APP.currentOT.equipmentId || e.name === APP.currentOT.equipmentName; }) || null;
+}
+function askOTCopilot(text) {
+  var input = document.getElementById('ot-copilot-input');
+  if (input) input.value = text;
+  sendOTCopilotMessage();
+}
+function sendOTCopilotMessage() {
+  var input = document.getElementById('ot-copilot-input');
+  if (!input || !APP.currentOT) return;
+  var text = input.value.trim();
+  if (!text) return;
+  APP.currentOT.copilotMessages = APP.currentOT.copilotMessages || [];
+  APP.currentOT.copilotMessages.push({ type:'user', text:text });
+  APP.currentOT.copilotMessages.push({ type:'ai', text:getOTCopilotResponse(text) });
+  input.value = '';
+  saveData(); renderOTCopilot();
+}
+function getOTCopilotResponse(question) {
+  var q = question.toLowerCase();
+  var ot = APP.currentOT;
+  var eq = getCurrentOTEquipment();
+  var eqName = (eq && eq.name) || ot.equipmentName || 'equipamento';
+  var relatedProcedures = APP.knowledge.filter(function(k) {
+    var hay = ((k.title || '') + ' ' + (k.equipment || '') + ' ' + (k.category || '') + ' ' + (k.solution || '')).toLowerCase();
+    return hay.includes((eq && eq.category || '').toLowerCase()) || hay.includes(eqName.toLowerCase().split(' ')[0]) || q.split(' ').some(function(word) { return word.length > 4 && hay.includes(word); });
+  }).slice(0, 2);
+  var history = APP.ots.filter(function(o) {
+    return o.id !== ot.id && (o.equipmentId === ot.equipmentId || o.equipmentName === ot.equipmentName);
+  }).slice(-3);
+  if (q.includes('ats') || q.includes('gerador')) {
+    return 'Teste ATS para ' + eqName + '\n\n1. Confirmar condições de segurança e comunicar a sala/cliente\n2. Verificar combustível, óleo, bateria de arranque e alarmes ativos\n3. Simular falha de rede no quadro/ATS conforme procedimento autorizado\n4. Confirmar arranque do gerador e tempo de transferência\n5. Medir tensão/frequência em carga e observar estabilidade\n6. Repor rede, confirmar retorno automático e registar tempos\n\nProcedimentos encontrados: ' + (relatedProcedures.length ? relatedProcedures.map(function(p) { return p.title; }).join(', ') : 'Gerador — Teste ATS') + '\nHistórico interno: ' + (history.length ? history.length + ' OT(s) anteriores neste ativo.' : 'sem falhas anteriores registadas neste ativo.');
+  }
+  if (q.includes('bypass') || q.includes('alarme') || q.includes('bateria') || q.includes('diagnóstico')) {
+    var parts = suggestPartsForOT(ot);
+    return 'Diagnóstico inteligente para ' + eqName + '\n\nPossíveis causas:\n- Baterias degradadas ou fim de vida: 62%\n- Temperatura/ventilação insuficiente: 24%\n- Falha no carregador ou módulo de potência: 14%\n\nProcedimentos recomendados:\n- Consultar procedimento interno de UPS antes de qualquer intervenção\n- Medir tensão por bloco/string e confirmar alarmes ativos\n- Verificar temperatura ambiente, filtros e ventilação\n- Se houver bypass ativo, confirmar redundância e autorização do cliente\n\nPeças recomendadas:\n' + parts.map(function(p) { return '- ' + p; }).join('\n');
+  }
+  if (q.includes('procedimento') || q.includes('manual')) {
+    return relatedProcedures.length
+      ? 'Procedimentos relevantes para ' + eqName + ':\n\n' + relatedProcedures.map(function(p) { return '- ' + p.title + '\n  ' + (p.solution || '').split('\n').slice(0,3).join('\n  '); }).join('\n')
+      : 'Não encontrei um procedimento específico para este equipamento. Recomendo criar um procedimento técnico na Base de Conhecimento e anexar manual, fotos ou PDF.';
+  }
+  if (q.includes('histórico') || q.includes('falha') || q.includes('falhas')) {
+    return history.length
+      ? 'Histórico interno de ' + eqName + ':\n\n' + history.map(function(o) { return '- ' + o.id + ' · ' + o.title + ' · ' + o.status; }).join('\n')
+      : 'Não existem OTs anteriores associadas a este equipamento. Esta intervenção ficará como primeira referência histórica.';
+  }
+  return 'Para esta OT eu consideraria:\n\n- Equipamento: ' + eqName + '\n- Tipo/estado: ' + ot.type + ' · ' + ot.status + '\n- Procedimentos disponíveis: ' + relatedProcedures.length + '\n- Histórico relacionado: ' + history.length + ' OT(s)\n\nDescreva o sintoma ou peça um teste específico para eu sugerir passos técnicos.';
+}
+function suggestPartsForOT(ot) {
+  var text = ((ot && (ot.title + ' ' + ot.description + ' ' + ot.equipmentName)) || '').toLowerCase();
+  var history = APP.ots.filter(function(o) { return ot && o.id !== ot.id && (o.equipmentId === ot.equipmentId || o.equipmentName === ot.equipmentName); });
+  if (text.includes('ups') || text.includes('bateria') || text.includes('bypass')) return ['Blocos de bateria compatíveis', 'Fusíveis DC', 'Filtro de ar UPS', 'Sensor térmico', 'Módulo carregador'];
+  if (text.includes('gerador') || text.includes('ats')) return ['Filtro óleo', 'Filtro combustível', 'Correia', 'Bateria de arranque', 'Relé ATS'];
+  if (text.includes('bomba')) return ['Vedante mecânico', 'Rolamento', 'Retentor', 'Acoplamento', 'Lubrificante'];
+  if (history.some(function(h) { return ['Alta','Urgente'].includes(h.priority); })) return ['Kit preventivo do equipamento', 'Consumíveis críticos', 'Ferramentas de diagnóstico'];
+  return ['Consumíveis padrão', 'EPI adequado', 'Ferramentas manuais'];
+}
+function escapeHtml(text) {
+  return String(text || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+function renderSmallImage(src, alt, fallbackIcon) {
+  if (src) return '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(alt) + '" class="w-9 h-9 rounded-lg object-cover border border-white/10">';
+  return '<div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:rgba(99,102,241,0.16)"><i class="fas ' + (fallbackIcon || 'fa-image') + ' text-purple-400 text-xs"></i></div>';
+}
+function renderDetailImage(wrapId, imageId, src) {
+  var wrap = document.getElementById(wrapId);
+  var img = document.getElementById(imageId);
+  if (!wrap || !img) return;
+  if (src) {
+    img.src = src;
+    wrap.style.display = 'block';
+  } else {
+    img.removeAttribute('src');
+    wrap.style.display = 'none';
+  }
+}
 
 // ======================== EQUIPMENT ========================
-function openNewEquipModal() { document.getElementById('modal-new-equip').style.display = 'flex'; }
-function createEquipment() {
+function openNewEquipModal() {
+  populateOTSelects();
+  document.getElementById('equip-image-upload').value = '';
+  enhanceFileInputs();
+  document.getElementById('modal-new-equip').style.display = 'flex';
+}
+async function createEquipment() {
   var name = document.getElementById('equip-name').value.trim();
   if (!name) { alert('Nome é obrigatório.'); return; }
+  var image = await readSingleUpload('equip-image-upload');
+  var clientId = document.getElementById('equip-client').value;
+  var client = APP.clients.find(function(c) { return c.id === clientId; });
+  if (!clientId) { alert('Cliente proprietário é obrigatório.'); return; }
+  var code = document.getElementById('equip-code').value || generateId('EQ');
   var equip = {
     id: generateId('EQ'), name: name,
-    code: document.getElementById('equip-code').value,
+    code: code,
+    qrCode: 'MG-' + code + '-' + Date.now().toString(36).toUpperCase(),
+    nfcTag: 'NFC-EQ-' + code,
     brand: document.getElementById('equip-brand').value,
     model: document.getElementById('equip-model').value,
     serial: document.getElementById('equip-serial').value,
     category: document.getElementById('equip-category').value,
     location: document.getElementById('equip-location').value,
     criticality: document.getElementById('equip-criticality').value,
+    clientId: clientId,
+    clientName: client ? client.name : '',
     installDate: document.getElementById('equip-install-date').value,
     status: document.getElementById('equip-status').value,
     notes: document.getElementById('equip-notes').value,
+    image: image ? image.dataUrl : '',
+    imageName: image ? image.name : '',
+    preventiveRule: null,
+    operatingHours: 0,
+    cycleCount: 0,
+    readings: getDefaultReadings(),
     createdAt: new Date().toISOString(),
   };
   APP.equipment.push(equip);
   saveData(); closeModal('modal-new-equip');
   ['equip-name','equip-code','equip-brand','equip-model','equip-serial','equip-location','equip-notes'].forEach(function(id) { document.getElementById(id).value = ''; });
+  document.getElementById('equip-client').value = '';
+  document.getElementById('equip-image-upload').value = '';
   updateDashboard(); renderEquipment(); populateOTSelects(); showToast('Equipamento adicionado!');
 }
 function renderEquipment(list) {
@@ -2258,11 +3635,13 @@ function renderEquipment(list) {
     var icon = catIcon[e.category] || 'fa-microchip';
     var color = catColor[e.category] || '#94a3b8';
     return '<div class="card p-5 cursor-pointer" style="transition:all 0.2s" onclick="openEquipDetail(\'' + e.id + '\')">' +
+      (e.image ? '<img src="' + escapeHtml(e.image) + '" alt="' + escapeHtml(e.name) + '" class="w-full rounded-lg border border-white/10 object-cover mb-4" style="height:140px">' : '') +
       '<div class="flex items-start justify-between mb-3">' +
       '<div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:' + bg + '"><i class="fas ' + icon + '" style="color:' + color + '"></i></div>' +
       '<span class="badge ' + getEquipStatusClass(e.status) + ' text-xs">' + e.status + '</span></div>' +
       '<div class="font-semibold mb-1">' + e.name + '</div>' +
       '<div class="text-xs text-slate-400 mb-3">' + (e.brand ? e.brand + (e.model ? ' &bull; ' + e.model : '') : '—') + '</div>' +
+      '<div class="text-xs text-slate-500 mb-2"><i class="fas fa-building" style="margin-right:4px"></i>' + (e.clientName || 'Sem cliente') + '</div>' +
       '<div class="flex items-center justify-between text-xs text-slate-500">' +
       '<span><i class="fas fa-map-marker-alt" style="margin-right:4px"></i>' + (e.location || '—') + '</span>' +
       '<span class="badge badge-gray">' + e.category + '</span></div>' +
@@ -2279,16 +3658,54 @@ function openEquipDetail(id) {
   badge.className = 'badge ' + getEquipStatusClass(eq.status);
   badge.textContent = eq.status;
   var rows = [['Fabricante',eq.brand||'—'],['Modelo',eq.model||'—'],['Nº Série',eq.serial||'—'],
-    ['Categoria',eq.category],['Localização',eq.location||'—'],['Criticidade',eq.criticality],
+    ['Categoria',eq.category],['Localização',eq.location||'—'],['Criticidade',eq.criticality],['Cliente proprietário',eq.clientName||'—'],
     ['Instalação',eq.installDate||'—'],['Notas',eq.notes||'—']];
   document.getElementById('equip-detail-info').innerHTML = rows.map(function(r) {
     return '<div class="flex justify-between py-1.5 border-b border-white/5"><span class="text-slate-400">' + r[0] + ':</span><span>' + r[1] + '</span></div>';
   }).join('');
-  var history = APP.ots.filter(function(o) { return o.equipmentId === id; });
-  document.getElementById('equip-history').innerHTML = history.length === 0
+  renderDetailImage('equip-detail-image-wrap', 'equip-detail-image', eq.image);
+  renderEquipmentQr(eq);
+  populatePreventiveFields(eq);
+  renderEquipmentHistory(eq);
+  renderEquipmentReadings(eq);
+  renderAssociatedFiles('equipment', eq.id, 'equip-files-list');
+  showDetailPage('modal-equip-detail');
+}
+function renderEquipmentHistory(eq) {
+  var history = APP.ots.filter(function(o) { return o.equipmentId === eq.id || o.equipmentName === eq.name; });
+  var techs = history.map(function(o) { return o.technicianName; }).filter(Boolean).filter(function(v,i,a) { return a.indexOf(v) === i; });
+  var el = document.getElementById('equip-history');
+  if (!el) return;
+  el.innerHTML = history.length === 0
     ? '<span class="text-slate-400">Nenhuma intervenção registada.</span>'
-    : history.map(function(o) { return '<div class="py-1.5 border-b border-white/5"><span class="font-medium">' + o.title + '</span><span class="ml-2 badge ' + getStatusClass(o.status) + '">' + o.status + '</span></div>'; }).join('');
-  document.getElementById('modal-equip-detail').style.display = 'flex';
+    : '<div class="text-xs text-slate-500 mb-2">OTs: ' + history.length + ' · Técnicos: ' + (techs.join(', ') || '—') + '</div>' +
+      history.map(function(o) { return '<div class="py-1.5 border-b border-white/5"><div class="font-medium">' + o.title + '</div><div class="text-xs text-slate-500">' + (o.technicianName || '—') + ' · ' + (o.date ? new Date(o.date).toLocaleDateString('pt-PT') : '—') + ' <span class="badge ' + getStatusClass(o.status) + '">' + o.status + '</span></div></div>'; }).join('');
+}
+function getDefaultReadings() {
+  return [
+    { name:'Temperatura', unit:'°C', previous:24, current:26 },
+    { name:'Tensão', unit:'V', previous:230, current:228 },
+    { name:'Corrente', unit:'A', previous:12, current:13.4 },
+    { name:'Pressão', unit:'bar', previous:4.5, current:4.2 },
+    { name:'Autonomia', unit:'min', previous:42, current:38 },
+    { name:'Horas de funcionamento', unit:'h', previous:1180, current:1200 }
+  ];
+}
+function renderEquipmentReadings(eq) {
+  var el = document.getElementById('equip-readings-history');
+  if (!el) return;
+  eq.readings = eq.readings && eq.readings.length ? eq.readings : getDefaultReadings();
+  el.innerHTML = eq.readings.map(function(r) {
+    var diff = (parseFloat(r.current) || 0) - (parseFloat(r.previous) || 0);
+    var max = Math.max(Math.abs(r.current || 0), Math.abs(r.previous || 0), 1);
+    var pct = Math.max(8, Math.min(100, Math.round((Math.abs(r.current || 0) / max) * 100)));
+    return '<div class="border-b border-white/5 pb-2"><div class="grid grid-cols-4 gap-2 text-xs mb-1">' +
+      '<span class="font-medium text-slate-200">' + r.name + '</span>' +
+      '<span>Atual: <span class="mono text-white">' + r.current + r.unit + '</span></span>' +
+      '<span>Anterior: <span class="mono">' + r.previous + r.unit + '</span></span>' +
+      '<span class="' + (diff >= 0 ? 'text-yellow-400' : 'text-green-400') + '">Dif: ' + (diff > 0 ? '+' : '') + diff.toFixed(1) + r.unit + '</span></div>' +
+      '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div></div>';
+  }).join('');
 }
 function searchEquipment(q) {
   renderEquipment(APP.equipment.filter(function(e) {
@@ -2303,7 +3720,7 @@ function filterEquipByCategory(cat) {
 }
 function schedulePreventive() {
   if (!APP.currentEquip) return;
-  closeModal('modal-equip-detail');
+  showPage('equipment');
   openNewOTModal();
   document.getElementById('ot-title').value = 'Manutenção preventiva — ' + APP.currentEquip.name;
   document.getElementById('ot-type').value = 'Preventiva';
@@ -2311,28 +3728,227 @@ function schedulePreventive() {
 }
 function openOTFromEquip() {
   if (!APP.currentEquip) return;
-  closeModal('modal-equip-detail');
+  showPage('equipment');
   openNewOTModal();
   document.getElementById('ot-equipment').value = APP.currentEquip.id;
 }
+function qrCells(token) {
+  var seed = 0;
+  for (var i = 0; i < token.length; i++) seed = (seed + token.charCodeAt(i) * (i + 7)) % 9973;
+  var cells = [];
+  for (var idx = 0; idx < 81; idx++) {
+    var row = Math.floor(idx / 9), col = idx % 9;
+    var finder = (row < 3 && col < 3) || (row < 3 && col > 5) || (row > 5 && col < 3);
+    cells.push(finder || ((seed + row * 17 + col * 31 + row * col) % 5 < 2));
+  }
+  return cells;
+}
+function renderQrMarkup(token) {
+  return qrCells(token).map(function(on) {
+    return '<span class="qr-cell' + (on ? '' : ' off') + '"></span>';
+  }).join('');
+}
+function renderEquipmentQr(eq) {
+  eq.qrCode = eq.qrCode || ('MG-' + (eq.code || eq.id) + '-' + eq.id);
+  eq.nfcTag = eq.nfcTag || ('NFC-EQ-' + (eq.code || eq.id));
+  var qr = document.getElementById('equip-qr-code');
+  if (qr) qr.innerHTML = renderQrMarkup(eq.qrCode);
+  var nfc = document.getElementById('equip-nfc-token');
+  if (nfc) nfc.textContent = eq.nfcTag;
+  var label = document.getElementById('equipment-print-label');
+  if (label) {
+    label.innerHTML = '<div style="display:flex;gap:14px;align-items:center">' +
+      '<div class="qr-box">' + renderQrMarkup(eq.qrCode) + '</div>' +
+      '<div><div style="font-weight:800;font-size:16px">' + eq.name + '</div>' +
+      '<div style="font-family:monospace;margin-top:4px">' + (eq.code || eq.id) + '</div>' +
+      '<div style="font-size:12px;margin-top:6px">' + (eq.location || 'Sem localização') + '</div>' +
+      '<div style="font-size:11px;margin-top:8px">QR: ' + eq.qrCode + '</div>' +
+      '<div style="font-size:11px;margin-top:3px">NFC: ' + eq.nfcTag + '</div></div></div>';
+  }
+}
+function printEquipmentLabel() {
+  var label = document.getElementById('equipment-print-label');
+  if (!label || !APP.currentEquip) return;
+  label.style.display = 'block';
+  window.print();
+  setTimeout(function() { label.style.display = 'none'; }, 300);
+}
+function openEquipmentFichaFromQr() {
+  if (!APP.currentEquip) return;
+  showToast('Ficha técnica aberta via QR: ' + APP.currentEquip.name);
+  openEquipDetail(APP.currentEquip.id);
+}
+function getNfcPayloadForCurrent(type) {
+  if (type === 'equipment' && APP.currentEquip) return 'manugent://equipment/' + APP.currentEquip.id;
+  if (type === 'ot' && APP.currentOT) return 'manugent://ot/' + APP.currentOT.id;
+  return '';
+}
+function assignNfcToCurrentEquip() {
+  if (!APP.currentEquip) return;
+  APP.currentEquip.nfcTag = APP.currentEquip.nfcTag || ('NFC-EQ-' + (APP.currentEquip.code || APP.currentEquip.id));
+  saveData(); renderEquipmentQr(APP.currentEquip); renderEquipment();
+  showToast('Tag NFC associada ao equipamento.');
+}
+function assignNfcToCurrentOT() {
+  if (!APP.currentOT) return;
+  APP.currentOT.nfcTag = APP.currentOT.nfcTag || ('NFC-OT-' + APP.currentOT.id);
+  saveData(); openOTDetail(APP.currentOT.id); renderOTs();
+  showToast('Tag NFC associada à OT.');
+}
+async function readNfcTag(type) {
+  if (!('NDEFReader' in window)) {
+    showToast('NFC real não suportado neste browser; simulação ativada.');
+    simulateNfcRead(type);
+    return;
+  }
+  try {
+    var reader = new NDEFReader();
+    await reader.scan();
+    showToast('Aproxime a tag NFC do equipamento ou da OT.');
+    reader.onreading = function(event) {
+      var payload = '';
+      event.message.records.forEach(function(record) {
+        if (record.recordType === 'text') payload = new TextDecoder().decode(record.data);
+      });
+      handleNfcPayload(payload || getNfcPayloadForCurrent(type));
+    };
+  } catch (error) {
+    showToast('Leitura NFC indisponível: ' + error.message);
+  }
+}
+function simulateNfcRead(type) {
+  var payload = getNfcPayloadForCurrent(type);
+  if (!payload) { showToast('Abra primeiro uma OT ou equipamento.'); return; }
+  handleNfcPayload(payload);
+}
+function handleNfcPayload(payload) {
+  APP.lastNfcPayload = payload;
+  var equipMatch = payload.match(/^manugent:\/\/equipment\/(.+)$/);
+  var otMatch = payload.match(/^manugent:\/\/ot\/(.+)$/);
+  if (equipMatch) {
+    var eq = APP.equipment.find(function(e) { return e.id === equipMatch[1]; });
+    if (!eq) { showToast('Equipamento NFC não encontrado.'); return; }
+    showPage('equipment'); openEquipDetail(eq.id); showToast('Ficha aberta via NFC: ' + eq.name);
+    return;
+  }
+  if (otMatch) {
+    var ot = APP.ots.find(function(o) { return o.id === otMatch[1]; });
+    if (!ot) { showToast('OT NFC não encontrada.'); return; }
+    showPage('ots'); openOTDetail(ot.id); showToast('OT aberta via NFC: ' + ot.title);
+    return;
+  }
+  showToast('Tag NFC não reconhecida pelo ManuGent.');
+}
+function populatePreventiveFields(eq) {
+  var rule = eq.preventiveRule || {};
+  document.getElementById('equip-preventive-frequency').value = rule.frequency || '';
+  document.getElementById('equip-preventive-threshold').value = rule.threshold || '';
+  document.getElementById('equip-operating-hours').value = eq.operatingHours || '';
+  document.getElementById('equip-cycle-count').value = eq.cycleCount || '';
+  document.getElementById('equip-next-preventive').textContent = getNextPreventiveLabel(eq);
+}
+function getNextPreventiveLabel(eq) {
+  if (!eq.preventiveRule || !eq.preventiveRule.frequency) return '—';
+  var f = eq.preventiveRule.frequency;
+  if (f === 'operating_hours') return 'Ao atingir ' + eq.preventiveRule.threshold + 'h';
+  if (f === 'cycles') return 'Ao atingir ' + eq.preventiveRule.threshold + ' ciclos';
+  var days = { weekly: 7, monthly: 30, quarterly: 90, semiannual: 180 }[f] || 30;
+  var base = eq.preventiveRule.lastGeneratedAt ? new Date(eq.preventiveRule.lastGeneratedAt) : new Date();
+  return new Date(base.getTime() + days * 86400000).toLocaleDateString('pt-PT');
+}
+function savePreventiveRule() {
+  if (!APP.currentEquip) return;
+  APP.currentEquip.preventiveRule = {
+    frequency: document.getElementById('equip-preventive-frequency').value,
+    threshold: parseInt(document.getElementById('equip-preventive-threshold').value || '0', 10),
+    assignedTechnicianId: APP.technicians[0] ? APP.technicians[0].id : '',
+    lastGeneratedAt: APP.currentEquip.preventiveRule ? APP.currentEquip.preventiveRule.lastGeneratedAt : null
+  };
+  APP.currentEquip.operatingHours = parseInt(document.getElementById('equip-operating-hours').value || '0', 10);
+  APP.currentEquip.cycleCount = parseInt(document.getElementById('equip-cycle-count').value || '0', 10);
+  saveData(); populatePreventiveFields(APP.currentEquip); renderEquipment(); showToast('Regra de preventiva guardada.');
+}
+function runPreventiveAutomation() {
+  if (!APP.currentEquip) return;
+  savePreventiveRule();
+  var eq = APP.currentEquip;
+  if (!eq.preventiveRule || !eq.preventiveRule.frequency) { showToast('Defina uma frequência primeiro.'); return; }
+  var rule = eq.preventiveRule;
+  var due = true;
+  if (rule.frequency === 'operating_hours') due = (eq.operatingHours || 0) >= rule.threshold;
+  if (rule.frequency === 'cycles') due = (eq.cycleCount || 0) >= rule.threshold;
+  if (!due) { showToast('Ainda não atingiu o contador configurado.'); return; }
+  var tech = APP.technicians.find(function(t) { return t.id === rule.assignedTechnicianId; }) || APP.technicians[0];
+  var ot = {
+    id: generateId('OT'), title: 'Preventiva automática - ' + eq.name,
+    type: 'Preventiva', origin: 'scheduled',
+    priority: eq.criticality === 'Crítico' ? 'Alta' : 'Média',
+    status: 'Agendada', equipmentId: eq.id, equipmentName: eq.name,
+    technicianId: tech ? tech.id : '', technicianName: tech ? tech.name : '—',
+    date: new Date().toISOString(),
+    description: 'OT criada automaticamente por regra de preventiva: ' + rule.frequency,
+    location: eq.location,
+    nfcTag: 'NFC-OT-' + Date.now().toString(36).toUpperCase(),
+    tasks: getPreventivaMensal().tasks.map(function(t) { return { description: t.name, type: 'check', done: false, state: null, help: t.help || '' }; }),
+    materials: [], timeLogs: [], comments: [], report: '',
+    activity: [{ text: 'OT criada automaticamente por preventiva', time: new Date().toLocaleString('pt-PT') }],
+    createdAt: new Date().toISOString()
+  };
+  APP.ots.push(ot);
+  rule.lastGeneratedAt = new Date().toISOString();
+  saveData(); updateDashboard(); renderOTs(); populatePreventiveFields(eq); showToast('OT preventiva automática criada e atribuída.');
+}
 
 // ======================== CLIENTS ========================
-function openNewClientModal() { document.getElementById('modal-new-client').style.display = 'flex'; }
-function createClient() {
+function openNewClientModal() {
+  APP.editingClientId = null;
+  document.getElementById('client-modal-title').textContent = 'Novo Cliente';
+  document.getElementById('client-submit-btn').innerHTML = '<i class="fas fa-plus"></i> Adicionar cliente';
+  ['client-name','client-email','client-phone','client-address','client-notes'].forEach(function(id) { document.getElementById(id).value = ''; });
+  document.getElementById('client-contract').value = 'Sem contrato';
+  document.getElementById('client-image-upload').value = '';
+  enhanceFileInputs();
+  document.getElementById('modal-new-client').style.display = 'flex';
+}
+function openEditClientModal(id) {
+  var c = APP.clients.find(function(x) { return x.id === id; });
+  if (!c) return;
+  APP.editingClientId = id;
+  document.getElementById('client-modal-title').textContent = 'Editar Cliente';
+  document.getElementById('client-submit-btn').innerHTML = '<i class="fas fa-save"></i> Guardar cliente';
+  document.getElementById('client-name').value = c.name || '';
+  document.getElementById('client-email').value = c.email || '';
+  document.getElementById('client-phone').value = c.phone || '';
+  document.getElementById('client-address').value = c.address || '';
+  document.getElementById('client-contract').value = c.contract || 'Sem contrato';
+  document.getElementById('client-notes').value = c.notes || '';
+  document.getElementById('client-image-upload').value = '';
+  enhanceFileInputs();
+  document.getElementById('modal-new-client').style.display = 'flex';
+}
+async function createClient() {
   var name = document.getElementById('client-name').value.trim();
   if (!name) { alert('Nome é obrigatório.'); return; }
-  APP.clients.push({
-    id: generateId('CL'), name: name,
+  var image = await readSingleUpload('client-image-upload');
+  var client = APP.editingClientId ? APP.clients.find(function(c) { return c.id === APP.editingClientId; }) : null;
+  if (!client) {
+    client = { id: generateId('CL'), createdAt: new Date().toISOString() };
+    APP.clients.push(client);
+  }
+  Object.assign(client, { name: name,
     email: document.getElementById('client-email').value,
     phone: document.getElementById('client-phone').value,
     address: document.getElementById('client-address').value,
     contract: document.getElementById('client-contract').value,
     notes: document.getElementById('client-notes').value,
-    createdAt: new Date().toISOString(),
+    image: image ? image.dataUrl : (client.image || ''),
+    imageName: image ? image.name : (client.imageName || ''),
   });
   saveData(); closeModal('modal-new-client');
   ['client-name','client-email','client-phone','client-address','client-notes'].forEach(function(id) { document.getElementById(id).value = ''; });
-  renderClients(); showToast('Cliente adicionado!');
+  document.getElementById('client-image-upload').value = '';
+  APP.editingClientId = null;
+  renderClients(); showToast('Cliente guardado!');
 }
 function renderClients() {
   var el = document.getElementById('clients-grid');
@@ -2342,10 +3958,13 @@ function renderClients() {
     return;
   }
   el.innerHTML = APP.clients.map(function(c) {
-    return '<div class="card p-5"><div class="flex items-start gap-3 mb-4"><div class="w-10 h-10 rounded-lg flex items-center justify-center font-bold" style="background:rgba(59,130,246,0.2);color:#60a5fa">' + c.name.charAt(0) + '</div>' +
+    return '<div class="card p-5">' +
+      (c.image ? '<img src="' + escapeHtml(c.image) + '" alt="' + escapeHtml(c.name) + '" class="w-full rounded-lg border border-white/10 object-cover mb-4" style="height:130px">' : '') +
+      '<div class="flex items-start gap-3 mb-4"><div class="w-10 h-10 rounded-lg flex items-center justify-center font-bold" style="background:rgba(59,130,246,0.2);color:#60a5fa">' + c.name.charAt(0) + '</div>' +
       '<div><div class="font-semibold">' + c.name + '</div><div class="text-xs text-slate-400">' + c.contract + '</div></div></div>' +
       '<div class="space-y-1 text-xs text-slate-400">' + (c.email ? '<div><i class="fas fa-envelope" style="margin-right:8px"></i>' + c.email + '</div>' : '') + (c.phone ? '<div><i class="fas fa-phone" style="margin-right:8px"></i>' + c.phone + '</div>' : '') + '</div>' +
       '<div class="flex gap-2 mt-4"><button class="btn-ghost text-xs flex-1" onclick="openOTFromClient(\'' + c.id + '\')"><i class="fas fa-wrench"></i> Nova OT</button>' +
+      '<button class="btn-ghost text-xs" onclick="openEditClientModal(\'' + c.id + '\')"><i class="fas fa-pen"></i></button>' +
       '<button class="btn-ghost text-xs" onclick="deleteClient(\'' + c.id + '\')"><i class="fas fa-trash" style="color:var(--accent-red)"></i></button></div></div>';
   }).join('');
 }
@@ -2363,21 +3982,54 @@ function deleteClient(id) {
 }
 
 // ======================== TECHNICIANS ========================
-function openNewTechModal() { document.getElementById('modal-new-tech').style.display = 'flex'; }
-function createTechnician() {
+function openNewTechModal() {
+  APP.editingTechId = null;
+  document.getElementById('tech-modal-title').textContent = 'Novo Técnico';
+  document.getElementById('tech-submit-btn').innerHTML = '<i class="fas fa-plus"></i> Adicionar técnico';
+  ['tech-name','tech-email','tech-phone'].forEach(function(id) { document.getElementById(id).value = ''; });
+  document.getElementById('tech-specialty').value = 'Elétrico';
+  document.getElementById('tech-availability').value = 'Disponível';
+  document.getElementById('tech-photo-upload').value = '';
+  enhanceFileInputs();
+  document.getElementById('modal-new-tech').style.display = 'flex';
+}
+function openEditTechModal(id) {
+  var t = APP.technicians.find(function(x) { return x.id === id; });
+  if (!t) return;
+  APP.editingTechId = id;
+  document.getElementById('tech-modal-title').textContent = 'Editar Técnico';
+  document.getElementById('tech-submit-btn').innerHTML = '<i class="fas fa-save"></i> Guardar técnico';
+  document.getElementById('tech-name').value = t.name || '';
+  document.getElementById('tech-email').value = t.email || '';
+  document.getElementById('tech-specialty').value = t.specialty || 'Elétrico';
+  document.getElementById('tech-phone').value = t.phone || '';
+  document.getElementById('tech-availability').value = t.availability || 'Disponível';
+  document.getElementById('tech-photo-upload').value = '';
+  enhanceFileInputs();
+  document.getElementById('modal-new-tech').style.display = 'flex';
+}
+async function createTechnician() {
   var name = document.getElementById('tech-name').value.trim();
   if (!name) { alert('Nome é obrigatório.'); return; }
-  APP.technicians.push({
-    id: generateId('TC'), name: name,
+  var photo = await readSingleUpload('tech-photo-upload');
+  var tech = APP.editingTechId ? APP.technicians.find(function(t) { return t.id === APP.editingTechId; }) : null;
+  if (!tech) {
+    tech = { id: generateId('TC'), createdAt: new Date().toISOString() };
+    APP.technicians.push(tech);
+  }
+  Object.assign(tech, { name: name,
     email: document.getElementById('tech-email').value,
     specialty: document.getElementById('tech-specialty').value,
     phone: document.getElementById('tech-phone').value,
     availability: document.getElementById('tech-availability').value,
-    createdAt: new Date().toISOString(),
+    photo: photo ? photo.dataUrl : (tech.photo || ''),
+    photoName: photo ? photo.name : (tech.photoName || ''),
   });
   saveData(); closeModal('modal-new-tech');
   ['tech-name','tech-email','tech-phone'].forEach(function(id) { document.getElementById(id).value = ''; });
-  renderTechnicians(); populateOTSelects(); showToast('Técnico adicionado!');
+  document.getElementById('tech-photo-upload').value = '';
+  APP.editingTechId = null;
+  renderTechnicians(); populateOTSelects(); showToast('Técnico guardado!');
 }
 function renderTechnicians() {
   var el = document.getElementById('technicians-grid');
@@ -2390,12 +4042,12 @@ function renderTechnicians() {
   el.innerHTML = APP.technicians.map(function(t) {
     var otCount = APP.ots.filter(function(o) { return o.technicianId === t.id && ['Aberta','Em andamento'].includes(o.status); }).length;
     return '<div class="card p-5"><div class="flex items-start gap-3 mb-4">' +
-      '<div class="w-10 h-10 rounded-full flex items-center justify-center font-bold" style="background:rgba(99,102,241,0.2);color:#818cf8">' + t.name.charAt(0) + '</div>' +
+      (t.photo ? '<img src="' + escapeHtml(t.photo) + '" alt="' + escapeHtml(t.name) + '" class="w-10 h-10 rounded-full object-cover border border-white/10">' : '<div class="w-10 h-10 rounded-full flex items-center justify-center font-bold" style="background:rgba(99,102,241,0.2);color:#818cf8">' + t.name.charAt(0) + '</div>') +
       '<div><div class="font-semibold">' + t.name + '</div><span class="badge badge-purple text-xs">' + t.specialty + '</span></div>' +
       '<span class="ml-auto badge ' + (availColors[t.availability]||'badge-gray') + ' text-xs">' + t.availability + '</span></div>' +
       '<div class="space-y-1 text-xs text-slate-400 mb-3">' + (t.email ? '<div><i class="fas fa-envelope" style="margin-right:8px"></i>' + t.email + '</div>' : '') +
       '<div><i class="fas fa-wrench" style="margin-right:8px"></i>' + otCount + ' OT(s) ativas</div></div>' +
-      '<button class="btn-ghost text-xs" style="width:100%;color:var(--accent-red)" onclick="deleteTech(\'' + t.id + '\')"><i class="fas fa-trash"></i> Remover</button></div>';
+      '<div class="flex gap-2"><button class="btn-ghost text-xs flex-1" onclick="openEditTechModal(\'' + t.id + '\')"><i class="fas fa-pen"></i> Editar</button><button class="btn-ghost text-xs" style="color:var(--accent-red)" onclick="deleteTech(\'' + t.id + '\')"><i class="fas fa-trash"></i></button></div></div>';
   }).join('');
 }
 function deleteTech(id) {
@@ -2405,24 +4057,42 @@ function deleteTech(id) {
 }
 
 // ======================== KNOWLEDGE ========================
-function openNewKnowledgeModal() { document.getElementById('modal-new-knowledge').style.display = 'flex'; }
-function createKnowledgeArticle() {
+function openNewKnowledgeModal() {
+  ['know-photos-upload','know-videos-upload','know-pdf-upload'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  enhanceFileInputs();
+  document.getElementById('modal-new-knowledge').style.display = 'flex';
+}
+async function createKnowledgeArticle() {
   var title = document.getElementById('know-title').value.trim();
   var solution = document.getElementById('know-solution').value.trim();
   if (!title || !solution) { alert('Título e solução são obrigatórios.'); return; }
+  var photos = await mergeTextAndUploads('know-photos', 'know-photos-upload');
+  var videos = await mergeTextAndUploads('know-videos', 'know-videos-upload');
+  var pdfs = await mergeTextAndUploads('know-pdf', 'know-pdf-upload');
   APP.knowledge.push({
     id: generateId('KB'), title: title,
+    kind: 'Procedimento',
     equipment: document.getElementById('know-equip').value,
     category: document.getElementById('know-category').value,
     symptom: document.getElementById('know-symptom').value,
     solution: solution,
+    steps: solution.split('\n').filter(function(line) { return line.trim(); }),
     tools: document.getElementById('know-tools').value,
+    estimatedTime: document.getElementById('know-time').value,
+    checklist: document.getElementById('know-checklist').value.split('\n').filter(function(line) { return line.trim(); }),
+    photos: photos,
+    videos: videos,
+    pdf: pdfs,
     author: APP.user ? APP.user.name : '—',
     createdAt: new Date().toISOString(),
   });
   saveData(); closeModal('modal-new-knowledge');
-  ['know-title','know-equip','know-symptom','know-solution','know-tools'].forEach(function(id) { document.getElementById(id).value = ''; });
-  renderKnowledge(); updateDashboard(); showToast('Artigo publicado!');
+  ['know-title','know-equip','know-symptom','know-solution','know-tools','know-time','know-checklist','know-photos','know-videos','know-pdf'].forEach(function(id) { document.getElementById(id).value = ''; });
+  ['know-photos-upload','know-videos-upload','know-pdf-upload'].forEach(function(id) { document.getElementById(id).value = ''; });
+  renderKnowledge(); updateDashboard(); showToast('Procedimento publicado!');
 }
 function renderKnowledge(list) {
   var items = list || APP.knowledge;
@@ -2438,13 +4108,151 @@ function renderKnowledge(list) {
       '<div class="font-semibold mb-2">' + a.title + '</div>' +
       (a.symptom ? '<div class="text-xs text-slate-400 mb-2"><i class="fas fa-exclamation-circle" style="color:var(--accent-yellow);margin-right:4px"></i>' + a.symptom + '</div>' : '') +
       '<div class="text-sm text-slate-400">' + a.solution.substring(0,100) + (a.solution.length > 100 ? '...' : '') + '</div>' +
-      '<div class="flex items-center justify-between mt-3 text-xs text-slate-500"><span><i class="fas fa-user" style="margin-right:4px"></i>' + a.author + '</span><span>' + new Date(a.createdAt).toLocaleDateString('pt-PT') + '</span></div></div>';
+      '<div class="flex gap-2 mt-3">' +
+      (a.photos ? '<span class="badge badge-blue text-xs"><i class="fas fa-image"></i> Fotos</span>' : '') +
+      (a.videos ? '<span class="badge badge-red text-xs"><i class="fas fa-video"></i> Vídeos</span>' : '') +
+      (a.pdf ? '<span class="badge badge-gray text-xs"><i class="fas fa-file-pdf"></i> PDF</span>' : '') +
+      '</div><div class="flex items-center justify-between mt-3 text-xs text-slate-500"><span><i class="fas fa-user" style="margin-right:4px"></i>' + a.author + '</span><span>' + new Date(a.createdAt).toLocaleDateString('pt-PT') + '</span></div></div>';
   }).join('');
 }
 function openArticleDetail(id) {
   var art = APP.knowledge.find(function(a) { return a.id === id; });
   if (!art) return;
-  alert(art.title + '\n\n' + (art.symptom ? 'Sintoma: ' + art.symptom + '\n\n' : '') + 'Solução:\n' + art.solution + (art.tools ? '\n\nFerramentas: ' + art.tools : '') + '\n\nAutor: ' + art.author);
+  document.getElementById('article-detail-category').textContent = art.category || 'Procedimento';
+  document.getElementById('article-detail-id').textContent = art.id;
+  document.getElementById('article-detail-title').textContent = art.title;
+  document.getElementById('article-detail-subtitle').textContent = art.symptom || art.equipment || 'Detalhe técnico do procedimento';
+  document.getElementById('article-detail-steps').innerHTML = renderArticleSteps(art.solution);
+  document.getElementById('article-detail-checklist').innerHTML = renderArticleChecklist(art.checklist);
+  document.getElementById('article-detail-notes').innerHTML = renderArticleNotes(art);
+  document.getElementById('article-detail-meta').innerHTML = renderArticleMeta(art);
+  document.getElementById('article-detail-photos').innerHTML = renderArticleAssets(art.photos, 'image');
+  document.getElementById('article-detail-videos').innerHTML = renderArticleAssets(art.videos, 'video');
+  document.getElementById('article-detail-pdfs').innerHTML = renderArticleAssets(art.pdf, 'pdf');
+  showPage('article-detail');
+  var nav = document.getElementById('nav-knowledge');
+  if (nav) nav.classList.add('active');
+}
+function renderArticleSteps(solution) {
+  var lines = splitArticleLines(solution);
+  if (lines.length === 0) return '<p class="text-slate-500">Sem passos registados.</p>';
+  return lines.map(function(line, idx) {
+    return '<div class="flex gap-3 py-2 border-b border-white/5"><div class="w-7 h-7 rounded-lg flex items-center justify-center mono text-xs" style="background:rgba(99,102,241,0.2);color:var(--accent-purple-light)">' + (idx + 1) + '</div><div class="flex-1">' + escapeHtml(cleanStepText(line)) + '</div></div>';
+  }).join('');
+}
+function renderArticleChecklist(checklist) {
+  var lines = Array.isArray(checklist) ? checklist : splitArticleLines(checklist);
+  if (lines.length === 0) return '<p class="text-slate-500">Sem checklist registada.</p>';
+  return lines.map(function(line) {
+    return '<div class="flex items-start gap-3 py-2 border-b border-white/5"><span class="task-check"><i class="fas fa-check text-white text-xs" style="opacity:0"></i></span><span>' + escapeHtml(cleanStepText(line)) + '</span></div>';
+  }).join('');
+}
+function renderArticleNotes(art) {
+  var rows = [];
+  if (art.tools) rows.push('<div><span class="text-slate-500">Ferramentas:</span><p class="mt-1">' + escapeHtml(art.tools) + '</p></div>');
+  if (art.estimatedTime) rows.push('<div class="mt-4"><span class="text-slate-500">Tempo estimado:</span><p class="mt-1">' + escapeHtml(art.estimatedTime) + '</p></div>');
+  if (!rows.length) rows.push('<p class="text-slate-500">Sem notas técnicas adicionais.</p>');
+  return rows.join('');
+}
+function renderArticleMeta(art) {
+  var rows = [
+    ['Equipamento', art.equipment || '—'],
+    ['Objetivo/Sintoma', art.symptom || '—'],
+    ['Autor', art.author || '—'],
+    ['Criado em', art.createdAt ? new Date(art.createdAt).toLocaleDateString('pt-PT') : '—']
+  ];
+  return rows.map(function(r) {
+    return '<div class="flex justify-between gap-3 py-2 border-b border-white/5"><span class="text-slate-500">' + r[0] + '</span><span class="text-right text-slate-200">' + escapeHtml(r[1]) + '</span></div>';
+  }).join('');
+}
+function renderArticleAssets(value, type) {
+  var assets = splitArticleAssets(value);
+  if (assets.length === 0) return '<p class="text-sm text-slate-500">Nada anexado.</p>';
+  return assets.map(function(asset) {
+    var icon = type === 'image' ? 'fa-image' : type === 'video' ? 'fa-video' : 'fa-file-pdf';
+    var label = type === 'image' ? 'Imagem' : type === 'video' ? 'Vídeo' : 'PDF';
+    var href = getAssetHref(asset);
+    var name = getAssetName(asset);
+    var safe = escapeHtml(href);
+    var safeName = escapeHtml(name);
+    if (type === 'image' && isImageUrl(href)) {
+      return '<a href="' + safe + '" target="_blank" class="block"><img src="' + safe + '" alt="' + safeName + '" class="w-full rounded-lg border border-white/10 object-cover" style="max-height:180px"><div class="text-xs text-slate-500 mt-2 truncate">' + safeName + '</div></a>';
+    }
+    if (type === 'video' && isVideoUrl(href)) {
+      return '<video controls class="w-full rounded-lg border border-white/10"><source src="' + safe + '"></video>';
+    }
+    return '<a href="' + safe + '" target="_blank" class="flex items-center gap-3 p-3 rounded-lg border border-white/10 hover:border-purple-400/60 transition-all">' +
+      '<div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:rgba(99,102,241,0.18)"><i class="fas ' + icon + ' text-purple-400"></i></div>' +
+      '<div class="min-w-0"><div class="text-sm text-slate-200">' + label + '</div><div class="text-xs text-slate-500 truncate">' + safeName + '</div></div></a>';
+  }).join('');
+}
+function splitArticleLines(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.filter(Boolean);
+  return String(value).split(/\n+/).map(function(line) { return line.trim(); }).filter(Boolean);
+}
+function splitArticleAssets(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.filter(Boolean);
+  return String(value).split(/[\n;]+/).map(function(item) { return item.trim(); }).filter(Boolean);
+}
+function cleanStepText(value) {
+  return String(value || '').replace(/^\s*\d+[\).\s-]*/, '').trim();
+}
+function isImageUrl(value) {
+  return /^data:image\//i.test(value) || (/^https?:\/\//i.test(value) && /\.(png|jpe?g|gif|webp|avif)(\?.*)?$/i.test(value));
+}
+function isVideoUrl(value) {
+  return /^data:video\//i.test(value) || (/^https?:\/\//i.test(value) && /\.(mp4|webm|ogg)(\?.*)?$/i.test(value));
+}
+function isPdfAsset(value) {
+  return /^data:application\/pdf/i.test(value) || /\.pdf(\?.*)?$/i.test(value);
+}
+function readSingleUpload(id) {
+  var el = document.getElementById(id);
+  if (!el || !el.files || !el.files[0]) return Promise.resolve(null);
+  return readUploadFile(el.files[0]);
+}
+function readMultipleUploads(id) {
+  var el = document.getElementById(id);
+  if (!el || !el.files || !el.files.length) return Promise.resolve([]);
+  return Promise.all(Array.prototype.slice.call(el.files).map(readUploadFile));
+}
+function readUploadFile(file) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function() { resolve({ name: file.name, type: file.type, dataUrl: reader.result }); };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+async function mergeTextAndUploads(textId, uploadId) {
+  var text = document.getElementById(textId).value.trim();
+  var uploads = await readMultipleUploads(uploadId);
+  var uploadValues = uploads.map(function(file) { return file.dataUrl + '#name=' + encodeURIComponent(file.name); });
+  return [text].concat(uploadValues).filter(Boolean).join('\n');
+}
+function getAssetHref(asset) {
+  return String(asset || '').split('#name=')[0];
+}
+function getAssetName(asset) {
+  var match = String(asset || '').match(/#name=([^#]+)$/);
+  return match ? decodeURIComponent(match[1]) : String(asset || '');
+}
+function inferFileTypeFromUpload(uploaded) {
+  if (!uploaded) return '';
+  if ((uploaded.type || '').startsWith('image/')) return 'Imagem';
+  if ((uploaded.type || '').startsWith('video/')) return 'Vídeo';
+  if (uploaded.type === 'application/pdf') return 'PDF';
+  return 'Ficheiro';
+}
+function getAcceptForFileType(type) {
+  if (type === 'Imagem') return 'image/*';
+  if (type === 'Vídeo') return 'video/*';
+  if (type === 'PDF') return 'application/pdf,.pdf';
+  if (type === 'Esquema elétrico') return '.pdf,.dwg,.dxf,image/*';
+  if (type === 'Link' || type === 'Credencial' || !type) return 'image/*,video/*,application/pdf,.pdf';
+  return 'image/*,video/*,application/pdf,.pdf,.doc,.docx,.xls,.xlsx,.dwg,.dxf';
 }
 function searchKnowledge(q) {
   renderKnowledge(APP.knowledge.filter(function(a) {
@@ -2453,6 +4261,334 @@ function searchKnowledge(q) {
 }
 function filterKnowledge(cat) {
   renderKnowledge(cat ? APP.knowledge.filter(function(a) { return a.category === cat; }) : APP.knowledge);
+}
+
+// ======================== FILES ========================
+function getTeamOptions() {
+  var specialties = APP.technicians.map(function(t) { return t.specialty; }).filter(Boolean);
+  var defaults = ['Equipa Elétrica', 'Equipa Mecânica', 'Equipa AVAC', 'Supervisores'];
+  return Array.from(new Set(defaults.concat(specialties.map(function(s) { return 'Equipa ' + s; }))));
+}
+function escapeHtml(value) {
+  return String(value || '').replace(/[&<>"']/g, function(ch) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+  });
+}
+function openNewFileModal() {
+  populateOTSelects();
+  document.getElementById('file-type').value = 'Ficheiro';
+  document.getElementById('file-version').value = 'v1.0';
+  document.getElementById('file-ref').value = '';
+  document.getElementById('file-upload').value = '';
+  document.getElementById('file-desc').value = '';
+  document.getElementById('file-media-caption').value = '';
+  document.getElementById('file-credential-service').value = '';
+  document.getElementById('file-credential-user').value = '';
+  document.getElementById('file-credential-vault').value = '';
+  document.getElementById('file-permission').value = 'all';
+  ['file-users','file-teams'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) Array.prototype.slice.call(el.options).forEach(function(opt) { opt.selected = false; });
+  });
+  document.getElementById('file-folder').value = APP.currentFileFolder !== 'all' ? (APP.currentFileFolder || '') : '';
+  if (APP.currentOT && isPageActive('modal-ot-detail')) {
+    document.getElementById('file-ot').value = APP.currentOT.id;
+    document.getElementById('file-equipment').value = APP.currentOT.equipmentId || '';
+  }
+  if (APP.currentEquip && isPageActive('modal-equip-detail')) {
+    document.getElementById('file-equipment').value = APP.currentEquip.id;
+    document.getElementById('file-client').value = APP.currentEquip.clientId || '';
+  }
+  updateFileTypeFields();
+  updateFilePermissionFields();
+  enhanceFileInputs();
+  document.getElementById('modal-new-file').style.display = 'flex';
+}
+function openNewFolderModal() {
+  populateOTSelects();
+  document.getElementById('folder-name').value = '';
+  document.getElementById('folder-parent').value = APP.currentFileFolder !== 'all' ? (APP.currentFileFolder || '') : '';
+  document.getElementById('modal-new-folder').style.display = 'flex';
+}
+function createFileFolder() {
+  var name = document.getElementById('folder-name').value.trim();
+  if (!name) { alert('Nome da pasta é obrigatório.'); return; }
+  APP.fileFolders.push({ id: generateId('FOLDER'), name: name, parentId: document.getElementById('folder-parent').value, createdAt: new Date().toISOString() });
+  saveData(); closeModal('modal-new-folder'); renderFiles(); populateOTSelects(); showToast('Pasta criada.');
+}
+function updateFileTypeFields() {
+  var type = document.getElementById('file-type').value;
+  var refField = document.getElementById('file-ref-field');
+  var refLabel = document.getElementById('file-ref-label');
+  var refInput = document.getElementById('file-ref');
+  var credentialFields = document.getElementById('file-credential-fields');
+  var mediaFields = document.getElementById('file-media-fields');
+  var upload = document.getElementById('file-upload');
+  credentialFields.style.display = type === 'Credencial' ? 'block' : 'none';
+  mediaFields.style.display = ['Vídeo','Imagem'].includes(type) ? 'block' : 'none';
+  refField.style.display = type === 'Credencial' ? 'none' : 'block';
+  var labels = {
+    'Ficheiro': ['Ficheiro / referência *', 'Ex: manual-ups.pdf ou /docs/manual-ups.pdf'],
+    'Link': ['URL *', 'https://...'],
+    'Vídeo': ['URL do vídeo *', 'https://.../video.mp4 ou referência interna'],
+    'Imagem': ['URL / referência da imagem *', 'foto-quadro.jpg ou https://...'],
+    'Esquema elétrico': ['Esquema / desenho *', 'Ex: QE01-unifilar.dwg'],
+    'PDF': ['PDF / referência *', 'Ex: manual-ups.pdf ou carregar ficheiro'],
+    'Outro documento': ['Documento / referência *', 'Ex: checklist-entrega.docx']
+  };
+  var cfg = labels[type] || labels.Ficheiro;
+  refLabel.textContent = cfg[0];
+  refInput.placeholder = cfg[1];
+  upload.accept = getAcceptForFileType(type);
+}
+function updateFilePermissionFields() {
+  var permission = document.getElementById('file-permission').value;
+  document.getElementById('file-users-field').style.display = permission === 'users' ? 'block' : 'none';
+  document.getElementById('file-teams-field').style.display = permission === 'teams' ? 'block' : 'none';
+}
+function getSelectedValues(id) {
+  var el = document.getElementById(id);
+  if (!el) return [];
+  return Array.prototype.slice.call(el.selectedOptions).map(function(o) { return o.value; });
+}
+async function createSharedFile() {
+  var name = document.getElementById('file-name').value.trim();
+  var type = document.getElementById('file-type').value;
+  var uploaded = type === 'Credencial' ? null : await readSingleUpload('file-upload');
+  var ref = type === 'Credencial' ? document.getElementById('file-credential-vault').value.trim() : (uploaded ? uploaded.dataUrl : document.getElementById('file-ref').value.trim());
+  if (!name || !ref) { alert('Nome e referência são obrigatórios.'); return; }
+  if (type === 'Credencial' && !document.getElementById('file-credential-service').value.trim()) { alert('Serviço / sistema é obrigatório para credenciais.'); return; }
+  var clientId = document.getElementById('file-client').value;
+  var equipmentId = document.getElementById('file-equipment').value;
+  var otId = document.getElementById('file-ot').value;
+  var client = APP.clients.find(function(c) { return c.id === clientId; });
+  var equipment = APP.equipment.find(function(e) { return e.id === equipmentId; });
+  var ot = APP.ots.find(function(o) { return o.id === otId; });
+  var version = document.getElementById('file-version').value.trim() || 'v1.0';
+  APP.files.push({
+    id: generateId('FILE'),
+    name: name,
+    type: type,
+    ref: ref,
+    fileName: uploaded ? uploaded.name : '',
+    mimeType: uploaded ? uploaded.type : '',
+    folderId: document.getElementById('file-folder').value,
+    description: document.getElementById('file-desc').value,
+    mediaCaption: document.getElementById('file-media-caption').value,
+    credentialService: document.getElementById('file-credential-service').value,
+    credentialUser: document.getElementById('file-credential-user').value,
+    permission: document.getElementById('file-permission').value,
+    userIds: getSelectedValues('file-users'),
+    teams: getSelectedValues('file-teams'),
+    clientId: clientId,
+    clientName: client ? client.name : '',
+    equipmentId: equipmentId,
+    equipmentName: equipment ? equipment.name : '',
+    otId: otId,
+    otTitle: ot ? ot.title : '',
+    versions: [{ version: version, notes: document.getElementById('file-version-notes').value || 'Publicação inicial', ref: ref, createdAt: new Date().toISOString(), author: APP.user ? APP.user.name : 'Gestor' }],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    owner: APP.user ? APP.user.name : 'Gestor',
+  });
+  saveData(); closeModal('modal-new-file');
+  ['file-name','file-ref','file-desc','file-version','file-version-notes','file-media-caption','file-credential-service','file-credential-user','file-credential-vault'].forEach(function(id) { document.getElementById(id).value = ''; });
+  document.getElementById('file-upload').value = '';
+  if (APP.currentOT) renderAssociatedFiles('ot', APP.currentOT.id, 'ot-files-list');
+  if (APP.currentEquip) renderAssociatedFiles('equipment', APP.currentEquip.id, 'equip-files-list');
+  renderFiles(); showToast('Ficheiro partilhado!');
+}
+function renderFiles() {
+  var items = APP.files || [];
+  var qEl = document.getElementById('files-search');
+  var typeEl = document.getElementById('files-type-filter');
+  var permEl = document.getElementById('files-permission-filter');
+  var q = qEl ? qEl.value.toLowerCase() : '';
+  var type = typeEl ? typeEl.value : '';
+  var perm = permEl ? permEl.value : '';
+  items = items.filter(function(f) {
+    var hay = [f.name, f.type, f.ref, f.description, f.clientName, f.equipmentName, f.otId, f.otTitle, getFolderPath(f.folderId)].join(' ').toLowerCase();
+    var folderOk = APP.currentFileFolder === 'all' || (f.folderId || '') === (APP.currentFileFolder || '');
+    return folderOk && (!q || hay.includes(q)) && (!type || f.type === type) && (!perm || f.permission === perm);
+  });
+  renderFolderTree();
+  renderFileMetrics();
+  var el = document.getElementById('files-table-body');
+  if (!el) return;
+  if (items.length === 0) {
+    el.innerHTML = '<tr><td colspan="8" class="text-center text-slate-500 py-8">Nenhum ficheiro encontrado.</td></tr>';
+    return;
+  }
+  el.innerHTML = items.map(function(f) {
+    var refLabel = f.fileName || getAssetName(f.ref);
+    return '<tr onclick="openFileDetail(\'' + f.id + '\')">' +
+      '<td><div class="flex items-center gap-3"><div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:rgba(99,102,241,0.18)"><i class="' + getFileIcon(f.type) + ' text-purple-400"></i></div><div><div class="font-medium text-slate-100">' + escapeHtml(f.name) + '</div><div class="text-xs text-slate-500">' + escapeHtml(refLabel) + '</div></div></div></td>' +
+      '<td><span class="badge ' + getFileTypeClass(f.type) + '">' + escapeHtml(f.type) + '</span></td>' +
+      '<td><span class="text-xs text-slate-400">' + escapeHtml(getFolderPath(f.folderId) || 'Raiz') + '</span></td>' +
+      '<td>' + getPermissionLabel(f) + '</td>' +
+      '<td>' + getFileAssociations(f) + '</td>' +
+      '<td><span class="mono text-xs">' + ((f.versions || []).length || 1) + '</span></td>' +
+      '<td>' + new Date(f.updatedAt || f.createdAt).toLocaleDateString('pt-PT') + '</td>' +
+      '<td><button class="btn-ghost text-xs" onclick="event.stopPropagation(); addFileVersion(\'' + f.id + '\')"><i class="fas fa-code-branch"></i> Nova versão</button></td>' +
+      '</tr>';
+  }).join('');
+}
+function renderFileMetrics() {
+  var files = APP.files || [];
+  setText('files-metric-total', files.length);
+  setText('files-metric-restricted', files.filter(function(f) { return f.permission === 'restricted'; }).length);
+  setText('files-metric-versions', files.filter(function(f) { return (f.versions || []).length > 1; }).length);
+  setText('files-metric-linked', files.filter(function(f) { return f.clientId || f.equipmentId || f.otId; }).length);
+}
+function renderFolderTree() {
+  var el = document.getElementById('files-folder-tree');
+  if (!el) return;
+  var rootCount = (APP.files || []).filter(function(f) { return !f.folderId; }).length;
+  var html = '<div class="folder-row ' + (APP.currentFileFolder === 'all' ? 'active' : '') + '" onclick="selectFileFolder(\'all\')"><i class="fas fa-layer-group"></i><span class="flex-1">Todos</span><span class="badge badge-gray text-xs">' + (APP.files || []).length + '</span></div>' +
+    '<div class="folder-row ' + (APP.currentFileFolder === '' ? 'active' : '') + '" onclick="selectFileFolder(\'\')"><i class="fas fa-folder"></i><span class="flex-1">Raiz</span><span class="badge badge-gray text-xs">' + rootCount + '</span></div>';
+  html += renderFolderBranch('');
+  el.innerHTML = html;
+}
+function renderFolderBranch(parentId, level) {
+  level = level || 0;
+  return (APP.fileFolders || []).filter(function(f) { return (f.parentId || '') === (parentId || ''); }).map(function(folder) {
+    var count = (APP.files || []).filter(function(file) { return file.folderId === folder.id; }).length;
+    var children = renderFolderBranch(folder.id, level + 1);
+    return '<div class="folder-row ' + (APP.currentFileFolder === folder.id ? 'active' : '') + '" style="padding-left:' + (10 + level * 18) + 'px" onclick="selectFileFolder(\'' + folder.id + '\')">' +
+      '<i class="fas ' + (children ? 'fa-folder-open' : 'fa-folder') + '"></i><span class="flex-1">' + escapeHtml(folder.name) + '</span><span class="badge badge-gray text-xs">' + count + '</span></div>' +
+      (children ? '<div style="border-left:1px solid rgba(99,102,241,0.18);margin-left:' + (14 + level * 18) + 'px">' + children + '</div>' : '');
+  }).join('');
+}
+function selectFileFolder(id) {
+  APP.currentFileFolder = id;
+  renderFiles();
+}
+function getFolderOptionsHtml() {
+  return renderFolderOptions('', 0);
+}
+function renderFolderOptions(parentId, level) {
+  return (APP.fileFolders || []).filter(function(f) { return (f.parentId || '') === (parentId || ''); }).map(function(folder) {
+    var prefix = new Array(level + 1).join('— ');
+    return '<option value="' + folder.id + '">' + prefix + escapeHtml(folder.name) + '</option>' + renderFolderOptions(folder.id, level + 1);
+  }).join('');
+}
+function getFolderPath(folderId) {
+  if (!folderId) return '';
+  var folders = APP.fileFolders || [];
+  var parts = [];
+  var current = folders.find(function(f) { return f.id === folderId; });
+  while (current) {
+    parts.unshift(current.name);
+    current = folders.find(function(f) { return f.id === current.parentId; });
+  }
+  return parts.join(' / ');
+}
+function getFileIcon(type) {
+  return {'Link':'fas fa-link','Vídeo':'fas fa-video','Imagem':'fas fa-image','Esquema elétrico':'fas fa-bolt','Credencial':'fas fa-key','PDF':'fas fa-file-pdf','Outro documento':'fas fa-file-lines'}[type] || 'fas fa-file';
+}
+function getFileTypeClass(type) {
+  return {'Credencial':'badge-red','Esquema elétrico':'badge-yellow','Vídeo':'badge-blue','Imagem':'badge-green','Link':'badge-purple','PDF':'badge-red'}[type] || 'badge-gray';
+}
+function getPermissionLabel(f) {
+  if (f.permission === 'all') return '<span class="badge badge-green">Todos</span>';
+  if (f.permission === 'users') return '<span class="badge badge-blue">Utilizadores</span> <span class="text-xs text-slate-500">' + (f.userIds || []).length + '</span>';
+  if (f.permission === 'teams') return '<span class="badge badge-purple">Equipas</span> <span class="text-xs text-slate-500">' + (f.teams || []).length + '</span>';
+  return '<span class="badge badge-red">Restrito</span>';
+}
+function getFileAssociations(f) {
+  var rows = [];
+  if (f.clientName) rows.push('<span class="badge badge-blue">' + escapeHtml(f.clientName) + '</span>');
+  if (f.equipmentName) rows.push('<span class="badge badge-yellow">' + escapeHtml(f.equipmentName) + '</span>');
+  if (f.otId) rows.push('<span class="badge badge-gray">' + escapeHtml(f.otId) + '</span>');
+  return rows.length ? rows.join(' ') : '<span class="text-slate-600">Sem associação</span>';
+}
+function openFileDetail(id) {
+  var f = (APP.files || []).find(function(x) { return x.id === id; });
+  if (!f) return;
+  APP.currentFile = f;
+  document.getElementById('file-detail-title').textContent = f.name;
+  document.getElementById('file-detail-type').className = 'badge ' + getFileTypeClass(f.type);
+  document.getElementById('file-detail-type').textContent = f.type;
+  document.getElementById('file-detail-folder').textContent = getFolderPath(f.folderId) || 'Raiz';
+  document.getElementById('file-detail-ref').textContent = f.fileName || getAssetName(f.ref);
+  document.getElementById('file-detail-description').textContent = f.description || '—';
+  document.getElementById('file-detail-preview').innerHTML = renderFilePreview(f);
+  document.getElementById('file-detail-meta').innerHTML = renderFileDetailMeta(f);
+  document.getElementById('file-detail-versions').innerHTML = renderFileVersions(f);
+  document.getElementById('modal-file-detail').style.display = 'flex';
+}
+function renderFilePreview(f) {
+  var href = getAssetHref(f.ref);
+  var safe = escapeHtml(href);
+  var name = escapeHtml(f.fileName || getAssetName(f.ref) || f.name);
+  if (isImageUrl(href)) return '<img src="' + safe + '" alt="' + name + '" class="w-full rounded-lg border border-white/10 object-contain" style="max-height:420px">';
+  if (isVideoUrl(href)) return '<video controls class="w-full rounded-lg border border-white/10"><source src="' + safe + '"></video>';
+  if (isPdfAsset(href)) return '<iframe src="' + safe + '" class="w-full rounded-lg border border-white/10" style="height:420px"></iframe>';
+  return '<div class="text-center py-12 text-slate-400"><i class="' + getFileIcon(f.type) + ' text-4xl text-purple-400 mb-3 block"></i><div class="font-medium text-slate-200">' + name + '</div><div class="text-xs mt-2">' + escapeHtml(f.type) + '</div></div>';
+}
+function renderFileDetailMeta(f) {
+  var rows = [
+    ['Permissão', getPermissionText(f.permission)],
+    ['Associações', stripTags(getFileAssociations(f)) || 'Sem associação'],
+    ['Atualizado', f.updatedAt ? new Date(f.updatedAt).toLocaleDateString('pt-PT') : '—']
+  ];
+  if (f.type === 'Credencial') rows.splice(1, 0, ['Serviço', f.credentialService || '—'], ['Utilizador', f.credentialUser || '—']);
+  if (f.mediaCaption) rows.splice(1, 0, ['Legenda', f.mediaCaption]);
+  return rows.map(function(r) {
+    return '<div class="flex justify-between gap-3 py-2 border-b border-white/5"><span class="text-slate-500">' + r[0] + '</span><span class="text-right text-slate-200">' + escapeHtml(r[1]) + '</span></div>';
+  }).join('');
+}
+function renderFileVersions(f) {
+  var versions = f.versions || [];
+  if (!versions.length) return '<p class="text-slate-500">Sem histórico.</p>';
+  return versions.map(function(v) {
+    return '<div class="py-2 border-b border-white/5"><div class="font-medium text-slate-200">' + escapeHtml(v.version || 'v1') + '</div><div class="text-xs text-slate-500">' + (v.createdAt ? new Date(v.createdAt).toLocaleString('pt-PT') : '—') + '</div><div class="text-xs text-slate-400 mt-1">' + escapeHtml(v.notes || '') + '</div></div>';
+  }).join('');
+}
+function openCurrentFileAsset() {
+  if (!APP.currentFile) return;
+  var href = getAssetHref(APP.currentFile.ref);
+  if (href) window.open(href, '_blank');
+}
+function addFileVersion(id) {
+  var f = (APP.files || []).find(function(x) { return x.id === id; });
+  if (!f) return;
+  var version = prompt('Nova versão', 'v' + (((f.versions || []).length || 1) + 1) + '.0');
+  if (!version) return;
+  var ref = prompt('URL / referência da nova versão', f.ref || '');
+  if (!ref) return;
+  var notes = prompt('Notas da versão', 'Atualização do documento') || '';
+  f.ref = ref;
+  f.updatedAt = new Date().toISOString();
+  f.versions = f.versions || [];
+  f.versions.push({ version: version, ref: ref, notes: notes, createdAt: new Date().toISOString(), author: APP.user ? APP.user.name : 'Gestor' });
+  saveData(); renderFiles(); showToast('Nova versão registada.');
+}
+function renderAssociatedFiles(target, id, elId) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+  var items = (APP.files || []).filter(function(f) {
+    if (target === 'ot') return f.otId === id;
+    if (target === 'equipment') return f.equipmentId === id;
+    if (target === 'client') return f.clientId === id;
+    return false;
+  });
+  if (items.length === 0) {
+    el.innerHTML = '<span class="text-slate-500">Nenhum ficheiro associado.</span>';
+    return;
+  }
+  el.innerHTML = items.map(function(f) {
+    return '<div class="flex items-center justify-between py-2 border-b border-white/5">' +
+      '<div class="flex items-center gap-2"><i class="' + getFileIcon(f.type) + ' text-purple-400"></i><div><div class="text-slate-200">' + escapeHtml(f.name) + '</div><div class="text-xs text-slate-500">' + escapeHtml(f.type) + ' · ' + ((f.versions || []).length || 1) + ' versão(ões)</div></div></div>' +
+      '<button class="btn-ghost text-xs" onclick="openFileDetail(\'' + f.id + '\')"><i class="fas fa-eye"></i></button>' +
+      '</div>';
+  }).join('');
+}
+function getPermissionText(permission) {
+  return {'all':'Todos','users':'Utilizadores selecionados','teams':'Equipas selecionadas','restricted':'Restrito ao gestor'}[permission] || permission;
+}
+function stripTags(html) {
+  return String(html || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
 }
 
 // ======================== INCIDENTS ========================
@@ -2502,7 +4638,7 @@ function openChecklistDetail(type) {
     return '<div class="task-row mb-2"><div class="flex items-center gap-3">' +
       '<div class="task-check" id="cl-task-' + i + '" onclick="toggleCLTask(' + i + ')"></div>' +
       '<div><div class="text-sm font-medium">' + t.name + '</div>' + (t.section ? '<div class="text-xs text-slate-500">' + t.section + '</div>' : '') + '</div>' +
-      (t.help ? '<button class="btn-ghost text-xs ml-auto" onclick="alert(\'' + t.help.replace(/'/g,"\\'") + '\')"><i class="fas fa-question-circle" style="color:var(--accent-blue)"></i> Saber como fazer</button>' : '') +
+      '<button class="btn-ghost text-xs ml-auto" onclick="openHowToPanel({description:\'' + t.name.replace(/'/g,"\\'") + '\', help:\'' + (t.help || '').replace(/'/g,"\\'") + '\'})"><i class="fas fa-circle-question" style="color:var(--accent-blue)"></i> Saber como fazer</button>' +
       '</div></div>';
   }).join('');
   document.getElementById('modal-checklist-detail').style.display = 'flex';
@@ -2596,6 +4732,15 @@ function renderUpcomingInterventions() {
 // ======================== AI ASSISTANT ========================
 function getAIResponse(msg) {
   var m = msg.toLowerCase();
+  if (m.includes('nfc')) {
+    return 'Leitura NFC no ManuGent\n\nFluxo suportado:\n1. Abrir a ficha do equipamento ou o detalhe da OT\n2. Associar uma tag NFC ao registo\n3. Ler a tag no local\n4. Abrir automaticamente a ficha técnica ou a OT\n\nEquipamentos:\n- A leitura abre a ficha técnica, histórico e botão para criar OT\n- Pode ser usada em conjunto com o QR imprimível\n\nOTs:\n- A leitura abre diretamente a intervenção\n- O técnico pode juntar-se ao trabalho, iniciar, pausar, retomar ou sair\n\nNota: em browsers sem Web NFC, o sistema ativa simulação para testar o fluxo no desktop.';
+  }
+  if ((m.includes('ups') || m.includes('galaxy')) && m.includes('bypass') && (m.includes('bateria') || m.includes('battery')) && (m.includes('temperatura') || m.includes('temp'))) {
+    return 'Diagnóstico IA — UPS Galaxy VS\n\nPossíveis causas:\n- Ventilação insuficiente: 72%\n- Baterias degradadas: 18%\n- Sensor térmico defeituoso: 10%\n\nAções recomendadas:\n1. Verificar temperatura da sala e fluxo de ar nos filtros\n2. Confirmar idade e tensão das baterias\n3. Validar alarmes ativos no painel da UPS\n4. Criar OT corretiva se a temperatura estiver acima do limite\n\nPosso criar uma OT corretiva para este diagnóstico.';
+  }
+  if (m.includes('diagnostic') || m.includes('diagnosticar') || m.includes('alarme')) {
+    return 'Diagnóstico IA\n\nPossíveis causas:\n- Falha operacional provável: 58%\n- Componente em degradação: 27%\n- Sensor ou leitura incorreta: 15%\n\nAções recomendadas:\n1. Confirmar alarmes no equipamento\n2. Consultar histórico de OTs\n3. Executar checklist de inspeção\n4. Registar medições fora dos limites';
+  }
   if (m.includes('spc11') && m.includes('calibr')) return 'Calibração SPC11 — Procedimento:\n\n1. Conectar cabo USB-UART e abrir software FCT\n2. Menu: Calibration > Auto Calibration\n3. Seguir wizard de posicionamento (0%, 50%, 100%)\n4. Guardar parâmetros em EEPROM\n5. Testar ciclo completo\n\nTempo estimado: ~30 min\nFerramentas: Computador com FCT, cabo USB-UART';
   if (m.includes('spc11')) return 'Erro SPC11 — Festo\n\nCausas prováveis:\n• Sinal de posição fora de tolerância\n• Cabo do sensor danificado\n• Parâmetros de controlo incorretos\n\nDiagnóstico:\n1. Verificar conexão do cabo do sensor de posição\n2. Confirmar parâmetros no menu Config > POS\n3. Realizar nova calibração via menu CAL\n4. Verificar alimentação 24VDC\n\nTempo médio de resolução: 45 min';
   if (m.includes('ups') || m.includes('galaxy') || m.includes('battery')) return 'UPS Galaxy VS — Battery Charger Failure\n\nCausas prováveis:\n• Falha no módulo de carregamento\n• Temperatura elevada das baterias\n• Baterias com sulfatação avançada\n\nProcedimento:\n1. Verificar temperatura sala UPS (máx. 25°C)\n2. Medir tensão baterias em flutuação (48-54V)\n3. Verificar fusíveis do módulo de carga\n4. Se baterias >5 anos: substituição recomendada';
@@ -2704,7 +4849,15 @@ function getStatusClass(s) {
 function getEquipStatusClass(s) {
   return {'Operacional':'badge-green','Em manutenção':'badge-yellow','Avaria':'badge-red','Desativado':'badge-gray'}[s] || 'badge-gray';
 }
-function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+function isPageActive(id) {
+  var el = document.getElementById(id);
+  return !!(el && el.classList.contains('active'));
+}
+function closeModal(id) {
+  if (id === 'modal-ot-detail') { showPage('ots'); return; }
+  if (id === 'modal-equip-detail') { showPage('equipment'); return; }
+  document.getElementById(id).style.display = 'none';
+}
 function showToast(msg) {
   var toast = document.createElement('div');
   toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#1a1a3a;border:1px solid rgba(99,102,241,0.5);color:white;padding:12px 20px;border-radius:10px;z-index:9999;font-size:14px;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
@@ -2717,6 +4870,32 @@ function toggleNotifications() {
   p.style.display = p.style.display === 'none' ? 'block' : 'none';
 }
 function closeNotifications() { document.getElementById('notifications-panel').style.display = 'none'; }
+function enhanceFileInputs() {
+  document.querySelectorAll('input[type="file"].input-field').forEach(function(input) {
+    input.classList.add('upload-hidden');
+    if (input.dataset.enhanced === 'true') {
+      updateFilePickerLabel(input);
+      return;
+    }
+    input.dataset.enhanced = 'true';
+    var label = document.createElement('label');
+    label.className = 'file-picker';
+    label.htmlFor = input.id;
+    label.innerHTML = '<i class="fas fa-cloud-arrow-up"></i><span>Carregar ficheiro</span>';
+    input.insertAdjacentElement('afterend', label);
+    input.addEventListener('change', function() {
+      updateFilePickerLabel(input);
+    });
+  });
+}
+function updateFilePickerLabel(input) {
+  var label = input.nextElementSibling && input.nextElementSibling.classList.contains('file-picker') ? input.nextElementSibling : null;
+  if (!label) return;
+  var files = Array.prototype.slice.call(input.files || []);
+  var text = files.length > 1 ? files.length + ' ficheiros selecionados' : (files[0] ? files[0].name : 'Carregar ficheiro');
+  label.querySelector('span').textContent = text;
+  label.classList.toggle('active', files.length > 0);
+}
 function globalSearch(q) {
   if (!q || q.length < 2) return;
   var results = [];
@@ -2726,6 +4905,11 @@ function globalSearch(q) {
   APP.equipment.filter(function(e) { return e.name.toLowerCase().includes(q.toLowerCase()); }).forEach(function(e) {
     results.push(function() { showPage('equipment'); setTimeout(function() { openEquipDetail(e.id); }, 100); });
   });
+  (APP.files || []).filter(function(f) {
+    return [f.name, f.type, f.ref, f.description, f.clientName, f.equipmentName, f.otId].join(' ').toLowerCase().includes(q.toLowerCase());
+  }).forEach(function() {
+    results.push(function() { showPage('files'); });
+  });
   if (results.length > 0) results[0]();
 }
 
@@ -2733,11 +4917,37 @@ function globalSearch(q) {
 function initSampleData() {
   if (APP.equipment.length === 0 && APP.ots.length === 0 && !APP.user) {
     APP.equipment = [
-      { id:'EQ-001', name:'UPS Galaxy VS 20kVA', code:'UPS-01', brand:'Schneider Electric', model:'Galaxy VS', serial:'SN123456', category:'UPS', location:'Piso 0 — Sala UPS', criticality:'Crítico', status:'Operacional', installDate:'2021-03-15', notes:'Baterias substituídas em 2024', createdAt:new Date().toISOString() },
-      { id:'EQ-002', name:'Festo SPC11', code:'AUT-01', brand:'Festo', model:'SPC11', serial:'', category:'Automação', location:'Piso 1 — Linha Produção', criticality:'Alto', status:'Operacional', installDate:'2020-06-01', notes:'', createdAt:new Date().toISOString() },
-      { id:'EQ-003', name:'Gerador Diesel 100kVA', code:'GER-01', brand:'Kohler', model:'KD100', serial:'KD-789012', category:'Gerador', location:'Exterior — Pátio', criticality:'Crítico', status:'Operacional', installDate:'2019-01-10', notes:'Próxima revisão: 500h', createdAt:new Date().toISOString() }
+      { id:'EQ-001', name:'UPS Galaxy VS 20kVA', code:'UPS-01', qrCode:'MG-UPS-01-DEMO', nfcTag:'NFC-EQ-UPS-01', brand:'Schneider Electric', model:'Galaxy VS', serial:'SN123456', category:'UPS', location:'Piso 0 — Sala UPS', criticality:'Crítico', status:'Operacional', clientId:'CL-001', clientName:'Cliente Industrial Demo', installDate:'2021-03-15', notes:'Baterias substituídas em 2024', preventiveRule:{frequency:'quarterly',threshold:90,lastGeneratedAt:null,assignedTechnicianId:'TC-001'}, operatingHours:1200, cycleCount:42, createdAt:new Date().toISOString() },
+      { id:'EQ-002', name:'Festo SPC11', code:'AUT-01', qrCode:'MG-AUT-01-DEMO', nfcTag:'NFC-EQ-AUT-01', brand:'Festo', model:'SPC11', serial:'', category:'Automação', location:'Piso 1 — Linha Produção', criticality:'Alto', status:'Operacional', installDate:'2020-06-01', notes:'', preventiveRule:{frequency:'monthly',threshold:30,lastGeneratedAt:null,assignedTechnicianId:'TC-001'}, operatingHours:860, cycleCount:12800, createdAt:new Date().toISOString() },
+      { id:'EQ-003', name:'Gerador Diesel 100kVA', code:'GER-01', qrCode:'MG-GER-01-DEMO', nfcTag:'NFC-EQ-GER-01', brand:'Kohler', model:'KD100', serial:'KD-789012', category:'Gerador', location:'Exterior — Pátio', criticality:'Crítico', status:'Operacional', installDate:'2019-01-10', notes:'Próxima revisão: 500h', preventiveRule:{frequency:'operating_hours',threshold:500,lastGeneratedAt:null,assignedTechnicianId:'TC-001'}, operatingHours:510, cycleCount:76, createdAt:new Date().toISOString() }
     ];
     APP.technicians = [{ id:'TC-001', name:'João Silva', email:'joao@empresa.com', specialty:'Elétrico', phone:'+351 912 000 001', availability:'Disponível', createdAt:new Date().toISOString() }];
+    APP.clients = [{ id:'CL-001', name:'Cliente Industrial Demo', contact:'Maria Costa', email:'maria@cliente-demo.pt', phone:'+351 210 000 000', address:'Lisboa', createdAt:new Date().toISOString() }];
+    APP.buildings = [
+      { id:'ED-001', name:'Instalação Principal', clientId:'CL-001', clientName:'Cliente Industrial Demo', address:'Lisboa', zones:'Piso 0, Sala UPS, Linha Produção', createdAt:new Date().toISOString() }
+    ];
+    APP.stockMaterials = [
+      { id:'MAT-001', name:'Fusível NH00 63A', category:'Elétrico', stock:12, cost:8.5, location:'Armazém central', createdAt:new Date().toISOString() },
+      { id:'MAT-002', name:'Filtro óleo gerador', category:'Geradores', stock:4, cost:42, location:'Armazém técnico', createdAt:new Date().toISOString() }
+    ];
+    APP.suppliers = [
+      { id:'SUP-001', name:'ElectroParts Portugal', category:'Elétrico', approved:true },
+      { id:'SUP-002', name:'Diesel Service Lda', category:'Geradores', approved:true },
+      { id:'SUP-003', name:'UPS Battery Store', category:'Baterias', approved:true }
+    ];
+    APP.purchases = [
+      { id:'PC-001', item:'Banco de baterias UPS', supplier:'UPS Battery Store', status:'Aprovação', value:1850, createdAt:new Date().toISOString() },
+      { id:'PC-002', item:'Filtros gerador', supplier:'Diesel Service Lda', status:'Recebido', value:320, createdAt:new Date().toISOString() }
+    ];
+    APP.contracts = [
+      { id:'CT-001', client:'Contrato UPS', sla:'4h', hoursIncluded:40, preventivesIncluded:12, renewal:'automática' },
+      { id:'CT-002', client:'Cliente Industrial', sla:'8h', hoursIncluded:24, preventivesIncluded:6, renewal:'30 dias antes' }
+    ];
+    APP.invoices = [
+      { id:'ORC-001', type:'Orçamento', source:'UPS Galaxy VS · baterias', value:1250 },
+      { id:'FAT-001', type:'Fatura', source:'Contrato mensal', value:1800 },
+      { id:'REL-001', type:'Relatório', source:'Preventiva mensal UPS', value:0 }
+    ];
     APP.ots = [{
       id:'OT-000001', title:'Verificação mensal UPS Galaxy VS', type:'Preventiva', priority:'Alta',
       status:'Aberta', equipmentId:'EQ-001', equipmentName:'UPS Galaxy VS 20kVA',
@@ -2745,15 +4955,45 @@ function initSampleData() {
       date: new Date().toISOString().slice(0,16),
       description:'Verificação mensal completa da UPS incluindo baterias, módulos e alarmes.',
       location:'Piso 0 — Sala UPS', tasks:[], materials:[], timeLogs:[], comments:[],
-      report:'', activity:[{ text:'OT criada', time: new Date().toLocaleString('pt-PT') }],
+      nfcTag:'NFC-OT-000001', report:'', activity:[{ text:'OT criada', time: new Date().toLocaleString('pt-PT') }],
       createdAt: new Date().toISOString(),
     }];
-    APP.knowledge = [{
-      id:'KB-001', title:'UPS — Battery Charger Failure', equipment:'UPS Galaxy VS', category:'UPS',
-      symptom:'Alarme Battery Charger Failure no painel', author:'Sistema ManuGent',
-      solution:'1. Verificar temperatura sala (máx 25°C)\n2. Medir tensão baterias em flutuação (48-54V)\n3. Verificar fusíveis módulo de carga\n4. Se baterias >5 anos: substituição recomendada',
-      tools:'Multímetro, termómetro', createdAt: new Date().toISOString(),
-    }];
+    APP.knowledge = [
+      {
+        id:'KB-001', title:'UPS Galaxy VS — Troca de baterias', equipment:'UPS Galaxy VS', category:'UPS', kind:'Procedimento',
+        symptom:'Baterias degradadas ou autonomia reduzida', author:'Sistema ManuGent',
+        solution:'1. Confirmar bypass e autorização\n2. Desligar string de baterias\n3. Medir tensão por bloco\n4. Substituir blocos degradados\n5. Repor string e executar teste de autonomia',
+        tools:'Multímetro, EPI elétrico, chave isolada', photos:'foto-banco-baterias.jpg', videos:'video-teste-autonomia.mp4', pdf:'manual-ups-galaxy-vs.pdf', createdAt: new Date().toISOString(),
+      },
+      {
+        id:'KB-002', title:'UPS Galaxy VS — Bypass manual', equipment:'UPS Galaxy VS', category:'UPS', kind:'Procedimento',
+        symptom:'Manutenção segura ou alarme crítico', author:'Sistema ManuGent',
+        solution:'1. Validar carga crítica\n2. Confirmar rede estável\n3. Acionar bypass interno\n4. Confirmar indicação no painel\n5. Registar evento e criar OT',
+        tools:'Checklist UPS, EPI elétrico', photos:'painel-bypass.jpg', videos:'bypass-ups.mp4', pdf:'procedimento-bypass-ups.pdf', createdAt: new Date().toISOString(),
+      },
+      {
+        id:'KB-003', title:'Gerador — Teste ATS', equipment:'Gerador Diesel 100kVA', category:'Gerador', kind:'Procedimento',
+        symptom:'Teste mensal de transferência automática', author:'Sistema ManuGent',
+        solution:'1. Confirmar condições de segurança\n2. Simular falha de rede\n3. Medir tempo de arranque\n4. Confirmar transferência ATS\n5. Repor rede e registar parâmetros',
+        tools:'Cronómetro, multímetro, rádio', photos:'ats-quadro.jpg', videos:'teste-ats.mp4', pdf:'checklist-gerador-ats.pdf', createdAt: new Date().toISOString(),
+      }
+    ];
+    APP.fileFolders = [
+      { id:'FOLDER-ROOT-UPS', name:'UPS Galaxy VS', parentId:'', createdAt:new Date().toISOString() },
+      { id:'FOLDER-UPS-MANUAIS', name:'Manuais', parentId:'FOLDER-ROOT-UPS', createdAt:new Date().toISOString() },
+      { id:'FOLDER-UPS-ESQUEMAS', name:'Esquemas elétricos', parentId:'FOLDER-ROOT-UPS', createdAt:new Date().toISOString() },
+      { id:'FOLDER-UPS-MEDIA', name:'Fotos e vídeos', parentId:'FOLDER-ROOT-UPS', createdAt:new Date().toISOString() },
+      { id:'FOLDER-CLIENTE', name:'Documentos do cliente', parentId:'', createdAt:new Date().toISOString() }
+    ];
+    APP.files = [
+      { id:'FILE-001', name:'Manual UPS Galaxy VS', type:'Ficheiro', ref:'manual-ups-galaxy-vs.pdf', folderId:'FOLDER-UPS-MANUAIS', description:'Manual técnico completo da UPS instalada na sala principal.', permission:'all', userIds:[], teams:[], clientId:'CL-001', clientName:'Cliente Industrial Demo', equipmentId:'EQ-001', equipmentName:'UPS Galaxy VS 20kVA', otId:'OT-000001', otTitle:'Verificação mensal UPS Galaxy VS', versions:[{ version:'v1.0', notes:'Manual de referência', ref:'manual-ups-galaxy-vs.pdf', createdAt:new Date().toISOString(), author:'Sistema ManuGent' }], createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), owner:'Sistema ManuGent' },
+      { id:'FILE-002', name:'Esquema elétrico do quadro UPS', type:'Esquema elétrico', ref:'esquema-quadro-ups-qe01.dwg', folderId:'FOLDER-UPS-ESQUEMAS', description:'Diagrama unifilar e bornes de ligação do quadro UPS.', permission:'teams', userIds:[], teams:['Equipa Elétrica','Supervisores'], clientId:'CL-001', clientName:'Cliente Industrial Demo', equipmentId:'EQ-001', equipmentName:'UPS Galaxy VS 20kVA', otId:'', otTitle:'', versions:[{ version:'v1.0', notes:'Desenho inicial', ref:'esquema-quadro-ups-qe01.dwg', createdAt:new Date().toISOString(), author:'Sistema ManuGent' }, { version:'v1.1', notes:'Atualização após inspeção', ref:'esquema-quadro-ups-qe01-rev1.dwg', createdAt:new Date().toISOString(), author:'João Silva' }], createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), owner:'Sistema ManuGent' },
+      { id:'FILE-003', name:'Vídeo bypass manual UPS', type:'Vídeo', ref:'https://intranet.local/videos/bypass-ups', folderId:'FOLDER-UPS-MEDIA', mediaCaption:'Demonstração do bypass manual.', description:'Demonstração do procedimento de bypass manual.', permission:'users', userIds:['TC-001'], teams:[], clientId:'CL-001', clientName:'Cliente Industrial Demo', equipmentId:'EQ-001', equipmentName:'UPS Galaxy VS 20kVA', otId:'OT-000001', otTitle:'Verificação mensal UPS Galaxy VS', versions:[{ version:'v1.0', notes:'Vídeo de formação', ref:'https://intranet.local/videos/bypass-ups', createdAt:new Date().toISOString(), author:'Sistema ManuGent' }], createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), owner:'Sistema ManuGent' },
+      { id:'FILE-004', name:'Credenciais portal Schneider', type:'Credencial', ref:'Cofre interno / SCHNEIDER-UPS-01', folderId:'FOLDER-ROOT-UPS', credentialService:'Portal Schneider', credentialUser:'manutencao@empresa.pt', description:'Referência segura para credenciais do portal do fabricante.', permission:'restricted', userIds:[], teams:[], clientId:'CL-001', clientName:'Cliente Industrial Demo', equipmentId:'EQ-001', equipmentName:'UPS Galaxy VS 20kVA', otId:'', otTitle:'', versions:[{ version:'v1.0', notes:'Criado no cofre interno', ref:'Cofre interno / SCHNEIDER-UPS-01', createdAt:new Date().toISOString(), author:'Gestor' }], createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), owner:'Gestor' },
+      { id:'FILE-005', name:'Portal de suporte Schneider', type:'Link', ref:'https://www.se.com/pt/pt/support/', folderId:'FOLDER-ROOT-UPS', description:'Link de suporte e documentação do fabricante.', permission:'all', userIds:[], teams:[], clientId:'CL-001', clientName:'Cliente Industrial Demo', equipmentId:'EQ-001', equipmentName:'UPS Galaxy VS 20kVA', otId:'', otTitle:'', versions:[{ version:'v1.0', notes:'Link de referência', ref:'https://www.se.com/pt/pt/support/', createdAt:new Date().toISOString(), author:'Sistema ManuGent' }], createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), owner:'Sistema ManuGent' },
+      { id:'FILE-006', name:'Foto banco de baterias UPS', type:'Imagem', ref:'foto-banco-baterias.jpg', folderId:'FOLDER-UPS-MEDIA', mediaCaption:'Banco de baterias instalado.', description:'Imagem de referência do banco de baterias instalado.', permission:'teams', userIds:[], teams:['Equipa Elétrica'], clientId:'CL-001', clientName:'Cliente Industrial Demo', equipmentId:'EQ-001', equipmentName:'UPS Galaxy VS 20kVA', otId:'OT-000001', otTitle:'Verificação mensal UPS Galaxy VS', versions:[{ version:'v1.0', notes:'Foto de instalação', ref:'foto-banco-baterias.jpg', createdAt:new Date().toISOString(), author:'João Silva' }], createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), owner:'João Silva' },
+      { id:'FILE-007', name:'Checklist de entrega ao cliente', type:'Outro documento', ref:'checklist-entrega-cliente.docx', folderId:'FOLDER-CLIENTE', description:'Documento geral para validação após intervenção.', permission:'all', userIds:[], teams:[], clientId:'CL-001', clientName:'Cliente Industrial Demo', equipmentId:'', equipmentName:'', otId:'OT-000001', otTitle:'Verificação mensal UPS Galaxy VS', versions:[{ version:'v1.0', notes:'Modelo inicial', ref:'checklist-entrega-cliente.docx', createdAt:new Date().toISOString(), author:'Sistema ManuGent' }], createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), owner:'Sistema ManuGent' }
+    ];
   }
 }
 </script>
