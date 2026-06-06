@@ -1,0 +1,2513 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManuGent — Agente IA de Manutenção</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0a1a;
+      --bg-secondary: #0f0f2a;
+      --bg-card: #111128;
+      --bg-card-hover: #161635;
+      --bg-sidebar: #0c0c22;
+      --accent-purple: #6366f1;
+      --accent-purple-light: #818cf8;
+      --accent-blue: #3b82f6;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --accent-yellow: #f59e0b;
+      --accent-cyan: #06b6d4;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #475569;
+      --border: #1e1e3f;
+      --border-light: #252550;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+
+    /* Gradient backgrounds */
+    .hero-bg {
+      background: radial-gradient(ellipse at 30% 50%, rgba(99,102,241,0.15) 0%, transparent 60%),
+                  radial-gradient(ellipse at 70% 20%, rgba(139,92,246,0.12) 0%, transparent 50%),
+                  radial-gradient(ellipse at 50% 90%, rgba(59,130,246,0.08) 0%, transparent 50%),
+                  linear-gradient(135deg, #060614 0%, #0a0a20 50%, #08081a 100%);
+    }
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .card:hover { border-color: var(--border-light); }
+    .sidebar-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px; border-radius: 8px;
+      cursor: pointer; transition: all 0.2s;
+      color: var(--text-secondary); font-size: 14px;
+    }
+    .sidebar-item:hover { background: rgba(99,102,241,0.1); color: var(--text-primary); }
+    .sidebar-item.active { background: rgba(99,102,241,0.15); color: var(--accent-purple-light); }
+    .sidebar-item i { width: 18px; text-align: center; }
+
+    .btn-primary {
+      background: var(--accent-purple);
+      color: white; border: none; padding: 10px 20px;
+      border-radius: 8px; cursor: pointer; font-weight: 500;
+      transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-primary:hover { background: #5254cc; }
+    .btn-secondary {
+      background: transparent; color: var(--text-secondary);
+      border: 1px solid var(--border-light); padding: 10px 20px;
+      border-radius: 8px; cursor: pointer; font-weight: 500;
+      transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-secondary:hover { border-color: var(--accent-purple); color: var(--text-primary); }
+    .btn-ghost {
+      background: transparent; color: var(--text-secondary);
+      border: none; padding: 8px 12px; border-radius: 6px;
+      cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-ghost:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+
+    .input-field {
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border-light);
+      color: var(--text-primary); padding: 10px 14px; border-radius: 8px;
+      width: 100%; font-size: 14px; transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .input-field:focus { outline: none; border-color: var(--accent-purple); background: rgba(99,102,241,0.05); }
+    .input-field::placeholder { color: var(--text-muted); }
+
+    select.input-field option { background: #1a1a35; }
+
+    .badge {
+      padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .badge-purple { background: rgba(99,102,241,0.2); color: var(--accent-purple-light); }
+    .badge-green { background: rgba(16,185,129,0.15); color: #34d399; }
+    .badge-red { background: rgba(239,68,68,0.15); color: #f87171; }
+    .badge-yellow { background: rgba(245,158,11,0.15); color: #fbbf24; }
+    .badge-blue { background: rgba(59,130,246,0.15); color: #60a5fa; }
+    .badge-gray { background: rgba(148,163,184,0.1); color: var(--text-secondary); }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .chat-bubble-user {
+      background: var(--accent-purple); color: white;
+      padding: 10px 14px; border-radius: 12px 12px 0 12px;
+      max-width: 75%; align-self: flex-end;
+    }
+    .chat-bubble-ai {
+      background: var(--bg-card-hover); color: var(--text-primary);
+      padding: 12px 16px; border-radius: 12px 12px 12px 0;
+      max-width: 85%; align-self: flex-start; border: 1px solid var(--border);
+    }
+
+    .metric-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px; transition: all 0.2s;
+    }
+    .metric-card:hover { border-color: var(--border-light); }
+
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .dot-green { background: var(--accent-green); }
+    .dot-yellow { background: var(--accent-yellow); }
+    .dot-red { background: var(--accent-red); }
+    .dot-blue { background: var(--accent-blue); }
+    .dot-gray { background: var(--text-muted); }
+
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th {
+      text-align: left; padding: 10px 16px;
+      color: var(--text-muted); font-size: 11px;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border); font-weight: 600;
+    }
+    .data-table td {
+      padding: 14px 16px; border-bottom: 1px solid var(--border);
+      font-size: 14px; color: var(--text-secondary);
+    }
+    .data-table tr:hover td { background: rgba(255,255,255,0.02); cursor: pointer; }
+    .data-table tr:last-child td { border-bottom: none; }
+
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      z-index: 1000; display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    .modal-content {
+      background: #12122a; border: 1px solid var(--border-light);
+      border-radius: 16px; padding: 28px; width: 90%; max-width: 600px;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-lg { max-width: 900px; }
+    .modal-xl { max-width: 1100px; }
+
+    .tab-btn {
+      padding: 8px 18px; border-radius: 8px; cursor: pointer;
+      font-size: 14px; font-weight: 500; transition: all 0.2s;
+      color: var(--text-secondary); background: transparent; border: none;
+      font-family: 'Inter', sans-serif;
+    }
+    .tab-btn.active { background: var(--accent-purple); color: white; }
+    .tab-btn:hover:not(.active) { color: var(--text-primary); background: var(--bg-card-hover); }
+
+    .nav-link { color: var(--text-secondary); font-size: 14px; cursor: pointer; transition: color 0.2s; }
+    .nav-link:hover { color: var(--text-primary); }
+
+    .task-check {
+      width: 18px; height: 18px; border-radius: 4px;
+      border: 1.5px solid var(--border-light); background: transparent;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; flex-shrink: 0;
+    }
+    .task-check.checked { background: var(--accent-green); border-color: var(--accent-green); }
+
+    .progress-bar { background: var(--border); border-radius: 4px; height: 6px; overflow: hidden; }
+    .progress-fill {
+      height: 100%; border-radius: 4px;
+      background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue));
+      transition: width 0.5s;
+    }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    .cursor { animation: blink 1s infinite; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    .fade-in { animation: fadeIn 0.3s ease; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    .pulse { animation: pulse 2s infinite; }
+
+    #app-sidebar {
+      width: 220px; min-width: 220px; background: var(--bg-sidebar);
+      border-right: 1px solid var(--border); height: 100vh;
+      display: flex; flex-direction: column; position: fixed; left: 0; top: 0;
+      overflow-y: auto; z-index: 100;
+    }
+    #app-main { margin-left: 220px; min-height: 100vh; }
+
+    .notif-dot {
+      width: 6px; height: 6px; background: var(--accent-red);
+      border-radius: 50%; position: absolute; top: 2px; right: 2px;
+    }
+
+    .task-row {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px; margin-bottom: 8px;
+      transition: all 0.2s;
+    }
+    .task-row:hover { border-color: var(--border-light); }
+
+    .wiki-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 18px; cursor: pointer; transition: all 0.2s;
+    }
+    .wiki-card:hover { border-color: var(--accent-purple); }
+
+    .search-bar {
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 14px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .search-bar input {
+      background: transparent; border: none; color: var(--text-primary);
+      font-size: 14px; outline: none; flex: 1; font-family: 'Inter', sans-serif;
+    }
+    .search-bar input::placeholder { color: var(--text-muted); }
+
+    .notif-item {
+      padding: 12px 16px; border-bottom: 1px solid var(--border);
+      cursor: pointer; transition: background 0.2s;
+    }
+    .notif-item:hover { background: var(--bg-card-hover); }
+
+    .kanban-col {
+      min-width: 260px; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 12px; padding: 14px;
+    }
+    .kanban-card {
+      background: var(--bg-card-hover); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .kanban-card:hover { border-color: var(--accent-purple); }
+
+    .activity-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .activity-icon {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; flex-shrink: 0;
+    }
+
+    .auth-card {
+      background: #0e0e26; border: 1px solid var(--border-light);
+      border-radius: 16px; padding: 36px; width: 100%; max-width: 440px;
+    }
+    .logo-icon {
+      width: 36px; height: 36px; background: var(--accent-purple);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    }
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      color: var(--text-muted); font-size: 12px;
+    }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .glow-purple { box-shadow: 0 0 20px rgba(99,102,241,0.3); }
+
+    .tooltip-text {
+      visibility: hidden; background: #1e1e3f; color: var(--text-primary);
+      padding: 6px 10px; border-radius: 6px; font-size: 12px;
+      position: absolute; z-index: 999; bottom: 125%; left: 50%;
+      transform: translateX(-50%); white-space: nowrap;
+      border: 1px solid var(--border-light);
+    }
+    .tooltip:hover .tooltip-text { visibility: visible; }
+    .tooltip { position: relative; }
+  </style>
+</head>
+<body>
+
+<!-- ====================== LANDING PAGE ====================== -->
+<div id="landing-page" class="hero-bg min-h-screen">
+  <nav class="flex items-center justify-between px-8 py-4 border-b border-white/5">
+    <div class="flex items-center gap-3">
+      <div class="logo-icon"><i class="fas fa-gear text-white text-sm"></i></div>
+      <span class="font-bold text-lg">ManuGent</span>
+    </div>
+    <div class="hidden md:flex items-center gap-8">
+      <span class="nav-link" onclick="scrollToSection('features')">Funcionalidades</span>
+      <span class="nav-link" onclick="scrollToSection('modules')">Módulos</span>
+      <span class="nav-link" onclick="scrollToSection('ia')">IA</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <button class="btn-ghost" onclick="showAuth('login')">Entrar</button>
+      <button class="btn-primary" onclick="showAuth('signup')">Começar grátis</button>
+    </div>
+  </nav>
+
+  <div class="max-w-4xl mx-auto text-center px-6 pt-24 pb-16">
+    <div class="inline-flex items-center gap-2 mb-6 bg-white/5 px-4 py-2 rounded-full border border-white/10">
+      <span class="status-dot dot-green pulse"></span>
+      <span class="mono text-xs text-green-400 tracking-widest">AI-POWERED MAINTENANCE OPERATING SYSTEM</span>
+    </div>
+    <h1 class="text-5xl md:text-6xl font-black leading-tight mb-6">
+      O conhecimento<br>técnico,<br>
+      <span style="color: var(--accent-purple-light)">transformado em IA.</span>
+    </h1>
+    <p class="text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+      ManuGent é o agente inteligente de manutenção industrial: CMMS, base de conhecimento e técnico sénior digital — tudo numa plataforma que aprende com a sua equipa.
+    </p>
+    <div class="flex items-center justify-center gap-4 flex-wrap">
+      <button class="btn-primary text-base px-6 py-3" onclick="showAuth('signup')">
+        Começar grátis <i class="fas fa-arrow-right"></i>
+      </button>
+      <button class="btn-secondary text-base px-6 py-3" onclick="scrollToSection('features')">
+        Ver funcionalidades
+      </button>
+    </div>
+  </div>
+
+  <div class="max-w-4xl mx-auto px-6 pb-16">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="card p-5 text-center">
+        <div class="text-3xl font-black text-white mb-1">-45%</div>
+        <div class="text-xs text-slate-500 mono tracking-wider">MTTR</div>
+      </div>
+      <div class="card p-5 text-center">
+        <div class="text-3xl font-black text-white mb-1">-60%</div>
+        <div class="text-xs text-slate-500 mono tracking-wider">TEMPO RESPOSTA</div>
+      </div>
+      <div class="card p-5 text-center">
+        <div class="text-3xl font-black text-white mb-1">100%</div>
+        <div class="text-xs text-slate-500 mono tracking-wider">RETENÇÃO CONHECIMENTO</div>
+      </div>
+      <div class="card p-5 text-center">
+        <div class="text-3xl font-black text-white mb-1">24/7</div>
+        <div class="text-xs text-slate-500 mono tracking-wider">OTS AUTOMÁTICAS</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="features" class="max-w-6xl mx-auto px-6 py-16">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl font-bold mb-3">Tudo o que precisa de manutenção</h2>
+      <p class="text-slate-400">Plataforma completa para equipas técnicas industriais</p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="card p-6">
+        <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center mb-4">
+          <i class="fas fa-robot text-purple-400"></i>
+        </div>
+        <h3 class="font-semibold mb-2">Assistente IA</h3>
+        <p class="text-sm text-slate-400">Diagnóstico inteligente, procedimentos automáticos e conhecimento técnico instantâneo.</p>
+      </div>
+      <div class="card p-6">
+        <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center mb-4">
+          <i class="fas fa-clipboard-list text-blue-400"></i>
+        </div>
+        <h3 class="font-semibold mb-2">CMMS Inteligente</h3>
+        <p class="text-sm text-slate-400">Ordens de trabalho, checklists, planeamento e gestão completa de manutenção.</p>
+      </div>
+      <div class="card p-6">
+        <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center mb-4">
+          <i class="fas fa-book text-green-400"></i>
+        </div>
+        <h3 class="font-semibold mb-2">Base de Conhecimento</h3>
+        <p class="text-sm text-slate-400">Capture e preserve o conhecimento técnico da equipa. Nunca mais perca experiência.</p>
+      </div>
+      <div class="card p-6">
+        <div class="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center mb-4">
+          <i class="fas fa-microchip text-yellow-400"></i>
+        </div>
+        <h3 class="font-semibold mb-2">Gestão de Ativos</h3>
+        <p class="text-sm text-slate-400">Equipamentos, manuais, histórico e manutenção preventiva num só lugar.</p>
+      </div>
+      <div class="card p-6">
+        <div class="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center mb-4">
+          <i class="fas fa-calendar-alt text-red-400"></i>
+        </div>
+        <h3 class="font-semibold mb-2">Planeamento Automático</h3>
+        <p class="text-sm text-slate-400">IA agenda intervenções, evita conflitos e otimiza recursos da equipa.</p>
+      </div>
+      <div class="card p-6">
+        <div class="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center mb-4">
+          <i class="fas fa-chart-line text-cyan-400"></i>
+        </div>
+        <h3 class="font-semibold mb-2">Analytics &amp; KPIs</h3>
+        <p class="text-sm text-slate-400">MTTR, MTBF, disponibilidade e indicadores de desempenho em tempo real.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="modules" class="max-w-6xl mx-auto px-6 py-16 border-t border-white/5">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl font-bold mb-3">Módulos especializados</h2>
+      <p class="text-slate-400">Cada área da manutenção coberta por agentes IA especializados</p>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="card p-4 text-center hover:border-purple-500/50 transition-all cursor-pointer">
+        <i class="fas fa-wind text-2xl text-blue-400 mb-3 block"></i>
+        <div class="font-medium text-sm">Agente AVAC</div>
+      </div>
+      <div class="card p-4 text-center hover:border-purple-500/50 transition-all cursor-pointer">
+        <i class="fas fa-bolt text-2xl text-yellow-400 mb-3 block"></i>
+        <div class="font-medium text-sm">Agente Elétrico</div>
+      </div>
+      <div class="card p-4 text-center hover:border-purple-500/50 transition-all cursor-pointer">
+        <i class="fas fa-cogs text-2xl text-purple-400 mb-3 block"></i>
+        <div class="font-medium text-sm">Agente Automação</div>
+      </div>
+      <div class="card p-4 text-center hover:border-purple-500/50 transition-all cursor-pointer">
+        <i class="fas fa-building text-2xl text-green-400 mb-3 block"></i>
+        <div class="font-medium text-sm">Agente Facilities</div>
+      </div>
+      <div class="card p-4 text-center hover:border-purple-500/50 transition-all cursor-pointer">
+        <i class="fas fa-calendar text-2xl text-red-400 mb-3 block"></i>
+        <div class="font-medium text-sm">Agente Planeamento</div>
+      </div>
+      <div class="card p-4 text-center hover:border-purple-500/50 transition-all cursor-pointer">
+        <i class="fas fa-shopping-cart text-2xl text-cyan-400 mb-3 block"></i>
+        <div class="font-medium text-sm">Agente Compras</div>
+      </div>
+      <div class="card p-4 text-center hover:border-purple-500/50 transition-all cursor-pointer">
+        <i class="fas fa-stethoscope text-2xl text-orange-400 mb-3 block"></i>
+        <div class="font-medium text-sm">Agente Diagnóstico</div>
+      </div>
+      <div class="card p-4 text-center hover:border-purple-500/50 transition-all cursor-pointer">
+        <i class="fas fa-chart-bar text-2xl text-pink-400 mb-3 block"></i>
+        <div class="font-medium text-sm">Agente Analytics</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="ia" class="max-w-4xl mx-auto px-6 py-16 text-center">
+    <div class="card p-12" style="background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1));">
+      <h2 class="text-3xl font-bold mb-4">Pronto para começar?</h2>
+      <p class="text-slate-400 mb-8">Junte-se a centenas de equipas que já transformaram a sua manutenção com IA.</p>
+      <button class="btn-primary text-base px-8 py-3 glow-purple" onclick="showAuth('signup')">
+        Começar grátis <i class="fas fa-arrow-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <footer class="border-t border-white/5 py-8 text-center text-slate-500 text-sm">
+    <div class="flex items-center justify-center gap-2 mb-2">
+      <div class="logo-icon" style="width:24px;height:24px"><i class="fas fa-gear text-white text-xs"></i></div>
+      <span class="font-bold text-white">ManuGent</span>
+    </div>
+    <p>O conhecimento técnico da sua empresa, transformado em inteligência artificial.</p>
+  </footer>
+</div>
+
+<!-- ====================== AUTH PAGE ====================== -->
+<div id="auth-page" class="hero-bg min-h-screen items-center justify-center p-6" style="display:none">
+  <div style="position:absolute;top:20px;left:20px">
+    <button class="btn-ghost" onclick="showLanding()"><i class="fas fa-arrow-left"></i> Voltar</button>
+  </div>
+  <div class="auth-card">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="logo-icon"><i class="fas fa-gear text-white text-sm"></i></div>
+      <div>
+        <div class="font-bold text-lg">ManuGent</div>
+        <div class="text-xs text-slate-400">Agente IA de manutenção</div>
+      </div>
+    </div>
+    <div class="flex bg-white/5 rounded-lg p-1 mb-6">
+      <button class="flex-1 tab-btn active" id="tab-login" onclick="switchAuthTab('login')">Entrar</button>
+      <button class="flex-1 tab-btn" id="tab-signup" onclick="switchAuthTab('signup')">Criar conta</button>
+    </div>
+    <div id="login-form">
+      <div class="mb-4">
+        <label class="block text-sm mb-2 text-slate-300">Email</label>
+        <input type="email" id="login-email" class="input-field" placeholder="email@empresa.com">
+      </div>
+      <div class="mb-6">
+        <label class="block text-sm mb-2 text-slate-300">Password</label>
+        <input type="password" id="login-pass" class="input-field" placeholder="••••••••">
+      </div>
+      <button class="btn-primary w-full justify-center py-3" onclick="doLogin()">Entrar</button>
+      <div class="divider my-4">ou</div>
+      <button class="btn-secondary w-full justify-center py-3" onclick="doGoogleLogin()">
+        <i class="fab fa-google"></i> Continuar com Google
+      </button>
+    </div>
+    <div id="signup-form" style="display:none">
+      <div class="mb-4">
+        <label class="block text-sm mb-2 text-slate-300">Nome completo</label>
+        <input type="text" id="signup-name" class="input-field" placeholder="João Silva">
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm mb-2 text-slate-300">Email</label>
+        <input type="email" id="signup-email" class="input-field" placeholder="email@empresa.com">
+      </div>
+      <div class="mb-6">
+        <label class="block text-sm mb-2 text-slate-300">Password</label>
+        <input type="password" id="signup-pass" class="input-field" placeholder="••••••••">
+      </div>
+      <button class="btn-primary w-full justify-center py-3" onclick="doSignup()">Criar conta</button>
+      <div class="divider my-4">ou</div>
+      <button class="btn-secondary w-full justify-center py-3" onclick="doGoogleLogin()">
+        <i class="fab fa-google"></i> Continuar com Google
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================== APP LAYOUT ====================== -->
+<div id="app-layout" style="display:none">
+  <aside id="app-sidebar">
+    <div class="p-4 border-b border-white/5">
+      <div class="flex items-center gap-3">
+        <div class="logo-icon"><i class="fas fa-gear text-white text-sm"></i></div>
+        <span class="font-bold">ManuGent</span>
+      </div>
+    </div>
+    <div class="px-4 py-3 border-b border-white/5">
+      <div class="text-xs text-slate-500 uppercase tracking-wider mb-1">Operação</div>
+      <div class="text-sm font-medium" id="sidebar-user-name">Bem-vindo</div>
+      <div class="text-xs text-slate-500" id="sidebar-user-email"></div>
+    </div>
+    <nav class="flex-1 p-3 space-y-1">
+      <div class="sidebar-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+        <i class="fas fa-th-large"></i> Visão geral
+      </div>
+      <div class="sidebar-item" onclick="showPage('ots')" id="nav-ots">
+        <i class="fas fa-wrench"></i> Ordens de Trabalho
+        <span class="ml-auto badge badge-red text-xs" id="ot-count-badge" style="font-size:10px">0</span>
+      </div>
+      <div class="sidebar-item" onclick="showPage('equipment')" id="nav-equipment">
+        <i class="fas fa-microchip"></i> Equipamentos
+      </div>
+      <div class="sidebar-item" onclick="showPage('clients')" id="nav-clients">
+        <i class="fas fa-briefcase"></i> Clientes
+      </div>
+      <div class="sidebar-item" onclick="showPage('technicians')" id="nav-technicians">
+        <i class="fas fa-hard-hat"></i> Técnicos
+      </div>
+      <div class="sidebar-item" onclick="showPage('knowledge')" id="nav-knowledge">
+        <i class="fas fa-book"></i> Conhecimento
+      </div>
+      <div class="sidebar-item" onclick="showPage('ai-assistant')" id="nav-ai-assistant">
+        <i class="fas fa-robot"></i> Assistente IA
+        <span class="ml-auto status-dot dot-green" style="flex-shrink:0"></span>
+      </div>
+      <div class="mt-4 mb-1 px-2 text-xs text-slate-600 uppercase tracking-wider">Planeamento</div>
+      <div class="sidebar-item" onclick="showPage('calendar')" id="nav-calendar">
+        <i class="fas fa-calendar-alt"></i> Calendário
+      </div>
+      <div class="sidebar-item" onclick="showPage('checklists')" id="nav-checklists">
+        <i class="fas fa-check-square"></i> Checklists
+      </div>
+      <div class="sidebar-item" onclick="showPage('incidents')" id="nav-incidents">
+        <i class="fas fa-exclamation-triangle"></i> Incidentes
+      </div>
+    </nav>
+    <div class="p-3 border-t border-white/5">
+      <div class="sidebar-item" onclick="showPage('settings')" id="nav-settings">
+        <i class="fas fa-cog"></i> Definições
+      </div>
+      <div class="sidebar-item" style="color:#f87171" onclick="doLogout()">
+        <i class="fas fa-sign-out-alt"></i> Sair
+      </div>
+    </div>
+  </aside>
+
+  <main id="app-main">
+    <!-- Top bar -->
+    <div class="flex items-center justify-between px-6 py-3 border-b border-white/5 sticky top-0 z-50" style="background: var(--bg-primary);">
+      <div class="search-bar w-64">
+        <i class="fas fa-search text-slate-500 text-sm"></i>
+        <input type="text" placeholder="Pesquisar equipamentos, OTs..." onkeyup="globalSearch(this.value)">
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="btn-ghost" style="position:relative" onclick="toggleNotifications()">
+          <i class="fas fa-bell"></i>
+          <span class="notif-dot"></span>
+        </button>
+        <div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-sm font-bold cursor-pointer" id="user-avatar" onclick="showPage('settings')">J</div>
+      </div>
+    </div>
+
+    <div class="p-6">
+
+      <!-- DASHBOARD -->
+      <div id="page-dashboard" class="page active fade-in">
+        <div class="mb-6">
+          <div class="text-xs text-slate-500 uppercase tracking-wider mb-1">Operação</div>
+          <h1 class="text-2xl font-bold mono">Bem-vindo de volta</h1>
+          <p class="text-slate-400 text-sm" id="dash-user-email">—</p>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div class="metric-card">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs text-slate-500 uppercase tracking-wider">OTs Abertas</span>
+              <i class="fas fa-wrench text-purple-400 text-sm"></i>
+            </div>
+            <div class="text-3xl font-bold mono" id="metric-ots-open">0</div>
+            <div class="text-xs text-slate-500 mt-1">Em andamento ou pendentes</div>
+          </div>
+          <div class="metric-card">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs text-slate-500 uppercase tracking-wider">OTs Concluídas</span>
+              <i class="fas fa-check-circle text-green-400 text-sm"></i>
+            </div>
+            <div class="text-3xl font-bold mono" id="metric-ots-done">0</div>
+            <div class="text-xs text-slate-500 mt-1">Total histórico</div>
+          </div>
+          <div class="metric-card">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs text-slate-500 uppercase tracking-wider">Críticas</span>
+              <i class="fas fa-exclamation-triangle text-yellow-400 text-sm"></i>
+            </div>
+            <div class="text-3xl font-bold mono" id="metric-critical">0</div>
+            <div class="text-xs text-slate-500 mt-1">Prioridade alta</div>
+          </div>
+          <div class="metric-card">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs text-slate-500 uppercase tracking-wider">Equipamentos</span>
+              <i class="fas fa-microchip text-blue-400 text-sm"></i>
+            </div>
+            <div class="text-3xl font-bold mono" id="metric-equip">0</div>
+            <div class="text-xs text-slate-500 mt-1">Ativos registados</div>
+          </div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-6 mb-6">
+          <div class="card p-5">
+            <div class="flex items-center gap-2 mb-4">
+              <i class="fas fa-activity text-purple-400"></i>
+              <h3 class="font-semibold mono">Atividade recente</h3>
+            </div>
+            <div id="dash-activity"><p class="text-slate-500 text-sm">Nenhuma atividade recente.</p></div>
+          </div>
+          <div class="card p-5">
+            <div class="flex items-center gap-2 mb-4">
+              <i class="fas fa-book text-blue-400"></i>
+              <h3 class="font-semibold mono">Base de conhecimento</h3>
+            </div>
+            <div id="dash-knowledge"><p class="text-slate-500 text-sm">0 artigos técnicos no repositório.</p></div>
+          </div>
+        </div>
+        <div class="card p-5 mb-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold">OTs Recentes</h3>
+            <button class="btn-ghost text-sm" onclick="showPage('ots')">Ver todas <i class="fas fa-arrow-right"></i></button>
+          </div>
+          <div id="dash-ots-list"><p class="text-slate-500 text-sm">Nenhuma OT criada ainda.</p></div>
+        </div>
+        <div class="card p-5">
+          <h3 class="font-semibold mb-4">Ações rápidas</h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <button class="card p-4 text-center hover:border-purple-500/50 transition-all" onclick="openNewOTModal()">
+              <i class="fas fa-plus-circle text-purple-400 text-xl mb-2 block"></i>
+              <div class="text-sm">Nova OT</div>
+            </button>
+            <button class="card p-4 text-center hover:border-blue-500/50 transition-all" onclick="openNewEquipModal()">
+              <i class="fas fa-microchip text-blue-400 text-xl mb-2 block"></i>
+              <div class="text-sm">Novo Equipamento</div>
+            </button>
+            <button class="card p-4 text-center hover:border-green-500/50 transition-all" onclick="showPage('ai-assistant')">
+              <i class="fas fa-robot text-green-400 text-xl mb-2 block"></i>
+              <div class="text-sm">Assistente IA</div>
+            </button>
+            <button class="card p-4 text-center hover:border-yellow-500/50 transition-all" onclick="openNewKnowledgeModal()">
+              <i class="fas fa-book-open text-yellow-400 text-xl mb-2 block"></i>
+              <div class="text-sm">Novo Artigo</div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ORDENS DE TRABALHO -->
+      <div id="page-ots" class="page fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold mono">Ordens de Trabalho</h1>
+            <p class="text-slate-400 text-sm mt-1">Gestão de intervenções e manutenção</p>
+          </div>
+          <button class="btn-primary" onclick="openNewOTModal()"><i class="fas fa-plus"></i> Nova OT</button>
+        </div>
+        <div class="flex items-center gap-3 mb-5 flex-wrap">
+          <div class="flex bg-white/5 rounded-lg p-1">
+            <button class="tab-btn active" id="ot-tab-all" onclick="filterOTs('all')">Todas</button>
+            <button class="tab-btn" id="ot-tab-aberta" onclick="filterOTs('Aberta')">Abertas</button>
+            <button class="tab-btn" id="ot-tab-andamento" onclick="filterOTs('Em andamento')">Em andamento</button>
+            <button class="tab-btn" id="ot-tab-concluida" onclick="filterOTs('Concluída')">Concluídas</button>
+          </div>
+          <select class="input-field w-auto" onchange="filterOTsByPriority(this.value)" style="width:auto">
+            <option value="">Todas prioridades</option>
+            <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
+          </select>
+          <select class="input-field w-auto" onchange="filterOTsByType(this.value)" style="width:auto">
+            <option value="">Todos os tipos</option>
+            <option>Corretiva</option><option>Preventiva</option><option>Preditiva</option><option>Inspeção</option>
+          </select>
+        </div>
+        <div class="flex gap-2 mb-5">
+          <button class="btn-ghost text-sm" id="view-list" onclick="setOTView('list')" style="color:var(--accent-purple-light)"><i class="fas fa-list"></i> Lista</button>
+          <button class="btn-ghost text-sm" id="view-kanban" onclick="setOTView('kanban')"><i class="fas fa-columns"></i> Kanban</button>
+        </div>
+        <div id="ot-list-view">
+          <div class="card overflow-hidden">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th><th>Título</th><th>Equipamento</th><th>Tipo</th>
+                  <th>Prioridade</th><th>Estado</th><th>Técnico</th><th>Data</th><th></th>
+                </tr>
+              </thead>
+              <tbody id="ot-table-body">
+                <tr><td colspan="9" class="text-center text-slate-500 py-8">Nenhuma OT encontrada.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div id="ot-kanban-view" style="display:none">
+          <div class="flex gap-4 overflow-x-auto pb-4">
+            <div class="kanban-col">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="status-dot dot-yellow"></span>
+                <span class="text-sm font-semibold">Aberta</span>
+                <span class="ml-auto badge badge-yellow text-xs" id="kanban-count-aberta">0</span>
+              </div>
+              <div id="kanban-aberta"></div>
+            </div>
+            <div class="kanban-col">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="status-dot dot-blue"></span>
+                <span class="text-sm font-semibold">Em andamento</span>
+                <span class="ml-auto badge badge-blue text-xs" id="kanban-count-andamento">0</span>
+              </div>
+              <div id="kanban-andamento"></div>
+            </div>
+            <div class="kanban-col">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="status-dot dot-green"></span>
+                <span class="text-sm font-semibold">Concluída</span>
+                <span class="ml-auto badge badge-green text-xs" id="kanban-count-concluida">0</span>
+              </div>
+              <div id="kanban-concluida"></div>
+            </div>
+            <div class="kanban-col">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="status-dot dot-gray"></span>
+                <span class="text-sm font-semibold">Cancelada</span>
+                <span class="ml-auto badge badge-gray text-xs" id="kanban-count-cancelada">0</span>
+              </div>
+              <div id="kanban-cancelada"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EQUIPAMENTOS -->
+      <div id="page-equipment" class="page fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold mono">Equipamentos</h1>
+            <p class="text-slate-400 text-sm mt-1">Gestão de ativos e histórico técnico</p>
+          </div>
+          <button class="btn-primary" onclick="openNewEquipModal()"><i class="fas fa-plus"></i> Novo Equipamento</button>
+        </div>
+        <div class="flex items-center gap-3 mb-5 flex-wrap">
+          <div class="search-bar" style="max-width:300px">
+            <i class="fas fa-search text-slate-500 text-sm"></i>
+            <input type="text" placeholder="Pesquisar equipamentos..." onkeyup="searchEquipment(this.value)">
+          </div>
+          <select class="input-field" onchange="filterEquipByStatus(this.value)" style="width:auto">
+            <option value="">Todos os estados</option>
+            <option>Operacional</option><option>Em manutenção</option><option>Avaria</option><option>Desativado</option>
+          </select>
+          <select class="input-field" onchange="filterEquipByCategory(this.value)" style="width:auto">
+            <option value="">Todas categorias</option>
+            <option>AVAC</option><option>Elétrico</option><option>Automação</option>
+            <option>UPS</option><option>Gerador</option><option>Compressor</option>
+          </select>
+        </div>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="equipment-grid">
+          <div class="card p-8 text-center text-slate-500" style="grid-column:1/-1">
+            <i class="fas fa-microchip text-3xl mb-3 text-slate-600 block"></i>
+            <p>Nenhum equipamento registado.</p>
+            <button class="btn-primary mt-4" onclick="openNewEquipModal()"><i class="fas fa-plus"></i> Adicionar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLIENTES -->
+      <div id="page-clients" class="page fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold mono">Clientes</h1>
+            <p class="text-slate-400 text-sm mt-1">Gestão de clientes e edifícios</p>
+          </div>
+          <button class="btn-primary" onclick="openNewClientModal()"><i class="fas fa-plus"></i> Novo Cliente</button>
+        </div>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="clients-grid">
+          <div class="card p-8 text-center text-slate-500" style="grid-column:1/-1">
+            <i class="fas fa-briefcase text-3xl mb-3 text-slate-600 block"></i>
+            <p>Nenhum cliente registado.</p>
+            <button class="btn-primary mt-4" onclick="openNewClientModal()"><i class="fas fa-plus"></i> Adicionar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TÉCNICOS -->
+      <div id="page-technicians" class="page fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold mono">Técnicos</h1>
+            <p class="text-slate-400 text-sm mt-1">Gestão da equipa técnica</p>
+          </div>
+          <button class="btn-primary" onclick="openNewTechModal()"><i class="fas fa-plus"></i> Novo Técnico</button>
+        </div>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="technicians-grid">
+          <div class="card p-8 text-center text-slate-500" style="grid-column:1/-1">
+            <i class="fas fa-hard-hat text-3xl mb-3 text-slate-600 block"></i>
+            <p>Nenhum técnico registado.</p>
+            <button class="btn-primary mt-4" onclick="openNewTechModal()"><i class="fas fa-plus"></i> Adicionar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONHECIMENTO -->
+      <div id="page-knowledge" class="page fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold mono">Base de Conhecimento</h1>
+            <p class="text-slate-400 text-sm mt-1">Artigos técnicos, procedimentos e soluções</p>
+          </div>
+          <button class="btn-primary" onclick="openNewKnowledgeModal()"><i class="fas fa-plus"></i> Novo Artigo</button>
+        </div>
+        <div class="flex items-center gap-3 mb-5 flex-wrap">
+          <div class="search-bar" style="max-width:300px">
+            <i class="fas fa-search text-slate-500 text-sm"></i>
+            <input type="text" placeholder="Pesquisar artigos técnicos..." onkeyup="searchKnowledge(this.value)">
+          </div>
+          <select class="input-field" onchange="filterKnowledge(this.value)" style="width:auto">
+            <option value="">Todas categorias</option>
+            <option>AVAC</option><option>Elétrico</option><option>Automação</option>
+            <option>UPS</option><option>Gerador</option><option>Procedimento</option><option>Diagnóstico</option>
+          </select>
+        </div>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="knowledge-grid">
+          <div class="card p-8 text-center text-slate-500" style="grid-column:1/-1">
+            <i class="fas fa-book text-3xl mb-3 text-slate-600 block"></i>
+            <p>Nenhum artigo na base de conhecimento.</p>
+            <button class="btn-primary mt-4" onclick="openNewKnowledgeModal()"><i class="fas fa-plus"></i> Criar artigo</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ASSISTENTE IA -->
+      <div id="page-ai-assistant" class="page fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold mono">Assistente IA</h1>
+            <p class="text-slate-400 text-sm mt-1 flex items-center gap-2">
+              <span class="status-dot dot-green pulse"></span>
+              Agente operacional inteligente — online
+            </p>
+          </div>
+          <div class="flex gap-2">
+            <button class="btn-ghost text-sm" onclick="clearChat()"><i class="fas fa-trash"></i> Limpar</button>
+            <button class="btn-secondary text-sm" onclick="showPage('knowledge')"><i class="fas fa-book"></i> Base de conhecimento</button>
+          </div>
+        </div>
+        <div class="flex gap-2 mb-5 flex-wrap">
+          <button class="badge badge-purple cursor-pointer" style="padding:8px 12px" onclick="quickPrompt('Criar OT preventiva para o gerador')"><i class="fas fa-plus"></i> Criar OT preventiva</button>
+          <button class="badge badge-blue cursor-pointer" style="padding:8px 12px" onclick="quickPrompt('Diagnosticar erro SPC11 no atuador Festo')"><i class="fas fa-stethoscope"></i> Diagnosticar erro</button>
+          <button class="badge badge-green cursor-pointer" style="padding:8px 12px" onclick="quickPrompt('Mostrar equipamentos registados')"><i class="fas fa-microchip"></i> Equipamentos</button>
+          <button class="badge badge-yellow cursor-pointer" style="padding:8px 12px" onclick="quickPrompt('Criar checklist de ronda diária AVAC')"><i class="fas fa-check-square"></i> Criar checklist</button>
+          <button class="badge badge-gray cursor-pointer" style="padding:8px 12px" onclick="quickPrompt('Mostrar OTs abertas')"><i class="fas fa-wrench"></i> OTs abertas</button>
+        </div>
+        <div class="card" style="height:calc(100vh - 320px);display:flex;flex-direction:column">
+          <div class="flex-1 overflow-y-auto p-5 flex flex-col gap-4" id="chat-messages">
+            <div class="chat-bubble-ai fade-in">
+              <div class="flex items-center gap-2 mb-2">
+                <div class="w-6 h-6 rounded flex items-center justify-center" style="background:var(--accent-purple)"><i class="fas fa-robot text-xs text-white"></i></div>
+                <span class="text-xs font-semibold" style="color:var(--accent-purple-light)">ManuGent IA</span>
+                <span class="text-xs text-slate-500">Agente operacional</span>
+              </div>
+              <p class="text-sm">Olá! Sou o assistente IA da ManuGent. Posso ajudar com diagnósticos técnicos, criar ordens de trabalho, gerir equipamentos e responder a questões técnicas.</p>
+              <p class="text-sm mt-2 text-slate-400">Como posso ajudar hoje?</p>
+            </div>
+          </div>
+          <div class="border-t border-white/5 p-4">
+            <div class="flex gap-3">
+              <div class="search-bar flex-1">
+                <input type="text" id="chat-input" placeholder="Descreva um problema, peça diagnóstico ou solicite uma ação..." onkeypress="if(event.key==='Enter')sendMessage()">
+              </div>
+              <button class="btn-primary px-4" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+            <div class="text-xs text-slate-600 mt-2">
+              <i class="fas fa-info-circle"></i> A IA pode criar OTs, artigos de conhecimento e responder a questões técnicas. Todas as ações requerem a sua aprovação.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CALENDÁRIO -->
+      <div id="page-calendar" class="page fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold mono">Calendário</h1>
+            <p class="text-slate-400 text-sm mt-1">Planeamento e agendamento de intervenções</p>
+          </div>
+          <button class="btn-primary" onclick="openNewOTModal()"><i class="fas fa-plus"></i> Agendar</button>
+        </div>
+        <div class="card p-5">
+          <div class="flex items-center justify-between mb-5">
+            <button class="btn-ghost" onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+            <h2 class="font-semibold text-lg" id="calendar-title">Junho 2026</h2>
+            <button class="btn-ghost" onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+          </div>
+          <div class="grid grid-cols-7 gap-1 mb-2">
+            <div class="text-center text-xs text-slate-500 py-2">Dom</div>
+            <div class="text-center text-xs text-slate-500 py-2">Seg</div>
+            <div class="text-center text-xs text-slate-500 py-2">Ter</div>
+            <div class="text-center text-xs text-slate-500 py-2">Qua</div>
+            <div class="text-center text-xs text-slate-500 py-2">Qui</div>
+            <div class="text-center text-xs text-slate-500 py-2">Sex</div>
+            <div class="text-center text-xs text-slate-500 py-2">Sáb</div>
+          </div>
+          <div class="grid grid-cols-7 gap-1" id="calendar-grid"></div>
+        </div>
+        <div class="card p-5 mt-5">
+          <h3 class="font-semibold mb-4">Próximas intervenções</h3>
+          <div id="upcoming-interventions"><p class="text-slate-500 text-sm">Nenhuma intervenção agendada.</p></div>
+        </div>
+      </div>
+
+      <!-- CHECKLISTS -->
+      <div id="page-checklists" class="page fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold mono">Checklists</h1>
+            <p class="text-slate-400 text-sm mt-1">Rondas e inspeções periódicas</p>
+          </div>
+          <button class="btn-primary" onclick="showToast('Funcionalidade em desenvolvimento.')"><i class="fas fa-plus"></i> Nova Checklist</button>
+        </div>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="wiki-card" onclick="openChecklistDetail('ronda-diaria')">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:rgba(59,130,246,0.2)">
+                <i class="fas fa-sun text-blue-400"></i>
+              </div>
+              <div>
+                <div class="font-semibold">Ronda Diária</div>
+                <div class="text-xs text-slate-400">Frequência: Diária</div>
+              </div>
+            </div>
+            <div class="progress-bar mb-2"><div class="progress-fill" style="width:0%"></div></div>
+            <div class="flex items-center justify-between text-xs text-slate-500">
+              <span>0/8 tarefas</span><span class="badge badge-yellow">Pendente</span>
+            </div>
+          </div>
+          <div class="wiki-card" onclick="openChecklistDetail('preventiva-mensal')">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:rgba(99,102,241,0.2)">
+                <i class="fas fa-calendar-check text-purple-400"></i>
+              </div>
+              <div>
+                <div class="font-semibold">Manutenção Preventiva Mensal</div>
+                <div class="text-xs text-slate-400">Frequência: Mensal</div>
+              </div>
+            </div>
+            <div class="progress-bar mb-2"><div class="progress-fill" style="width:0%"></div></div>
+            <div class="flex items-center justify-between text-xs text-slate-500">
+              <span>0/12 tarefas</span><span class="badge badge-yellow">Pendente</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INCIDENTES -->
+      <div id="page-incidents" class="page fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold mono">Incidentes</h1>
+            <p class="text-slate-400 text-sm mt-1">Registo de falhas e ocorrências</p>
+          </div>
+          <button class="btn-primary" onclick="openNewIncidentModal()"><i class="fas fa-plus"></i> Novo Incidente</button>
+        </div>
+        <div class="card overflow-hidden">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th><th>Descrição</th><th>Equipamento</th><th>Severidade</th><th>Estado</th><th>Data</th>
+              </tr>
+            </thead>
+            <tbody id="incidents-table-body">
+              <tr><td colspan="6" class="text-center text-slate-500 py-8">Nenhum incidente registado.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div id="page-settings" class="page fade-in">
+        <div class="mb-6">
+          <h1 class="text-2xl font-bold mono">Definições</h1>
+          <p class="text-slate-400 text-sm mt-1">Perfil e configurações da plataforma</p>
+        </div>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="card p-6">
+            <h3 class="font-semibold mb-4">Perfil</h3>
+            <div class="flex items-center gap-4 mb-5">
+              <div class="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold" style="background:var(--accent-purple)" id="settings-avatar">J</div>
+              <div>
+                <div class="font-semibold" id="settings-name">—</div>
+                <div class="text-sm text-slate-400" id="settings-email">—</div>
+              </div>
+            </div>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm mb-2 text-slate-300">Nome</label>
+                <input type="text" id="settings-name-input" class="input-field" placeholder="Nome completo">
+              </div>
+              <div>
+                <label class="block text-sm mb-2 text-slate-300">Email</label>
+                <input type="email" id="settings-email-input" class="input-field" placeholder="email@empresa.com" disabled>
+              </div>
+              <button class="btn-primary" onclick="saveProfile()"><i class="fas fa-save"></i> Guardar</button>
+            </div>
+          </div>
+          <div class="card p-6">
+            <h3 class="font-semibold mb-4">Sobre a Plataforma</h3>
+            <div class="space-y-3 text-sm">
+              <div class="flex items-center justify-between py-2 border-b border-white/5">
+                <span class="text-slate-400">Versão</span><span class="mono text-xs badge badge-purple">v1.0.0</span>
+              </div>
+              <div class="flex items-center justify-between py-2 border-b border-white/5">
+                <span class="text-slate-400">Stack tecnológico</span><span class="text-slate-300">Hono + Cloudflare</span>
+              </div>
+              <div class="flex items-center justify-between py-2 border-b border-white/5">
+                <span class="text-slate-400">IA</span>
+                <span class="text-slate-300 flex items-center gap-2"><span class="status-dot dot-green"></span> Operacional</span>
+              </div>
+              <div class="flex items-center justify-between py-2">
+                <span class="text-slate-400">Módulos</span><span class="text-slate-300">8 ativos</span>
+              </div>
+            </div>
+            <div class="mt-5 p-4 rounded-lg" style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2)">
+              <div class="text-xs mono" style="color:var(--accent-purple-light)">ManuGent — O conhecimento técnico da sua empresa, transformado em inteligência artificial.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ======================== MODALS ======================== -->
+
+<!-- New OT Modal -->
+<div id="modal-new-ot" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-semibold">Nova Ordem de Trabalho</h2>
+      <button class="btn-ghost" onclick="closeModal('modal-new-ot')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Título *</label>
+        <input type="text" id="ot-title" class="input-field" placeholder="Ex: Manutenção preventiva gerador">
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Tipo</label>
+          <select id="ot-type" class="input-field">
+            <option>Corretiva</option><option>Preventiva</option><option>Preditiva</option><option>Inspeção</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Prioridade</label>
+          <select id="ot-priority" class="input-field">
+            <option>Média</option><option>Baixa</option><option>Alta</option><option>Urgente</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Equipamento</label>
+          <select id="ot-equipment" class="input-field"><option value="">Selecionar...</option></select>
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Técnico</label>
+          <select id="ot-technician" class="input-field"><option value="">Selecionar...</option></select>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Data agendada</label>
+        <input type="datetime-local" id="ot-date" class="input-field">
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Descrição</label>
+        <textarea id="ot-desc" class="input-field" rows="3" placeholder="Descrição da intervenção..."></textarea>
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Localização</label>
+        <input type="text" id="ot-location" class="input-field" placeholder="Ex: Piso 2 - Sala técnica">
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-new-ot')">Cancelar</button>
+      <button class="btn-primary flex-1" onclick="createOT()"><i class="fas fa-plus"></i> Criar OT</button>
+    </div>
+  </div>
+</div>
+
+<!-- OT Detail Modal -->
+<div id="modal-ot-detail" class="modal-overlay" style="display:none">
+  <div class="modal-content modal-xl">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <div class="text-xs text-slate-500 mono mb-1" id="ot-detail-id">OT-001</div>
+        <h2 class="text-xl font-bold" id="ot-detail-title">Título da OT</h2>
+      </div>
+      <div class="flex items-center gap-2">
+        <select id="ot-detail-status" class="input-field text-sm" style="width:auto" onchange="updateOTStatus(this.value)">
+          <option>Aberta</option><option>Em andamento</option><option>Em espera</option>
+          <option>Concluída</option><option>Cancelada</option>
+        </select>
+        <button class="btn-ghost" onclick="closeModal('modal-ot-detail')"><i class="fas fa-times"></i></button>
+      </div>
+    </div>
+    <div class="grid md:grid-cols-3 gap-5">
+      <div class="md:col-span-2 space-y-5">
+        <div class="card p-4">
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div><span class="text-slate-500">Tipo:</span> <span id="ot-detail-type" class="font-medium ml-2">—</span></div>
+            <div><span class="text-slate-500">Prioridade:</span> <span id="ot-detail-priority" class="ml-2">—</span></div>
+            <div><span class="text-slate-500">Equipamento:</span> <span id="ot-detail-equip" class="font-medium ml-2">—</span></div>
+            <div><span class="text-slate-500">Técnico:</span> <span id="ot-detail-tech" class="font-medium ml-2">—</span></div>
+            <div><span class="text-slate-500">Data:</span> <span id="ot-detail-date" class="font-medium ml-2">—</span></div>
+            <div><span class="text-slate-500">Local:</span> <span id="ot-detail-location" class="font-medium ml-2">—</span></div>
+          </div>
+          <div class="mt-3 pt-3 border-t border-white/5">
+            <span class="text-slate-500 text-sm">Descrição:</span>
+            <p id="ot-detail-desc" class="text-sm mt-1 text-slate-300">—</p>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-semibold">Tarefas</h3>
+            <button class="btn-ghost text-sm" onclick="openAddTaskModal()"><i class="fas fa-plus"></i> Adicionar tarefa</button>
+          </div>
+          <div id="ot-tasks-list"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="card p-4">
+            <h4 class="font-medium mb-3 text-sm">Material Gasto</h4>
+            <div id="ot-materials-list" class="text-sm text-slate-400 mb-3">Nenhum material registado.</div>
+            <button class="btn-ghost text-xs w-full" onclick="addMaterial()"><i class="fas fa-plus"></i> Adicionar material</button>
+          </div>
+          <div class="card p-4">
+            <h4 class="font-medium mb-3 text-sm">Tempo Registado</h4>
+            <div class="text-2xl font-bold mono mb-1" id="ot-time-total">0h 0m</div>
+            <div class="text-xs text-slate-500 mb-3">Tempo total de intervenção</div>
+            <button class="btn-ghost text-xs w-full" onclick="addTimeLog()"><i class="fas fa-clock"></i> Registar tempo</button>
+          </div>
+        </div>
+        <div class="card p-4">
+          <h4 class="font-medium mb-3 text-sm">Relatório de Intervenção</h4>
+          <textarea id="ot-report" class="input-field" rows="3" placeholder="Descreva o trabalho realizado..."></textarea>
+          <button class="btn-primary text-sm mt-3" onclick="saveOTReport()"><i class="fas fa-save"></i> Guardar relatório</button>
+        </div>
+      </div>
+      <div class="space-y-4">
+        <div class="card p-4">
+          <h4 class="font-medium mb-3 text-sm">Histórico de Atividades</h4>
+          <div id="ot-activity-log" class="space-y-1 text-xs max-h-64 overflow-y-auto"></div>
+        </div>
+        <div class="card p-4">
+          <h4 class="font-medium mb-3 text-sm">Comentários</h4>
+          <div id="ot-comments" class="space-y-2 mb-3 max-h-32 overflow-y-auto"></div>
+          <div class="flex gap-2">
+            <input type="text" id="ot-comment-input" class="input-field text-sm" placeholder="Adicionar comentário...">
+            <button class="btn-primary px-3" onclick="addComment()"><i class="fas fa-paper-plane text-xs"></i></button>
+          </div>
+        </div>
+        <div class="card p-4">
+          <h4 class="font-medium mb-3 text-sm">Assinatura</h4>
+          <div class="text-xs text-slate-400 mb-3">Assinatura do cliente após conclusão</div>
+          <button class="btn-secondary w-full text-sm" onclick="requestSignature()"><i class="fas fa-pen"></i> Solicitar assinatura</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Task Modal -->
+<div id="modal-add-task" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-semibold">Adicionar Tarefa</h2>
+      <button class="btn-ghost" onclick="closeModal('modal-add-task')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Descrição *</label>
+        <input type="text" id="task-desc" class="input-field" placeholder="Ex: Verificar tensão de alimentação">
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Tipo de tarefa</label>
+        <select id="task-type" class="input-field" onchange="updateTaskTypeFields()">
+          <option value="check">Verificação (OK/NOK/N/A)</option>
+          <option value="measure">Medição numérica</option>
+          <option value="lubrication">Lubrificação</option>
+          <option value="inspection">Inspeção</option>
+          <option value="other">Outro</option>
+        </select>
+      </div>
+      <div id="task-measure-fields" style="display:none">
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-sm mb-2 text-slate-300">Valor mín.</label>
+            <input type="number" id="task-min" class="input-field" placeholder="220">
+          </div>
+          <div>
+            <label class="block text-sm mb-2 text-slate-300">Valor máx.</label>
+            <input type="number" id="task-max" class="input-field" placeholder="240">
+          </div>
+          <div>
+            <label class="block text-sm mb-2 text-slate-300">Unidade</label>
+            <input type="text" id="task-unit" class="input-field" placeholder="V">
+          </div>
+        </div>
+      </div>
+      <div id="task-lube-fields" style="display:none">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm mb-2 text-slate-300">Tipo de lubrificante</label>
+            <input type="text" id="task-lube-type" class="input-field" placeholder="Ex: Shell Gadus S2 V220">
+          </div>
+          <div>
+            <label class="block text-sm mb-2 text-slate-300">Quantidade</label>
+            <input type="text" id="task-lube-qty" class="input-field" placeholder="Ex: 5g">
+          </div>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Ajuda técnica ("Saber como fazer")</label>
+        <textarea id="task-help" class="input-field" rows="3" placeholder="Procedimento, ferramentas necessárias, precauções de segurança..."></textarea>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-add-task')">Cancelar</button>
+      <button class="btn-primary flex-1" onclick="addTaskToOT()"><i class="fas fa-plus"></i> Adicionar tarefa</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Equipment Modal -->
+<div id="modal-new-equip" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-semibold">Novo Equipamento</h2>
+      <button class="btn-ghost" onclick="closeModal('modal-new-equip')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-sm mb-2 text-slate-300">Nome *</label><input type="text" id="equip-name" class="input-field" placeholder="Ex: UPS Galaxy VS"></div>
+        <div><label class="block text-sm mb-2 text-slate-300">Código / TAG</label><input type="text" id="equip-code" class="input-field" placeholder="Ex: EQ-001"></div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-sm mb-2 text-slate-300">Fabricante</label><input type="text" id="equip-brand" class="input-field" placeholder="Ex: Schneider Electric"></div>
+        <div><label class="block text-sm mb-2 text-slate-300">Modelo</label><input type="text" id="equip-model" class="input-field" placeholder="Ex: Galaxy VS 20kVA"></div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-sm mb-2 text-slate-300">Número de série</label><input type="text" id="equip-serial" class="input-field" placeholder="Ex: SN123456"></div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Categoria</label>
+          <select id="equip-category" class="input-field">
+            <option>AVAC</option><option>Elétrico</option><option>Automação</option>
+            <option>UPS</option><option>Gerador</option><option>Compressor</option><option>Outro</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-sm mb-2 text-slate-300">Localização</label><input type="text" id="equip-location" class="input-field" placeholder="Ex: Piso 2 - Sala elétrica"></div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Criticidade</label>
+          <select id="equip-criticality" class="input-field"><option>Crítico</option><option>Alto</option><option>Médio</option><option>Baixo</option></select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-sm mb-2 text-slate-300">Data de instalação</label><input type="date" id="equip-install-date" class="input-field"></div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Estado</label>
+          <select id="equip-status" class="input-field"><option>Operacional</option><option>Em manutenção</option><option>Avaria</option><option>Desativado</option></select>
+        </div>
+      </div>
+      <div><label class="block text-sm mb-2 text-slate-300">Notas</label><textarea id="equip-notes" class="input-field" rows="2" placeholder="Observações técnicas..."></textarea></div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-new-equip')">Cancelar</button>
+      <button class="btn-primary flex-1" onclick="createEquipment()"><i class="fas fa-plus"></i> Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Equipment Detail Modal -->
+<div id="modal-equip-detail" class="modal-overlay" style="display:none">
+  <div class="modal-content modal-lg">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <div class="text-xs text-slate-500 mono mb-1" id="equip-detail-code">EQ-001</div>
+        <h2 class="text-xl font-bold" id="equip-detail-name">Nome do Equipamento</h2>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="equip-detail-status-badge" class="badge badge-green">Operacional</span>
+        <button class="btn-ghost" onclick="closeModal('modal-equip-detail')"><i class="fas fa-times"></i></button>
+      </div>
+    </div>
+    <div class="grid md:grid-cols-2 gap-5">
+      <div class="space-y-4">
+        <div class="card p-4">
+          <h4 class="font-medium mb-3 text-sm">Dados Técnicos</h4>
+          <div class="space-y-2 text-sm" id="equip-detail-info"></div>
+        </div>
+        <div class="card p-4">
+          <h4 class="font-medium mb-3 text-sm">Histórico de Intervenções</h4>
+          <div id="equip-history" class="text-sm text-slate-400">Nenhuma intervenção registada.</div>
+        </div>
+      </div>
+      <div class="space-y-4">
+        <div class="card p-4">
+          <h4 class="font-medium mb-3 text-sm">Manutenção Preventiva</h4>
+          <div class="text-sm text-slate-400 mb-3">Próxima manutenção: <span class="text-white">—</span></div>
+          <button class="btn-primary w-full text-sm" onclick="schedulePreventive()"><i class="fas fa-calendar-plus"></i> Agendar manutenção</button>
+        </div>
+        <div class="card p-4">
+          <h4 class="font-medium mb-3 text-sm">Abrir pedido de assistência</h4>
+          <button class="btn-secondary w-full text-sm" onclick="openOTFromEquip()"><i class="fas fa-wrench"></i> Nova OT para este equipamento</button>
+        </div>
+        <div class="card p-4">
+          <h4 class="font-medium mb-3 text-sm">Documentação</h4>
+          <div class="text-sm text-slate-400 mb-3">Nenhum documento associado.</div>
+          <button class="btn-ghost w-full text-sm"><i class="fas fa-upload"></i> Anexar documento</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New Client Modal -->
+<div id="modal-new-client" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-semibold">Novo Cliente</h2>
+      <button class="btn-ghost" onclick="closeModal('modal-new-client')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div><label class="block text-sm mb-2 text-slate-300">Nome da empresa *</label><input type="text" id="client-name" class="input-field" placeholder="Ex: Industrial Lda."></div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-sm mb-2 text-slate-300">Email</label><input type="email" id="client-email" class="input-field" placeholder="email@empresa.com"></div>
+        <div><label class="block text-sm mb-2 text-slate-300">Telefone</label><input type="text" id="client-phone" class="input-field" placeholder="+351 000 000 000"></div>
+      </div>
+      <div><label class="block text-sm mb-2 text-slate-300">Morada</label><input type="text" id="client-address" class="input-field" placeholder="Rua, cidade, código postal"></div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Contrato de manutenção</label>
+        <select id="client-contract" class="input-field"><option>Sem contrato</option><option>Básico</option><option>Standard</option><option>Premium</option></select>
+      </div>
+      <div><label class="block text-sm mb-2 text-slate-300">Notas</label><textarea id="client-notes" class="input-field" rows="2" placeholder="Informações adicionais..."></textarea></div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-new-client')">Cancelar</button>
+      <button class="btn-primary flex-1" onclick="createClient()"><i class="fas fa-plus"></i> Adicionar cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Technician Modal -->
+<div id="modal-new-tech" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-semibold">Novo Técnico</h2>
+      <button class="btn-ghost" onclick="closeModal('modal-new-tech')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-sm mb-2 text-slate-300">Nome *</label><input type="text" id="tech-name" class="input-field" placeholder="Nome completo"></div>
+        <div><label class="block text-sm mb-2 text-slate-300">Email</label><input type="email" id="tech-email" class="input-field" placeholder="tecnico@empresa.com"></div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Especialidade</label>
+          <select id="tech-specialty" class="input-field"><option>AVAC</option><option>Elétrico</option><option>Automação</option><option>Facilities</option><option>Mecânico</option><option>Geral</option></select>
+        </div>
+        <div><label class="block text-sm mb-2 text-slate-300">Telefone</label><input type="text" id="tech-phone" class="input-field" placeholder="+351 000 000 000"></div>
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Disponibilidade</label>
+        <select id="tech-availability" class="input-field"><option>Disponível</option><option>Em campo</option><option>Em férias</option><option>Indisponível</option></select>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-new-tech')">Cancelar</button>
+      <button class="btn-primary flex-1" onclick="createTechnician()"><i class="fas fa-plus"></i> Adicionar técnico</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Knowledge Modal -->
+<div id="modal-new-knowledge" class="modal-overlay" style="display:none">
+  <div class="modal-content modal-lg">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-semibold">Novo Artigo de Conhecimento</h2>
+      <button class="btn-ghost" onclick="closeModal('modal-new-knowledge')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div><label class="block text-sm mb-2 text-slate-300">Título *</label><input type="text" id="know-title" class="input-field" placeholder="Ex: Erro SPC11 — Sequência de adição"></div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-sm mb-2 text-slate-300">Equipamento associado</label><input type="text" id="know-equip" class="input-field" placeholder="Ex: Festo SPC11"></div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Categoria</label>
+          <select id="know-category" class="input-field"><option>AVAC</option><option>Elétrico</option><option>Automação</option><option>UPS</option><option>Gerador</option><option>Procedimento</option><option>Diagnóstico</option><option>Outro</option></select>
+        </div>
+      </div>
+      <div><label class="block text-sm mb-2 text-slate-300">Sintoma / Problema</label><input type="text" id="know-symptom" class="input-field" placeholder="Ex: Alarme Battery Charger Failure"></div>
+      <div><label class="block text-sm mb-2 text-slate-300">Solução / Procedimento *</label><textarea id="know-solution" class="input-field" rows="5" placeholder="Descreva o procedimento passo a passo..."></textarea></div>
+      <div><label class="block text-sm mb-2 text-slate-300">Ferramentas necessárias</label><input type="text" id="know-tools" class="input-field" placeholder="Ex: Multímetro, chave de fendas..."></div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-new-knowledge')">Cancelar</button>
+      <button class="btn-primary flex-1" onclick="createKnowledgeArticle()"><i class="fas fa-plus"></i> Publicar artigo</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI Approval Modal -->
+<div id="modal-ai-approval" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center gap-3 mb-5">
+      <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background:var(--accent-purple)">
+        <i class="fas fa-robot text-white"></i>
+      </div>
+      <div>
+        <h2 class="text-lg font-semibold">Confirmação de Ação IA</h2>
+        <p class="text-xs text-slate-400">A IA solicita aprovação para executar esta ação</p>
+      </div>
+    </div>
+    <div class="card p-4 mb-5" style="border-color:rgba(99,102,241,0.3);background:rgba(99,102,241,0.05)">
+      <div class="text-xs mono mb-2" style="color:var(--accent-purple-light)">AÇÃO SOLICITADA</div>
+      <div id="ai-approval-content" class="text-sm"></div>
+    </div>
+    <div class="flex gap-3">
+      <button class="btn-secondary flex-1" onclick="rejectAIAction()"><i class="fas fa-times"></i> Rejeitar</button>
+      <button class="btn-primary flex-1" onclick="approveAIAction()"><i class="fas fa-check"></i> Aprovar e Executar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Incident Modal -->
+<div id="modal-new-incident" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-semibold">Novo Incidente</h2>
+      <button class="btn-ghost" onclick="closeModal('modal-new-incident')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div><label class="block text-sm mb-2 text-slate-300">Descrição *</label><textarea id="incident-desc" class="input-field" rows="3" placeholder="Descreva o incidente..."></textarea></div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Equipamento</label>
+          <select id="incident-equip" class="input-field"><option value="">Selecionar...</option></select>
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Severidade</label>
+          <select id="incident-severity" class="input-field"><option>Baixa</option><option>Média</option><option>Alta</option><option>Crítica</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-new-incident')">Cancelar</button>
+      <button class="btn-primary flex-1" onclick="createIncident()"><i class="fas fa-exclamation-triangle"></i> Registar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notifications -->
+<div id="notifications-panel" style="display:none;position:fixed;top:60px;right:20px;width:360px;background:#12122a;border:1px solid var(--border-light);border-radius:12px;overflow:hidden;z-index:1001">
+  <div class="flex items-center justify-between p-4 border-b border-white/5">
+    <h3 class="font-semibold">Notificações</h3>
+    <button class="btn-ghost text-xs" onclick="closeNotifications()">Fechar</button>
+  </div>
+  <div id="notifications-list" class="max-h-80 overflow-y-auto">
+    <div class="notif-item">
+      <div class="flex items-start gap-3">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(99,102,241,0.2)">
+          <i class="fas fa-robot text-xs" style="color:var(--accent-purple-light)"></i>
+        </div>
+        <div>
+          <div class="text-sm font-medium">Bem-vindo ao ManuGent!</div>
+          <div class="text-xs text-slate-400 mt-0.5">O assistente IA está pronto para ajudar.</div>
+          <div class="text-xs text-slate-600 mt-1">Agora</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Checklist Detail Modal -->
+<div id="modal-checklist-detail" class="modal-overlay" style="display:none">
+  <div class="modal-content modal-lg">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h2 class="text-xl font-bold" id="checklist-detail-title">Ronda Diária</h2>
+        <p class="text-sm text-slate-400 mt-1" id="checklist-detail-desc">Verificação diária de equipamentos críticos</p>
+      </div>
+      <button class="btn-ghost" onclick="closeModal('modal-checklist-detail')"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="checklist-tasks-list"></div>
+    <div class="flex gap-3 mt-5">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-checklist-detail')">Fechar</button>
+      <button class="btn-primary flex-1" onclick="completeChecklist()"><i class="fas fa-check"></i> Concluir checklist</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ======================== APP STATE ========================
+var APP = {
+  user: null, ots: [], equipment: [], technicians: [],
+  clients: [], knowledge: [], incidents: [],
+  currentOT: null, currentEquip: null,
+  aiApprovalCallback: null,
+  calendarDate: new Date(),
+  otFilter: 'all', otPriorityFilter: '', otTypeFilter: '',
+};
+
+function saveData() {
+  try {
+    localStorage.setItem('mg_data', JSON.stringify({
+      user: APP.user, ots: APP.ots, equipment: APP.equipment,
+      technicians: APP.technicians, clients: APP.clients,
+      knowledge: APP.knowledge, incidents: APP.incidents,
+    }));
+  } catch(e) {}
+}
+function loadData() {
+  try {
+    var raw = localStorage.getItem('mg_data');
+    if (raw) {
+      var d = JSON.parse(raw);
+      APP.user = d.user || null;
+      APP.ots = d.ots || [];
+      APP.equipment = d.equipment || [];
+      APP.technicians = d.technicians || [];
+      APP.clients = d.clients || [];
+      APP.knowledge = d.knowledge || [];
+      APP.incidents = d.incidents || [];
+    }
+  } catch(e) {}
+}
+
+loadData();
+window.onload = function() {
+  if (APP.user) { showApp(); }
+  else { showLanding(); }
+  initSampleData();
+  renderCalendar();
+};
+
+function showLanding() {
+  document.getElementById('landing-page').style.display = 'block';
+  document.getElementById('auth-page').style.display = 'none';
+  document.getElementById('app-layout').style.display = 'none';
+}
+function showAuth(tab) {
+  document.getElementById('landing-page').style.display = 'none';
+  document.getElementById('auth-page').style.display = 'flex';
+  document.getElementById('app-layout').style.display = 'none';
+  if (tab) switchAuthTab(tab);
+}
+function showApp() {
+  document.getElementById('landing-page').style.display = 'none';
+  document.getElementById('auth-page').style.display = 'none';
+  document.getElementById('app-layout').style.display = 'flex';
+  updateUserUI();
+  updateDashboard();
+  renderCalendar();
+  populateOTSelects();
+  setTimeout(function() {
+    renderOTs(); renderEquipment(); renderClients();
+    renderTechnicians(); renderKnowledge(); renderIncidents();
+  }, 50);
+}
+function scrollToSection(id) {
+  var el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth' });
+}
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.sidebar-item').forEach(function(i) { i.classList.remove('active'); });
+  var pageEl = document.getElementById('page-' + page);
+  if (pageEl) pageEl.classList.add('active');
+  var navEl = document.getElementById('nav-' + page);
+  if (navEl) navEl.classList.add('active');
+  if (page === 'ots') renderOTs();
+  if (page === 'equipment') renderEquipment();
+  if (page === 'clients') renderClients();
+  if (page === 'technicians') renderTechnicians();
+  if (page === 'knowledge') renderKnowledge();
+  if (page === 'incidents') renderIncidents();
+  if (page === 'calendar') renderCalendar();
+}
+
+// ======================== AUTH ========================
+function switchAuthTab(tab) {
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+  document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('signup-form').style.display = tab === 'signup' ? 'block' : 'none';
+}
+function doLogin() {
+  var email = document.getElementById('login-email').value;
+  var pass = document.getElementById('login-pass').value;
+  if (!email || !pass) { alert('Preencha email e password.'); return; }
+  APP.user = { name: email.split('@')[0], email: email, role: 'admin' };
+  saveData(); showApp();
+}
+function doSignup() {
+  var name = document.getElementById('signup-name').value;
+  var email = document.getElementById('signup-email').value;
+  var pass = document.getElementById('signup-pass').value;
+  if (!name || !email || !pass) { alert('Preencha todos os campos.'); return; }
+  APP.user = { name: name, email: email, role: 'admin' };
+  saveData(); showApp();
+}
+function doGoogleLogin() {
+  APP.user = { name: 'Utilizador Google', email: 'utilizador@google.com', role: 'admin' };
+  saveData(); showApp();
+}
+function doLogout() {
+  APP.user = null; saveData(); showLanding();
+}
+function updateUserUI() {
+  if (!APP.user) return;
+  var n = APP.user.name || APP.user.email;
+  document.getElementById('sidebar-user-name').textContent = n;
+  document.getElementById('sidebar-user-email').textContent = APP.user.email;
+  document.getElementById('dash-user-email').textContent = APP.user.email;
+  var av = n.charAt(0).toUpperCase();
+  document.getElementById('user-avatar').textContent = av;
+  document.getElementById('settings-avatar').textContent = av;
+  document.getElementById('settings-name').textContent = n;
+  document.getElementById('settings-email').textContent = APP.user.email;
+  document.getElementById('settings-name-input').value = n;
+  document.getElementById('settings-email-input').value = APP.user.email;
+}
+function saveProfile() {
+  var name = document.getElementById('settings-name-input').value;
+  if (!name) return;
+  APP.user.name = name;
+  saveData(); updateUserUI(); showToast('Perfil guardado!');
+}
+
+// ======================== DASHBOARD ========================
+function updateDashboard() {
+  var open = APP.ots.filter(function(o) { return ['Aberta','Em andamento','Em espera'].includes(o.status); }).length;
+  var done = APP.ots.filter(function(o) { return o.status === 'Concluída'; }).length;
+  var critical = APP.ots.filter(function(o) { return ['Alta','Urgente'].includes(o.priority) && o.status !== 'Concluída'; }).length;
+  document.getElementById('metric-ots-open').textContent = open;
+  document.getElementById('metric-ots-done').textContent = done;
+  document.getElementById('metric-critical').textContent = critical;
+  document.getElementById('metric-equip').textContent = APP.equipment.length;
+  document.getElementById('ot-count-badge').textContent = open;
+
+  var recent = APP.ots.slice(-5).reverse();
+  var actEl = document.getElementById('dash-activity');
+  if (APP.ots.length === 0) {
+    actEl.innerHTML = '<p class="text-slate-500 text-sm">Nenhuma atividade recente.</p>';
+  } else {
+    actEl.innerHTML = recent.map(function(o) {
+      return '<div class="activity-item"><div class="activity-icon" style="background:rgba(99,102,241,0.15)"><i class="fas fa-wrench text-purple-400 text-xs"></i></div><div><div class="text-sm font-medium">' + o.title + '</div><div class="text-xs text-slate-500">' + o.status + ' &bull; ' + o.type + '</div></div></div>';
+    }).join('');
+  }
+  var kEl = document.getElementById('dash-knowledge');
+  kEl.innerHTML = APP.knowledge.length === 0
+    ? '<p class="text-slate-500 text-sm">0 artigos técnicos no repositório.</p>'
+    : '<p class="text-sm">' + APP.knowledge.length + ' artigo(s) técnico(s) no repositório.</p>';
+
+  var otListEl = document.getElementById('dash-ots-list');
+  if (APP.ots.length === 0) {
+    otListEl.innerHTML = '<p class="text-slate-500 text-sm">Nenhuma OT criada ainda.</p>';
+  } else {
+    otListEl.innerHTML = recent.map(function(o) {
+      return '<div class="flex items-center justify-between py-2 border-b border-white/5 cursor-pointer" onclick="openOTDetail(\'' + o.id + '\')">' +
+        '<div class="flex items-center gap-3"><span class="text-xs text-slate-500 mono">' + o.id + '</span><span class="text-sm font-medium">' + o.title + '</span></div>' +
+        '<div class="flex items-center gap-2"><span class="badge ' + getPriorityClass(o.priority) + '">' + o.priority + '</span><span class="badge ' + getStatusClass(o.status) + '">' + o.status + '</span></div></div>';
+    }).join('');
+  }
+}
+
+// ======================== OTs ========================
+function generateId(prefix) {
+  return prefix + '-' + String(Date.now()).slice(-6);
+}
+function openNewOTModal() {
+  populateOTSelects();
+  document.getElementById('ot-date').value = new Date().toISOString().slice(0,16);
+  document.getElementById('modal-new-ot').style.display = 'flex';
+}
+function populateOTSelects() {
+  var equipSel = document.getElementById('ot-equipment');
+  var techSel = document.getElementById('ot-technician');
+  var incidentEquipSel = document.getElementById('incident-equip');
+  if (equipSel) equipSel.innerHTML = '<option value="">Selecionar...</option>' + APP.equipment.map(function(e) { return '<option value="' + e.id + '">' + e.name + '</option>'; }).join('');
+  if (techSel) techSel.innerHTML = '<option value="">Selecionar...</option>' + APP.technicians.map(function(t) { return '<option value="' + t.id + '">' + t.name + '</option>'; }).join('');
+  if (incidentEquipSel) incidentEquipSel.innerHTML = '<option value="">Selecionar...</option>' + APP.equipment.map(function(e) { return '<option value="' + e.id + '">' + e.name + '</option>'; }).join('');
+}
+function createOT() {
+  var title = document.getElementById('ot-title').value.trim();
+  if (!title) { alert('Título é obrigatório.'); return; }
+  var equipId = document.getElementById('ot-equipment').value;
+  var techId = document.getElementById('ot-technician').value;
+  var equip = APP.equipment.find(function(e) { return e.id === equipId; });
+  var tech = APP.technicians.find(function(t) { return t.id === techId; });
+  var ot = {
+    id: generateId('OT'), title: title,
+    type: document.getElementById('ot-type').value,
+    priority: document.getElementById('ot-priority').value,
+    status: 'Aberta',
+    equipmentId: equipId, equipmentName: equip ? equip.name : '—',
+    technicianId: techId, technicianName: tech ? tech.name : '—',
+    date: document.getElementById('ot-date').value,
+    description: document.getElementById('ot-desc').value,
+    location: document.getElementById('ot-location').value,
+    tasks: [], materials: [], timeLogs: [], comments: [], report: '',
+    activity: [{ text: 'OT criada', time: new Date().toLocaleString('pt-PT') }],
+    createdAt: new Date().toISOString(),
+  };
+  APP.ots.push(ot);
+  saveData();
+  closeModal('modal-new-ot');
+  ['ot-title','ot-desc','ot-location'].forEach(function(id) { document.getElementById(id).value = ''; });
+  updateDashboard(); renderOTs(); showToast('OT criada com sucesso!');
+}
+function getFilteredOTs() {
+  var list = APP.ots.slice().reverse();
+  if (APP.otFilter !== 'all') list = list.filter(function(o) { return o.status === APP.otFilter; });
+  if (APP.otPriorityFilter) list = list.filter(function(o) { return o.priority === APP.otPriorityFilter; });
+  if (APP.otTypeFilter) list = list.filter(function(o) { return o.type === APP.otTypeFilter; });
+  return list;
+}
+function renderOTs() {
+  var filtered = getFilteredOTs();
+  var tbody = document.getElementById('ot-table-body');
+  if (!tbody) return;
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" class="text-center text-slate-500 py-8">Nenhuma OT encontrada.</td></tr>';
+  } else {
+    tbody.innerHTML = filtered.map(function(o) {
+      return '<tr onclick="openOTDetail(\'' + o.id + '\')">' +
+        '<td class="mono text-xs text-slate-400">' + o.id + '</td>' +
+        '<td class="font-medium" style="color:var(--text-primary)">' + o.title + '</td>' +
+        '<td>' + (o.equipmentName || '—') + '</td>' +
+        '<td><span class="badge badge-purple">' + o.type + '</span></td>' +
+        '<td><span class="badge ' + getPriorityClass(o.priority) + '">' + o.priority + '</span></td>' +
+        '<td><span class="badge ' + getStatusClass(o.status) + '">' + o.status + '</span></td>' +
+        '<td>' + (o.technicianName || '—') + '</td>' +
+        '<td class="text-xs">' + (o.date ? new Date(o.date).toLocaleDateString('pt-PT') : '—') + '</td>' +
+        '<td><button class="btn-ghost text-xs" onclick="event.stopPropagation();openOTDetail(\'' + o.id + '\')"><i class="fas fa-eye"></i></button></td></tr>';
+    }).join('');
+  }
+  renderKanban(filtered);
+}
+function filterOTs(status) {
+  APP.otFilter = status;
+  ['all','aberta','andamento','concluida'].forEach(function(k) {
+    var el = document.getElementById('ot-tab-' + k);
+    if (el) el.classList.remove('active');
+  });
+  var key = status === 'all' ? 'all' : status === 'Aberta' ? 'aberta' : status === 'Em andamento' ? 'andamento' : 'concluida';
+  var el = document.getElementById('ot-tab-' + key);
+  if (el) el.classList.add('active');
+  renderOTs();
+}
+function filterOTsByPriority(v) { APP.otPriorityFilter = v; renderOTs(); }
+function filterOTsByType(v) { APP.otTypeFilter = v; renderOTs(); }
+function setOTView(view) {
+  document.getElementById('ot-list-view').style.display = view === 'list' ? 'block' : 'none';
+  document.getElementById('ot-kanban-view').style.display = view === 'kanban' ? 'block' : 'none';
+  document.getElementById('view-list').style.color = view === 'list' ? 'var(--accent-purple-light)' : '';
+  document.getElementById('view-kanban').style.color = view === 'kanban' ? 'var(--accent-purple-light)' : '';
+}
+function renderKanban(list) {
+  var cols = [['Aberta','aberta'],['Em andamento','andamento'],['Concluída','concluida'],['Cancelada','cancelada']];
+  cols.forEach(function(col) {
+    var items = list.filter(function(o) { return o.status === col[0]; });
+    var el = document.getElementById('kanban-' + col[1]);
+    var countEl = document.getElementById('kanban-count-' + col[1]);
+    if (countEl) countEl.textContent = items.length;
+    if (!el) return;
+    el.innerHTML = items.length === 0
+      ? '<div class="text-xs text-slate-600 text-center py-4">Vazio</div>'
+      : items.map(function(o) {
+          return '<div class="kanban-card" onclick="openOTDetail(\'' + o.id + '\')">' +
+            '<div class="text-xs text-slate-500 mono mb-1">' + o.id + '</div>' +
+            '<div class="text-sm font-medium mb-2">' + o.title + '</div>' +
+            '<div class="flex items-center justify-between"><span class="badge ' + getPriorityClass(o.priority) + ' text-xs">' + o.priority + '</span>' +
+            '<span class="text-xs text-slate-500">' + (o.technicianName || '—') + '</span></div></div>';
+        }).join('');
+  });
+}
+function openOTDetail(id) {
+  var ot = APP.ots.find(function(o) { return o.id === id; });
+  if (!ot) return;
+  APP.currentOT = ot;
+  document.getElementById('ot-detail-id').textContent = ot.id;
+  document.getElementById('ot-detail-title').textContent = ot.title;
+  document.getElementById('ot-detail-status').value = ot.status;
+  document.getElementById('ot-detail-type').textContent = ot.type;
+  document.getElementById('ot-detail-priority').innerHTML = '<span class="badge ' + getPriorityClass(ot.priority) + '">' + ot.priority + '</span>';
+  document.getElementById('ot-detail-equip').textContent = ot.equipmentName || '—';
+  document.getElementById('ot-detail-tech').textContent = ot.technicianName || '—';
+  document.getElementById('ot-detail-date').textContent = ot.date ? new Date(ot.date).toLocaleString('pt-PT') : '—';
+  document.getElementById('ot-detail-location').textContent = ot.location || '—';
+  document.getElementById('ot-detail-desc').textContent = ot.description || '—';
+  document.getElementById('ot-report').value = ot.report || '';
+  var totalTime = (ot.timeLogs || []).reduce(function(s,t) { return s + t.hours; }, 0);
+  document.getElementById('ot-time-total').textContent = Math.floor(totalTime) + 'h ' + Math.round((totalTime%1)*60) + 'm';
+  renderOTTasks(); renderOTActivity(); renderOTComments(); renderOTMaterials();
+  document.getElementById('modal-ot-detail').style.display = 'flex';
+}
+function updateOTStatus(status) {
+  if (!APP.currentOT) return;
+  APP.currentOT.status = status;
+  APP.currentOT.activity.push({ text: 'Estado alterado para ' + status, time: new Date().toLocaleString('pt-PT') });
+  saveData(); updateDashboard(); renderOTs(); renderOTActivity();
+}
+function renderOTTasks() {
+  var ot = APP.currentOT;
+  var el = document.getElementById('ot-tasks-list');
+  if (!el) return;
+  if (!ot.tasks || ot.tasks.length === 0) {
+    el.innerHTML = '<div class="card p-4 text-center text-slate-500 text-sm">Nenhuma tarefa adicionada.</div>';
+    return;
+  }
+  el.innerHTML = ot.tasks.map(function(t, i) { return renderTaskRow(t, i); }).join('');
+}
+function renderTaskRow(t, i) {
+  var valueSection = '';
+  if (t.type === 'measure') {
+    var val = t.value !== undefined ? t.value : '';
+    var isNOK = val !== '' && t.min !== undefined && t.max !== undefined && (parseFloat(val) < parseFloat(t.min) || parseFloat(val) > parseFloat(t.max));
+    valueSection = '<div class="flex items-center gap-3 mt-3">' +
+      '<input type="number" value="' + val + '" placeholder="Valor medido" class="input-field" style="width:120px;padding:6px 10px;font-size:13px" onchange="setTaskValue(' + i + ', this.value)">' +
+      (t.unit ? '<span class="text-xs text-slate-500">' + t.unit + '</span>' : '') +
+      (t.min !== undefined ? '<span class="text-xs text-slate-500">Intervalo: ' + t.min + '–' + t.max + ' ' + (t.unit||'') + '</span>' : '') +
+      (isNOK ? '<span class="badge badge-red text-xs"><i class="fas fa-exclamation-triangle"></i> Fora do intervalo</span>' : (val ? '<span class="badge badge-green text-xs"><i class="fas fa-check"></i> OK</span>' : '')) +
+      '</div>';
+  } else if (t.type === 'lubrication') {
+    valueSection = '<div class="mt-2 text-xs text-slate-400">' + (t.lubeType ? 'Lubrificante: ' + t.lubeType : '') + (t.lubeQty ? ' &bull; Qtd: ' + t.lubeQty : '') + '</div>';
+  }
+  var stateMap = {'OK':'badge-green','NOK':'badge-red','N/A':'badge-gray'};
+  var stateHtml = ['OK','NOK','N/A'].map(function(s) {
+    return '<button class="badge ' + (t.state === s ? stateMap[s] : 'badge-gray') + ' cursor-pointer text-xs" onclick="setTaskState(' + i + ',\'' + s + '\')">' + s + '</button>';
+  }).join('');
+  var typeLabel = {check:'Verificação',measure:'Medição',lubrication:'Lubrificação',inspection:'Inspeção',other:'Outro'}[t.type] || t.type;
+  return '<div class="task-row">' +
+    '<div class="flex items-start justify-between">' +
+    '<div class="flex items-start gap-3 flex-1">' +
+    '<div class="task-check ' + (t.done ? 'checked' : '') + '" onclick="toggleTask(' + i + ')" style="margin-top:2px">' +
+    (t.done ? '<i class="fas fa-check text-white text-xs"></i>' : '') + '</div>' +
+    '<div class="flex-1"><div class="text-sm font-medium' + (t.done ? '" style="text-decoration:line-through;color:var(--text-muted)"' : '"') + '>' + t.description + '</div>' +
+    '<div class="text-xs text-slate-500 mt-1">' + typeLabel + '</div>' + valueSection + '</div></div>' +
+    '<div class="flex items-center gap-2 ml-3">' + stateHtml +
+    (t.help ? '<button class="btn-ghost text-xs tooltip" onclick="showTaskHelp(' + i + ')"><i class="fas fa-question-circle" style="color:var(--accent-blue)"></i></button>' : '') +
+    '<button class="btn-ghost text-xs" onclick="removeTask(' + i + ')"><i class="fas fa-trash" style="color:var(--accent-red)"></i></button></div></div></div>';
+}
+function toggleTask(i) {
+  APP.currentOT.tasks[i].done = !APP.currentOT.tasks[i].done;
+  saveData(); renderOTTasks();
+}
+function setTaskState(i, state) {
+  APP.currentOT.tasks[i].state = state;
+  saveData(); renderOTTasks();
+}
+function setTaskValue(i, val) {
+  APP.currentOT.tasks[i].value = val;
+  saveData(); renderOTTasks();
+}
+function removeTask(i) {
+  APP.currentOT.tasks.splice(i, 1);
+  saveData(); renderOTTasks();
+}
+function showTaskHelp(i) {
+  var t = APP.currentOT.tasks[i];
+  alert('Como fazer: ' + t.description + '\n\n' + t.help);
+}
+function openAddTaskModal() {
+  document.getElementById('task-desc').value = '';
+  document.getElementById('task-help').value = '';
+  document.getElementById('task-type').value = 'check';
+  updateTaskTypeFields();
+  document.getElementById('modal-add-task').style.display = 'flex';
+}
+function updateTaskTypeFields() {
+  var type = document.getElementById('task-type').value;
+  document.getElementById('task-measure-fields').style.display = type === 'measure' ? 'block' : 'none';
+  document.getElementById('task-lube-fields').style.display = type === 'lubrication' ? 'block' : 'none';
+}
+function addTaskToOT() {
+  var desc = document.getElementById('task-desc').value.trim();
+  if (!desc) { alert('Descrição é obrigatória.'); return; }
+  var type = document.getElementById('task-type').value;
+  var task = { description: desc, type: type, done: false, state: null, help: document.getElementById('task-help').value };
+  if (type === 'measure') {
+    task.min = document.getElementById('task-min').value;
+    task.max = document.getElementById('task-max').value;
+    task.unit = document.getElementById('task-unit').value;
+  }
+  if (type === 'lubrication') {
+    task.lubeType = document.getElementById('task-lube-type').value;
+    task.lubeQty = document.getElementById('task-lube-qty').value;
+  }
+  APP.currentOT.tasks.push(task);
+  APP.currentOT.activity.push({ text: 'Tarefa adicionada: ' + desc, time: new Date().toLocaleString('pt-PT') });
+  saveData(); closeModal('modal-add-task'); renderOTTasks(); renderOTActivity();
+}
+function addMaterial() {
+  var mat = prompt('Material gasto (ex: Rolamento 6205 x1):');
+  if (!mat) return;
+  APP.currentOT.materials.push({ description: mat, addedAt: new Date().toLocaleString('pt-PT') });
+  saveData(); renderOTMaterials();
+}
+function renderOTMaterials() {
+  var el = document.getElementById('ot-materials-list');
+  if (!el) return;
+  el.innerHTML = (!APP.currentOT.materials || APP.currentOT.materials.length === 0)
+    ? '<span class="text-slate-400">Nenhum material registado.</span>'
+    : APP.currentOT.materials.map(function(m) { return '<div class="py-1 border-b border-white/5 text-sm">&bull; ' + m.description + '</div>'; }).join('');
+}
+function addTimeLog() {
+  var h = prompt('Horas de trabalho (ex: 1.5):');
+  if (!h) return;
+  APP.currentOT.timeLogs = APP.currentOT.timeLogs || [];
+  APP.currentOT.timeLogs.push({ hours: parseFloat(h), addedAt: new Date().toLocaleString('pt-PT') });
+  saveData();
+  var total = APP.currentOT.timeLogs.reduce(function(s,t) { return s + t.hours; }, 0);
+  document.getElementById('ot-time-total').textContent = Math.floor(total) + 'h ' + Math.round((total%1)*60) + 'm';
+}
+function saveOTReport() {
+  APP.currentOT.report = document.getElementById('ot-report').value;
+  APP.currentOT.activity.push({ text: 'Relatório atualizado', time: new Date().toLocaleString('pt-PT') });
+  saveData(); renderOTActivity(); showToast('Relatório guardado!');
+}
+function addComment() {
+  var text = document.getElementById('ot-comment-input').value.trim();
+  if (!text) return;
+  APP.currentOT.comments = APP.currentOT.comments || [];
+  APP.currentOT.comments.push({ text: text, author: APP.user ? APP.user.name : '—', time: new Date().toLocaleString('pt-PT') });
+  saveData(); document.getElementById('ot-comment-input').value = ''; renderOTComments();
+}
+function renderOTComments() {
+  var el = document.getElementById('ot-comments');
+  if (!el) return;
+  var comments = APP.currentOT.comments || [];
+  el.innerHTML = comments.length === 0
+    ? '<p class="text-xs text-slate-500">Nenhum comentário.</p>'
+    : comments.map(function(c) { return '<div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:8px" class="text-xs"><span class="font-medium">' + c.author + '</span>: ' + c.text + '<div class="text-slate-500 mt-1">' + c.time + '</div></div>'; }).join('');
+}
+function renderOTActivity() {
+  var el = document.getElementById('ot-activity-log');
+  if (!el) return;
+  var acts = APP.currentOT.activity || [];
+  el.innerHTML = acts.length === 0
+    ? '<p class="text-slate-500">Sem atividade.</p>'
+    : acts.slice().reverse().map(function(a) { return '<div class="py-1.5 border-b border-white/5"><div class="text-slate-300">' + a.text + '</div><div class="text-slate-600">' + a.time + '</div></div>'; }).join('');
+}
+function requestSignature() { showToast('Pedido de assinatura enviado ao cliente.'); }
+
+// ======================== EQUIPMENT ========================
+function openNewEquipModal() { document.getElementById('modal-new-equip').style.display = 'flex'; }
+function createEquipment() {
+  var name = document.getElementById('equip-name').value.trim();
+  if (!name) { alert('Nome é obrigatório.'); return; }
+  var equip = {
+    id: generateId('EQ'), name: name,
+    code: document.getElementById('equip-code').value,
+    brand: document.getElementById('equip-brand').value,
+    model: document.getElementById('equip-model').value,
+    serial: document.getElementById('equip-serial').value,
+    category: document.getElementById('equip-category').value,
+    location: document.getElementById('equip-location').value,
+    criticality: document.getElementById('equip-criticality').value,
+    installDate: document.getElementById('equip-install-date').value,
+    status: document.getElementById('equip-status').value,
+    notes: document.getElementById('equip-notes').value,
+    createdAt: new Date().toISOString(),
+  };
+  APP.equipment.push(equip);
+  saveData(); closeModal('modal-new-equip');
+  ['equip-name','equip-code','equip-brand','equip-model','equip-serial','equip-location','equip-notes'].forEach(function(id) { document.getElementById(id).value = ''; });
+  updateDashboard(); renderEquipment(); populateOTSelects(); showToast('Equipamento adicionado!');
+}
+function renderEquipment(list) {
+  var items = list || APP.equipment;
+  var el = document.getElementById('equipment-grid');
+  if (!el) return;
+  if (items.length === 0) {
+    el.innerHTML = '<div class="card p-8 text-center text-slate-500" style="grid-column:1/-1"><i class="fas fa-microchip text-3xl mb-3 text-slate-600 block"></i><p>Nenhum equipamento registado.</p><button class="btn-primary mt-4" onclick="openNewEquipModal()"><i class="fas fa-plus"></i> Adicionar</button></div>';
+    return;
+  }
+  var catBg = {AVAC:'rgba(59,130,246,0.2)',Elétrico:'rgba(245,158,11,0.2)',Automação:'rgba(99,102,241,0.2)',UPS:'rgba(16,185,129,0.2)',Gerador:'rgba(249,115,22,0.2)',Compressor:'rgba(6,182,212,0.2)'};
+  var catIcon = {AVAC:'fa-wind',Elétrico:'fa-bolt',Automação:'fa-cogs',UPS:'fa-battery-full',Gerador:'fa-gas-pump',Compressor:'fa-tachometer-alt'};
+  var catColor = {AVAC:'#60a5fa',Elétrico:'#fbbf24',Automação:'#818cf8',UPS:'#34d399',Gerador:'#fb923c',Compressor:'#22d3ee'};
+  el.innerHTML = items.map(function(e) {
+    var bg = catBg[e.category] || 'rgba(148,163,184,0.1)';
+    var icon = catIcon[e.category] || 'fa-microchip';
+    var color = catColor[e.category] || '#94a3b8';
+    return '<div class="card p-5 cursor-pointer" style="transition:all 0.2s" onclick="openEquipDetail(\'' + e.id + '\')">' +
+      '<div class="flex items-start justify-between mb-3">' +
+      '<div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:' + bg + '"><i class="fas ' + icon + '" style="color:' + color + '"></i></div>' +
+      '<span class="badge ' + getEquipStatusClass(e.status) + ' text-xs">' + e.status + '</span></div>' +
+      '<div class="font-semibold mb-1">' + e.name + '</div>' +
+      '<div class="text-xs text-slate-400 mb-3">' + (e.brand ? e.brand + (e.model ? ' &bull; ' + e.model : '') : '—') + '</div>' +
+      '<div class="flex items-center justify-between text-xs text-slate-500">' +
+      '<span><i class="fas fa-map-marker-alt" style="margin-right:4px"></i>' + (e.location || '—') + '</span>' +
+      '<span class="badge badge-gray">' + e.category + '</span></div>' +
+      (e.code ? '<div class="text-xs text-slate-600 mt-2 mono">' + e.code + '</div>' : '') + '</div>';
+  }).join('');
+}
+function openEquipDetail(id) {
+  var eq = APP.equipment.find(function(e) { return e.id === id; });
+  if (!eq) return;
+  APP.currentEquip = eq;
+  document.getElementById('equip-detail-code').textContent = eq.code || eq.id;
+  document.getElementById('equip-detail-name').textContent = eq.name;
+  var badge = document.getElementById('equip-detail-status-badge');
+  badge.className = 'badge ' + getEquipStatusClass(eq.status);
+  badge.textContent = eq.status;
+  var rows = [['Fabricante',eq.brand||'—'],['Modelo',eq.model||'—'],['Nº Série',eq.serial||'—'],
+    ['Categoria',eq.category],['Localização',eq.location||'—'],['Criticidade',eq.criticality],
+    ['Instalação',eq.installDate||'—'],['Notas',eq.notes||'—']];
+  document.getElementById('equip-detail-info').innerHTML = rows.map(function(r) {
+    return '<div class="flex justify-between py-1.5 border-b border-white/5"><span class="text-slate-400">' + r[0] + ':</span><span>' + r[1] + '</span></div>';
+  }).join('');
+  var history = APP.ots.filter(function(o) { return o.equipmentId === id; });
+  document.getElementById('equip-history').innerHTML = history.length === 0
+    ? '<span class="text-slate-400">Nenhuma intervenção registada.</span>'
+    : history.map(function(o) { return '<div class="py-1.5 border-b border-white/5"><span class="font-medium">' + o.title + '</span><span class="ml-2 badge ' + getStatusClass(o.status) + '">' + o.status + '</span></div>'; }).join('');
+  document.getElementById('modal-equip-detail').style.display = 'flex';
+}
+function searchEquipment(q) {
+  renderEquipment(APP.equipment.filter(function(e) {
+    return e.name.toLowerCase().includes(q.toLowerCase()) || (e.code||'').toLowerCase().includes(q.toLowerCase()) || (e.brand||'').toLowerCase().includes(q.toLowerCase());
+  }));
+}
+function filterEquipByStatus(status) {
+  renderEquipment(status ? APP.equipment.filter(function(e) { return e.status === status; }) : APP.equipment);
+}
+function filterEquipByCategory(cat) {
+  renderEquipment(cat ? APP.equipment.filter(function(e) { return e.category === cat; }) : APP.equipment);
+}
+function schedulePreventive() {
+  if (!APP.currentEquip) return;
+  closeModal('modal-equip-detail');
+  openNewOTModal();
+  document.getElementById('ot-title').value = 'Manutenção preventiva — ' + APP.currentEquip.name;
+  document.getElementById('ot-type').value = 'Preventiva';
+  document.getElementById('ot-equipment').value = APP.currentEquip.id;
+}
+function openOTFromEquip() {
+  if (!APP.currentEquip) return;
+  closeModal('modal-equip-detail');
+  openNewOTModal();
+  document.getElementById('ot-equipment').value = APP.currentEquip.id;
+}
+
+// ======================== CLIENTS ========================
+function openNewClientModal() { document.getElementById('modal-new-client').style.display = 'flex'; }
+function createClient() {
+  var name = document.getElementById('client-name').value.trim();
+  if (!name) { alert('Nome é obrigatório.'); return; }
+  APP.clients.push({
+    id: generateId('CL'), name: name,
+    email: document.getElementById('client-email').value,
+    phone: document.getElementById('client-phone').value,
+    address: document.getElementById('client-address').value,
+    contract: document.getElementById('client-contract').value,
+    notes: document.getElementById('client-notes').value,
+    createdAt: new Date().toISOString(),
+  });
+  saveData(); closeModal('modal-new-client');
+  ['client-name','client-email','client-phone','client-address','client-notes'].forEach(function(id) { document.getElementById(id).value = ''; });
+  renderClients(); showToast('Cliente adicionado!');
+}
+function renderClients() {
+  var el = document.getElementById('clients-grid');
+  if (!el) return;
+  if (APP.clients.length === 0) {
+    el.innerHTML = '<div class="card p-8 text-center text-slate-500" style="grid-column:1/-1"><i class="fas fa-briefcase text-3xl mb-3 text-slate-600 block"></i><p>Nenhum cliente registado.</p><button class="btn-primary mt-4" onclick="openNewClientModal()"><i class="fas fa-plus"></i> Adicionar</button></div>';
+    return;
+  }
+  el.innerHTML = APP.clients.map(function(c) {
+    return '<div class="card p-5"><div class="flex items-start gap-3 mb-4"><div class="w-10 h-10 rounded-lg flex items-center justify-center font-bold" style="background:rgba(59,130,246,0.2);color:#60a5fa">' + c.name.charAt(0) + '</div>' +
+      '<div><div class="font-semibold">' + c.name + '</div><div class="text-xs text-slate-400">' + c.contract + '</div></div></div>' +
+      '<div class="space-y-1 text-xs text-slate-400">' + (c.email ? '<div><i class="fas fa-envelope" style="margin-right:8px"></i>' + c.email + '</div>' : '') + (c.phone ? '<div><i class="fas fa-phone" style="margin-right:8px"></i>' + c.phone + '</div>' : '') + '</div>' +
+      '<div class="flex gap-2 mt-4"><button class="btn-ghost text-xs flex-1" onclick="openOTFromClient(\'' + c.id + '\')"><i class="fas fa-wrench"></i> Nova OT</button>' +
+      '<button class="btn-ghost text-xs" onclick="deleteClient(\'' + c.id + '\')"><i class="fas fa-trash" style="color:var(--accent-red)"></i></button></div></div>';
+  }).join('');
+}
+function openOTFromClient(id) {
+  var c = APP.clients.find(function(x) { return x.id === id; });
+  if (!c) return;
+  openNewOTModal();
+  document.getElementById('ot-title').value = 'Assistência — ' + c.name;
+  document.getElementById('ot-location').value = c.address || '';
+}
+function deleteClient(id) {
+  if (!confirm('Remover este cliente?')) return;
+  APP.clients = APP.clients.filter(function(c) { return c.id !== id; });
+  saveData(); renderClients();
+}
+
+// ======================== TECHNICIANS ========================
+function openNewTechModal() { document.getElementById('modal-new-tech').style.display = 'flex'; }
+function createTechnician() {
+  var name = document.getElementById('tech-name').value.trim();
+  if (!name) { alert('Nome é obrigatório.'); return; }
+  APP.technicians.push({
+    id: generateId('TC'), name: name,
+    email: document.getElementById('tech-email').value,
+    specialty: document.getElementById('tech-specialty').value,
+    phone: document.getElementById('tech-phone').value,
+    availability: document.getElementById('tech-availability').value,
+    createdAt: new Date().toISOString(),
+  });
+  saveData(); closeModal('modal-new-tech');
+  ['tech-name','tech-email','tech-phone'].forEach(function(id) { document.getElementById(id).value = ''; });
+  renderTechnicians(); populateOTSelects(); showToast('Técnico adicionado!');
+}
+function renderTechnicians() {
+  var el = document.getElementById('technicians-grid');
+  if (!el) return;
+  if (APP.technicians.length === 0) {
+    el.innerHTML = '<div class="card p-8 text-center text-slate-500" style="grid-column:1/-1"><i class="fas fa-hard-hat text-3xl mb-3 text-slate-600 block"></i><p>Nenhum técnico registado.</p><button class="btn-primary mt-4" onclick="openNewTechModal()"><i class="fas fa-plus"></i> Adicionar</button></div>';
+    return;
+  }
+  var availColors = {'Disponível':'badge-green','Em campo':'badge-blue','Em férias':'badge-yellow','Indisponível':'badge-red'};
+  el.innerHTML = APP.technicians.map(function(t) {
+    var otCount = APP.ots.filter(function(o) { return o.technicianId === t.id && ['Aberta','Em andamento'].includes(o.status); }).length;
+    return '<div class="card p-5"><div class="flex items-start gap-3 mb-4">' +
+      '<div class="w-10 h-10 rounded-full flex items-center justify-center font-bold" style="background:rgba(99,102,241,0.2);color:#818cf8">' + t.name.charAt(0) + '</div>' +
+      '<div><div class="font-semibold">' + t.name + '</div><span class="badge badge-purple text-xs">' + t.specialty + '</span></div>' +
+      '<span class="ml-auto badge ' + (availColors[t.availability]||'badge-gray') + ' text-xs">' + t.availability + '</span></div>' +
+      '<div class="space-y-1 text-xs text-slate-400 mb-3">' + (t.email ? '<div><i class="fas fa-envelope" style="margin-right:8px"></i>' + t.email + '</div>' : '') +
+      '<div><i class="fas fa-wrench" style="margin-right:8px"></i>' + otCount + ' OT(s) ativas</div></div>' +
+      '<button class="btn-ghost text-xs" style="width:100%;color:var(--accent-red)" onclick="deleteTech(\'' + t.id + '\')"><i class="fas fa-trash"></i> Remover</button></div>';
+  }).join('');
+}
+function deleteTech(id) {
+  if (!confirm('Remover este técnico?')) return;
+  APP.technicians = APP.technicians.filter(function(t) { return t.id !== id; });
+  saveData(); renderTechnicians(); populateOTSelects();
+}
+
+// ======================== KNOWLEDGE ========================
+function openNewKnowledgeModal() { document.getElementById('modal-new-knowledge').style.display = 'flex'; }
+function createKnowledgeArticle() {
+  var title = document.getElementById('know-title').value.trim();
+  var solution = document.getElementById('know-solution').value.trim();
+  if (!title || !solution) { alert('Título e solução são obrigatórios.'); return; }
+  APP.knowledge.push({
+    id: generateId('KB'), title: title,
+    equipment: document.getElementById('know-equip').value,
+    category: document.getElementById('know-category').value,
+    symptom: document.getElementById('know-symptom').value,
+    solution: solution,
+    tools: document.getElementById('know-tools').value,
+    author: APP.user ? APP.user.name : '—',
+    createdAt: new Date().toISOString(),
+  });
+  saveData(); closeModal('modal-new-knowledge');
+  ['know-title','know-equip','know-symptom','know-solution','know-tools'].forEach(function(id) { document.getElementById(id).value = ''; });
+  renderKnowledge(); updateDashboard(); showToast('Artigo publicado!');
+}
+function renderKnowledge(list) {
+  var items = list || APP.knowledge;
+  var el = document.getElementById('knowledge-grid');
+  if (!el) return;
+  if (items.length === 0) {
+    el.innerHTML = '<div class="card p-8 text-center text-slate-500" style="grid-column:1/-1"><i class="fas fa-book text-3xl mb-3 text-slate-600 block"></i><p>Nenhum artigo na base de conhecimento.</p><button class="btn-primary mt-4" onclick="openNewKnowledgeModal()"><i class="fas fa-plus"></i> Criar artigo</button></div>';
+    return;
+  }
+  el.innerHTML = items.map(function(a) {
+    return '<div class="wiki-card" onclick="openArticleDetail(\'' + a.id + '\')">' +
+      '<div class="flex items-center justify-between mb-3"><span class="badge badge-purple text-xs">' + a.category + '</span><span class="text-xs text-slate-500 mono">' + a.id + '</span></div>' +
+      '<div class="font-semibold mb-2">' + a.title + '</div>' +
+      (a.symptom ? '<div class="text-xs text-slate-400 mb-2"><i class="fas fa-exclamation-circle" style="color:var(--accent-yellow);margin-right:4px"></i>' + a.symptom + '</div>' : '') +
+      '<div class="text-sm text-slate-400">' + a.solution.substring(0,100) + (a.solution.length > 100 ? '...' : '') + '</div>' +
+      '<div class="flex items-center justify-between mt-3 text-xs text-slate-500"><span><i class="fas fa-user" style="margin-right:4px"></i>' + a.author + '</span><span>' + new Date(a.createdAt).toLocaleDateString('pt-PT') + '</span></div></div>';
+  }).join('');
+}
+function openArticleDetail(id) {
+  var art = APP.knowledge.find(function(a) { return a.id === id; });
+  if (!art) return;
+  alert(art.title + '\n\n' + (art.symptom ? 'Sintoma: ' + art.symptom + '\n\n' : '') + 'Solução:\n' + art.solution + (art.tools ? '\n\nFerramentas: ' + art.tools : '') + '\n\nAutor: ' + art.author);
+}
+function searchKnowledge(q) {
+  renderKnowledge(APP.knowledge.filter(function(a) {
+    return a.title.toLowerCase().includes(q.toLowerCase()) || a.solution.toLowerCase().includes(q.toLowerCase()) || (a.symptom||'').toLowerCase().includes(q.toLowerCase());
+  }));
+}
+function filterKnowledge(cat) {
+  renderKnowledge(cat ? APP.knowledge.filter(function(a) { return a.category === cat; }) : APP.knowledge);
+}
+
+// ======================== INCIDENTS ========================
+function openNewIncidentModal() { populateOTSelects(); document.getElementById('modal-new-incident').style.display = 'flex'; }
+function createIncident() {
+  var desc = document.getElementById('incident-desc').value.trim();
+  if (!desc) { alert('Descrição é obrigatória.'); return; }
+  var equipId = document.getElementById('incident-equip').value;
+  var equip = APP.equipment.find(function(e) { return e.id === equipId; });
+  APP.incidents.push({
+    id: generateId('INC'), description: desc,
+    severity: document.getElementById('incident-severity').value,
+    status: 'Aberto',
+    equipmentId: equipId, equipmentName: equip ? equip.name : '—',
+    createdAt: new Date().toISOString(),
+  });
+  saveData(); closeModal('modal-new-incident');
+  document.getElementById('incident-desc').value = '';
+  renderIncidents(); showToast('Incidente registado!');
+}
+function renderIncidents() {
+  var tbody = document.getElementById('incidents-table-body');
+  if (!tbody) return;
+  if (APP.incidents.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-slate-500 py-8">Nenhum incidente registado.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = APP.incidents.slice().reverse().map(function(inc) {
+    return '<tr><td class="mono text-xs text-slate-400">' + inc.id + '</td>' +
+      '<td class="font-medium" style="color:var(--text-primary)">' + inc.description + '</td>' +
+      '<td>' + (inc.equipmentName || '—') + '</td>' +
+      '<td><span class="badge ' + getSeverityClass(inc.severity) + '">' + inc.severity + '</span></td>' +
+      '<td><span class="badge ' + getStatusClass(inc.status) + '">' + inc.status + '</span></td>' +
+      '<td class="text-xs">' + new Date(inc.createdAt).toLocaleDateString('pt-PT') + '</td></tr>';
+  }).join('');
+}
+function getSeverityClass(s) {
+  return {Crítica:'badge-red',Alta:'badge-yellow',Média:'badge-blue',Baixa:'badge-green'}[s] || 'badge-gray';
+}
+
+// ======================== CHECKLISTS ========================
+function openChecklistDetail(type) {
+  var cl = type === 'ronda-diaria' ? getRondaDiaria() : getPreventivaMensal();
+  document.getElementById('checklist-detail-title').textContent = cl.title;
+  document.getElementById('checklist-detail-desc').textContent = cl.description;
+  document.getElementById('checklist-tasks-list').innerHTML = cl.tasks.map(function(t, i) {
+    return '<div class="task-row mb-2"><div class="flex items-center gap-3">' +
+      '<div class="task-check" id="cl-task-' + i + '" onclick="toggleCLTask(' + i + ')"></div>' +
+      '<div><div class="text-sm font-medium">' + t.name + '</div>' + (t.section ? '<div class="text-xs text-slate-500">' + t.section + '</div>' : '') + '</div>' +
+      (t.help ? '<button class="btn-ghost text-xs ml-auto" onclick="alert(\'' + t.help.replace(/'/g,"\\'") + '\')"><i class="fas fa-question-circle" style="color:var(--accent-blue)"></i> Saber como fazer</button>' : '') +
+      '</div></div>';
+  }).join('');
+  document.getElementById('modal-checklist-detail').style.display = 'flex';
+}
+function toggleCLTask(i) {
+  var el = document.getElementById('cl-task-' + i);
+  if (!el) return;
+  var done = !el.classList.contains('checked');
+  el.classList.toggle('checked', done);
+  el.innerHTML = done ? '<i class="fas fa-check text-white text-xs"></i>' : '';
+}
+function completeChecklist() {
+  closeModal('modal-checklist-detail');
+  showToast('Checklist concluída! Relatório gerado automaticamente.');
+}
+function getRondaDiaria() {
+  return { title: 'Ronda Diária', description: 'Verificação diária de equipamentos críticos', tasks: [
+    { name: 'Verificar alarmes frigoríficos', section: 'Frigoríficos', help: 'Verificar painel de alarmes. Se alarme ativo, registar temperatura e contactar técnico.' },
+    { name: 'Confirmar temperaturas frigoríficos', section: 'Frigoríficos', help: 'Temperatura deve estar entre -18°C e -22°C (congelados) ou 2°C a 8°C (refrigerados).' },
+    { name: 'Verificar displays AVAC', section: 'AVAC', help: 'Confirmar temperatura setpoint vs real em cada unidade.' },
+    { name: 'Confirmar funcionamento AVAC', section: 'AVAC', help: 'Verificar ventiladores, compressores e controles.' },
+    { name: 'Verificar combustível gerador', section: 'Gerador', help: 'Nível de combustível deve estar acima de 30%.' },
+    { name: 'Horas de funcionamento gerador', section: 'Gerador', help: 'Registar no livro de manutenção.' },
+    { name: 'Nível de óleo gerador', section: 'Gerador', help: 'Verificar vareta de óleo — nível entre mín e máx.' },
+    { name: 'Número de arranques gerador', section: 'Gerador', help: 'Registar arranques automáticos ou manuais.' },
+  ]};
+}
+function getPreventivaMensal() {
+  return { title: 'Manutenção Preventiva Mensal', description: 'Inspeção mensal de todos os sistemas críticos', tasks: [
+    { name: 'Limpeza de filtros de ar UPS', section: 'UPS', help: 'Retirar filtros e aspirar. Lavar com água se necessário.' },
+    { name: 'Verificar tensão bateria UPS', section: 'UPS', help: 'Tensão deve estar entre 48V e 54V em flutuação.' },
+    { name: 'Teste UPS com carga', section: 'UPS', help: 'Simular corte de rede e verificar autonomia.' },
+    { name: 'Verificar nível fluido refrigerante chiller', section: 'Chiller', help: 'Nível no visor de líquido.' },
+    { name: 'Limpeza condensadores chiller', section: 'Chiller', help: 'Aspirar e escovar serpentinas.' },
+    { name: 'Verificar pressões chiller', section: 'Chiller', help: 'Pressão de baixa: 3-5 bar. Alta: 18-22 bar.' },
+    { name: 'Lubrificar rolamentos ventiladores', section: 'Ventilação', help: 'Usar lubrificante Shell Gadus S2 V220, 5g por rolamento.' },
+    { name: 'Verificar correias ventiladores', section: 'Ventilação', help: 'Tensão e desgaste das correias.' },
+    { name: 'Teste gerador sem carga', section: 'Gerador', help: 'Arranque manual e verificação de parâmetros durante 15 min.' },
+    { name: 'Análise de água torres de arrefecimento', section: 'Torres', help: 'Verificar pH e biocida.' },
+    { name: 'Limpeza de quadros elétricos', section: 'Elétrico', help: 'Aspirar pó com aspirador antiestático. Verificar ligações.' },
+    { name: 'Termografia quadros elétricos', section: 'Elétrico', help: 'Usar câmara termográfica para detetar pontos quentes.' },
+  ]};
+}
+
+// ======================== CALENDAR ========================
+function renderCalendar() {
+  var d = APP.calendarDate;
+  var year = d.getFullYear(), month = d.getMonth();
+  var months = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  var titleEl = document.getElementById('calendar-title');
+  if (titleEl) titleEl.textContent = months[month] + ' ' + year;
+  var firstDay = new Date(year, month, 1).getDay();
+  var daysInMonth = new Date(year, month + 1, 0).getDate();
+  var today = new Date();
+  var html = '';
+  for (var i = 0; i < firstDay; i++) html += '<div></div>';
+  for (var day = 1; day <= daysInMonth; day++) {
+    var dateStr = year + '-' + String(month+1).padStart(2,'0') + '-' + String(day).padStart(2,'0');
+    var hasOT = APP.ots.some(function(o) { return o.date && o.date.startsWith(dateStr); });
+    var isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+    html += '<div class="text-center py-2 rounded-lg cursor-pointer text-sm" style="transition:all 0.2s;' + (isToday ? 'background:var(--accent-purple);color:white;font-weight:bold' : '') + '">' +
+      day + (hasOT ? '<div style="width:6px;height:6px;background:#60a5fa;border-radius:50%;margin:0 auto"></div>' : '') + '</div>';
+  }
+  var grid = document.getElementById('calendar-grid');
+  if (grid) grid.innerHTML = html;
+  renderUpcomingInterventions();
+}
+function changeMonth(dir) {
+  APP.calendarDate.setMonth(APP.calendarDate.getMonth() + dir);
+  renderCalendar();
+}
+function renderUpcomingInterventions() {
+  var el = document.getElementById('upcoming-interventions');
+  if (!el) return;
+  var now = new Date();
+  var upcoming = APP.ots.filter(function(o) { return o.date && new Date(o.date) >= now && o.status !== 'Concluída'; })
+    .sort(function(a,b) { return new Date(a.date) - new Date(b.date); }).slice(0,5);
+  if (upcoming.length === 0) {
+    el.innerHTML = '<p class="text-slate-500 text-sm">Nenhuma intervenção agendada.</p>';
+    return;
+  }
+  el.innerHTML = upcoming.map(function(o) {
+    return '<div class="flex items-center justify-between py-3 border-b border-white/5">' +
+      '<div class="flex items-center gap-3"><div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:rgba(99,102,241,0.2)"><i class="fas fa-wrench text-purple-400 text-xs"></i></div>' +
+      '<div><div class="text-sm font-medium">' + o.title + '</div><div class="text-xs text-slate-500">' + (o.technicianName||'—') + '</div></div></div>' +
+      '<div class="text-right"><div class="text-sm">' + new Date(o.date).toLocaleDateString('pt-PT') + '</div>' +
+      '<span class="badge ' + getPriorityClass(o.priority) + ' text-xs">' + o.priority + '</span></div></div>';
+  }).join('');
+}
+
+// ======================== AI ASSISTANT ========================
+function getAIResponse(msg) {
+  var m = msg.toLowerCase();
+  if (m.includes('spc11') && m.includes('calibr')) return 'Calibração SPC11 — Procedimento:\n\n1. Conectar cabo USB-UART e abrir software FCT\n2. Menu: Calibration > Auto Calibration\n3. Seguir wizard de posicionamento (0%, 50%, 100%)\n4. Guardar parâmetros em EEPROM\n5. Testar ciclo completo\n\nTempo estimado: ~30 min\nFerramentas: Computador com FCT, cabo USB-UART';
+  if (m.includes('spc11')) return 'Erro SPC11 — Festo\n\nCausas prováveis:\n• Sinal de posição fora de tolerância\n• Cabo do sensor danificado\n• Parâmetros de controlo incorretos\n\nDiagnóstico:\n1. Verificar conexão do cabo do sensor de posição\n2. Confirmar parâmetros no menu Config > POS\n3. Realizar nova calibração via menu CAL\n4. Verificar alimentação 24VDC\n\nTempo médio de resolução: 45 min';
+  if (m.includes('ups') || m.includes('galaxy') || m.includes('battery')) return 'UPS Galaxy VS — Battery Charger Failure\n\nCausas prováveis:\n• Falha no módulo de carregamento\n• Temperatura elevada das baterias\n• Baterias com sulfatação avançada\n\nProcedimento:\n1. Verificar temperatura sala UPS (máx. 25°C)\n2. Medir tensão baterias em flutuação (48-54V)\n3. Verificar fusíveis do módulo de carga\n4. Se baterias >5 anos: substituição recomendada';
+  if (m.includes('gerador')) return 'Manutenção Gerador — Verificações obrigatórias:\n\n• Nível óleo (entre mín/máx na vareta)\n• Nível combustível (>30%)\n• Água radiador\n• Cintas e correias\n• Bateria de arranque (12V)\n\nTeste mensal: 15 min em vazio, registo de horas e parâmetros.';
+  if (m.includes('criar ot') || m.includes('nova ot') || m.includes('ot preventiva') || m.includes('ot corretiva')) {
+    return 'ACTION_CREATE_OT:' + msg;
+  }
+  if (m.includes('checklist')) return 'ACTION_CHECKLIST:' + msg;
+  if (m.includes('ot') && (m.includes('abertas') || m.includes('activas') || m.includes('ativas'))) {
+    var open = APP.ots.filter(function(o) { return ['Aberta','Em andamento'].includes(o.status); });
+    if (open.length === 0) return 'Não há OTs abertas no momento.';
+    return 'OTs Abertas (' + open.length + '):\n\n' + open.map(function(o) { return '• ' + o.id + ' — ' + o.title + ' [' + o.priority + ']'; }).join('\n');
+  }
+  if (m.includes('equipamento')) {
+    return 'Equipamentos registados: ' + APP.equipment.length + '\n\n' +
+      (APP.equipment.length === 0 ? 'Nenhum equipamento registado.' : APP.equipment.map(function(e) { return '• ' + e.name + ' — ' + e.status + ' (' + (e.location||'sem local') + ')'; }).join('\n'));
+  }
+  return 'Posso ajudar com:\n\n• Diagnóstico técnico — descreva o sintoma\n• Criar OT — ex: "Criar OT preventiva para o gerador"\n• Procedimentos — ex: "Como calibrar SPC11?"\n• Equipamentos — ex: "Estado dos equipamentos"\n• OTs abertas — ex: "Mostrar OTs abertas"\n\nComo posso ajudar?';
+}
+function sendMessage() {
+  var input = document.getElementById('chat-input');
+  var msg = input.value.trim();
+  if (!msg) return;
+  appendChatMessage(msg, 'user');
+  input.value = '';
+  setTimeout(function() {
+    var res = getAIResponse(msg);
+    if (res.startsWith('ACTION_CREATE_OT:')) {
+      var summary = res.replace('ACTION_CREATE_OT:', '');
+      showAIApproval(
+        '<p class="font-medium mb-2">Criar nova Ordem de Trabalho:</p><p class="text-slate-300">Título: <strong>"' + summary + '"</strong></p><p class="text-slate-300 mt-1">Tipo: Preventiva &bull; Prioridade: Média</p>',
+        function() {
+          openNewOTModal();
+          document.getElementById('ot-title').value = summary;
+          document.getElementById('ot-type').value = 'Preventiva';
+          appendChatMessage('OT criada. Preencha os detalhes no formulário que abriu.', 'ai');
+        }
+      );
+    } else if (res.startsWith('ACTION_CHECKLIST:')) {
+      showAIApproval(
+        '<p class="font-medium mb-2">Criar Checklist de Ronda Diária AVAC</p><p class="text-slate-300">8 tarefas de verificação diária serão criadas automaticamente.</p>',
+        function() { showPage('checklists'); appendChatMessage('Checklist disponível em Checklists no menu lateral.', 'ai'); }
+      );
+    } else {
+      appendChatMessage(res, 'ai');
+    }
+  }, 800);
+}
+function appendChatMessage(text, type) {
+  var chat = document.getElementById('chat-messages');
+  var div = document.createElement('div');
+  div.className = (type === 'user' ? 'chat-bubble-user' : 'chat-bubble-ai') + ' fade-in';
+  if (type === 'ai') {
+    div.innerHTML = '<div class="flex items-center gap-2 mb-2"><div class="w-6 h-6 rounded flex items-center justify-center" style="background:var(--accent-purple)"><i class="fas fa-robot text-xs text-white"></i></div><span class="text-xs font-semibold" style="color:var(--accent-purple-light)">ManuGent IA</span></div>' +
+      '<div class="text-sm" style="white-space:pre-line">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>';
+  } else {
+    div.innerHTML = '<div class="text-sm">' + text + '</div>';
+  }
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+function quickPrompt(text) {
+  document.getElementById('chat-input').value = text;
+  sendMessage();
+}
+function clearChat() {
+  document.getElementById('chat-messages').innerHTML = '';
+  appendChatMessage('Chat limpo. Como posso ajudar?', 'ai');
+}
+
+// ======================== AI APPROVAL ========================
+function showAIApproval(content, callback) {
+  document.getElementById('ai-approval-content').innerHTML = content;
+  APP.aiApprovalCallback = callback;
+  document.getElementById('modal-ai-approval').style.display = 'flex';
+}
+function approveAIAction() {
+  closeModal('modal-ai-approval');
+  if (APP.aiApprovalCallback) { APP.aiApprovalCallback(); APP.aiApprovalCallback = null; }
+}
+function rejectAIAction() {
+  closeModal('modal-ai-approval');
+  APP.aiApprovalCallback = null;
+  appendChatMessage('Ação rejeitada. Como posso ajudar?', 'ai');
+}
+
+// ======================== UTILITIES ========================
+function getPriorityClass(p) {
+  return {Urgente:'badge-red',Alta:'badge-yellow',Média:'badge-blue',Baixa:'badge-green'}[p] || 'badge-gray';
+}
+function getStatusClass(s) {
+  return {'Aberta':'badge-yellow','Em andamento':'badge-blue','Concluída':'badge-green','Cancelada':'badge-gray','Em espera':'badge-gray','Aberto':'badge-yellow'}[s] || 'badge-gray';
+}
+function getEquipStatusClass(s) {
+  return {'Operacional':'badge-green','Em manutenção':'badge-yellow','Avaria':'badge-red','Desativado':'badge-gray'}[s] || 'badge-gray';
+}
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+function showToast(msg) {
+  var toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#1a1a3a;border:1px solid rgba(99,102,241,0.5);color:white;padding:12px 20px;border-radius:10px;z-index:9999;font-size:14px;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+  toast.innerHTML = '<i class="fas fa-check-circle" style="color:var(--accent-green);margin-right:8px"></i>' + msg;
+  document.body.appendChild(toast);
+  setTimeout(function() { toast.remove(); }, 3000);
+}
+function toggleNotifications() {
+  var p = document.getElementById('notifications-panel');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+function closeNotifications() { document.getElementById('notifications-panel').style.display = 'none'; }
+function globalSearch(q) {
+  if (!q || q.length < 2) return;
+  var results = [];
+  APP.ots.filter(function(o) { return o.title.toLowerCase().includes(q.toLowerCase()); }).forEach(function(o) {
+    results.push(function() { showPage('ots'); setTimeout(function() { openOTDetail(o.id); }, 100); });
+  });
+  APP.equipment.filter(function(e) { return e.name.toLowerCase().includes(q.toLowerCase()); }).forEach(function(e) {
+    results.push(function() { showPage('equipment'); setTimeout(function() { openEquipDetail(e.id); }, 100); });
+  });
+  if (results.length > 0) results[0]();
+}
+
+// ======================== SAMPLE DATA ========================
+function initSampleData() {
+  if (APP.equipment.length === 0 && APP.ots.length === 0 && !APP.user) {
+    APP.equipment = [
+      { id:'EQ-001', name:'UPS Galaxy VS 20kVA', code:'UPS-01', brand:'Schneider Electric', model:'Galaxy VS', serial:'SN123456', category:'UPS', location:'Piso 0 — Sala UPS', criticality:'Crítico', status:'Operacional', installDate:'2021-03-15', notes:'Baterias substituídas em 2024', createdAt:new Date().toISOString() },
+      { id:'EQ-002', name:'Festo SPC11', code:'AUT-01', brand:'Festo', model:'SPC11', serial:'', category:'Automação', location:'Piso 1 — Linha Produção', criticality:'Alto', status:'Operacional', installDate:'2020-06-01', notes:'', createdAt:new Date().toISOString() },
+      { id:'EQ-003', name:'Gerador Diesel 100kVA', code:'GER-01', brand:'Kohler', model:'KD100', serial:'KD-789012', category:'Gerador', location:'Exterior — Pátio', criticality:'Crítico', status:'Operacional', installDate:'2019-01-10', notes:'Próxima revisão: 500h', createdAt:new Date().toISOString() }
+    ];
+    APP.technicians = [{ id:'TC-001', name:'João Silva', email:'joao@empresa.com', specialty:'Elétrico', phone:'+351 912 000 001', availability:'Disponível', createdAt:new Date().toISOString() }];
+    APP.ots = [{
+      id:'OT-000001', title:'Verificação mensal UPS Galaxy VS', type:'Preventiva', priority:'Alta',
+      status:'Aberta', equipmentId:'EQ-001', equipmentName:'UPS Galaxy VS 20kVA',
+      technicianId:'TC-001', technicianName:'João Silva',
+      date: new Date().toISOString().slice(0,16),
+      description:'Verificação mensal completa da UPS incluindo baterias, módulos e alarmes.',
+      location:'Piso 0 — Sala UPS', tasks:[], materials:[], timeLogs:[], comments:[],
+      report:'', activity:[{ text:'OT criada', time: new Date().toLocaleString('pt-PT') }],
+      createdAt: new Date().toISOString(),
+    }];
+    APP.knowledge = [{
+      id:'KB-001', title:'UPS — Battery Charger Failure', equipment:'UPS Galaxy VS', category:'UPS',
+      symptom:'Alarme Battery Charger Failure no painel', author:'Sistema ManuGent',
+      solution:'1. Verificar temperatura sala (máx 25°C)\n2. Medir tensão baterias em flutuação (48-54V)\n3. Verificar fusíveis módulo de carga\n4. Se baterias >5 anos: substituição recomendada',
+      tools:'Multímetro, termómetro', createdAt: new Date().toISOString(),
+    }];
+  }
+}
+</script>
+</body>
+</html>
