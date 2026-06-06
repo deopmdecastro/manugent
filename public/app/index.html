@@ -2023,19 +2023,13 @@
           <div class="card p-4">
             <h4 class="font-medium mb-3 text-sm">Material Gasto</h4>
             <div id="ot-materials-list" class="text-sm text-slate-400 mb-3">Nenhum material registado.</div>
-            <button class="btn-ghost text-xs w-full" onclick="addMaterial()"><i class="fas fa-plus"></i> Adicionar material</button>
+            <button class="btn-secondary btn-action text-xs w-full" onclick="openAddMaterialModal()"><i class="fas fa-plus"></i> Adicionar material</button>
           </div>
           <div class="card p-4">
             <h4 class="font-medium mb-3 text-sm">Tempo Registado</h4>
             <div class="text-2xl font-bold mono mb-1" id="ot-time-total">0h 0m</div>
             <div class="text-xs text-slate-500 mb-3">Tempo total de intervenção</div>
-            <div class="grid grid-cols-2 gap-2">
-              <button class="btn-secondary btn-action text-xs" onclick="workOrderTimeAction('join')"><i class="fas fa-user-plus"></i> Juntar-me</button>
-              <button class="btn-secondary btn-action text-xs" onclick="workOrderTimeAction('start')"><i class="fas fa-play"></i> Iniciar</button>
-              <button class="btn-secondary btn-action text-xs" onclick="workOrderTimeAction('pause')"><i class="fas fa-pause"></i> Pausar</button>
-              <button class="btn-secondary btn-action text-xs" onclick="workOrderTimeAction('resume')"><i class="fas fa-redo"></i> Retomar</button>
-              <button class="btn-secondary btn-action text-xs col-span-2" style="color:#f87171;border-color:rgba(248,113,113,0.35);background:rgba(239,68,68,0.1)" onclick="workOrderTimeAction('exit')"><i class="fas fa-sign-out-alt"></i> Sair</button>
-            </div>
+            <div id="ot-time-controls" class="grid grid-cols-2 gap-2"></div>
           </div>
         </div>
         <div class="card p-4">
@@ -2103,22 +2097,26 @@
               </div>
               <span class="badge badge-purple"><i class="fas fa-shield-halved"></i> Admin</span>
             </div>
-            <div class="grid md:grid-cols-4 gap-3 mb-5">
+            <div class="grid md:grid-cols-3 gap-3 mb-4">
               <input type="text" id="managed-user-name" class="input-field" placeholder="Nome">
               <input type="email" id="managed-user-email" class="input-field" placeholder="email@empresa.com">
-              <input type="password" id="managed-user-pass" class="input-field" placeholder="Password inicial">
               <select id="managed-user-role" class="input-field">
                 <option value="gestor">Gestor</option>
                 <option value="tecnico">Técnico</option>
                 <option value="cliente">Cliente</option>
               </select>
             </div>
+            <div class="flex flex-wrap items-center gap-3 mb-5 p-3 rounded-lg border border-white/10 bg-white/5">
+              <div class="text-xs text-slate-500 uppercase tracking-wider">Senha inicial gerada</div>
+              <div class="mono text-sm text-slate-100 flex-1" id="managed-user-pass-preview">—</div>
+              <button class="btn-secondary btn-action text-xs" onclick="generateManagedUserPassword()"><i class="fas fa-rotate"></i> Gerar outra</button>
+            </div>
             <div class="flex justify-end mb-5">
               <button class="btn-primary" onclick="createManagedUser()"><i class="fas fa-user-plus"></i> Criar utilizador</button>
             </div>
             <div class="card overflow-hidden">
               <table class="data-table">
-                <thead><tr><th>Utilizador</th><th>Perfil</th><th>Criado em</th></tr></thead>
+                <thead><tr><th>Utilizador</th><th>Perfil</th><th>Senha</th><th>Criado em</th><th></th></tr></thead>
                 <tbody id="managed-users-table"></tbody>
               </table>
             </div>
@@ -2209,6 +2207,82 @@
     <div class="flex gap-3 mt-6">
       <button class="btn-secondary flex-1" onclick="closeModal('modal-add-task')">Cancelar</button>
       <button class="btn-primary flex-1" onclick="addTaskToOT()"><i class="fas fa-plus"></i> Adicionar tarefa</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pause OT Modal -->
+<div id="modal-pause-ot" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h2 class="text-lg font-semibold">Pausar intervenção</h2>
+        <p class="text-sm text-slate-500 mt-1">Indique o motivo para a OT ficar parada.</p>
+      </div>
+      <button class="btn-ghost" onclick="closeModal('modal-pause-ot')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Motivo da pausa</label>
+        <select id="ot-pause-reason" class="input-field" onchange="updatePauseReasonField()">
+          <option>Aguarda material</option>
+          <option>Aguarda decisão superior</option>
+          <option>Aguarda cliente</option>
+          <option>Aguarda acesso ao local</option>
+          <option>Aguarda segurança/autorização</option>
+          <option>Fim de turno</option>
+          <option>Outro</option>
+        </select>
+      </div>
+      <div id="ot-pause-other-wrap" style="display:none">
+        <label class="block text-sm mb-2 text-slate-300">Detalhe</label>
+        <input type="text" id="ot-pause-other" class="input-field" placeholder="Descreva o motivo">
+      </div>
+      <textarea id="ot-pause-note" class="input-field" rows="3" placeholder="Notas internas opcionais..."></textarea>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-pause-ot')">Cancelar</button>
+      <button class="btn-primary flex-1" style="background:#f59e0b;color:#111827" onclick="confirmPauseOT()"><i class="fas fa-pause"></i> Pausar OT</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add OT Material Modal -->
+<div id="modal-add-material" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h2 class="text-lg font-semibold">Associar material à OT</h2>
+        <p class="text-sm text-slate-500 mt-1">Escolha um material já registado em stock.</p>
+      </div>
+      <button class="btn-ghost" onclick="closeModal('modal-add-material')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Material existente *</label>
+        <select id="ot-material-stock" class="input-field" onchange="updateOTMaterialPreview()"></select>
+      </div>
+      <div id="ot-material-preview" class="p-3 rounded-lg border border-white/10 bg-white/5 text-sm text-slate-400">
+        Selecione um material para ver stock, localização e custo.
+      </div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Quantidade usada</label>
+          <input type="number" min="1" step="1" id="ot-material-qty" class="input-field" value="1" oninput="updateOTMaterialPreview()">
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Custo unitário</label>
+          <input type="number" min="0" step="0.01" id="ot-material-cost" class="input-field" value="0">
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Notas</label>
+        <input type="text" id="ot-material-notes" class="input-field" placeholder="Ex: substituído no rolamento principal">
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-add-material')">Cancelar</button>
+      <button class="btn-primary flex-1" onclick="addSelectedMaterialToOT()"><i class="fas fa-link"></i> Associar material</button>
     </div>
   </div>
 </div>
@@ -2898,6 +2972,7 @@ function updateUserUI() {
   document.getElementById('settings-email-input').value = APP.user.email;
   document.getElementById('settings-role-input').value = APP.user.role;
   document.getElementById('settings-role-input').disabled = APP.user.role !== 'admin';
+  if (getUserRole() === 'admin') generateManagedUserPassword(false);
   renderManagedUsers();
 }
 function saveProfile() {
@@ -2916,14 +2991,15 @@ function createManagedUser() {
   if (getUserRole() !== 'admin') { showToast('Apenas Admin pode criar contas.'); return; }
   var name = document.getElementById('managed-user-name').value.trim();
   var email = document.getElementById('managed-user-email').value.trim().toLowerCase();
-  var pass = document.getElementById('managed-user-pass').value;
+  var pass = document.getElementById('managed-user-pass-preview').textContent.trim();
   var role = document.getElementById('managed-user-role').value;
-  if (!name || !email || !pass) { showToast('Preencha nome, email e password.'); return; }
+  if (!name || !email || !pass || pass === '—') { showToast('Preencha nome e email.'); return; }
   APP.users = APP.users || [];
   if (APP.users.some(function(u) { return u.email === email; })) { showToast('Já existe uma conta com este email.'); return; }
-  APP.users.push({ name: name, email: email, password: pass, role: role, createdAt: new Date().toISOString() });
-  ['managed-user-name','managed-user-email','managed-user-pass'].forEach(function(id) { document.getElementById(id).value = ''; });
-  saveData(); renderManagedUsers(); showToast('Utilizador criado com perfil ' + getRoleLabel(role) + '.');
+  APP.users.push({ name: name, email: email, password: pass, role: role, createdAt: new Date().toISOString(), passwordUpdatedAt: new Date().toISOString() });
+  ['managed-user-name','managed-user-email'].forEach(function(id) { document.getElementById(id).value = ''; });
+  saveData(); renderManagedUsers(); showToast('Utilizador criado. Senha inicial: ' + pass);
+  generateManagedUserPassword(false);
 }
 function renderManagedUsers() {
   var card = document.getElementById('admin-users-card');
@@ -2932,14 +3008,39 @@ function renderManagedUsers() {
   if (!tbody) return;
   var users = (APP.users || []).slice();
   if (!users.length) {
-    tbody.innerHTML = '<tr><td colspan="3" class="text-center text-slate-500 py-6">Nenhum utilizador registado.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-slate-500 py-6">Nenhum utilizador registado.</td></tr>';
     return;
   }
   tbody.innerHTML = users.map(function(u) {
     return '<tr><td><div class="font-medium text-slate-100">' + escapeHtml(u.name) + '</div><div class="text-xs text-slate-500">' + escapeHtml(u.email) + '</div></td>' +
       '<td><span class="badge ' + getRoleBadgeClass(u.role) + '">' + getRoleLabel(u.role) + '</span></td>' +
-      '<td class="text-slate-400 text-xs">' + (u.createdAt ? new Date(u.createdAt).toLocaleDateString('pt-PT') : 'Seed') + '</td></tr>';
+      '<td><span class="mono text-xs text-slate-300">' + escapeHtml(u.password || '—') + '</span></td>' +
+      '<td class="text-slate-400 text-xs">' + (u.createdAt ? new Date(u.createdAt).toLocaleDateString('pt-PT') : 'Seed') + '</td>' +
+      '<td><button class="btn-secondary btn-action text-xs" onclick="resetManagedUserPassword(\'' + u.email.replace(/'/g, "\\'") + '\')"><i class="fas fa-key"></i> Alterar senha</button></td></tr>';
   }).join('');
+}
+function generateManagedUserPassword(showFeedback) {
+  var preview = document.getElementById('managed-user-pass-preview');
+  if (!preview) return;
+  var pass = generateReadablePassword();
+  preview.textContent = pass;
+  if (showFeedback !== false) showToast('Nova senha gerada: ' + pass);
+}
+function generateReadablePassword() {
+  var prefix = 'MG';
+  var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+  var out = '';
+  for (var i = 0; i < 8; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  return prefix + '-' + out;
+}
+function resetManagedUserPassword(email) {
+  if (getUserRole() !== 'admin') { showToast('Apenas Admin pode alterar senhas.'); return; }
+  var user = (APP.users || []).find(function(u) { return u.email === email; });
+  if (!user) return;
+  var pass = generateReadablePassword();
+  user.password = pass;
+  user.passwordUpdatedAt = new Date().toISOString();
+  saveData(); renderManagedUsers(); showToast('Senha alterada para ' + user.email + ': ' + pass);
 }
 function getRoleBadgeClass(role) {
   return { admin:'badge-purple', gestor:'badge-blue', tecnico:'badge-green', cliente:'badge-yellow' }[role] || 'badge-gray';
@@ -3034,9 +3135,41 @@ function formatCurrency(value) {
   return '€' + Math.round(value || 0).toLocaleString('pt-PT');
 }
 function getOTHours(ot) {
-  if (ot.timeLogs && ot.timeLogs.length) return ot.timeLogs.reduce(function(sum, t) { return sum + (parseFloat(t.hours) || 0); }, 0);
+  if (ot.timeLogs && ot.timeLogs.length) return getOTElapsedSeconds(ot) / 3600;
   if (ot.timeEntry && ot.timeEntry.effective_seconds) return ot.timeEntry.effective_seconds / 3600;
   return ot.status === 'Concluída' ? 2.5 : 1.25;
+}
+function formatDuration(seconds) {
+  seconds = Math.max(0, Math.floor(seconds || 0));
+  return Math.floor(seconds / 3600) + 'h ' + Math.floor((seconds % 3600) / 60) + 'm ' + Math.floor(seconds % 60) + 's';
+}
+function getOTElapsedSeconds(ot) {
+  if (!ot) return 0;
+  var logs = ot.timeLogs || [];
+  return logs.reduce(function(sum, log) {
+    if (log.startedAt) {
+      var start = new Date(log.startedAt).getTime();
+      var end = log.endedAt ? new Date(log.endedAt).getTime() : Date.now();
+      return sum + Math.max(0, Math.floor((end - start) / 1000));
+    }
+    return sum + Math.round((parseFloat(log.hours) || 0) * 3600);
+  }, 0);
+}
+function getActiveTimeLog(ot) {
+  return ((ot && ot.timeLogs) || []).find(function(log) { return log.startedAt && !log.endedAt; }) || null;
+}
+function getActiveTimeLogs(ot) {
+  return ((ot && ot.timeLogs) || []).filter(function(log) { return log.startedAt && !log.endedAt; });
+}
+function getCurrentTimeUserId() {
+  return (APP.user && APP.user.email) || APP.demoTechnicianId || (APP.currentOT && APP.currentOT.technicianId) || 'local-user';
+}
+function getCurrentTimeUserName() {
+  return (APP.user && APP.user.name) || (APP.currentOT && APP.currentOT.technicianName) || 'Técnico';
+}
+function getCurrentUserActiveTimeLog(ot) {
+  var userId = getCurrentTimeUserId();
+  return getActiveTimeLogs(ot).find(function(log) { return String(log.technicianId || '') === String(userId); }) || null;
 }
 function getOTCost(ot) {
   var materialCost = (ot.materials || []).reduce(function(sum, m) { return sum + ((parseFloat(m.cost) || 0) * (parseFloat(m.qty) || 1)); }, 0);
@@ -3469,6 +3602,8 @@ function openOTDetail(id) {
   document.getElementById('ot-report').value = ot.report || '';
   document.getElementById('ot-auto-request-result').style.display = 'none';
   updateOTTimeDisplay();
+  renderOTTimeControls();
+  ensureOTTimeTicker();
   renderOTTasks(); renderOTActivity(); renderOTComments(); renderOTMaterials();
   renderAssociatedFiles('ot', ot.id, 'ot-files-list');
   renderOTCopilot();
@@ -3616,30 +3751,103 @@ function ensureDemoTechnician() {
 }
 function workOrderTimeAction(action) {
   if (!APP.currentOT) return;
+  if (action === 'pause') { openPauseOTModal(); return; }
   var labels = { join: 'Técnico juntou-se ao trabalho', start: 'Cronómetro iniciado', pause: 'Cronómetro pausado', resume: 'Cronómetro retomado', exit: 'Técnico saiu da intervenção' };
   var statusByAction = { start: 'Em Curso', pause: 'Pausada', resume: 'Em Curso' };
-  var technicianId;
-  try { technicianId = ensureDemoTechnician(); } catch (error) { showToast(error.message); return; }
+  APP.currentOT.activity = APP.currentOT.activity || [];
+  APP.currentOT.activity.push({ text: labels[action], time: new Date().toLocaleString('pt-PT') });
+  if (statusByAction[action]) APP.currentOT.status = statusByAction[action];
+  if (action === 'join' || action === 'start' || action === 'resume') startLocalOTTimer(labels[action], action === 'join');
+  if (action === 'exit') stopLocalOTTimer(labels[action]);
+  saveData(); updateOTTimeDisplay(); renderOTTimeControls(); renderOTActivity(); updateDashboard(); renderOTs();
   if (APP.currentOT.backendId) {
     apiRequest('/api/work-orders/' + APP.currentOT.backendId + '/time/' + action, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ technicianId: technicianId })
+      body: JSON.stringify({ technicianId: getCurrentTimeUserId() })
     }).then(function(result) {
       APP.currentOT.timeEntry = result.timeEntry;
-      APP.currentOT.activity.push({ text: labels[action], time: new Date().toLocaleString('pt-PT') });
-      if (statusByAction[action]) APP.currentOT.status = statusByAction[action];
-      saveData(); updateOTTimeDisplay(); renderOTActivity(); updateDashboard(); renderOTs();
-      showToast(labels[action]);
-    }).catch(function(error) { showToast(error.message); });
-    return;
+      saveData(); updateOTTimeDisplay(); renderOTTimeControls(); renderOTActivity(); updateDashboard(); renderOTs();
+    }).catch(function(error) { console.warn(error); });
   }
-  APP.currentOT.activity.push({ text: labels[action], time: new Date().toLocaleString('pt-PT') });
-  if (statusByAction[action]) APP.currentOT.status = statusByAction[action];
-  saveData(); updateOTTimeDisplay(); renderOTActivity(); updateDashboard(); renderOTs();
+  showToast(labels[action]);
+}
+function openPauseOTModal() {
+  if (!APP.currentOT) return;
+  document.getElementById('ot-pause-reason').value = 'Aguarda material';
+  document.getElementById('ot-pause-other').value = '';
+  document.getElementById('ot-pause-note').value = '';
+  updatePauseReasonField();
+  document.getElementById('modal-pause-ot').style.display = 'flex';
+}
+function updatePauseReasonField() {
+  var reason = document.getElementById('ot-pause-reason').value;
+  var wrap = document.getElementById('ot-pause-other-wrap');
+  if (wrap) wrap.style.display = reason === 'Outro' ? 'block' : 'none';
+}
+function confirmPauseOT() {
+  if (!APP.currentOT) return;
+  var reason = document.getElementById('ot-pause-reason').value;
+  if (reason === 'Outro') reason = document.getElementById('ot-pause-other').value.trim() || 'Outro';
+  var note = document.getElementById('ot-pause-note').value.trim();
+  APP.currentOT.status = reason === 'Aguarda material' ? 'Aguarda Material' : 'Pausada';
+  var statusEl = document.getElementById('ot-detail-status');
+  if (statusEl) statusEl.value = APP.currentOT.status;
+  stopLocalOTTimer('Pausado: ' + reason, reason, note);
+  APP.currentOT.activity = APP.currentOT.activity || [];
+  APP.currentOT.activity.push({ text: 'Cronómetro pausado · ' + reason + (note ? ' · ' + note : ''), time: new Date().toLocaleString('pt-PT') });
+  saveData();
+  closeModal('modal-pause-ot');
+  updateOTTimeDisplay();
+  renderOTTimeControls();
+  renderOTActivity();
+  updateDashboard();
+  renderOTs();
+  showToast('OT pausada: ' + reason);
+}
+function ensureOTTimeTicker() {
+  if (APP.timeTicker) clearInterval(APP.timeTicker);
+  APP.timeTicker = setInterval(function() {
+    if (!APP.currentOT || !isPageActive('modal-ot-detail')) return;
+    updateOTTimeDisplay();
+  }, 1000);
+}
+function startLocalOTTimer(label, allowParallel) {
+  if (!APP.currentOT) return;
+  APP.currentOT.timeLogs = APP.currentOT.timeLogs || [];
+  if (getCurrentUserActiveTimeLog(APP.currentOT)) return false;
+  if (!allowParallel && getActiveTimeLog(APP.currentOT)) return false;
+  APP.currentOT.timeLogs.push({
+    id: generateId('TIME'),
+    startedAt: new Date().toISOString(),
+    technicianId: getCurrentTimeUserId(),
+    technicianName: getCurrentTimeUserName(),
+    note: label || 'Tempo iniciado'
+  });
+  APP.currentOT.status = 'Em Curso';
+  var statusEl = document.getElementById('ot-detail-status');
+  if (statusEl) statusEl.value = APP.currentOT.status;
+  ensureOTTimeTicker();
+  return true;
+}
+function stopLocalOTTimer(label, reason, note) {
+  if (!APP.currentOT) return;
+  var active = getCurrentUserActiveTimeLog(APP.currentOT) || getActiveTimeLog(APP.currentOT);
+  if (!active) return;
+  active.endedAt = new Date().toISOString();
+  active.seconds = Math.max(0, Math.floor((new Date(active.endedAt).getTime() - new Date(active.startedAt).getTime()) / 1000));
+  active.hours = active.seconds / 3600;
+  active.closedBy = label || 'Tempo parado';
+  active.pauseReason = reason || '';
+  active.pauseNote = note || '';
 }
 function updateOTTimeDisplay() {
   if (!APP.currentOT) return;
+  if ((APP.currentOT.timeLogs || []).length) {
+    document.getElementById('ot-time-total').textContent = formatDuration(getOTElapsedSeconds(APP.currentOT));
+    renderOTTimeControls();
+    return;
+  }
   var entry = APP.currentOT.timeEntry;
   if (entry) {
     var seconds = entry.effective_seconds || 0;
@@ -3647,11 +3855,34 @@ function updateOTTimeDisplay() {
       var start = entry.resumed_at || entry.started_at;
       if (start) seconds += Math.max(0, Math.floor((Date.now() - new Date(start).getTime()) / 1000));
     }
-    document.getElementById('ot-time-total').textContent = Math.floor(seconds / 3600) + 'h ' + Math.floor((seconds % 3600) / 60) + 'm';
+    document.getElementById('ot-time-total').textContent = formatDuration(seconds);
+    renderOTTimeControls();
     return;
   }
-  var totalTime = (APP.currentOT.timeLogs || []).reduce(function(s,t) { return s + t.hours; }, 0);
-  document.getElementById('ot-time-total').textContent = Math.floor(totalTime) + 'h ' + Math.round((totalTime%1)*60) + 'm';
+  document.getElementById('ot-time-total').textContent = formatDuration(getOTElapsedSeconds(APP.currentOT));
+  renderOTTimeControls();
+}
+function renderOTTimeControls() {
+  var el = document.getElementById('ot-time-controls');
+  if (!el || !APP.currentOT) return;
+  var activeLogs = getActiveTimeLogs(APP.currentOT);
+  var mine = getCurrentUserActiveTimeLog(APP.currentOT);
+  var hasOtherActive = activeLogs.some(function(log) { return String(log.technicianId || '') !== String(getCurrentTimeUserId()); });
+  var paused = !mine && !activeLogs.length && ['Pausada','Aguarda Material','Aguarda Cliente','Aguarda decisão superior','Aguarda acesso ao local'].includes(APP.currentOT.status);
+  var buttons = [];
+  if (hasOtherActive && !mine) buttons.push(timeButton('join', 'fa-user-plus', 'Juntar-me', '#6366f1', 'rgba(99,102,241,0.18)'));
+  if (mine) {
+    buttons.push(timeButton('pause', 'fa-pause', 'Pausar', '#f59e0b', 'rgba(245,158,11,0.16)'));
+  } else if (paused) {
+    buttons.push(timeButton('resume', 'fa-rotate-right', 'Retomar', '#60a5fa', 'rgba(96,165,250,0.16)'));
+  } else if (!activeLogs.length) {
+    buttons.push(timeButton('start', 'fa-play', 'Iniciar', '#34d399', 'rgba(52,211,153,0.16)'));
+  }
+  if (mine) buttons.push(timeButton('exit', 'fa-door-open', 'Fechar', '#f87171', 'rgba(248,113,113,0.14)', 'col-span-2'));
+  el.innerHTML = buttons.join('');
+}
+function timeButton(action, icon, label, color, bg, extraClass) {
+  return '<button class="btn-secondary btn-action text-xs ' + (extraClass || '') + '" style="color:' + color + ';border-color:' + color + ';background:' + bg + '" onclick="workOrderTimeAction(\'' + action + '\')"><i class="fas ' + icon + '"></i> ' + label + '</button>';
 }
 function registerOutOfLimitFinding() {
   if (!APP.currentOT) return;
@@ -3743,19 +3974,29 @@ function renderTaskRow(t, i) {
 }
 function toggleTask(i) {
   APP.currentOT.tasks[i].done = !APP.currentOT.tasks[i].done;
-  saveData(); renderOTTasks();
+  startOTTimerFromTask('Tarefa iniciada: ' + APP.currentOT.tasks[i].description);
+  saveData(); renderOTTasks(); updateOTTimeDisplay(); renderOTTimeControls(); renderOTActivity(); renderOTs();
 }
 function setTaskState(i, state) {
   APP.currentOT.tasks[i].state = state;
-  saveData(); renderOTTasks();
+  startOTTimerFromTask('Tarefa atualizada para ' + state + ': ' + APP.currentOT.tasks[i].description);
+  saveData(); renderOTTasks(); updateOTTimeDisplay(); renderOTTimeControls(); renderOTActivity(); renderOTs();
 }
 function setTaskValue(i, val) {
   APP.currentOT.tasks[i].value = val;
-  saveData(); renderOTTasks();
+  startOTTimerFromTask('Medição registada: ' + APP.currentOT.tasks[i].description);
+  saveData(); renderOTTasks(); updateOTTimeDisplay(); renderOTTimeControls(); renderOTActivity(); renderOTs();
 }
 function removeTask(i) {
   APP.currentOT.tasks.splice(i, 1);
   saveData(); renderOTTasks();
+}
+function startOTTimerFromTask(label) {
+  if (!APP.currentOT) return;
+  if (startLocalOTTimer(label)) {
+    APP.currentOT.activity = APP.currentOT.activity || [];
+    APP.currentOT.activity.push({ text: label + ' · cronómetro iniciado', time: new Date().toLocaleString('pt-PT') });
+  }
 }
 function showTaskHelp(i) {
   var t = APP.currentOT.tasks[i];
@@ -3925,27 +4166,110 @@ async function addTaskToOT() {
   APP.currentOT.activity.push({ text: 'Tarefa adicionada: ' + desc, time: new Date().toLocaleString('pt-PT') });
   saveData(); closeModal('modal-add-task'); renderOTTasks(); renderOTActivity();
 }
-function addMaterial() {
-  var mat = prompt('Material gasto (ex: Rolamento 6205 x1):');
-  if (!mat) return;
-  APP.currentOT.materials.push({ description: mat, addedAt: new Date().toLocaleString('pt-PT') });
-  saveData(); renderOTMaterials();
+function addMaterial() { openAddMaterialModal(); }
+function openAddMaterialModal() {
+  if (!APP.currentOT) return;
+  APP.stockMaterials = APP.stockMaterials || [];
+  populateOTMaterialSelect();
+  document.getElementById('ot-material-qty').value = '1';
+  document.getElementById('ot-material-notes').value = '';
+  updateOTMaterialPreview();
+  document.getElementById('modal-add-material').style.display = 'flex';
+}
+function populateOTMaterialSelect() {
+  var select = document.getElementById('ot-material-stock');
+  if (!select) return;
+  if (!APP.stockMaterials.length) {
+    select.innerHTML = '<option value="">Sem material registado em stock</option>';
+    return;
+  }
+  select.innerHTML = APP.stockMaterials.map(function(m) {
+    return '<option value="' + escapeHtml(m.id) + '">' + escapeHtml(m.name || 'Material') + ' · stock ' + escapeHtml(String(m.stock || 0)) + '</option>';
+  }).join('');
+}
+function getSelectedStockMaterial() {
+  var select = document.getElementById('ot-material-stock');
+  var id = select ? select.value : '';
+  return (APP.stockMaterials || []).find(function(m) { return m.id === id; }) || null;
+}
+function updateOTMaterialPreview() {
+  var material = getSelectedStockMaterial();
+  var preview = document.getElementById('ot-material-preview');
+  var costInput = document.getElementById('ot-material-cost');
+  if (!preview || !costInput) return;
+  if (!material) {
+    preview.innerHTML = '<span class="text-slate-500">Nenhum material disponível. Crie primeiro o item na aba Material.</span>';
+    costInput.value = '0';
+    return;
+  }
+  var qty = Math.max(1, Number(document.getElementById('ot-material-qty').value || 1));
+  if (!costInput.dataset.manual || costInput.dataset.materialId !== material.id) {
+    costInput.value = Number(material.cost || 0);
+    costInput.dataset.materialId = material.id;
+  }
+  var stock = Number(material.stock || 0);
+  var total = qty * Number(costInput.value || material.cost || 0);
+  preview.innerHTML = '<div class="flex items-start gap-3">' +
+    '<div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:rgba(99,102,241,0.18)"><i class="fas fa-boxes-stacked text-purple-400"></i></div>' +
+    '<div class="flex-1 min-w-0"><div class="font-medium text-slate-200">' + escapeHtml(material.name || 'Material') + '</div>' +
+    '<div class="text-xs text-slate-500 mt-1">' + escapeHtml(material.category || 'Geral') + ' · ' + escapeHtml(material.location || 'Armazém') + '</div>' +
+    '<div class="flex flex-wrap gap-2 mt-3"><span class="badge ' + (stock <= 2 ? 'badge-yellow' : 'badge-green') + '">Stock: ' + stock + '</span>' +
+    '<span class="badge badge-blue">Qtd. usada: ' + qty + '</span><span class="badge badge-purple">Custo: ' + formatCurrency(total) + '</span></div></div></div>';
+}
+function addSelectedMaterialToOT() {
+  if (!APP.currentOT) return;
+  var material = getSelectedStockMaterial();
+  if (!material) { showToast('Selecione um material em stock.'); return; }
+  var qty = Math.max(1, Number(document.getElementById('ot-material-qty').value || 1));
+  var available = Number(material.stock || 0);
+  if (qty > available) { showToast('Quantidade superior ao stock disponível.'); return; }
+  var cost = Number(document.getElementById('ot-material-cost').value || material.cost || 0);
+  var notes = document.getElementById('ot-material-notes').value.trim();
+  APP.currentOT.materials = APP.currentOT.materials || [];
+  APP.currentOT.materials.push({
+    id: generateId('MATUSE'),
+    stockMaterialId: material.id,
+    name: material.name,
+    description: material.name + ' x' + qty,
+    category: material.category || 'Geral',
+    qty: qty,
+    cost: cost,
+    location: material.location || '',
+    notes: notes,
+    addedAt: new Date().toLocaleString('pt-PT')
+  });
+  material.stock = Math.max(0, available - qty);
+  APP.currentOT.activity = APP.currentOT.activity || [];
+  APP.currentOT.activity.push({ text: 'Material associado: ' + material.name + ' x' + qty, time: new Date().toLocaleString('pt-PT') });
+  saveData();
+  closeModal('modal-add-material');
+  renderOTMaterials();
+  renderOTActivity();
+  renderMaterials();
+  updateDashboard();
+  showToast('Material associado à OT e stock atualizado.');
 }
 function renderOTMaterials() {
   var el = document.getElementById('ot-materials-list');
   if (!el) return;
-  el.innerHTML = (!APP.currentOT.materials || APP.currentOT.materials.length === 0)
+  var materials = (APP.currentOT && APP.currentOT.materials) || [];
+  el.innerHTML = (!materials.length)
     ? '<span class="text-slate-400">Nenhum material registado.</span>'
-    : APP.currentOT.materials.map(function(m) { return '<div class="py-1 border-b border-white/5 text-sm">&bull; ' + m.description + '</div>'; }).join('');
+    : materials.map(function(m) {
+      var qty = Number(m.qty || 1);
+      var total = qty * Number(m.cost || 0);
+      return '<div class="flex items-center justify-between gap-3 py-2 border-b border-white/5 text-sm">' +
+        '<div class="min-w-0"><div class="text-slate-200">' + escapeHtml(m.name || m.description || 'Material usado') + '</div>' +
+        '<div class="text-xs text-slate-500">' + escapeHtml(m.category || 'Material') + ' · qtd. ' + qty + (m.notes ? ' · ' + escapeHtml(m.notes) : '') + '</div></div>' +
+        '<div class="mono text-xs text-slate-400">' + formatCurrency(total) + '</div></div>';
+    }).join('');
 }
 function addTimeLog() {
-  var h = prompt('Horas de trabalho (ex: 1.5):');
-  if (!h) return;
-  APP.currentOT.timeLogs = APP.currentOT.timeLogs || [];
-  APP.currentOT.timeLogs.push({ hours: parseFloat(h), addedAt: new Date().toLocaleString('pt-PT') });
-  saveData();
-  var total = APP.currentOT.timeLogs.reduce(function(s,t) { return s + t.hours; }, 0);
-  document.getElementById('ot-time-total').textContent = Math.floor(total) + 'h ' + Math.round((total%1)*60) + 'm';
+  if (!APP.currentOT) return;
+  startLocalOTTimer('Tempo iniciado manualmente');
+  APP.currentOT.activity = APP.currentOT.activity || [];
+  APP.currentOT.activity.push({ text: 'Cronómetro iniciado manualmente', time: new Date().toLocaleString('pt-PT') });
+  saveData(); updateOTTimeDisplay(); renderOTTimeControls(); renderOTActivity(); renderOTs();
 }
 function saveOTReport() {
   APP.currentOT.report = document.getElementById('ot-report').value;
