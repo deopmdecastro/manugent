@@ -684,22 +684,29 @@
             <h1 class="text-2xl font-bold mono">Ordens de Trabalho</h1>
             <p class="text-slate-400 text-sm mt-1">Gestão de intervenções e manutenção</p>
           </div>
-          <button class="btn-primary" onclick="openNewOTModal()"><i class="fas fa-plus"></i> Nova OT</button>
+          <div class="flex gap-2">
+            <button class="btn-secondary" onclick="createScheduledDemoFlow()"><i class="fas fa-bolt"></i> Criar fluxo demo</button>
+            <button class="btn-primary" onclick="openNewOTModal()"><i class="fas fa-plus"></i> Nova OT</button>
+          </div>
         </div>
         <div class="flex items-center gap-3 mb-5 flex-wrap">
           <div class="flex bg-white/5 rounded-lg p-1">
-            <button class="tab-btn active" id="ot-tab-all" onclick="filterOTs('all')">Todas</button>
-            <button class="tab-btn" id="ot-tab-aberta" onclick="filterOTs('Aberta')">Abertas</button>
-            <button class="tab-btn" id="ot-tab-andamento" onclick="filterOTs('Em andamento')">Em andamento</button>
-            <button class="tab-btn" id="ot-tab-concluida" onclick="filterOTs('Concluída')">Concluídas</button>
+            <button class="tab-btn active" id="ot-tab-agendadas" onclick="filterOTs('agendadas')">Agendadas</button>
+            <button class="tab-btn" id="ot-tab-pedidos" onclick="filterOTs('pedidos')">Pedidos</button>
           </div>
+          <select class="input-field w-auto" onchange="filterOTsByStatus(this.value)" style="width:auto">
+            <option value="">Todos os estados</option>
+            <option>Aberta</option><option>Agendada</option><option>Em Curso</option><option>Pausada</option>
+            <option>Aguarda Material</option><option>Aguarda Cliente</option><option>Concluída</option><option>Cancelada</option>
+          </select>
           <select class="input-field w-auto" onchange="filterOTsByPriority(this.value)" style="width:auto">
             <option value="">Todas prioridades</option>
             <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
           </select>
           <select class="input-field w-auto" onchange="filterOTsByType(this.value)" style="width:auto">
             <option value="">Todos os tipos</option>
-            <option>Corretiva</option><option>Preventiva</option><option>Preditiva</option><option>Inspeção</option>
+            <option>Preventiva</option><option>Inspeção</option><option>Ronda</option><option>Checklist</option>
+            <option>Corretiva</option><option>Avaria</option><option>Emergência</option><option>Solicitação</option>
           </select>
         </div>
         <div class="flex gap-2 mb-5">
@@ -1127,8 +1134,8 @@
       </div>
       <div class="flex items-center gap-2">
         <select id="ot-detail-status" class="input-field text-sm" style="width:auto" onchange="updateOTStatus(this.value)">
-          <option>Aberta</option><option>Em andamento</option><option>Em espera</option>
-          <option>Concluída</option><option>Cancelada</option>
+          <option>Aberta</option><option>Agendada</option><option>Em Curso</option><option>Pausada</option>
+          <option>Aguarda Material</option><option>Aguarda Cliente</option><option>Concluída</option><option>Cancelada</option>
         </select>
         <button class="btn-ghost" onclick="closeModal('modal-ot-detail')"><i class="fas fa-times"></i></button>
       </div>
@@ -1166,8 +1173,28 @@
             <h4 class="font-medium mb-3 text-sm">Tempo Registado</h4>
             <div class="text-2xl font-bold mono mb-1" id="ot-time-total">0h 0m</div>
             <div class="text-xs text-slate-500 mb-3">Tempo total de intervenção</div>
-            <button class="btn-ghost text-xs w-full" onclick="addTimeLog()"><i class="fas fa-clock"></i> Registar tempo</button>
+            <div class="grid grid-cols-2 gap-2">
+              <button class="btn-ghost text-xs" onclick="workOrderTimeAction('join')"><i class="fas fa-user-plus"></i> Juntar-me</button>
+              <button class="btn-ghost text-xs" onclick="workOrderTimeAction('start')"><i class="fas fa-play"></i> Iniciar</button>
+              <button class="btn-ghost text-xs" onclick="workOrderTimeAction('pause')"><i class="fas fa-pause"></i> Pausar</button>
+              <button class="btn-ghost text-xs" onclick="workOrderTimeAction('resume')"><i class="fas fa-redo"></i> Retomar</button>
+              <button class="btn-ghost text-xs col-span-2" style="color:var(--accent-red)" onclick="workOrderTimeAction('exit')"><i class="fas fa-sign-out-alt"></i> Sair</button>
+            </div>
           </div>
+        </div>
+        <div class="card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-medium text-sm">Medição / Finding</h4>
+            <span class="badge badge-yellow text-xs">limite máx. 8</span>
+          </div>
+          <div class="grid grid-cols-3 gap-3 mb-3">
+            <input type="number" step="0.1" id="ot-measure-value" class="input-field text-sm" value="12.5" placeholder="Valor">
+            <input type="number" step="0.1" id="ot-measure-min" class="input-field text-sm" placeholder="Mín.">
+            <input type="number" step="0.1" id="ot-measure-max" class="input-field text-sm" value="8" placeholder="Máx.">
+          </div>
+          <textarea id="ot-measure-desc" class="input-field text-sm" rows="2">Vibração acima do limite no rolamento</textarea>
+          <button class="btn-primary text-sm mt-3 w-full" onclick="registerOutOfLimitFinding()"><i class="fas fa-exclamation-triangle"></i> Registar medição fora do limite</button>
+          <div id="ot-auto-request-result" class="mt-3 text-xs" style="display:none;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#34d399;border-radius:8px;padding:10px"></div>
         </div>
         <div class="card p-4">
           <h4 class="font-medium mb-3 text-sm">Relatório de Intervenção</h4>
@@ -1536,7 +1563,9 @@ var APP = {
   currentOT: null, currentEquip: null,
   aiApprovalCallback: null,
   calendarDate: new Date(),
-  otFilter: 'all', otPriorityFilter: '', otTypeFilter: '',
+  otFilter: 'agendadas', otStatusFilter: '', otPriorityFilter: '', otTypeFilter: '',
+  backendOnline: false, demoTechnicianId: localStorage.getItem('manugentTechnicianId') || '',
+  timeTicker: null,
 };
 
 function saveData() {
@@ -1569,6 +1598,7 @@ window.onload = function() {
   if (APP.user) { showApp(); }
   else { showLanding(); }
   initSampleData();
+  syncBackendWorkOrders();
   renderCalendar();
 };
 
@@ -1668,7 +1698,7 @@ function saveProfile() {
 
 // ======================== DASHBOARD ========================
 function updateDashboard() {
-  var open = APP.ots.filter(function(o) { return ['Aberta','Em andamento','Em espera'].includes(o.status); }).length;
+  var open = APP.ots.filter(function(o) { return ['Aberta','Agendada','Em Curso','Pausada','Aguarda Material','Aguarda Cliente','Em andamento','Em espera'].includes(o.status); }).length;
   var done = APP.ots.filter(function(o) { return o.status === 'Concluída'; }).length;
   var critical = APP.ots.filter(function(o) { return ['Alta','Urgente'].includes(o.priority) && o.status !== 'Concluída'; }).length;
   document.getElementById('metric-ots-open').textContent = open;
@@ -1749,7 +1779,9 @@ function createOT() {
 }
 function getFilteredOTs() {
   var list = APP.ots.slice().reverse();
-  if (APP.otFilter !== 'all') list = list.filter(function(o) { return o.status === APP.otFilter; });
+  if (APP.otFilter === 'agendadas') list = list.filter(function(o) { return getOTOrigin(o) === 'scheduled'; });
+  if (APP.otFilter === 'pedidos') list = list.filter(function(o) { return getOTOrigin(o) === 'request'; });
+  if (APP.otStatusFilter) list = list.filter(function(o) { return o.status === APP.otStatusFilter; });
   if (APP.otPriorityFilter) list = list.filter(function(o) { return o.priority === APP.otPriorityFilter; });
   if (APP.otTypeFilter) list = list.filter(function(o) { return o.type === APP.otTypeFilter; });
   return list;
@@ -1776,17 +1808,17 @@ function renderOTs() {
   }
   renderKanban(filtered);
 }
-function filterOTs(status) {
-  APP.otFilter = status;
-  ['all','aberta','andamento','concluida'].forEach(function(k) {
+function filterOTs(tab) {
+  APP.otFilter = tab;
+  ['agendadas','pedidos'].forEach(function(k) {
     var el = document.getElementById('ot-tab-' + k);
     if (el) el.classList.remove('active');
   });
-  var key = status === 'all' ? 'all' : status === 'Aberta' ? 'aberta' : status === 'Em andamento' ? 'andamento' : 'concluida';
-  var el = document.getElementById('ot-tab-' + key);
+  var el = document.getElementById('ot-tab-' + tab);
   if (el) el.classList.add('active');
   renderOTs();
 }
+function filterOTsByStatus(v) { APP.otStatusFilter = v; renderOTs(); }
 function filterOTsByPriority(v) { APP.otPriorityFilter = v; renderOTs(); }
 function filterOTsByType(v) { APP.otTypeFilter = v; renderOTs(); }
 function setOTView(view) {
@@ -1796,7 +1828,7 @@ function setOTView(view) {
   document.getElementById('view-kanban').style.color = view === 'kanban' ? 'var(--accent-purple-light)' : '';
 }
 function renderKanban(list) {
-  var cols = [['Aberta','aberta'],['Em andamento','andamento'],['Concluída','concluida'],['Cancelada','cancelada']];
+  var cols = [['Aberta','aberta'],['Em Curso','andamento'],['Concluída','concluida'],['Cancelada','cancelada']];
   cols.forEach(function(col) {
     var items = list.filter(function(o) { return o.status === col[0]; });
     var el = document.getElementById('kanban-' + col[1]);
@@ -1829,8 +1861,8 @@ function openOTDetail(id) {
   document.getElementById('ot-detail-location').textContent = ot.location || '—';
   document.getElementById('ot-detail-desc').textContent = ot.description || '—';
   document.getElementById('ot-report').value = ot.report || '';
-  var totalTime = (ot.timeLogs || []).reduce(function(s,t) { return s + t.hours; }, 0);
-  document.getElementById('ot-time-total').textContent = Math.floor(totalTime) + 'h ' + Math.round((totalTime%1)*60) + 'm';
+  document.getElementById('ot-auto-request-result').style.display = 'none';
+  updateOTTimeDisplay();
   renderOTTasks(); renderOTActivity(); renderOTComments(); renderOTMaterials();
   document.getElementById('modal-ot-detail').style.display = 'flex';
 }
@@ -1840,6 +1872,210 @@ function updateOTStatus(status) {
   APP.currentOT.activity.push({ text: 'Estado alterado para ' + status, time: new Date().toLocaleString('pt-PT') });
   saveData(); updateDashboard(); renderOTs(); renderOTActivity();
 }
+
+var BACKEND_STATUS_TO_UI = {
+  open: 'Aberta',
+  scheduled: 'Agendada',
+  in_progress: 'Em Curso',
+  paused: 'Pausada',
+  waiting_material: 'Aguarda Material',
+  waiting_customer: 'Aguarda Cliente',
+  completed: 'Concluída',
+  cancelled: 'Cancelada'
+};
+var BACKEND_TYPE_TO_UI = {
+  preventive: 'Preventiva',
+  inspection: 'Inspeção',
+  round: 'Ronda',
+  checklist: 'Checklist',
+  corrective: 'Corretiva',
+  breakdown: 'Avaria',
+  emergency: 'Emergência',
+  customer_request: 'Solicitação'
+};
+function apiRequest(path, options) {
+  return fetch(path, options || {}).then(function(res) {
+    if (!res.ok) {
+      return res.json().catch(function() { return {}; }).then(function(body) {
+        throw new Error(body.error || 'Erro HTTP ' + res.status);
+      });
+    }
+    return res.json();
+  });
+}
+function getOTOrigin(ot) {
+  if (ot.origin) return ot.origin;
+  return ['Preventiva','Inspeção','Ronda','Checklist','Preditiva'].includes(ot.type) ? 'scheduled' : 'request';
+}
+function mapBackendOT(ot) {
+  return {
+    id: ot.id,
+    backendId: ot.id,
+    parentWorkOrderId: ot.parentWorkOrderId,
+    title: ot.title,
+    type: BACKEND_TYPE_TO_UI[ot.type] || ot.type,
+    origin: ot.origin,
+    priority: ot.priority === 'high' ? 'Alta' : ot.priority === 'urgent' ? 'Urgente' : ot.priority === 'low' ? 'Baixa' : 'Média',
+    status: BACKEND_STATUS_TO_UI[ot.status] || ot.status,
+    equipmentId: ot.equipmentId,
+    equipmentName: ot.equipmentName,
+    clientId: ot.clientId,
+    clientName: ot.clientName,
+    technicianId: APP.demoTechnicianId,
+    technicianName: APP.demoTechnicianId ? 'Técnico Demo' : '',
+    date: ot.scheduledFor || ot.createdAt,
+    description: ot.description,
+    location: '',
+    tasks: [],
+    materials: [],
+    timeLogs: [],
+    comments: [],
+    report: '',
+    activity: [{ text: 'Sincronizada com backend', time: new Date().toLocaleString('pt-PT') }],
+    createdAt: ot.createdAt
+  };
+}
+function mergeBackendOTs(items) {
+  items.forEach(function(item) {
+    var mapped = mapBackendOT(item);
+    var existing = APP.ots.find(function(o) { return o.id === mapped.id; });
+    if (existing) Object.assign(existing, mapped, { activity: existing.activity || mapped.activity });
+    else APP.ots.push(mapped);
+  });
+}
+function syncBackendWorkOrders() {
+  return Promise.all([
+    apiRequest('/api/work-orders?tab=agendadas'),
+    apiRequest('/api/work-orders?tab=pedidos'),
+    apiRequest('/api/notifications')
+  ]).then(function(results) {
+    APP.backendOnline = true;
+    mergeBackendOTs(results[0].workOrders || []);
+    mergeBackendOTs(results[1].workOrders || []);
+    var badge = document.getElementById('ot-count-badge');
+    if (badge) badge.textContent = (results[2].notifications || []).length;
+    saveData(); updateDashboard(); renderOTs();
+  }).catch(function() {
+    APP.backendOnline = false;
+  });
+}
+function createScheduledDemoFlow() {
+  apiRequest('/api/work-orders/demo/bootstrap', { method: 'POST' }).then(function(result) {
+    APP.demoTechnicianId = result.technician.id;
+    localStorage.setItem('manugentTechnicianId', APP.demoTechnicianId);
+    mergeBackendOTs([result.workOrder]);
+    APP.otFilter = 'agendadas';
+    filterOTs('agendadas');
+    saveData(); updateDashboard(); renderOTs();
+    openOTDetail(result.workOrder.id);
+    showToast('OT preventiva agendada criada no backend.');
+  }).catch(function(error) {
+    var ot = {
+      id: generateId('OT'), title: 'Preventiva mensal - Bomba Principal',
+      type: 'Preventiva', origin: 'scheduled', priority: 'Alta', status: 'Agendada',
+      equipmentName: 'Bomba Principal', technicianName: 'Técnico Demo',
+      date: new Date(Date.now() + 86400000).toISOString(),
+      description: 'Inspeção programada com medição de vibração no rolamento.',
+      tasks: [], materials: [], timeLogs: [], comments: [], report: '',
+      activity: [{ text: 'OT preventiva criada localmente', time: new Date().toLocaleString('pt-PT') }]
+    };
+    APP.ots.push(ot);
+    saveData(); filterOTs('agendadas'); openOTDetail(ot.id);
+    showToast('Backend indisponível; fluxo demo criado localmente.');
+  });
+}
+function ensureDemoTechnician() {
+  if (APP.demoTechnicianId) return APP.demoTechnicianId;
+  if (APP.currentOT && APP.currentOT.technicianId) return APP.currentOT.technicianId;
+  throw new Error('Crie primeiro o fluxo demo para obter um técnico.');
+}
+function workOrderTimeAction(action) {
+  if (!APP.currentOT) return;
+  var labels = { join: 'Técnico juntou-se ao trabalho', start: 'Cronómetro iniciado', pause: 'Cronómetro pausado', resume: 'Cronómetro retomado', exit: 'Técnico saiu da intervenção' };
+  var statusByAction = { start: 'Em Curso', pause: 'Pausada', resume: 'Em Curso' };
+  var technicianId;
+  try { technicianId = ensureDemoTechnician(); } catch (error) { showToast(error.message); return; }
+  if (APP.currentOT.backendId) {
+    apiRequest('/api/work-orders/' + APP.currentOT.backendId + '/time/' + action, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ technicianId: technicianId })
+    }).then(function(result) {
+      APP.currentOT.timeEntry = result.timeEntry;
+      APP.currentOT.activity.push({ text: labels[action], time: new Date().toLocaleString('pt-PT') });
+      if (statusByAction[action]) APP.currentOT.status = statusByAction[action];
+      saveData(); updateOTTimeDisplay(); renderOTActivity(); updateDashboard(); renderOTs();
+      showToast(labels[action]);
+    }).catch(function(error) { showToast(error.message); });
+    return;
+  }
+  APP.currentOT.activity.push({ text: labels[action], time: new Date().toLocaleString('pt-PT') });
+  if (statusByAction[action]) APP.currentOT.status = statusByAction[action];
+  saveData(); updateOTTimeDisplay(); renderOTActivity(); updateDashboard(); renderOTs();
+}
+function updateOTTimeDisplay() {
+  if (!APP.currentOT) return;
+  var entry = APP.currentOT.timeEntry;
+  if (entry) {
+    var seconds = entry.effective_seconds || 0;
+    if (entry.status === 'running') {
+      var start = entry.resumed_at || entry.started_at;
+      if (start) seconds += Math.max(0, Math.floor((Date.now() - new Date(start).getTime()) / 1000));
+    }
+    document.getElementById('ot-time-total').textContent = Math.floor(seconds / 3600) + 'h ' + Math.floor((seconds % 3600) / 60) + 'm';
+    return;
+  }
+  var totalTime = (APP.currentOT.timeLogs || []).reduce(function(s,t) { return s + t.hours; }, 0);
+  document.getElementById('ot-time-total').textContent = Math.floor(totalTime) + 'h ' + Math.round((totalTime%1)*60) + 'm';
+}
+function registerOutOfLimitFinding() {
+  if (!APP.currentOT) return;
+  var value = parseFloat(document.getElementById('ot-measure-value').value);
+  var minRaw = document.getElementById('ot-measure-min').value;
+  var maxRaw = document.getElementById('ot-measure-max').value;
+  var desc = document.getElementById('ot-measure-desc').value.trim() || 'Medição fora dos limites';
+  var payload = { type: 'nok', description: desc, measurementValue: value, createdBy: APP.demoTechnicianId || null };
+  if (minRaw !== '') payload.limitMin = parseFloat(minRaw);
+  if (maxRaw !== '') payload.limitMax = parseFloat(maxRaw);
+  if (APP.currentOT.backendId) {
+    apiRequest('/api/work-orders/' + APP.currentOT.backendId + '/findings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function(result) {
+      APP.currentOT.activity.push({ text: 'Medição fora do limite registada: ' + value, time: new Date().toLocaleString('pt-PT') });
+      if (result.interventionRequest) {
+        mergeBackendOTs([result.interventionRequest]);
+        apiRequest('/api/notifications?workOrderId=' + result.interventionRequest.id).then(function(n) {
+          showAutoRequestResult(result.interventionRequest.id, n.notifications.length);
+        });
+        filterOTs('pedidos');
+      }
+      saveData(); updateDashboard(); renderOTs(); renderOTActivity();
+    }).catch(function(error) { showToast(error.message); });
+    return;
+  }
+  var request = {
+    id: generateId('PI'), title: 'Pedido de intervenção - ' + APP.currentOT.title,
+    type: 'Corretiva', origin: 'request', priority: 'Alta', status: 'Aberta',
+    equipmentName: APP.currentOT.equipmentName, technicianName: APP.currentOT.technicianName,
+    date: new Date().toISOString(), description: 'Criado automaticamente por medição fora dos limites.',
+    tasks: [], materials: [], timeLogs: [], comments: [], report: '',
+    activity: [{ text: 'Pedido criado automaticamente', time: new Date().toLocaleString('pt-PT') }]
+  };
+  APP.ots.push(request);
+  APP.currentOT.activity.push({ text: 'Medição fora do limite registada: ' + value, time: new Date().toLocaleString('pt-PT') });
+  showAutoRequestResult(request.id, 2);
+  saveData(); filterOTs('pedidos'); updateDashboard(); renderOTs(); renderOTActivity();
+}
+function showAutoRequestResult(requestId, notificationCount) {
+  var el = document.getElementById('ot-auto-request-result');
+  if (!el) return;
+  el.innerHTML = '<i class="fas fa-check-circle"></i> Pedido criado automaticamente: <span class="mono">' + requestId + '</span> · ' + notificationCount + ' notificações geradas';
+  el.style.display = 'block';
+  showToast('Pedido criado automaticamente em Pedidos.');
+}
+
 function renderOTTasks() {
   var ot = APP.currentOT;
   var el = document.getElementById('ot-tasks-list');
@@ -2451,7 +2687,19 @@ function getPriorityClass(p) {
   return {Urgente:'badge-red',Alta:'badge-yellow',Média:'badge-blue',Baixa:'badge-green'}[p] || 'badge-gray';
 }
 function getStatusClass(s) {
-  return {'Aberta':'badge-yellow','Em andamento':'badge-blue','Concluída':'badge-green','Cancelada':'badge-gray','Em espera':'badge-gray','Aberto':'badge-yellow'}[s] || 'badge-gray';
+  return {
+    'Aberta':'badge-yellow',
+    'Agendada':'badge-purple',
+    'Em Curso':'badge-blue',
+    'Pausada':'badge-yellow',
+    'Aguarda Material':'badge-gray',
+    'Aguarda Cliente':'badge-gray',
+    'Em andamento':'badge-blue',
+    'Em espera':'badge-gray',
+    'Concluída':'badge-green',
+    'Cancelada':'badge-gray',
+    'Aberto':'badge-yellow'
+  }[s] || 'badge-gray';
 }
 function getEquipStatusClass(s) {
   return {'Operacional':'badge-green','Em manutenção':'badge-yellow','Avaria':'badge-red','Desativado':'badge-gray'}[s] || 'badge-gray';

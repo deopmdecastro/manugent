@@ -3,17 +3,26 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:api": "tsx watch src/server.ts",
+    "build:api": "esbuild src/server.ts --bundle --platform=node --format=esm --outfile=dist/server.js --packages=external",
     "build": "vite build",
+    "start:api": "node dist/server.js",
     "preview": "wrangler pages dev",
     "deploy": "npm run build && wrangler pages deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
-    "hono": "^4.12.23"
+    "@hono/node-server": "^1.19.6",
+    "dotenv": "^16.6.1",
+    "hono": "^4.12.23",
+    "pg": "^8.16.3"
   },
   "devDependencies": {
     "@hono/vite-build": "^1.2.0",
     "@hono/vite-dev-server": "^0.25.2",
+    "@types/pg": "^8.15.5",
+    "esbuild": "^0.25.12",
+    "tsx": "^4.20.6",
     "vite": "^6.3.5",
     "wrangler": "^4.4.0"
   }
