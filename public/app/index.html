@@ -481,6 +481,102 @@
     }
     .data-table tr:hover td { background: rgba(255,255,255,0.02); cursor: pointer; }
     .data-table tr:last-child td { border-bottom: none; }
+    .files-toolbar {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) minmax(150px, 190px) minmax(170px, 210px);
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 20px;
+      max-width: 740px;
+    }
+    .files-toolbar .search-bar { max-width: none; width: 100%; }
+    .files-toolbar .input-field { width: 100% !important; min-height: 40px; }
+    .files-table {
+      table-layout: fixed;
+      min-width: 1080px;
+    }
+    .files-table th:nth-child(1) { width: 32%; }
+    .files-table th:nth-child(2) { width: 10%; }
+    .files-table th:nth-child(3) { width: 10%; }
+    .files-table th:nth-child(4) { width: 10%; }
+    .files-table th:nth-child(5) { width: 20%; }
+    .files-table th:nth-child(6) { width: 7%; }
+    .files-table th:nth-child(7) { width: 8%; }
+    .files-table th:nth-child(8) { width: 88px; }
+    .files-table td {
+      vertical-align: middle;
+      padding-top: 14px;
+      padding-bottom: 14px;
+    }
+    .file-name-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+    .file-icon-box {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      background: rgba(99,102,241,0.16);
+      border: 1px solid rgba(129,140,248,0.16);
+    }
+    .file-title-text {
+      font-weight: 700;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .file-ref-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+    .file-chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      align-items: center;
+      min-width: 0;
+    }
+    .file-chip-list .badge {
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .file-version-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 30px;
+      height: 26px;
+      border-radius: 999px;
+      background: rgba(148,163,184,0.1);
+      border: 1px solid rgba(148,163,184,0.12);
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-family: var(--font-mono);
+    }
+    .file-version-action {
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      justify-content: center;
+      border-radius: 12px;
+    }
+    .file-version-action span { display: none; }
+    @media (max-width: 1100px) {
+      .files-toolbar { grid-template-columns: 1fr; max-width: none; }
+    }
 
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.7);
@@ -494,6 +590,9 @@
     }
     .modal-lg { max-width: 900px; }
     .modal-xl { max-width: 1100px; }
+    #modal-new-file {
+      z-index: 1110;
+    }
     #modal-pause-ot .modal-content {
       max-width: 760px;
       min-height: 520px;
@@ -513,11 +612,96 @@
       width: 100%;
     }
     #modal-new-ot.detail-page .modal-content {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      max-width: none;
+      padding: 0;
+      width: 100%;
+    }
+    #modal-new-ot .ot-form-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 24px;
-      max-width: 1180px;
+    }
+    #modal-new-ot .ot-form-header {
+      align-items: center;
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding: 0 0 10px;
+    }
+    #modal-new-ot .ot-form-grid {
+      align-items: start;
+      display: grid;
+      gap: 24px;
+      grid-template-columns: minmax(0, 1.15fr) minmax(420px, 0.85fr);
+      width: 100%;
+    }
+    #modal-new-ot .ot-form-actions {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr 1fr;
+      margin-top: 24px;
+      max-width: 780px;
+    }
+    .ot-task-builder {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .ot-task-builder-row {
+      background: rgba(255,255,255,0.035);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .ot-task-builder-row:hover {
+      border-color: rgba(129,140,248,0.42);
+    }
+    .ot-task-builder-index {
+      align-items: center;
+      background: rgba(99,102,241,0.2);
+      border: 1px solid rgba(129,140,248,0.32);
+      border-radius: 10px;
+      color: var(--accent-purple-light);
+      display: inline-flex;
+      font-size: 12px;
+      font-weight: 700;
+      height: 34px;
+      justify-content: center;
+      width: 34px;
+    }
+    .ot-task-file-line {
+      align-items: center;
+      background: rgba(15,23,42,0.34);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      min-height: 44px;
+      padding: 8px 10px;
+    }
+    .ot-task-file-icon {
+      align-items: center;
+      background: rgba(99,102,241,0.18);
+      border: 1px solid rgba(129,140,248,0.26);
+      border-radius: 8px;
+      color: var(--accent-purple-light);
+      display: inline-flex;
+      height: 32px;
+      justify-content: center;
+      width: 32px;
+    }
+    @media (max-width: 1180px) {
+      #modal-new-ot .ot-form-grid {
+        grid-template-columns: 1fr;
+      }
+      #modal-new-ot .ot-form-actions {
+        max-width: none;
+      }
     }
 
     .tab-btn {
@@ -1524,8 +1708,8 @@
             <div id="files-folder-tree" class="space-y-1"></div>
           </div>
           <div>
-            <div class="flex items-center gap-3 mb-5 flex-wrap">
-              <div class="search-bar" style="max-width:320px">
+            <div class="files-toolbar">
+              <div class="search-bar">
                 <i class="fas fa-search text-slate-500 text-sm"></i>
                 <input type="text" id="files-search" placeholder="Pesquisar ficheiros..." onkeyup="renderFiles()">
               </div>
@@ -1538,8 +1722,8 @@
                 <option value="all">Todos</option><option value="users">Utilizadores</option><option value="teams">Equipas</option><option value="restricted">Restrito</option>
               </select>
             </div>
-            <div class="card overflow-hidden">
-              <table class="data-table">
+            <div class="card overflow-x-auto">
+              <table class="data-table files-table">
                 <thead>
                   <tr>
                     <th>Nome</th><th>Tipo</th><th>Pasta</th><th>Partilha</th><th>Associações</th><th>Versões</th><th>Atualizado</th><th></th>
@@ -1857,7 +2041,7 @@
     </div>
     <div class="space-y-4">
       <div class="grid md:grid-cols-2 gap-4">
-        <div><label class="block text-sm mb-2 text-slate-300">Nome *</label><input type="text" id="file-name" class="input-field" placeholder="Ex: Manual UPS Galaxy VS"></div>
+        <div><label class="block text-sm mb-2 text-slate-300">Nome / nome base</label><input type="text" id="file-name" class="input-field" placeholder="Opcional ao carregar vários ficheiros"></div>
         <div>
           <label class="block text-sm mb-2 text-slate-300">Tipo</label>
           <select id="file-type" class="input-field" onchange="updateFileTypeFields()">
@@ -1873,7 +2057,7 @@
         <label class="block text-sm mb-2 text-slate-300" id="file-ref-label">URL / referência *</label>
         <div class="grid md:grid-cols-2 gap-3">
           <input type="text" id="file-ref" class="input-field" placeholder="https://... ou nome do ficheiro interno">
-          <input type="file" id="file-upload" class="input-field">
+          <input type="file" id="file-upload" class="input-field" multiple>
         </div>
       </div>
       <div id="file-credential-fields" style="display:none">
@@ -1951,6 +2135,37 @@
         </div>
         <button id="file-detail-open" class="btn-primary w-full justify-center" onclick="openCurrentFileAsset()"><i class="fas fa-arrow-up-right-from-square"></i> Abrir ficheiro</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- File Version Modal -->
+<div id="modal-file-version" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-start justify-between gap-4 mb-5">
+      <div>
+        <h2 class="text-xl font-bold">Nova versão</h2>
+        <p class="text-sm text-slate-400 mt-1">Registe a versão atualizada deste ficheiro.</p>
+      </div>
+      <button class="btn-ghost" onclick="closeModal('modal-file-version')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Versão</label>
+        <input type="text" id="file-version-modal-version" class="input-field" placeholder="v2.0">
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">URL / referência</label>
+        <input type="text" id="file-version-modal-ref" class="input-field" placeholder="URL ou referência interna">
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Notas da versão</label>
+        <textarea id="file-version-modal-notes" class="input-field min-h-[96px]" placeholder="O que mudou nesta versão?"></textarea>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-file-version')">Cancelar</button>
+      <button class="btn-primary flex-1" onclick="confirmFileVersion()"><i class="fas fa-code-branch"></i> Guardar versão</button>
     </div>
   </div>
 </div>
@@ -2157,14 +2372,21 @@
 <!-- New OT Modal -->
 <div id="modal-new-ot" class="modal-overlay" style="display:none">
   <div class="modal-content">
-    <div class="flex items-center justify-between mb-5">
+    <div class="ot-form-header flex items-center justify-between">
       <div>
-        <h2 class="text-xl font-bold mono">Nova Ordem de Trabalho</h2>
-        <p class="text-slate-400 text-sm mt-1">Criação completa de OT, manutenção ou obras/instalações</p>
+        <h2 class="text-xl font-bold mono" id="ot-form-title">Nova Ordem de Trabalho</h2>
+        <p class="text-slate-400 text-sm mt-1" id="ot-form-subtitle">Criação completa de OT, manutenção ou obras/instalações</p>
       </div>
       <button class="btn-ghost" onclick="closeModal('modal-new-ot')"><i class="fas fa-arrow-left"></i> Voltar</button>
     </div>
-    <div class="space-y-4">
+    <div class="ot-form-grid">
+      <div class="ot-form-card space-y-4">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <h3 class="font-semibold text-base">Informações da OT</h3>
+          <p class="text-xs text-slate-500 mt-1">Dados principais, obra/instalação, capa e anexos.</p>
+        </div>
+      </div>
       <div>
         <label class="block text-sm mb-2 text-slate-300">Título *</label>
         <input type="text" id="ot-title" class="input-field" placeholder="Ex: Manutenção preventiva gerador">
@@ -2277,10 +2499,31 @@
         <label class="block text-sm mb-2 text-slate-300">Imagem da OT</label>
         <input type="file" id="ot-image-upload" class="input-field" accept="image/*">
       </div>
+      <div class="pt-4 border-t border-white/10">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="font-semibold text-sm">Ficheiros da OT</h3>
+            <p class="text-xs text-slate-500 mt-1">Anexe documentos, fotos, vídeos, PDFs ou esquemas associados a esta OT.</p>
+          </div>
+          <button type="button" class="btn-secondary text-sm" onclick="openOTFormFileModal()"><i class="fas fa-upload"></i> Anexar ficheiro</button>
+        </div>
+        <div id="ot-form-files-list" class="text-sm text-slate-400">Nenhum ficheiro preparado.</div>
+      </div>
+      </div>
+      <div class="ot-form-card">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="font-semibold text-sm">Tarefas iniciais da OT</h3>
+            <p class="text-xs text-slate-500 mt-1">Crie já as tarefas que o técnico deve executar.</p>
+          </div>
+          <button type="button" class="btn-secondary text-sm" onclick="addOTFormTaskRow()"><i class="fas fa-plus"></i> Adicionar tarefa</button>
+        </div>
+        <div id="ot-form-tasks" class="ot-task-builder"></div>
+      </div>
     </div>
-    <div class="flex gap-3 mt-6">
-      <button class="btn-secondary flex-1" onclick="closeModal('modal-new-ot')">Cancelar</button>
-      <button class="btn-primary flex-1" onclick="createOT()"><i class="fas fa-plus"></i> Criar OT</button>
+    <div class="ot-form-actions">
+      <button class="btn-secondary" onclick="closeModal('modal-new-ot')">Cancelar</button>
+      <button class="btn-primary" onclick="createOT()" id="ot-submit-btn"><i class="fas fa-plus"></i> Criar OT</button>
     </div>
   </div>
 </div>
@@ -2294,10 +2537,11 @@
         <h2 class="text-xl font-bold" id="ot-detail-title">Título da OT</h2>
       </div>
       <div class="flex items-center gap-2">
-        <select id="ot-detail-status" class="input-field text-sm" style="width:auto" onchange="updateOTStatus(this.value)">
+        <select id="ot-detail-status" class="input-field text-sm" style="width:220px" onchange="updateOTStatus(this.value)">
           <option>Aberta</option><option>Agendada</option><option>Em Curso</option><option>Pausada</option>
           <option>Aguarda Material</option><option>Aguarda Cliente</option><option>Concluída</option><option>Cancelada</option>
         </select>
+        <button class="btn-secondary" onclick="openEditOTPage()"><i class="fas fa-pen"></i> Editar OT</button>
         <button class="btn-ghost" onclick="showPage('ots')"><i class="fas fa-arrow-left"></i> Voltar</button>
       </div>
     </div>
@@ -2431,7 +2675,7 @@
 
 <!-- Add Task Modal -->
 <div id="modal-add-task" class="modal-overlay" style="display:none">
-  <div class="modal-content">
+  <div class="modal-content modal-lg">
     <div class="flex items-center justify-between mb-5">
       <h2 class="text-lg font-semibold">Adicionar Tarefa</h2>
       <button class="btn-ghost" onclick="closeModal('modal-add-task')"><i class="fas fa-times"></i></button>
@@ -2483,20 +2727,11 @@
         <label class="block text-sm mb-2 text-slate-300">Ajuda técnica ("Saber como fazer")</label>
         <textarea id="task-help" class="input-field" rows="3" placeholder="Procedimento, ferramentas necessárias, precauções de segurança..."></textarea>
       </div>
-      <div class="grid md:grid-cols-3 gap-4">
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Ficheiro de apoio</label>
         <div>
-          <label class="block text-sm mb-2 text-slate-300">Tipo de ficheiro</label>
-          <select id="task-file-type" class="input-field" onchange="updateTaskFileAccept()">
-            <option value="">Sem ficheiro</option>
-            <option>Ficheiro</option><option>Link</option><option>Vídeo</option><option>Imagem</option><option>Esquema elétrico</option><option>PDF</option><option>Outro documento</option>
-          </select>
-        </div>
-        <div class="md:col-span-2">
-          <label class="block text-sm mb-2 text-slate-300">Ficheiro / URL de apoio</label>
-          <div class="grid md:grid-cols-2 gap-3">
-            <input type="text" id="task-file-ref" class="input-field" placeholder="Ex: esquema-fonte-24v.pdf ou https://...">
-            <input type="file" id="task-file-upload" class="input-field" accept="image/*,video/*,application/pdf">
-          </div>
+          <button type="button" class="file-picker" onclick="openTaskHelpFileModal()"><i class="fas fa-cloud-arrow-up"></i><span>Anexar ficheiro</span></button>
+          <div id="task-file-selected" class="upload-preview"></div>
         </div>
       </div>
     </div>
@@ -2539,6 +2774,35 @@
     <div class="flex gap-3 mt-6">
       <button class="btn-secondary flex-1" onclick="closeModal('modal-pause-ot')">Cancelar</button>
       <button class="btn-primary flex-1" style="background:#f59e0b;color:#111827" onclick="confirmPauseOT()"><i class="fas fa-pause"></i> Pausar OT</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete OT Modal -->
+<div id="modal-delete-ot" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h2 class="text-lg font-semibold">Apagar OT</h2>
+        <p class="text-sm text-slate-500 mt-1">Confirme a ação com a sua senha de acesso.</p>
+      </div>
+      <button class="btn-ghost" onclick="closeModal('modal-delete-ot')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="card p-4 mb-4" style="border-color:rgba(239,68,68,0.35);background:rgba(239,68,68,0.06)">
+      <div class="text-sm text-slate-400 mb-1">Vai apagar definitivamente:</div>
+      <div class="font-semibold text-slate-100" id="delete-ot-title">—</div>
+      <div class="mono text-xs text-slate-500 mt-1" id="delete-ot-id">—</div>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Senha da conta atual *</label>
+        <input type="password" id="delete-ot-password" class="input-field" placeholder="Introduza a sua senha">
+      </div>
+      <div class="text-xs text-slate-500">Apenas Admin, Gestor e Técnico podem editar ou apagar OTs.</div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-delete-ot')">Cancelar</button>
+      <button class="btn-primary flex-1" style="background:rgba(239,68,68,0.95)" onclick="confirmDeleteOT()"><i class="fas fa-trash"></i> Apagar OT</button>
     </div>
   </div>
 </div>
@@ -3413,7 +3677,7 @@ var PAGE_PERMISSIONS = {
 var ACTION_PERMISSIONS = {
   admin: ['*'],
   gestor: ['create:*','edit:*','delete:*','view:*','commercial:*','create:purchases','create:quotes'],
-  tecnico: ['view:*','create:ots','edit:ots','create:incidents','create:files','create:knowledge','create:materials','edit:materials'],
+  tecnico: ['view:*','create:ots','edit:ots','delete:ots','create:incidents','create:files','create:knowledge','create:materials','edit:materials'],
   cliente: ['view:*','create:ots','create:files']
 };
 var AI_DATA_SCOPE = {
@@ -4159,10 +4423,21 @@ function generateId(prefix) {
 }
 function openNewOTModal() {
   if (!requirePermission('create', 'ots', 'criar OT')) return;
+  APP.editingOTId = '';
+  APP.pendingOTFiles = [];
   populateOTSelects();
+  document.getElementById('ot-form-title').textContent = 'Nova Ordem de Trabalho';
+  document.getElementById('ot-form-subtitle').textContent = 'Criação completa de OT, manutenção ou obras/instalações';
+  document.getElementById('ot-submit-btn').innerHTML = '<i class="fas fa-plus"></i> Criar OT';
+  document.getElementById('ot-title').value = '';
   document.getElementById('ot-date').value = new Date().toISOString().slice(0,16);
   document.getElementById('ot-image-upload').value = '';
   document.getElementById('ot-type').value = 'Corretiva';
+  document.getElementById('ot-priority').value = 'Média';
+  document.getElementById('ot-equipment').value = '';
+  document.getElementById('ot-technician').value = '';
+  document.getElementById('ot-desc').value = '';
+  document.getElementById('ot-location').value = '';
   document.getElementById('ot-work-client').value = '';
   document.getElementById('ot-work-building').value = '';
   document.getElementById('ot-work-kind').value = 'Instalação elétrica';
@@ -4176,9 +4451,233 @@ function openNewOTModal() {
   document.getElementById('ot-work-safety').value = '';
   populateWorkBuildingSelect();
   renderWorkStepsEditor();
+  renderOTFormTasks([]);
+  renderOTFormFiles();
   updateOTTypeFields();
   enhanceFileInputs();
+  enhanceSelects();
+  syncOTFormSelects();
   showDetailPage('modal-new-ot');
+}
+function syncOTFormSelects() {
+  ['ot-type','ot-priority','ot-equipment','ot-technician','ot-work-client','ot-work-building','ot-work-kind','ot-work-phase'].forEach(function(id) {
+    var sel = document.getElementById(id);
+    if (sel) syncEnhancedSelect(sel);
+  });
+}
+function openEditOTPage() {
+  if (!APP.currentOT) return;
+  if (!requirePermission('edit', 'ots', 'editar OT')) return;
+  var ot = APP.currentOT;
+  APP.editingOTId = ot.id;
+  populateOTSelects();
+  document.getElementById('ot-form-title').textContent = 'Editar Ordem de Trabalho';
+  document.getElementById('ot-form-subtitle').textContent = ot.id + ' · altere os dados principais da OT';
+  document.getElementById('ot-submit-btn').innerHTML = '<i class="fas fa-save"></i> Guardar alterações';
+  document.getElementById('ot-title').value = ot.title || '';
+  document.getElementById('ot-type').value = ot.type || 'Corretiva';
+  document.getElementById('ot-priority').value = ot.priority || 'Média';
+  document.getElementById('ot-equipment').value = ot.equipmentId || '';
+  document.getElementById('ot-technician').value = ot.technicianId || '';
+  document.getElementById('ot-date').value = ot.date || '';
+  document.getElementById('ot-desc').value = ot.description || '';
+  document.getElementById('ot-location').value = ot.location || '';
+  document.getElementById('ot-image-upload').value = '';
+  APP.pendingOTFiles = [];
+  document.getElementById('ot-work-client').value = ot.workClientId || '';
+  populateWorkBuildingSelect();
+  document.getElementById('ot-work-building').value = ot.workBuildingId || '';
+  document.getElementById('ot-work-kind').value = ot.workKind || 'Instalação elétrica';
+  document.getElementById('ot-work-phase').value = ot.workPhase || 'Planeamento';
+  document.getElementById('ot-work-start').value = ot.workStart || '';
+  document.getElementById('ot-work-deadline').value = ot.workDeadline || '';
+  document.getElementById('ot-work-reference').value = ot.workReference || '';
+  document.getElementById('ot-work-manager').value = ot.workManager || '';
+  document.getElementById('ot-work-zone').value = ot.workZone || '';
+  document.getElementById('ot-work-scope').value = ot.workScope || '';
+  document.getElementById('ot-work-safety').value = ot.workSafety || '';
+  renderWorkStepsEditor(ot.workSteps && ot.workSteps.length ? ot.workSteps : undefined);
+  renderOTFormTasks(ot.tasks || []);
+  renderOTFormFiles();
+  updateOTTypeFields();
+  enhanceFileInputs();
+  enhanceSelects();
+  syncOTFormSelects();
+  showDetailPage('modal-new-ot');
+}
+function openEditOTById(id) {
+  var ot = APP.ots.find(function(o) { return o.id === id; });
+  if (!ot) return;
+  APP.currentOT = ot;
+  openEditOTPage();
+}
+function getCurrentUserAccount() {
+  if (!APP.user || !APP.user.email) return null;
+  return (APP.users || []).find(function(u) {
+    return String(u.email || '').toLowerCase() === String(APP.user.email || '').toLowerCase();
+  }) || null;
+}
+function canModifyOTWithPassword(password) {
+  var role = getUserRole();
+  if (['admin','gestor','tecnico'].indexOf(role) === -1) return { ok:false, message:'Apenas Admin, Gestor e Técnico podem editar ou apagar OTs.' };
+  if (!canDo('delete', 'ots')) return { ok:false, message:'Sem permissão para apagar OT. Perfil atual: ' + getRoleLabel(role) + '.' };
+  var account = getCurrentUserAccount();
+  if (!account || !account.password) return { ok:false, message:'Conta atual sem senha local configurada. Entre com uma conta criada pelo Admin.' };
+  if (account.password !== password) return { ok:false, message:'Senha incorreta. Confirme a senha da sua conta.' };
+  return { ok:true };
+}
+function openDeleteOTModal(id) {
+  if (!requirePermission('delete', 'ots', 'apagar OT')) return;
+  var ot = APP.ots.find(function(o) { return o.id === id; });
+  if (!ot) return;
+  APP.pendingDeleteOTId = id;
+  document.getElementById('delete-ot-title').textContent = ot.title || 'OT sem título';
+  document.getElementById('delete-ot-id').textContent = ot.id;
+  document.getElementById('delete-ot-password').value = '';
+  document.getElementById('modal-delete-ot').style.display = 'flex';
+}
+function confirmDeleteOT() {
+  var id = APP.pendingDeleteOTId;
+  var password = document.getElementById('delete-ot-password').value;
+  var check = canModifyOTWithPassword(password);
+  if (!check.ok) { showToast(check.message); return; }
+  var ot = APP.ots.find(function(o) { return o.id === id; });
+  if (!ot) { closeModal('modal-delete-ot'); return; }
+  APP.ots = APP.ots.filter(function(o) { return o.id !== id; });
+  if (APP.currentOT && APP.currentOT.id === id) APP.currentOT = null;
+  APP.pendingDeleteOTId = '';
+  saveData();
+  closeModal('modal-delete-ot');
+  showPage('ots');
+  updateDashboard();
+  renderOTs();
+  populateOTSelects();
+  showToast('OT apagada: ' + id);
+}
+function attachUploadedFilesToOT(ot, uploads, equip) {
+  uploads = uploads || [];
+  if (!uploads.length || !ot) return;
+  APP.files = APP.files || [];
+  uploads.forEach(function(file) {
+    var type = inferFileTypeFromUpload(file);
+    var now = new Date().toISOString();
+    APP.files.push({
+      id: generateId('FILE'),
+      name: file.name || 'Ficheiro da OT',
+      type: type || 'Ficheiro',
+      ref: file.dataUrl,
+      fileName: file.name || '',
+      folderId: '',
+      description: 'Ficheiro carregado durante a criação/edição da OT.',
+      permission: 'all',
+      userIds: [],
+      teams: [],
+      clientId: ot.workClientId || (equip && equip.clientId) || '',
+      clientName: ot.workClientName || (equip && equip.clientName) || '',
+      equipmentId: ot.equipmentId || '',
+      equipmentName: ot.equipmentName || '',
+      otId: ot.id,
+      otTitle: ot.title,
+      versions: [{ version:'v1.0', notes:'Carregado na OT', ref:file.dataUrl, createdAt:now, author:APP.user ? APP.user.name : 'ManuGent' }],
+      createdAt: now,
+      updatedAt: now,
+      owner: APP.user ? APP.user.name : 'ManuGent'
+    });
+  });
+  ot.activity = ot.activity || [];
+  ot.activity.push({ text: uploads.length + ' ficheiro(s) anexado(s) à OT', time: new Date().toLocaleString('pt-PT') });
+}
+function openOTFormFileModal() {
+  APP.fileReturnContext = 'ot-form';
+  openNewFileModal();
+  var ot = APP.editingOTId ? APP.ots.find(function(o) { return o.id === APP.editingOTId; }) : null;
+  var equipId = document.getElementById('ot-equipment') ? document.getElementById('ot-equipment').value : '';
+  var equip = (APP.equipment || []).find(function(e) { return e.id === equipId; }) || null;
+  document.getElementById('file-ot').value = ot ? ot.id : '';
+  document.getElementById('file-equipment').value = equipId || (ot ? ot.equipmentId : '');
+  document.getElementById('file-client').value = (ot && ot.workClientId) || (equip && equip.clientId) || '';
+  syncEnhancedSelect(document.getElementById('file-ot'));
+  syncEnhancedSelect(document.getElementById('file-equipment'));
+  syncEnhancedSelect(document.getElementById('file-client'));
+}
+function renderOTFormFiles() {
+  var el = document.getElementById('ot-form-files-list');
+  if (!el) return;
+  var existing = APP.editingOTId ? (APP.files || []).filter(function(f) { return f.otId === APP.editingOTId; }) : [];
+  var pending = APP.pendingOTFiles || [];
+  var rows = existing.map(function(f) {
+    return '<div class="flex items-center justify-between py-2 border-b border-white/5"><span><i class="' + getFileIcon(f.type) + ' text-purple-400" style="margin-right:8px"></i>' + escapeHtml(f.name) + '</span><span class="badge badge-gray">Associado</span></div>';
+  }).concat(pending.map(function(f, i) {
+    return '<div class="flex items-center justify-between py-2 border-b border-white/5"><span><i class="' + getFileIcon(f.type) + ' text-purple-400" style="margin-right:8px"></i>' + escapeHtml(f.name) + '</span><button type="button" class="btn-ghost text-xs" style="color:var(--accent-red)" onclick="removePendingOTFile(' + i + ')"><i class="fas fa-trash"></i></button></div>';
+  }));
+  el.innerHTML = rows.length ? rows.join('') : '<span class="text-slate-500">Nenhum ficheiro preparado.</span>';
+}
+function removePendingOTFile(index) {
+  APP.pendingOTFiles = APP.pendingOTFiles || [];
+  APP.pendingOTFiles.splice(index, 1);
+  renderOTFormFiles();
+}
+function attachPendingFilesToOT(ot, equip) {
+  var pending = APP.pendingOTFiles || [];
+  if (!pending.length || !ot) return;
+  APP.files = APP.files || [];
+  pending.forEach(function(f) {
+    f.otId = ot.id;
+    f.otTitle = ot.title;
+    f.equipmentId = f.equipmentId || ot.equipmentId || '';
+    f.equipmentName = f.equipmentName || ot.equipmentName || '';
+    f.clientId = f.clientId || ot.workClientId || (equip && equip.clientId) || '';
+    f.clientName = f.clientName || ot.workClientName || (equip && equip.clientName) || '';
+    f.updatedAt = new Date().toISOString();
+    APP.files.push(f);
+  });
+  ot.activity = ot.activity || [];
+  ot.activity.push({ text: pending.length + ' ficheiro(s) anexado(s) à OT', time: new Date().toLocaleString('pt-PT') });
+  APP.pendingOTFiles = [];
+}
+function attachTaskHelpFilesToOT(ot, equip) {
+  if (!ot || !ot.tasks) return;
+  APP.files = APP.files || [];
+  var count = 0;
+  ot.tasks.forEach(function(task) {
+    var files = Array.isArray(task.helpFileRecords) ? task.helpFileRecords : (task.helpFileRecord ? [task.helpFileRecord] : []);
+    files.forEach(function(file, index) {
+      if (!file || !file.id || !file.ref) return;
+      file.otId = ot.id;
+      file.otTitle = ot.title;
+      file.equipmentId = file.equipmentId || ot.equipmentId || '';
+      file.equipmentName = file.equipmentName || ot.equipmentName || '';
+      file.clientId = file.clientId || ot.workClientId || (equip && equip.clientId) || '';
+      file.clientName = file.clientName || ot.workClientName || (equip && equip.clientName) || '';
+      file.description = file.description || 'Ficheiro de ajuda técnica associado a uma tarefa da OT.';
+      file.updatedAt = new Date().toISOString();
+      if (!APP.files.some(function(existing) { return existing.id === file.id; })) {
+        APP.files.push(file);
+        count++;
+      }
+      if (index === 0) {
+        task.fileType = file.type || task.fileType || 'Ficheiro';
+        task.fileRef = file.ref || task.fileRef || '';
+        task.fileName = file.fileName || file.name || task.fileName || '';
+      }
+    });
+    task.helpFiles = files.map(function(file) {
+      return {
+        id:file.id,
+        name:file.name,
+        type:file.type,
+        ref:file.ref,
+        fileName:file.fileName || '',
+        mimeType:file.mimeType || ''
+      };
+    });
+    delete task.helpFileRecords;
+    delete task.helpFileRecord;
+  });
+  if (count) {
+    ot.activity = ot.activity || [];
+    ot.activity.push({ text: count + ' ficheiro(s) de ajuda técnica anexado(s) às tarefas', time: new Date().toLocaleString('pt-PT') });
+  }
 }
 function updateOTTypeFields() {
   var type = document.getElementById('ot-type').value;
@@ -4236,43 +4735,61 @@ async function createOT() {
   var isWork = type === 'Obras/Instalações';
   var workClient = isWork ? (APP.clients || []).find(function(c) { return c.id === document.getElementById('ot-work-client').value; }) : null;
   var workBuilding = isWork ? (APP.buildings || []).find(function(b) { return b.id === document.getElementById('ot-work-building').value; }) : null;
-  var ot = {
-    id: generateId('OT'), title: title,
-    type: type,
-    workKind: isWork ? document.getElementById('ot-work-kind').value : '',
-    workPhase: isWork ? document.getElementById('ot-work-phase').value : '',
-    workClientId: workClient ? workClient.id : '',
-    workClientName: workClient ? workClient.name : '',
-    workBuildingId: workBuilding ? workBuilding.id : '',
-    workBuildingName: workBuilding ? workBuilding.name : '',
-    workStart: isWork ? document.getElementById('ot-work-start').value : '',
-    workDeadline: isWork ? document.getElementById('ot-work-deadline').value : '',
-    workReference: isWork ? document.getElementById('ot-work-reference').value.trim() : '',
-    workManager: isWork ? document.getElementById('ot-work-manager').value.trim() : '',
-    workZone: isWork ? document.getElementById('ot-work-zone').value.trim() : '',
-    workScope: isWork ? document.getElementById('ot-work-scope').value.trim() : '',
-    workSafety: isWork ? document.getElementById('ot-work-safety').value.trim() : '',
-    workSteps: isWork ? collectWorkInstallationSteps() : [],
-    priority: document.getElementById('ot-priority').value,
+  var editing = APP.editingOTId ? APP.ots.find(function(o) { return o.id === APP.editingOTId; }) : null;
+  var ot = editing || {
+    id: generateId('OT'),
     status: 'Aberta',
-    equipmentId: equipId, equipmentName: equip ? equip.name : '—',
-    technicianId: techId, technicianName: tech ? tech.name : '—',
-    date: document.getElementById('ot-date').value,
-    description: document.getElementById('ot-desc').value,
-    location: document.getElementById('ot-location').value,
-    image: image ? image.dataUrl : '',
-    imageName: image ? image.name : '',
     nfcTag: 'NFC-OT-' + Date.now().toString(36).toUpperCase(),
     tasks: [], materials: [], timeLogs: [], comments: [], report: '',
-    activity: [{ text: 'OT criada', time: new Date().toLocaleString('pt-PT') }],
-    createdAt: new Date().toISOString(),
+    activity: [],
+    createdAt: new Date().toISOString()
   };
-  APP.ots.push(ot);
+  ot.title = title;
+  ot.type = type;
+  ot.workKind = isWork ? document.getElementById('ot-work-kind').value : '';
+  ot.workPhase = isWork ? document.getElementById('ot-work-phase').value : '';
+  ot.workClientId = workClient ? workClient.id : '';
+  ot.workClientName = workClient ? workClient.name : '';
+  ot.workBuildingId = workBuilding ? workBuilding.id : '';
+  ot.workBuildingName = workBuilding ? workBuilding.name : '';
+  ot.workStart = isWork ? document.getElementById('ot-work-start').value : '';
+  ot.workDeadline = isWork ? document.getElementById('ot-work-deadline').value : '';
+  ot.workReference = isWork ? document.getElementById('ot-work-reference').value.trim() : '';
+  ot.workManager = isWork ? document.getElementById('ot-work-manager').value.trim() : '';
+  ot.workZone = isWork ? document.getElementById('ot-work-zone').value.trim() : '';
+  ot.workScope = isWork ? document.getElementById('ot-work-scope').value.trim() : '';
+  ot.workSafety = isWork ? document.getElementById('ot-work-safety').value.trim() : '';
+  ot.workSteps = isWork ? collectWorkInstallationSteps() : [];
+  ot.tasks = collectOTFormTasks();
+  ot.priority = document.getElementById('ot-priority').value;
+  ot.equipmentId = equipId;
+  ot.equipmentName = equip ? equip.name : '—';
+  ot.technicianId = techId;
+  ot.technicianName = tech ? tech.name : '—';
+  ot.date = document.getElementById('ot-date').value;
+  ot.description = document.getElementById('ot-desc').value;
+  ot.location = document.getElementById('ot-location').value;
+  if (image) {
+    ot.image = image.dataUrl;
+    ot.imageName = image.name;
+  } else {
+    ot.image = ot.image || '';
+    ot.imageName = ot.imageName || '';
+  }
+  ot.activity = ot.activity || [];
+  ot.activity.push({ text: editing ? 'OT editada' : 'OT criada', time: new Date().toLocaleString('pt-PT') });
+  if (!editing) APP.ots.push(ot);
+  attachTaskHelpFilesToOT(ot, equip);
+  attachPendingFilesToOT(ot, equip);
   saveData();
   closeModal('modal-new-ot');
+  APP.editingOTId = '';
   ['ot-title','ot-desc','ot-location','ot-work-reference','ot-work-manager','ot-work-zone','ot-work-scope','ot-work-safety'].forEach(function(id) { document.getElementById(id).value = ''; });
   document.getElementById('ot-image-upload').value = '';
-  updateDashboard(); renderOTs(); showToast('OT criada com sucesso!');
+  APP.currentOT = ot;
+  updateDashboard(); renderOTs();
+  if (editing) openOTDetail(ot.id);
+  showToast(editing ? 'OT atualizada com sucesso!' : 'OT criada com sucesso!');
 }
 function renderWorkStepsEditor(steps) {
   var wrap = document.getElementById('ot-work-steps-editor');
@@ -4309,6 +4826,137 @@ function collectWorkInstallationSteps() {
   var names = getCurrentWorkStepNames().filter(Boolean);
   if (!names.length) names = getWorkInstallationSteps(document.getElementById('ot-work-kind').value || 'Instalação elétrica').map(function(step) { return step.name || step; });
   return names.map(function(name) { return { name:name, done:false }; });
+}
+function renderOTFormTasks(tasks) {
+  var wrap = document.getElementById('ot-form-tasks');
+  if (!wrap) return;
+  var list = (tasks || []).map(function(t) {
+    return {
+      description: t.description || t.name || '',
+      type: t.type || 'check',
+      help: t.help || '',
+      helpFiles: normalizeTaskHelpFiles(t)
+    };
+  });
+  APP.otFormTaskFiles = list.map(function(t) { return t.helpFiles || []; });
+  wrap.innerHTML = list.length ? list.map(renderOTFormTaskRow).join('') : '<div class="text-sm text-slate-500 text-center py-3">Nenhuma tarefa inicial adicionada.</div>';
+}
+function normalizeTaskHelpFiles(task) {
+  var files = [];
+  if (Array.isArray(task.helpFiles)) files = files.concat(task.helpFiles);
+  if (Array.isArray(task.helpFileRecords)) files = files.concat(task.helpFileRecords);
+  if (task.helpFile) files.push(task.helpFile);
+  if (task.helpFileRecord) files.push(task.helpFileRecord);
+  if (!files.length && task.fileRef) files.push({ id:task.fileId || '', name:task.fileName || getAssetName(task.fileRef), type:task.fileType || 'Ficheiro', ref:task.fileRef, fileName:task.fileName || '' });
+  return files.filter(function(file, index, arr) {
+    if (!file || !file.ref) return false;
+    return arr.findIndex(function(other) { return other && other.ref === file.ref && (other.name || other.fileName) === (file.name || file.fileName); }) === index;
+  });
+}
+function renderOTFormTaskRow(task, index) {
+  return '<div class="ot-task-builder-row ot-form-task-row">' +
+    '<div class="flex items-start gap-3 mb-3">' +
+      '<span class="ot-task-builder-index">' + (index + 1) + '</span>' +
+      '<div class="grid md:grid-cols-[1fr_180px] gap-2 flex-1 min-w-0">' +
+        '<input type="text" class="input-field ot-form-task-desc" value="' + escapeHtml(task.description || '') + '" placeholder="Ex: Verificar tensão de alimentação">' +
+        '<select class="input-field ot-form-task-type">' +
+          '<option value="check"' + (task.type === 'check' ? ' selected' : '') + '>Verificação</option>' +
+          '<option value="measure"' + (task.type === 'measure' ? ' selected' : '') + '>Medição</option>' +
+          '<option value="inspection"' + (task.type === 'inspection' ? ' selected' : '') + '>Inspeção</option>' +
+          '<option value="lubrication"' + (task.type === 'lubrication' ? ' selected' : '') + '>Lubrificação</option>' +
+          '<option value="other"' + (task.type === 'other' ? ' selected' : '') + '>Outro</option>' +
+        '</select>' +
+      '</div>' +
+      '<button type="button" class="btn-ghost" style="color:var(--accent-red)" title="Remover tarefa" onclick="removeOTFormTaskRow(' + index + ')"><i class="fas fa-trash"></i></button>' +
+    '</div>' +
+    '<textarea class="input-field ot-form-task-help" rows="2" placeholder="Ajuda técnica opcional, ferramentas ou cuidados...">' + escapeHtml(task.help || '') + '</textarea>' +
+    '<div class="ot-task-file-line mt-3">' +
+      '<div class="min-w-0 flex-1">' + renderOTFormTaskFilePreview(task.helpFiles || [], index) + '</div>' +
+      '<button type="button" class="btn-secondary btn-action text-xs" onclick="openOTFormTaskFileModal(' + index + ')"><i class="fas fa-upload"></i> Anexar</button>' +
+    '</div>' +
+    '</div>';
+}
+function renderOTFormTaskFilePreview(files, index) {
+  files = Array.isArray(files) ? files : (files ? [files] : []);
+  if (!files.length) return '<div class="text-xs text-slate-500">Sem ficheiro de ajuda técnica.</div>';
+  return '<div class="space-y-2">' + files.map(function(file, fileIndex) {
+    var name = file.fileName || file.name || getAssetName(file.ref);
+    return '<div class="flex items-center gap-3 min-w-0">' +
+      '<span class="ot-task-file-icon"><i class="' + getFileIcon(file.type || 'Ficheiro') + '"></i></span>' +
+      '<div class="min-w-0 flex-1"><div class="upload-preview-name">' + escapeHtml(name) + '</div><div class="upload-preview-info">' + escapeHtml(file.type || 'Ficheiro') + ' · ajuda técnica</div></div>' +
+      '<button type="button" class="btn-ghost text-xs" style="color:#f87171" title="Remover ficheiro" onclick="removeOTFormTaskFile(' + index + ',' + fileIndex + ')"><i class="fas fa-trash"></i></button>' +
+      '</div>';
+  }).join('') + '</div>';
+}
+function getOTFormTasksDraft() {
+  return Array.prototype.slice.call(document.querySelectorAll('#ot-form-tasks .ot-form-task-row')).map(function(row) {
+    var index = Array.prototype.indexOf.call(document.querySelectorAll('#ot-form-tasks .ot-form-task-row'), row);
+    var helpFiles = APP.otFormTaskFiles && APP.otFormTaskFiles[index] ? APP.otFormTaskFiles[index] : [];
+    return {
+      description: (row.querySelector('.ot-form-task-desc') || {}).value || '',
+      type: (row.querySelector('.ot-form-task-type') || {}).value || 'check',
+      help: (row.querySelector('.ot-form-task-help') || {}).value || '',
+      helpFiles: Array.isArray(helpFiles) ? helpFiles : (helpFiles ? [helpFiles] : [])
+    };
+  });
+}
+function addOTFormTaskRow() {
+  var rows = getOTFormTasksDraft();
+  rows.push({ description:'', type:'check', help:'' });
+  renderOTFormTasks(rows);
+  enhanceSelects();
+  var inputs = document.querySelectorAll('#ot-form-tasks .ot-form-task-desc');
+  if (inputs.length) inputs[inputs.length - 1].focus();
+}
+function removeOTFormTaskRow(index) {
+  var rows = getOTFormTasksDraft();
+  rows.splice(index, 1);
+  renderOTFormTasks(rows);
+  enhanceSelects();
+}
+function collectOTFormTasks() {
+  return getOTFormTasksDraft().filter(function(t) { return t.description.trim(); }).map(function(t) {
+    var files = t.helpFiles || [];
+    var primary = files[0] || null;
+    return {
+      description:t.description.trim(),
+      type:t.type || 'check',
+      done:false,
+      state:null,
+      help:t.help.trim(),
+      fileType:primary ? primary.type : '',
+      fileRef:primary ? primary.ref : '',
+      fileName:primary ? (primary.fileName || primary.name || '') : '',
+      helpFileRecords:files.filter(function(file) { return file && file.id; })
+    };
+  });
+}
+function openOTFormTaskFileModal(index) {
+  APP.fileReturnContext = 'ot-form-task-help';
+  APP.pendingOTTaskFileIndex = index;
+  openNewFileModal();
+  var rows = getOTFormTasksDraft();
+  var task = rows[index] || {};
+  var editingOT = APP.editingOTId ? (APP.ots || []).find(function(o) { return o.id === APP.editingOTId; }) : null;
+  var equipId = document.getElementById('ot-equipment') ? document.getElementById('ot-equipment').value : '';
+  var equip = (APP.equipment || []).find(function(e) { return e.id === equipId; }) || null;
+  if (task.description && !document.getElementById('file-name').value.trim()) document.getElementById('file-name').value = task.description + ' - ajuda técnica';
+  document.getElementById('file-ot').value = editingOT ? editingOT.id : '';
+  document.getElementById('file-equipment').value = equipId || (editingOT ? editingOT.equipmentId : '');
+  document.getElementById('file-client').value = (editingOT && editingOT.workClientId) || (equip && equip.clientId) || '';
+  syncEnhancedSelect(document.getElementById('file-ot'));
+  syncEnhancedSelect(document.getElementById('file-equipment'));
+  syncEnhancedSelect(document.getElementById('file-client'));
+}
+function removeOTFormTaskFile(index, fileIndex) {
+  var rows = getOTFormTasksDraft();
+  if (rows[index]) {
+    rows[index].helpFiles = rows[index].helpFiles || [];
+    if (typeof fileIndex === 'number') rows[index].helpFiles.splice(fileIndex, 1);
+    else rows[index].helpFiles = [];
+  }
+  renderOTFormTasks(rows);
+  enhanceSelects();
 }
 function getWorkInstallationSteps(kind) {
   var commonStart = [
@@ -4369,10 +5017,21 @@ function renderOTs() {
         '<td><span class="badge ' + getStatusClass(o.status) + '">' + o.status + '</span></td>' +
         '<td>' + (o.technicianName || '—') + '</td>' +
         '<td class="text-xs">' + (o.date ? new Date(o.date).toLocaleDateString('pt-PT') : '—') + '</td>' +
-        '<td><button class="btn-ghost text-xs" onclick="event.stopPropagation();openOTDetail(\'' + o.id + '\')"><i class="fas fa-eye"></i></button></td></tr>';
+        '<td>' + renderOTActionButtons(o) + '</td></tr>';
     }).join('');
   }
   renderKanban(filtered);
+}
+function renderOTActionButtons(o) {
+  var html = '<div class="flex items-center gap-1 justify-end">' +
+    '<button class="btn-ghost text-xs" title="Visualizar" onclick="event.stopPropagation();openOTDetail(\'' + o.id + '\')"><i class="fas fa-eye"></i></button>';
+  if (canDo('edit', 'ots')) {
+    html += '<button class="btn-ghost text-xs" title="Editar" onclick="event.stopPropagation();openEditOTById(\'' + o.id + '\')"><i class="fas fa-pen" style="color:var(--accent-blue)"></i></button>';
+  }
+  if (canDo('delete', 'ots')) {
+    html += '<button class="btn-ghost text-xs" title="Apagar" onclick="event.stopPropagation();openDeleteOTModal(\'' + o.id + '\')"><i class="fas fa-trash" style="color:var(--accent-red)"></i></button>';
+  }
+  return html + '</div>';
 }
 function filterOTs(tab) {
   APP.otFilter = tab;
@@ -4444,6 +5103,7 @@ function openOTDetail(id) {
   document.getElementById('ot-detail-id').textContent = ot.id;
   document.getElementById('ot-detail-title').textContent = ot.title;
   document.getElementById('ot-detail-status').value = ot.status;
+  syncEnhancedSelect(document.getElementById('ot-detail-status'));
   document.getElementById('ot-detail-type').textContent = ot.type;
   document.getElementById('ot-detail-priority').innerHTML = '<span class="badge ' + getPriorityClass(ot.priority) + '">' + ot.priority + '</span>';
   document.getElementById('ot-detail-equip').textContent = ot.equipmentName || '—';
@@ -4505,6 +5165,7 @@ function updateOTStatus(status) {
     if (reportEl) reportEl.value = APP.currentOT.report;
   }
   APP.currentOT.activity.push({ text: 'Estado alterado para ' + status, time: new Date().toLocaleString('pt-PT') });
+  syncEnhancedSelect(document.getElementById('ot-detail-status'));
   saveData(); updateDashboard(); renderOTs(); renderOTActivity();
 }
 async function updateOTCoverFromInput() {
@@ -5005,15 +5666,12 @@ function inferRisksForTask(text) {
   return risks;
 }
 function openAddTaskModal() {
+  APP.pendingTaskHelpFile = null;
   document.getElementById('task-desc').value = '';
   document.getElementById('task-help').value = '';
-  document.getElementById('task-file-type').value = '';
-  document.getElementById('task-file-ref').value = '';
-  document.getElementById('task-file-upload').value = '';
   document.getElementById('task-type').value = 'check';
   updateTaskTypeFields();
-  updateTaskFileAccept();
-  enhanceFileInputs();
+  renderTaskHelpSelectedFile();
   document.getElementById('modal-add-task').style.display = 'flex';
 }
 function updateTaskTypeFields() {
@@ -5021,19 +5679,48 @@ function updateTaskTypeFields() {
   document.getElementById('task-measure-fields').style.display = type === 'measure' ? 'block' : 'none';
   document.getElementById('task-lube-fields').style.display = type === 'lubrication' ? 'block' : 'none';
 }
-function updateTaskFileAccept() {
-  var type = document.getElementById('task-file-type').value;
-  var upload = document.getElementById('task-file-upload');
-  if (!upload) return;
-  upload.accept = getAcceptForFileType(type);
+function updateTaskFileAccept() {}
+function openTaskHelpFileModal() {
+  if (!APP.currentOT) { showToast('Abra uma OT antes de anexar ficheiro à tarefa.'); return; }
+  APP.fileReturnContext = 'task-help';
+  openNewFileModal();
+  document.getElementById('file-ot').value = APP.currentOT.id || '';
+  document.getElementById('file-equipment').value = APP.currentOT.equipmentId || '';
+  var equip = (APP.equipment || []).find(function(e) { return e.id === APP.currentOT.equipmentId; }) || null;
+  document.getElementById('file-client').value = APP.currentOT.workClientId || (equip && equip.clientId) || '';
+  var desc = document.getElementById('task-desc').value.trim();
+  if (desc && !document.getElementById('file-name').value.trim()) document.getElementById('file-name').value = desc + ' - apoio técnico';
+  syncEnhancedSelect(document.getElementById('file-ot'));
+  syncEnhancedSelect(document.getElementById('file-equipment'));
+  syncEnhancedSelect(document.getElementById('file-client'));
+}
+function renderTaskHelpSelectedFile() {
+  var el = document.getElementById('task-file-selected');
+  if (!el) return;
+  var f = APP.pendingTaskHelpFile;
+  el.classList.toggle('active', !!f);
+  if (!f) {
+    el.innerHTML = '';
+    return;
+  }
+  var displayName = f.fileName || f.name || getAssetName(f.ref);
+  el.innerHTML = '<div class="upload-preview-item">' +
+    '<div class="upload-preview-thumb"><i class="' + getFileIcon(f.type) + '"></i></div>' +
+    '<div class="upload-preview-meta"><div class="upload-preview-name">' + escapeHtml(f.name || displayName) + '</div><div class="upload-preview-info">' + escapeHtml(f.type || 'Ficheiro') + ' · preparado para esta tarefa</div></div>' +
+    '<button type="button" class="btn-ghost text-xs" style="color:#f87171" onclick="removeTaskHelpSelectedFile()"><i class="fas fa-trash"></i></button>' +
+    '</div>';
+}
+function removeTaskHelpSelectedFile() {
+  APP.pendingTaskHelpFile = null;
+  renderTaskHelpSelectedFile();
 }
 async function addTaskToOT() {
   var desc = document.getElementById('task-desc').value.trim();
   if (!desc) { showToast('Descrição é obrigatória.'); return; }
   var type = document.getElementById('task-type').value;
-  var uploaded = await readSingleUpload('task-file-upload');
-  var fileRef = uploaded ? uploaded.dataUrl : document.getElementById('task-file-ref').value.trim();
-  var fileType = document.getElementById('task-file-type').value || inferFileTypeFromUpload(uploaded);
+  var linkedFile = APP.pendingTaskHelpFile || null;
+  var fileRef = linkedFile ? linkedFile.ref : '';
+  var fileType = linkedFile ? linkedFile.type : '';
   var task = {
     description: desc,
     type: type,
@@ -5042,7 +5729,7 @@ async function addTaskToOT() {
     help: document.getElementById('task-help').value,
     fileType: fileType,
     fileRef: fileRef,
-    fileName: uploaded ? uploaded.name : ''
+    fileName: linkedFile ? (linkedFile.fileName || linkedFile.name || '') : ''
   };
   if (type === 'measure') {
     task.min = document.getElementById('task-min').value;
@@ -5052,6 +5739,11 @@ async function addTaskToOT() {
   if (type === 'lubrication') {
     task.lubeType = document.getElementById('task-lube-type').value;
     task.lubeQty = document.getElementById('task-lube-qty').value;
+  }
+  if (linkedFile) {
+    APP.files = APP.files || [];
+    APP.files.push(linkedFile);
+    APP.pendingTaskHelpFile = null;
   }
   APP.currentOT.tasks.push(task);
   APP.currentOT.activity.push({ text: 'Tarefa adicionada: ' + desc, time: new Date().toLocaleString('pt-PT') });
@@ -6110,9 +6802,12 @@ async function createSharedFile() {
   if (!requirePermission('create', 'files', 'partilhar ficheiro')) return;
   var name = document.getElementById('file-name').value.trim();
   var type = document.getElementById('file-type').value;
-  var uploaded = type === 'Credencial' ? null : await readSingleUpload('file-upload');
-  var ref = type === 'Credencial' ? document.getElementById('file-credential-vault').value.trim() : (uploaded ? uploaded.dataUrl : document.getElementById('file-ref').value.trim());
-  if (!name || !ref) { showToast('Nome e referência são obrigatórios.'); return; }
+  var uploads = type === 'Credencial' ? [] : await readMultipleUploads('file-upload');
+  var manualRef = document.getElementById('file-ref').value.trim();
+  var credentialRef = document.getElementById('file-credential-vault').value.trim();
+  var hasUploads = uploads.length > 0;
+  if (type === 'Credencial' && (!name || !credentialRef)) { showToast('Nome e referência são obrigatórios.'); return; }
+  if (type !== 'Credencial' && !hasUploads && (!name || !manualRef)) { showToast('Nome e referência são obrigatórios.'); return; }
   if (type === 'Credencial' && !document.getElementById('file-credential-service').value.trim()) { showToast('Serviço / sistema é obrigatório para credenciais.'); return; }
   var clientId = document.getElementById('file-client').value;
   var equipmentId = document.getElementById('file-equipment').value;
@@ -6121,38 +6816,79 @@ async function createSharedFile() {
   var equipment = APP.equipment.find(function(e) { return e.id === equipmentId; });
   var ot = APP.ots.find(function(o) { return o.id === otId; });
   var version = document.getElementById('file-version').value.trim() || 'v1.0';
-  APP.files.push({
-    id: generateId('FILE'),
-    name: name,
-    type: type,
-    ref: ref,
-    fileName: uploaded ? uploaded.name : '',
-    mimeType: uploaded ? uploaded.type : '',
-    folderId: document.getElementById('file-folder').value,
-    description: document.getElementById('file-desc').value,
-    mediaCaption: document.getElementById('file-media-caption').value,
-    credentialService: document.getElementById('file-credential-service').value,
-    credentialUser: document.getElementById('file-credential-user').value,
-    permission: document.getElementById('file-permission').value,
-    userIds: getSelectedValues('file-users'),
-    teams: getSelectedValues('file-teams'),
-    clientId: clientId,
-    clientName: client ? client.name : '',
-    equipmentId: equipmentId,
-    equipmentName: equipment ? equipment.name : '',
-    otId: otId,
-    otTitle: ot ? ot.title : '',
-    versions: [{ version: version, notes: document.getElementById('file-version-notes').value || 'Publicação inicial', ref: ref, createdAt: new Date().toISOString(), author: APP.user ? APP.user.name : 'Gestor' }],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    owner: APP.user ? APP.user.name : 'Gestor',
+  var entries = type === 'Credencial'
+    ? [{ ref: credentialRef, uploaded: null, explicitType: type, explicitName: name }]
+    : (hasUploads ? uploads.map(function(uploaded) { return { ref: uploaded.dataUrl, uploaded: uploaded, explicitType: inferFileTypeFromUpload(uploaded) || type, explicitName: name || uploaded.name }; }) : [{ ref: manualRef, uploaded: null, explicitType: type, explicitName: name }]);
+  var baseNow = new Date().toISOString();
+  var fileRecords = entries.map(function(entry, index) {
+    var finalName = entry.explicitName || (entry.uploaded ? entry.uploaded.name : name) || 'Ficheiro partilhado';
+    if (entries.length > 1 && name) finalName = name + ' - ' + (entry.uploaded ? entry.uploaded.name : String(index + 1));
+    var finalType = entry.uploaded ? (inferFileTypeFromUpload(entry.uploaded) || type) : entry.explicitType;
+    return {
+      id: generateId('FILE') + '-' + (index + 1),
+      name: finalName,
+      type: finalType,
+      ref: entry.ref,
+      fileName: entry.uploaded ? entry.uploaded.name : '',
+      mimeType: entry.uploaded ? entry.uploaded.type : '',
+      folderId: document.getElementById('file-folder').value,
+      description: document.getElementById('file-desc').value,
+      mediaCaption: document.getElementById('file-media-caption').value,
+      credentialService: document.getElementById('file-credential-service').value,
+      credentialUser: document.getElementById('file-credential-user').value,
+      permission: document.getElementById('file-permission').value,
+      userIds: getSelectedValues('file-users'),
+      teams: getSelectedValues('file-teams'),
+      clientId: clientId,
+      clientName: client ? client.name : '',
+      equipmentId: equipmentId,
+      equipmentName: equipment ? equipment.name : '',
+      otId: otId,
+      otTitle: ot ? ot.title : '',
+      versions: [{ version: version, notes: document.getElementById('file-version-notes').value || 'Publicação inicial', ref: entry.ref, createdAt: baseNow, author: APP.user ? APP.user.name : 'Gestor' }],
+      createdAt: baseNow,
+      updatedAt: baseNow,
+      owner: APP.user ? APP.user.name : 'Gestor',
+    };
   });
-  saveData(); closeModal('modal-new-file');
+  var fileRecord = fileRecords[0];
+  if (APP.fileReturnContext === 'ot-form-task-help') {
+    var taskRows = getOTFormTasksDraft();
+    var taskIndex = Number(APP.pendingOTTaskFileIndex || 0);
+    if (taskRows[taskIndex]) {
+      taskRows[taskIndex].helpFiles = (taskRows[taskIndex].helpFiles || []).concat(fileRecords);
+    }
+    closeModal('modal-new-file');
+    renderOTFormTasks(taskRows);
+    enhanceSelects();
+    showToast(fileRecords.length + ' ficheiro(s) de ajuda preparado(s) para a tarefa.');
+  } else if (APP.fileReturnContext === 'task-help') {
+    APP.pendingTaskHelpFile = fileRecord;
+    if (fileRecords.length > 1) {
+      APP.files = APP.files || [];
+      APP.files = APP.files.concat(fileRecords.slice(1));
+      saveData();
+    }
+    closeModal('modal-new-file');
+    renderTaskHelpSelectedFile();
+    showToast(fileRecords.length > 1 ? 'Ficheiro da tarefa preparado e restantes partilhados.' : 'Ficheiro preparado para a tarefa.');
+  } else if (APP.fileReturnContext === 'ot-form' && !otId) {
+    APP.pendingOTFiles = APP.pendingOTFiles || [];
+    APP.pendingOTFiles = APP.pendingOTFiles.concat(fileRecords);
+    closeModal('modal-new-file');
+    renderOTFormFiles();
+    showToast(fileRecords.length + ' ficheiro(s) preparado(s) para anexar à OT.');
+  } else {
+    APP.files = APP.files || [];
+    APP.files = APP.files.concat(fileRecords);
+    saveData(); closeModal('modal-new-file');
+    if (APP.currentOT) renderAssociatedFiles('ot', APP.currentOT.id, 'ot-files-list');
+    if (APP.currentEquip) renderAssociatedFiles('equipment', APP.currentEquip.id, 'equip-files-list');
+    renderFiles(); showToast(fileRecords.length + ' ficheiro(s) partilhado(s)!');
+  }
+  APP.fileReturnContext = '';
   ['file-name','file-ref','file-desc','file-version','file-version-notes','file-media-caption','file-credential-service','file-credential-user','file-credential-vault'].forEach(function(id) { document.getElementById(id).value = ''; });
   document.getElementById('file-upload').value = '';
-  if (APP.currentOT) renderAssociatedFiles('ot', APP.currentOT.id, 'ot-files-list');
-  if (APP.currentEquip) renderAssociatedFiles('equipment', APP.currentEquip.id, 'equip-files-list');
-  renderFiles(); showToast('Ficheiro partilhado!');
 }
 function renderFiles() {
   var items = APP.files || [];
@@ -6177,15 +6913,17 @@ function renderFiles() {
   }
   el.innerHTML = items.map(function(f) {
     var refLabel = f.fileName || getAssetName(f.ref);
+    var folderLabel = getFolderPath(f.folderId) || 'Raiz';
+    var updatedLabel = f.updatedAt || f.createdAt ? new Date(f.updatedAt || f.createdAt).toLocaleDateString('pt-PT') : '—';
     return '<tr draggable="true" ondragstart="dragFileItem(event,\'' + f.id + '\')" onclick="openFileDetail(\'' + f.id + '\')">' +
-      '<td><div class="flex items-center gap-3"><div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:rgba(99,102,241,0.18)"><i class="' + getFileIcon(f.type) + ' text-purple-400"></i></div><div><div class="font-medium text-slate-100">' + escapeHtml(f.name) + '</div><div class="text-xs text-slate-500">' + escapeHtml(refLabel) + '</div></div></div></td>' +
+      '<td><div class="file-name-cell"><div class="file-icon-box"><i class="' + getFileIcon(f.type) + ' text-purple-400"></i></div><div class="min-w-0"><div class="file-title-text">' + escapeHtml(f.name) + '</div><div class="file-ref-text">' + escapeHtml(refLabel) + '</div></div></div></td>' +
       '<td><span class="badge ' + getFileTypeClass(f.type) + '">' + escapeHtml(f.type) + '</span></td>' +
-      '<td><span class="text-xs text-slate-400">' + escapeHtml(getFolderPath(f.folderId) || 'Raiz') + '</span></td>' +
+      '<td><span class="text-xs text-slate-400">' + escapeHtml(folderLabel) + '</span></td>' +
       '<td>' + getPermissionLabel(f) + '</td>' +
       '<td>' + getFileAssociations(f) + '</td>' +
-      '<td><span class="mono text-xs">' + ((f.versions || []).length || 1) + '</span></td>' +
-      '<td>' + new Date(f.updatedAt || f.createdAt).toLocaleDateString('pt-PT') + '</td>' +
-      '<td><button class="btn-secondary btn-action text-xs" onclick="event.stopPropagation(); addFileVersion(\'' + f.id + '\')"><i class="fas fa-code-branch"></i> Nova versão</button></td>' +
+      '<td><span class="file-version-pill">' + ((f.versions || []).length || 1) + '</span></td>' +
+      '<td><span class="text-sm text-slate-300">' + updatedLabel + '</span></td>' +
+      '<td class="text-right"><button class="btn-secondary btn-action file-version-action" title="Nova versão" onclick="event.stopPropagation(); addFileVersion(\'' + f.id + '\')"><i class="fas fa-code-branch"></i><span>Nova versão</span></button></td>' +
       '</tr>';
   }).join('');
 }
@@ -6199,23 +6937,32 @@ function renderFileMetrics() {
 function renderFolderTree() {
   var el = document.getElementById('files-folder-tree');
   if (!el) return;
-  var rootCount = (APP.files || []).filter(function(f) { return !f.folderId; }).length;
-  APP.fileTreeOpen = APP.fileTreeOpen || { root: true };
+  var rootCount = getFolderDirectItemCount('');
+  var manugentCount = (APP.files || []).length + (APP.fileFolders || []).length + 1;
+  APP.fileTreeOpen = APP.fileTreeOpen || { root: true, rootFolder: true };
   var rootOpen = APP.fileTreeOpen.root !== false;
+  var rootFolderOpen = APP.fileTreeOpen.rootFolder !== false;
+  var rootHasChildren = rootCount > 0;
   var html = '<div class="folder-row ' + (APP.currentFileFolder === 'all' ? 'active' : '') + '" onclick="selectFileFolder(\'all\')" ondragover="allowFileTreeDrop(event)" ondragleave="leaveFileTreeDrop(event)" ondrop="dropOnFolder(event,\'\')">' +
     '<span class="folder-toggle" onclick="event.stopPropagation();toggleFileTreeFolder(\'root\')"><i class="fas ' + (rootOpen ? 'fa-chevron-down' : 'fa-chevron-right') + ' text-[10px]"></i></span>' +
-    '<i class="fas fa-folder-tree text-yellow-400"></i><span class="folder-name font-semibold text-slate-200">manugent</span><span class="badge badge-gray text-xs">' + (APP.files || []).length + '</span></div>';
+    '<i class="fas fa-folder-tree text-yellow-400"></i><span class="folder-name font-semibold text-slate-200">manugent</span><span class="badge badge-gray text-xs">' + manugentCount + '</span></div>';
   if (rootOpen) {
     html += '<div class="folder-row ' + (APP.currentFileFolder === '' ? 'active' : '') + '" style="padding-left:28px" onclick="selectFileFolder(\'\')" ondragover="allowFileTreeDrop(event)" ondragleave="leaveFileTreeDrop(event)" ondrop="dropOnFolder(event,\'\')">' +
-      '<span class="folder-toggle"></span><i class="fas fa-folder text-yellow-400"></i><span class="folder-name">Raiz</span><span class="badge badge-gray text-xs">' + rootCount + '</span></div>';
-    html += renderFolderBranch('', 1);
+      '<span class="folder-toggle" onclick="event.stopPropagation();toggleFileTreeFolder(\'rootFolder\')">' + (rootHasChildren ? '<i class="fas ' + (rootFolderOpen ? 'fa-chevron-down' : 'fa-chevron-right') + ' text-[10px]"></i>' : '') + '</span><i class="fas ' + (rootFolderOpen && rootHasChildren ? 'fa-folder-open' : 'fa-folder') + ' text-yellow-400"></i><span class="folder-name">Raiz</span><span class="badge badge-gray text-xs">' + rootCount + '</span></div>';
+    if (rootFolderOpen) html += renderFolderBranch('', 2);
   }
   el.innerHTML = html;
+}
+function getFolderDirectItemCount(folderId) {
+  var normalizedId = folderId || '';
+  var fileCount = (APP.files || []).filter(function(file) { return (file.folderId || '') === normalizedId; }).length;
+  var folderCount = (APP.fileFolders || []).filter(function(folder) { return (folder.parentId || '') === normalizedId; }).length;
+  return fileCount + folderCount;
 }
 function renderFolderBranch(parentId, level) {
   level = level || 0;
   return (APP.fileFolders || []).filter(function(f) { return (f.parentId || '') === (parentId || ''); }).map(function(folder) {
-    var count = (APP.files || []).filter(function(file) { return file.folderId === folder.id; }).length;
+    var count = getFolderDirectItemCount(folder.id);
     var hasChildren = (APP.fileFolders || []).some(function(f) { return (f.parentId || '') === folder.id; });
     var isOpen = APP.fileTreeOpen && APP.fileTreeOpen[folder.id] !== false;
     var children = hasChildren && isOpen ? renderFolderBranch(folder.id, level + 1) : '';
@@ -6285,6 +7032,7 @@ function moveFolderToFolder(folderId, targetFolderId) {
   folder.parentId = targetFolderId || '';
   APP.fileTreeOpen = APP.fileTreeOpen || { root: true };
   APP.fileTreeOpen[targetFolderId || 'root'] = true;
+  if (!targetFolderId) APP.fileTreeOpen.rootFolder = true;
   APP.currentFileFolder = folderId;
   saveData(); renderFiles(); populateOTSelects(); showToast('Pasta movida para ' + (getFolderPath(targetFolderId) || 'Raiz') + '.');
 }
@@ -6365,17 +7113,17 @@ function getFileTypeClass(type) {
   return {'Credencial':'badge-red','Esquema elétrico':'badge-yellow','Vídeo':'badge-blue','Imagem':'badge-green','Link':'badge-purple','PDF':'badge-red'}[type] || 'badge-gray';
 }
 function getPermissionLabel(f) {
-  if (f.permission === 'all') return '<span class="badge badge-green">Todos</span>';
-  if (f.permission === 'users') return '<span class="badge badge-blue">Utilizadores</span> <span class="text-xs text-slate-500">' + (f.userIds || []).length + '</span>';
-  if (f.permission === 'teams') return '<span class="badge badge-purple">Equipas</span> <span class="text-xs text-slate-500">' + (f.teams || []).length + '</span>';
-  return '<span class="badge badge-red">Restrito</span>';
+  if (f.permission === 'all') return '<div class="file-chip-list"><span class="badge badge-green">Todos</span></div>';
+  if (f.permission === 'users') return '<div class="file-chip-list"><span class="badge badge-blue">Utilizadores · ' + (f.userIds || []).length + '</span></div>';
+  if (f.permission === 'teams') return '<div class="file-chip-list"><span class="badge badge-purple">Equipas · ' + (f.teams || []).length + '</span></div>';
+  return '<div class="file-chip-list"><span class="badge badge-red">Restrito</span></div>';
 }
 function getFileAssociations(f) {
   var rows = [];
   if (f.clientName) rows.push('<span class="badge badge-blue">' + escapeHtml(f.clientName) + '</span>');
   if (f.equipmentName) rows.push('<span class="badge badge-yellow">' + escapeHtml(f.equipmentName) + '</span>');
   if (f.otId) rows.push('<span class="badge badge-gray">' + escapeHtml(f.otId) + '</span>');
-  return rows.length ? rows.join(' ') : '<span class="text-slate-600">Sem associação</span>';
+  return rows.length ? '<div class="file-chip-list">' + rows.join('') + '</div>' : '<span class="text-xs text-slate-600">Sem associação</span>';
 }
 function openFileDetail(id) {
   var f = (APP.files || []).find(function(x) { return x.id === id; });
@@ -6428,16 +7176,38 @@ function openCurrentFileAsset() {
 function addFileVersion(id) {
   var f = (APP.files || []).find(function(x) { return x.id === id; });
   if (!f) return;
-  var version = prompt('Nova versão', 'v' + (((f.versions || []).length || 1) + 1) + '.0');
-  if (!version) return;
-  var ref = prompt('URL / referência da nova versão', f.ref || '');
-  if (!ref) return;
-  var notes = prompt('Notas da versão', 'Atualização do documento') || '';
+  APP.editingFileVersionId = id;
+  document.getElementById('file-version-modal-version').value = 'v' + (((f.versions || []).length || 1) + 1) + '.0';
+  document.getElementById('file-version-modal-ref').value = f.ref || '';
+  document.getElementById('file-version-modal-notes').value = 'Atualização do documento';
+  document.getElementById('modal-file-version').style.display = 'flex';
+  setTimeout(function() {
+    var input = document.getElementById('file-version-modal-version');
+    if (input) input.focus();
+  }, 50);
+}
+function confirmFileVersion() {
+  var id = APP.editingFileVersionId;
+  var f = (APP.files || []).find(function(x) { return x.id === id; });
+  if (!f) return;
+  var version = document.getElementById('file-version-modal-version').value.trim();
+  var ref = document.getElementById('file-version-modal-ref').value.trim();
+  var notes = document.getElementById('file-version-modal-notes').value.trim();
+  if (!version || !ref) {
+    showToast('Indique a versão e a referência do ficheiro.', 'error');
+    return;
+  }
   f.ref = ref;
   f.updatedAt = new Date().toISOString();
   f.versions = f.versions || [];
   f.versions.push({ version: version, ref: ref, notes: notes, createdAt: new Date().toISOString(), author: APP.user ? APP.user.name : 'Gestor' });
-  saveData(); renderFiles(); showToast('Nova versão registada.');
+  APP.editingFileVersionId = null;
+  saveData();
+  closeModal('modal-file-version');
+  renderFiles();
+  var detailModal = document.getElementById('modal-file-detail');
+  if (APP.currentFile && APP.currentFile.id === f.id && detailModal && detailModal.style.display === 'flex') openFileDetail(f.id);
+  showToast('Nova versão registada.');
 }
 function renderAssociatedFiles(target, id, elId) {
   var el = document.getElementById(elId);
@@ -7197,6 +7967,7 @@ function closeModal(id) {
   if (id === 'modal-new-ot') { showPage('ots'); return; }
   if (id === 'modal-ot-detail') { showPage('ots'); return; }
   if (id === 'modal-equip-detail') { showPage('equipment'); return; }
+  if (id === 'modal-new-file') APP.fileReturnContext = '';
   document.getElementById(id).style.display = 'none';
 }
 function showToast(msg) {
@@ -7297,11 +8068,29 @@ function enhanceFileInputs() {
     preview.className = 'upload-preview';
     preview.id = input.id + '-preview';
     label.insertAdjacentElement('afterend', preview);
+    label.addEventListener('click', function() {
+      input._filesBeforePicker = Array.prototype.slice.call(input.files || []);
+    });
     input.addEventListener('change', function() {
+      if (input.multiple) appendSelectedUploadFiles(input);
       updateFilePickerLabel(input);
       renderUploadPreview(input);
     });
   });
+}
+function appendSelectedUploadFiles(input) {
+  var previous = input._filesBeforePicker || [];
+  var selected = Array.prototype.slice.call(input.files || []);
+  if (!previous.length || !selected.length) return;
+  var dt = new DataTransfer();
+  previous.concat(selected).forEach(function(file) {
+    var exists = Array.prototype.slice.call(dt.files).some(function(existing) {
+      return existing.name === file.name && existing.size === file.size && existing.type === file.type && existing.lastModified === file.lastModified;
+    });
+    if (!exists) dt.items.add(file);
+  });
+  input.files = dt.files;
+  input._filesBeforePicker = [];
 }
 function updateFilePickerLabel(input) {
   var label = input.nextElementSibling && input.nextElementSibling.classList.contains('file-picker') ? input.nextElementSibling : null;
@@ -7309,9 +8098,9 @@ function updateFilePickerLabel(input) {
   var files = Array.prototype.slice.call(input.files || []);
   var context = (input.id || '').toLowerCase();
   var isPhoto = context.includes('image') || context.includes('photo') || context.includes('cover') || (input.accept || '').includes('image');
-  var idleText = context.includes('cover') ? 'Carregar capa' : isPhoto ? 'Carregar foto' : 'Carregar ficheiro';
-  var selectedText = context.includes('cover') ? 'Alterar capa' : isPhoto ? 'Alterar foto' : 'Alterar ficheiro';
-  var text = files.length ? selectedText : idleText;
+  var idleText = input.multiple ? 'Carregar ficheiros' : context.includes('cover') ? 'Carregar capa' : isPhoto ? 'Carregar foto' : 'Carregar ficheiro';
+  var selectedText = input.multiple ? 'Adicionar mais ficheiros' : context.includes('cover') ? 'Alterar capa' : isPhoto ? 'Alterar foto' : 'Alterar ficheiro';
+  var text = files.length > 1 ? files.length + ' ficheiros selecionados' : files.length ? selectedText : idleText;
   label.querySelector('span').textContent = text;
   label.classList.toggle('active', files.length > 0);
 }
