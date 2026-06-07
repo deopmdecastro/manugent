@@ -706,6 +706,35 @@
     .ai-hidden-upload {
       display: none !important;
     }
+    .chat-bubble-error {
+      align-self: flex-start;
+      background: rgba(245,158,11,0.08);
+      border: 1px solid rgba(245,158,11,0.22);
+      border-radius: 12px;
+      max-width: 85%;
+      padding: 12px 16px;
+    }
+    .ai-msg-content li { list-style: none; }
+    .ai-msg-content h2, .ai-msg-content h3, .ai-msg-content h4 { display: block; }
+    @keyframes dotBounce {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+      40% { transform: translateY(-5px); opacity: 1; }
+    }
+    .ai-dot { display: inline-block; font-size: 8px; }
+    .backend-status-bar {
+      background: rgba(16,185,129,0.08);
+      border: 1px solid rgba(16,185,129,0.2);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .backend-status-bar.offline {
+      background: rgba(245,158,11,0.08);
+      border-color: rgba(245,158,11,0.2);
+    }
     .multi-access-picker {
       display: grid;
       gap: 8px;
@@ -2312,8 +2341,8 @@
             <div>
               <h1 class="text-2xl font-bold mono">Assistente IA ManuGent</h1>
               <p class="text-slate-400 text-sm mt-1 flex items-center gap-2">
-                <span class="status-dot dot-green pulse"></span>
-                Agente operacional inteligente — online
+                <span class="status-dot dot-green pulse" id="ai-status-dot"></span>
+                <span id="ai-status-text">A verificar estado da IA...</span>
               </p>
             </div>
           </div>
@@ -2322,6 +2351,10 @@
             <button class="btn-secondary text-sm" id="ai-settings-btn" onclick="openAISettings()"><i class="fas fa-sliders"></i> Definições da IA</button>
             <button class="btn-secondary text-sm" onclick="showPage('knowledge')"><i class="fas fa-book"></i> Base de conhecimento</button>
           </div>
+        </div>
+        <!-- Backend status bar -->
+        <div id="backend-status-bar" class="backend-status-bar mb-4" style="display:none">
+          <span class="status-dot dot-yellow"></span><span>A verificar ligação ao servidor...</span>
         </div>
         <div class="flex gap-2 mb-5 flex-wrap">
           <button class="badge badge-purple cursor-pointer" style="padding:8px 12px" onclick="quickPrompt('Criar OT preventiva para o gerador')"><i class="fas fa-plus"></i> Criar OT preventiva</button>
@@ -2573,22 +2606,60 @@
             <h3 class="font-semibold mb-4">Sobre a Plataforma</h3>
             <div class="space-y-3 text-sm">
               <div class="flex items-center justify-between py-2 border-b border-white/5">
-                <span class="text-slate-400">Versão</span><span class="mono text-xs badge badge-purple">v1.0.0</span>
+                <span class="text-slate-400">Versão</span><span class="mono text-xs badge badge-purple">v2.0.0</span>
               </div>
               <div class="flex items-center justify-between py-2 border-b border-white/5">
-                <span class="text-slate-400">Stack tecnológico</span><span class="text-slate-300">Hono + Cloudflare</span>
+                <span class="text-slate-400">Stack tecnológico</span><span class="text-slate-300">Hono + Node.js + PostgreSQL</span>
               </div>
               <div class="flex items-center justify-between py-2 border-b border-white/5">
                 <span class="text-slate-400">IA</span>
-                <span class="text-slate-300 flex items-center gap-2"><span class="status-dot dot-green"></span> Operacional</span>
+                <span class="text-slate-300 flex items-center gap-2" id="settings-ai-status-badge">
+                  <span class="status-dot dot-yellow" id="settings-ai-dot"></span>
+                  <span id="settings-ai-label">A verificar...</span>
+                </span>
               </div>
               <div class="flex items-center justify-between py-2">
                 <span class="text-slate-400">Módulos</span><span class="text-slate-300">8 ativos</span>
               </div>
             </div>
             <div class="mt-5 p-4 rounded-lg" style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2)">
-              <div class="text-xs mono" style="color:var(--accent-purple-light)">ManuGent — O conhecimento técnico da sua empresa, transformado em inteligência artificial.</div>
+              <div class="text-xs mono" style="color:var(--accent-purple-light)">ManuGent v2 — O conhecimento técnico da sua empresa, transformado em inteligência artificial real.</div>
             </div>
+          </div>
+        </div>
+        <!-- AI Provider Configuration Card -->
+        <div class="card p-6 mt-6" id="admin-ai-config-card">
+          <div class="flex items-center justify-between gap-4 mb-5">
+            <div>
+              <h3 class="font-semibold flex items-center gap-2"><i class="fas fa-robot" style="color:var(--accent-purple-light)"></i> Configuração do Agente IA</h3>
+              <p class="text-xs text-slate-500 mt-1">Configure o provedor de IA real para o ManuGent. As chaves são geridas no servidor (.env).</p>
+            </div>
+            <span id="ai-config-status-badge" class="badge badge-gray">A verificar...</span>
+          </div>
+          <div id="ai-config-status-detail" class="mb-5 p-4 rounded-lg text-sm" style="background:rgba(0,0,0,0.2);border:1px solid var(--border)">
+            <div class="flex items-center gap-2"><span class="status-dot dot-yellow" id="ai-cfg-dot"></span><span id="ai-cfg-msg">A contactar servidor...</span></div>
+          </div>
+          <div class="grid md:grid-cols-2 gap-5">
+            <div class="p-4 rounded-lg border border-white/10 bg-white/5">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3)"><i class="fas fa-bolt text-emerald-400 text-sm"></i></div>
+                <div><div class="font-medium text-sm">Groq (Recomendado)</div><div class="text-xs text-slate-500">Llama 3 — Ultra rápido, gratuito</div></div>
+              </div>
+              <p class="text-xs text-slate-400 mb-3">Configure no servidor: <code class="mono text-emerald-300">GROQ_API_KEY=gsk_...</code></p>
+              <a href="https://console.groq.com/keys" target="_blank" class="btn-secondary text-xs" style="padding:6px 12px;display:inline-flex"><i class="fas fa-external-link-alt"></i> Obter chave gratuita</a>
+            </div>
+            <div class="p-4 rounded-lg border border-white/10 bg-white/5">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3)"><i class="fas fa-brain text-blue-400 text-sm"></i></div>
+                <div><div class="font-medium text-sm">OpenAI</div><div class="text-xs text-slate-500">GPT-4o-mini — Alta qualidade</div></div>
+              </div>
+              <p class="text-xs text-slate-400 mb-3">Configure no servidor: <code class="mono text-blue-300">OPENAI_API_KEY=sk-...</code></p>
+              <a href="https://platform.openai.com/api-keys" target="_blank" class="btn-secondary text-xs" style="padding:6px 12px;display:inline-flex"><i class="fas fa-external-link-alt"></i> Painel OpenAI</a>
+            </div>
+          </div>
+          <div class="mt-4 p-3 rounded-lg text-xs text-slate-400" style="background:rgba(99,102,241,0.07);border:1px solid rgba(99,102,241,0.15)">
+            <i class="fas fa-info-circle mr-1 text-indigo-400"></i>
+            Para configurar: edite o ficheiro <code class="mono text-indigo-300">.env</code> na raiz do servidor e reinicie. Variáveis: <code class="mono">OPENAI_API_KEY</code>, <code class="mono">GROQ_API_KEY</code>, <code class="mono">AI_PROVIDER</code> (openai|groq), <code class="mono">AI_MODEL</code>.
           </div>
         </div>
         <div class="card p-6 mt-6" id="admin-ai-scope-card">
@@ -4157,6 +4228,9 @@ window.onload = function() {
   renderCalendar();
   enhanceFileInputs();
   enhanceSelects();
+  // Initialize AI status check
+  checkAIStatus();
+  setInterval(checkAIStatus, 60000); // refresh every 60s
 };
 
 function showLanding() {
@@ -4291,6 +4365,7 @@ function showPage(page) {
   if (page === 'purchases') renderPurchases();
   if (page === 'quotes') renderQuotes();
   if (page === 'calendar') renderCalendar();
+  if (page === 'ai-assistant') checkAIStatus();
   updateGlobalSearchPlaceholder();
   refreshContextAIHeader();
 }
@@ -4406,6 +4481,8 @@ function updateUserUI() {
   if (getUserRole() === 'admin') generateManagedUserPassword(false);
   renderManagedUsers();
   renderAIScopeSettings();
+  // Update AI configuration status in settings page
+  updateSettingsAIStatus();
 }
 function saveProfile() {
   var name = document.getElementById('settings-name-input').value;
@@ -6472,16 +6549,44 @@ function syncBackendWorkOrders() {
   return Promise.all([
     apiRequest('/api/work-orders?tab=agendadas'),
     apiRequest('/api/work-orders?tab=pedidos'),
-    apiRequest('/api/notifications')
+    apiRequest('/api/notifications?unread=true'),
+    apiRequest('/api/stats').catch(function() { return null; })
   ]).then(function(results) {
     APP.backendOnline = true;
     mergeBackendOTs(results[0].workOrders || []);
     mergeBackendOTs(results[1].workOrders || []);
+    // Update notification badge
+    var unreadNotifs = (results[2].notifications || []);
     var badge = document.getElementById('ot-count-badge');
-    if (badge) badge.textContent = (results[2].notifications || []).length;
+    var notifCount = unreadNotifs.length;
+    if (badge) {
+      badge.textContent = notifCount > 0 ? notifCount : '';
+      badge.style.display = notifCount > 0 ? 'flex' : 'none';
+    }
+    // Merge backend stats if available
+    if (results[3]) {
+      APP.backendStats = results[3];
+    }
+    // Store backend notifications
+    if (unreadNotifs.length > 0) {
+      APP.backendNotifications = unreadNotifs;
+    }
     saveData(); updateDashboard(); renderOTs();
+    // Update backend status indicator
+    var backendBar = document.getElementById('backend-status-bar');
+    if (backendBar) {
+      backendBar.style.display = 'flex';
+      backendBar.className = 'backend-status-bar';
+      backendBar.innerHTML = '<span class="status-dot dot-green"></span><span>Backend online — ' + ((results[0].workOrders || []).length + (results[1].workOrders || []).length) + ' OTs sincronizadas</span>';
+    }
   }).catch(function() {
     APP.backendOnline = false;
+    var backendBar = document.getElementById('backend-status-bar');
+    if (backendBar) {
+      backendBar.style.display = 'flex';
+      backendBar.className = 'backend-status-bar offline';
+      backendBar.innerHTML = '<span class="status-dot dot-yellow"></span><span>Backend offline — modo local ativo</span>';
+    }
   });
 }
 function createScheduledDemoFlow() {
@@ -9353,27 +9458,167 @@ function getAIResponse(msg) {
   }
   return 'Posso ajudar com:\n\n• Diagnóstico técnico — descreva o sintoma\n• Criar OT — ex: "Criar OT preventiva para o gerador"\n• Procedimentos — ex: "Como calibrar SPC11?"\n• Equipamentos — ex: "Estado dos equipamentos"\n• OTs abertas — ex: "Mostrar OTs abertas"\n\nComo posso ajudar?';
 }
-function sendMessage() {
+// ======================== AI CHAT — REAL API INTEGRATION ========================
+APP.aiChatHistory = APP.aiChatHistory || [];
+APP.aiSessionId = APP.aiSessionId || ('sess-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+APP.aiProviderStatus = APP.aiProviderStatus || null;
+
+async function checkAIStatus() {
+  try {
+    var res = await fetch('/api/ai/status');
+    if (res.ok) {
+      var data = await res.json();
+      APP.aiProviderStatus = data;
+      updateAIStatusIndicator(data);
+    }
+  } catch (e) {
+    APP.aiProviderStatus = { configured: false };
+  }
+}
+
+function updateAIStatusIndicator(data) {
+  var statusEl = document.getElementById('ai-status-text');
+  var dotEl = document.getElementById('ai-status-dot');
+  if (!statusEl) return;
+  if (data && data.configured) {
+    statusEl.textContent = 'Agente IA ativo — ' + data.provider + ' (' + data.model + ')';
+    if (dotEl) { dotEl.className = 'status-dot dot-green pulse'; }
+  } else {
+    statusEl.textContent = 'IA sem configuração — modo local';
+    if (dotEl) { dotEl.className = 'status-dot dot-yellow'; }
+  }
+}
+
+function buildAIContext() {
+  var data = getAIVisibleData();
+  var openOTs = data.ots.filter(function(o) { return o.status !== 'Concluída' && o.status !== 'Cancelada'; });
+  var urgentOTs = openOTs.filter(function(o) { return o.priority === 'Urgente' || o.priority === 'Alta'; });
+  var lowStockItems = (data.materials || []).filter(function(m) { return Number(m.stock || 0) <= 2; });
+  return {
+    currentPage: APP.currentPage || 'ai-assistant',
+    userRole: getUserRole(),
+    stats: {
+      openOTs: openOTs.length,
+      inProgressOTs: openOTs.filter(function(o) { return o.status === 'Em Progresso'; }).length,
+      urgentOTs: urgentOTs.length,
+      equipment: (data.equipment || []).length,
+      clients: (data.clients || []).length,
+      lowStock: lowStockItems.length
+    },
+    currentEquipment: APP.currentEquip || null,
+    currentOT: APP.currentOT || null,
+    recentOTs: openOTs.slice(0, 5).map(function(o) {
+      return { id: o.id, title: o.title, type: o.type, status: o.status, priority: o.priority,
+               equipmentName: o.equipmentName, clientName: o.clientName, description: o.description };
+    })
+  };
+}
+
+function renderMarkdown(text) {
+  return text
+    .replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/`(.+?)`/g,'<code style="background:rgba(99,102,241,0.18);padding:1px 5px;border-radius:4px;font-family:monospace;font-size:0.85em">$1</code>')
+    .replace(/^### (.+)$/gm,'<h4 style="font-weight:700;margin:8px 0 4px;font-size:0.95em;color:var(--accent-purple-light)">$1</h4>')
+    .replace(/^## (.+)$/gm,'<h3 style="font-weight:700;margin:10px 0 5px;color:var(--text-primary)">$1</h3>')
+    .replace(/^# (.+)$/gm,'<h2 style="font-weight:800;margin:10px 0 6px;color:var(--text-primary)">$1</h2>')
+    .replace(/^[-*] (.+)$/gm,'<li style="margin-left:12px;margin-bottom:3px">• $1</li>')
+    .replace(/^(\d+)\. (.+)$/gm,'<li style="margin-left:12px;margin-bottom:3px"><strong>$1.</strong> $2</li>')
+    .replace(/\n/g,'<br>');
+}
+
+async function sendMessage() {
   var input = document.getElementById('chat-input');
-  var msg = input.value.trim();
+  var msg = (input && input.value) ? input.value.trim() : '';
   if (!msg) return;
   appendChatMessage(msg, 'user');
+  APP.aiChatHistory.push({ role: 'user', content: msg });
   input.value = '';
-  setTimeout(function() {
-    var result = runInternalAICommand(msg, APP.currentPage || 'ai-assistant');
-    appendChatMessage(result.text, 'ai');
-    if (result.action) requestAIAction(result.action, appendChatMessage);
-  }, 800);
-}
-function appendChatMessage(text, type) {
-  var chat = document.getElementById('chat-messages');
-  var div = document.createElement('div');
-  div.className = (type === 'user' ? 'chat-bubble-user' : 'chat-bubble-ai') + ' fade-in';
-  if (type === 'ai') {
-    div.innerHTML = '<div class="flex items-center gap-2 mb-2"><div class="w-6 h-6 rounded flex items-center justify-center" style="background:var(--accent-purple)"><i class="fas fa-robot text-xs text-white"></i></div><span class="text-xs font-semibold" style="color:var(--accent-purple-light)">Assistente IA ManuGent</span></div>' +
-      '<div class="text-sm" style="white-space:pre-line">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>';
+
+  // Keep history max 20 turns
+  if (APP.aiChatHistory.length > 20) APP.aiChatHistory = APP.aiChatHistory.slice(-20);
+
+  // Check if backend AI is available
+  var useRealAI = APP.aiProviderStatus && APP.aiProviderStatus.configured;
+
+  if (useRealAI) {
+    appendAITypingIndicator();
+    try {
+      var res = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: msg,
+          history: APP.aiChatHistory.slice(0, -1),
+          context: buildAIContext(),
+          sessionId: APP.aiSessionId
+        })
+      });
+      removeAITypingIndicator();
+      if (res.ok) {
+        var data = await res.json();
+        var aiText = data.text || 'Sem resposta.';
+        APP.aiChatHistory.push({ role: 'assistant', content: aiText });
+        appendChatMessage(aiText, 'ai', data.provider, data.model);
+      } else {
+        var errData = await res.json().catch(function() { return {}; });
+        appendChatMessage('Erro na IA: ' + (errData.error || 'Erro desconhecido'), 'ai-error');
+        // Fallback to internal
+        var fallback = runInternalAICommand(msg, APP.currentPage || 'ai-assistant');
+        appendChatMessage(fallback.text, 'ai');
+        if (fallback.action) requestAIAction(fallback.action, appendChatMessage);
+      }
+    } catch (e) {
+      removeAITypingIndicator();
+      appendChatMessage('Falha de rede. A usar modo local...', 'ai-error');
+      var fb = runInternalAICommand(msg, APP.currentPage || 'ai-assistant');
+      appendChatMessage(fb.text, 'ai');
+      if (fb.action) requestAIAction(fb.action, appendChatMessage);
+    }
   } else {
-    div.innerHTML = '<div class="text-sm">' + text + '</div>';
+    // Internal AI fallback
+    setTimeout(function() {
+      var result = runInternalAICommand(msg, APP.currentPage || 'ai-assistant');
+      APP.aiChatHistory.push({ role: 'assistant', content: result.text });
+      appendChatMessage(result.text, 'ai');
+      if (result.action) requestAIAction(result.action, appendChatMessage);
+    }, 600);
+  }
+}
+
+function appendAITypingIndicator() {
+  var chat = document.getElementById('chat-messages');
+  if (!chat) return;
+  var div = document.createElement('div');
+  div.id = 'ai-typing-indicator';
+  div.className = 'chat-bubble-ai fade-in';
+  div.innerHTML = '<div class="flex items-center gap-2 mb-1"><div class="w-6 h-6 rounded flex items-center justify-center" style="background:var(--accent-purple)"><i class="fas fa-robot text-xs text-white"></i></div><span class="text-xs font-semibold" style="color:var(--accent-purple-light)">Assistente IA ManuGent</span></div>' +
+    '<div class="flex items-center gap-1 text-slate-400" style="font-size:13px"><span class="ai-dot" style="animation:dotBounce 1s ease-in-out infinite 0s">●</span><span class="ai-dot" style="animation:dotBounce 1s ease-in-out infinite 0.2s">●</span><span class="ai-dot" style="animation:dotBounce 1s ease-in-out infinite 0.4s">●</span><span style="margin-left:6px">A processar...</span></div>';
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function removeAITypingIndicator() {
+  var el = document.getElementById('ai-typing-indicator');
+  if (el) el.remove();
+}
+
+function appendChatMessage(text, type, provider, model) {
+  var chat = document.getElementById('chat-messages');
+  if (!chat) return;
+  var div = document.createElement('div');
+  div.className = (type === 'user' ? 'chat-bubble-user' : type === 'ai-error' ? 'chat-bubble-error' : 'chat-bubble-ai') + ' fade-in';
+  if (type === 'ai') {
+    var badge = provider ? ' <span class="text-xs text-slate-600 ml-1">via ' + provider + '</span>' : '';
+    div.innerHTML = '<div class="flex items-center gap-2 mb-2"><div class="w-6 h-6 rounded flex items-center justify-center" style="background:var(--accent-purple)"><i class="fas fa-robot text-xs text-white"></i></div>' +
+      '<span class="text-xs font-semibold" style="color:var(--accent-purple-light)">Assistente IA ManuGent</span>' + badge + '</div>' +
+      '<div class="text-sm ai-msg-content" style="line-height:1.7">' + renderMarkdown(text) + '</div>';
+  } else if (type === 'ai-error') {
+    div.innerHTML = '<div class="flex items-center gap-2 mb-1"><i class="fas fa-exclamation-triangle text-amber-400 text-xs"></i><span class="text-xs text-amber-400">Aviso</span></div>' +
+      '<div class="text-sm text-amber-300">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>';
+  } else {
+    div.innerHTML = '<div class="text-sm">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>';
   }
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
@@ -9384,8 +9629,10 @@ function quickPrompt(text) {
 }
 function clearChat() {
   document.getElementById('chat-messages').innerHTML = '';
+  APP.aiChatHistory = [];
   appendChatMessage('Chat limpo. Como posso ajudar?', 'ai');
 }
+// appendChatMessage, quickPrompt and clearChat are now above in AI CHAT section
 function getAIInputByTarget(target) {
   return document.getElementById(target === 'context' ? 'context-ai-input' : 'chat-input');
 }
@@ -9490,12 +9737,40 @@ function openAISettings() {
   }
   showPage('settings');
   setTimeout(function() {
-    var card = document.getElementById('admin-ai-scope-card');
+    var card = document.getElementById('admin-ai-config-card');
+    if (!card) card = document.getElementById('admin-ai-scope-card');
     if (!card) return;
     card.scrollIntoView({ behavior: 'smooth', block: 'center' });
     card.style.boxShadow = '0 0 0 1px rgba(99,102,241,.7), 0 0 28px rgba(99,102,241,.28)';
     setTimeout(function() { card.style.boxShadow = ''; }, 1800);
+    // Refresh AI status in settings page
+    updateSettingsAIStatus();
   }, 80);
+}
+function updateSettingsAIStatus() {
+  var badge = document.getElementById('ai-config-status-badge');
+  var msg = document.getElementById('ai-cfg-msg');
+  var dot = document.getElementById('ai-cfg-dot');
+  var settingsLabel = document.getElementById('settings-ai-label');
+  var settingsDot = document.getElementById('settings-ai-dot');
+  if (!APP.aiProviderStatus) {
+    checkAIStatus().then(function() { updateSettingsAIStatus(); });
+    return;
+  }
+  var data = APP.aiProviderStatus;
+  if (data.configured) {
+    if (badge) { badge.className = 'badge badge-green'; badge.textContent = '✓ IA Ativa — ' + data.provider; }
+    if (msg) msg.textContent = 'IA configurada: ' + data.provider.toUpperCase() + ' — modelo ' + data.model;
+    if (dot) { dot.className = 'status-dot dot-green'; }
+    if (settingsLabel) settingsLabel.textContent = 'Operacional — ' + data.provider;
+    if (settingsDot) settingsDot.className = 'status-dot dot-green';
+  } else {
+    if (badge) { badge.className = 'badge badge-yellow'; badge.textContent = '⚠ Sem configuração'; }
+    if (msg) msg.textContent = 'Nenhum provedor configurado. Configure OPENAI_API_KEY ou GROQ_API_KEY no .env e reinicie o servidor.';
+    if (dot) { dot.className = 'status-dot dot-yellow'; }
+    if (settingsLabel) settingsLabel.textContent = 'Modo local (sem IA real)';
+    if (settingsDot) settingsDot.className = 'status-dot dot-yellow';
+  }
 }
 
 // ======================== INTERNAL MANUGENT IA ========================

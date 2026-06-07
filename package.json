@@ -1,13 +1,15 @@
 {
-  "name": "webapp",
+  "name": "manugent",
+  "version": "2.0.0",
+  "description": "ManuGent — Plataforma CMMS com Agente IA de Manutenção Industrial",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "dev:api": "tsx watch src/server.ts",
+    "dev": "tsx watch src/server.ts",
+    "build": "npm run build:api",
     "build:api": "esbuild src/server.ts --bundle --platform=node --format=esm --outfile=dist/server.js --packages=external",
-    "build": "vite build",
-    "start:api": "node dist/server.js",
-    "preview": "wrangler pages dev",
+    "start": "node dist/server.js",
+    "preview": "npm run build && node dist/server.js",
+    "lint": "node_modules/.bin/tsc --noEmit",
     "deploy": "npm run build && wrangler pages deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
@@ -20,9 +22,11 @@
   "devDependencies": {
     "@hono/vite-build": "^1.2.0",
     "@hono/vite-dev-server": "^0.25.2",
+    "@types/node": "^22.0.0",
     "@types/pg": "^8.15.5",
     "esbuild": "^0.25.12",
     "tsx": "^4.20.6",
+    "typescript": "^5.8.3",
     "vite": "^6.3.5",
     "wrangler": "^4.4.0"
   }

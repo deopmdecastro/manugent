@@ -1,3 +1,31 @@
+# Assets 3D (large binary files)
 public/app/assets/ManuGent_Mascot_3d.glb
 public/app/assets/ManuGent_Mascot_3d.blend
 src/ManuGent_Mascot_3d.glb
+src/ManuGent_Mascot_3d.blend
+
+# Environment / secrets
+.env
+.env.local
+.dev.vars
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.wrangler/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
