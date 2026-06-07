@@ -4,7 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ManuGent — Agente IA de Manutenção</title>
+  <link rel="icon" type="image/png" href="assets/icon_manugent.png">
+  <link rel="apple-touch-icon" href="assets/icon_manugent.png">
+  <meta name="theme-color" content="#0a0a1a">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
@@ -1039,9 +1043,115 @@
       color: #bbf7d0;
     }
     .logo-icon {
-      width: 36px; height: 36px; background: var(--accent-purple);
+      width: 36px; height: 36px; background: rgba(99,102,241,0.12);
+      border: 1px solid rgba(129,140,248,0.25);
       border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
     }
+    .logo-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .brand-logo {
+      height: 36px;
+      width: auto;
+      max-width: 150px;
+      object-fit: contain;
+      display: block;
+    }
+    .brand-logo.compact { height: 30px; max-width: 130px; }
+    .brand-logo.topbar { height: 48px; max-width: 190px; }
+    .brand-logo.auth { height: 42px; max-width: 180px; }
+    .brand-title-fallback { font-weight: 800; color: var(--text-primary); }
+    .ai-brand-icon {
+      width: 18px;
+      height: 18px;
+      object-fit: contain;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .ai-brand-icon.sm { width: 14px; height: 14px; }
+    .ai-brand-icon.md { width: 22px; height: 22px; }
+    .mascot-stage {
+      position: relative;
+      border: 1px solid rgba(129,140,248,0.22);
+      background: radial-gradient(circle at 50% 20%, rgba(99,102,241,0.32), rgba(15,15,42,0.72) 58%, rgba(10,10,26,0.82));
+      box-shadow: 0 18px 55px rgba(99,102,241,0.18);
+      overflow: hidden;
+      isolation: isolate;
+    }
+    .mascot-stage::after {
+      content: '';
+      position: absolute;
+      inset: auto 18% 12% 18%;
+      height: 14px;
+      border-radius: 999px;
+      background: rgba(129,140,248,0.26);
+      filter: blur(10px);
+      z-index: 0;
+    }
+    .mascot-stage-hero {
+      width: min(240px, 60vw);
+      height: 210px;
+      border-radius: 18px;
+      margin: 0 auto 28px;
+    }
+    .mascot-stage-chat {
+      width: 86px;
+      height: 86px;
+      border-radius: 18px;
+      flex-shrink: 0;
+    }
+    .mascot-stage-panel {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      flex-shrink: 0;
+    }
+    .mascot-model {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+    .mascot-fallback {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 2;
+      color: var(--accent-purple-light);
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .mascot-loader {
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      border: 3px solid rgba(129,140,248,0.18);
+      border-top-color: var(--accent-purple-light);
+      animation: mascotSpin 1s linear infinite;
+    }
+    .mascot-fallback img {
+      display: none;
+      width: 78%;
+      max-width: 170px;
+      max-height: 86%;
+      object-fit: contain;
+      filter: drop-shadow(0 14px 30px rgba(129,140,248,0.42));
+      animation: mascotFloat 3.6s ease-in-out infinite;
+    }
+    .mascot-stage.error .mascot-loader,
+    .mascot-stage.error .mascot-loading-label { display: none; }
+    .mascot-stage.error .mascot-fallback img { display: block; }
+    .mascot-stage.loaded .mascot-fallback { display: none; }
+    @keyframes mascotFloat {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-8px) scale(1.03); }
+    }
+    @keyframes mascotSpin { to { transform: rotate(360deg); } }
     .divider {
       display: flex; align-items: center; gap: 12px;
       color: var(--text-muted); font-size: 12px;
@@ -1148,8 +1258,7 @@
 <div id="landing-page" class="hero-bg min-h-screen">
   <nav class="flex items-center justify-between px-8 py-4 border-b border-white/5">
     <div class="flex items-center gap-3">
-      <div class="logo-icon"><i class="fas fa-gear text-white text-sm"></i></div>
-      <span class="font-bold text-lg">ManuGent</span>
+      <img src="assets/ManuGent_logo.png" alt="ManuGent" class="brand-logo topbar">
     </div>
     <div class="hidden md:flex items-center gap-8">
       <span class="nav-link" onclick="scrollToSection('features')">Funcionalidades</span>
@@ -1166,6 +1275,10 @@
     <div class="inline-flex items-center gap-2 mb-6 bg-white/5 px-4 py-2 rounded-full border border-white/10">
       <span class="status-dot dot-green pulse"></span>
       <span class="mono text-xs text-green-400 tracking-widest">AI-POWERED MAINTENANCE OPERATING SYSTEM</span>
+    </div>
+    <div class="mascot-stage mascot-stage-hero">
+      <model-viewer class="mascot-model" src="assets/ManuGent_Mascot_3d.glb" loading="eager" reveal="auto" camera-controls auto-rotate auto-rotate-delay="0" disable-zoom interaction-prompt="none" camera-orbit="25deg 72deg 3.4m" field-of-view="28deg" shadow-intensity="0.7" exposure="1.05"></model-viewer>
+      <div class="mascot-fallback"><span class="mascot-loader"></span><span class="mascot-loading-label">A carregar mascote 3D</span><img src="assets/3d_mascot.png" alt="Mascote ManuGent"></div>
     </div>
     <h1 class="text-5xl md:text-6xl font-black leading-tight mb-6">
       O conhecimento<br>técnico,<br>
@@ -1309,8 +1422,7 @@
 
   <footer class="border-t border-white/5 py-8 text-center text-slate-500 text-sm">
     <div class="flex items-center justify-center gap-2 mb-2">
-      <div class="logo-icon" style="width:24px;height:24px"><i class="fas fa-gear text-white text-xs"></i></div>
-      <span class="font-bold text-white">ManuGent</span>
+      <img src="assets/ManuGent_logo.png" alt="ManuGent" class="brand-logo compact">
     </div>
     <p>O conhecimento técnico da sua empresa, transformado em inteligência artificial.</p>
   </footer>
@@ -1323,9 +1435,8 @@
   </div>
   <div class="auth-card">
     <div class="flex items-center gap-3 mb-6">
-      <div class="logo-icon"><i class="fas fa-gear text-white text-sm"></i></div>
       <div>
-        <div class="font-bold text-lg">ManuGent</div>
+        <img src="assets/ManuGent_logo.png" alt="ManuGent" class="brand-logo auth">
         <div class="text-xs text-slate-400">Agente IA de manutenção</div>
       </div>
     </div>
@@ -1358,8 +1469,7 @@
   <aside id="app-sidebar">
     <div class="p-4 border-b border-white/5">
       <div class="flex items-center gap-3">
-        <div class="logo-icon"><i class="fas fa-gear text-white text-sm"></i></div>
-        <span class="font-bold">ManuGent</span>
+        <img src="assets/ManuGent_logo.png" alt="ManuGent" class="brand-logo compact" style="height:36px;max-width:160px">
       </div>
     </div>
     <div class="px-4 py-3 border-b border-white/5">
@@ -1938,12 +2048,18 @@
       <!-- ASSISTENTE IA -->
       <div id="page-ai-assistant" class="page fade-in">
         <div class="flex items-center justify-between mb-6">
-          <div>
-            <h1 class="text-2xl font-bold mono">Assistente IA</h1>
-            <p class="text-slate-400 text-sm mt-1 flex items-center gap-2">
-              <span class="status-dot dot-green pulse"></span>
-              Agente operacional inteligente — online
-            </p>
+          <div class="flex items-center gap-4">
+            <div class="mascot-stage mascot-stage-chat">
+              <model-viewer class="mascot-model" src="assets/ManuGent_Mascot_3d.glb" loading="eager" reveal="auto" auto-rotate auto-rotate-delay="0" disable-zoom interaction-prompt="none" camera-orbit="25deg 72deg 3.4m" field-of-view="30deg" shadow-intensity="0.65"></model-viewer>
+              <div class="mascot-fallback"><span class="mascot-loader"></span><img src="assets/3d_mascot.png" alt="Mascote ManuGent"></div>
+            </div>
+            <div>
+              <h1 class="text-2xl font-bold mono">Assistente IA</h1>
+              <p class="text-slate-400 text-sm mt-1 flex items-center gap-2">
+                <span class="status-dot dot-green pulse"></span>
+                Agente operacional inteligente — online
+              </p>
+            </div>
           </div>
           <div class="flex gap-2">
             <button class="btn-ghost text-sm" onclick="clearChat()"><i class="fas fa-trash"></i> Limpar</button>
@@ -3073,7 +3189,7 @@
 <div id="modal-new-equip" class="modal-overlay" style="display:none">
   <div class="modal-content">
     <div class="flex items-center justify-between mb-5">
-      <h2 class="text-lg font-semibold">Novo Equipamento</h2>
+      <h2 class="text-lg font-semibold" id="equip-modal-title">Novo Equipamento</h2>
       <button class="btn-ghost" onclick="closeModal('modal-new-equip')"><i class="fas fa-times"></i></button>
     </div>
     <div class="space-y-4">
@@ -3121,7 +3237,7 @@
     </div>
     <div class="flex gap-3 mt-6">
       <button class="btn-secondary flex-1" onclick="closeModal('modal-new-equip')">Cancelar</button>
-      <button class="btn-primary flex-1" onclick="createEquipment()"><i class="fas fa-plus"></i> Adicionar</button>
+      <button class="btn-primary flex-1" id="equip-submit-btn" onclick="createEquipment()"><i class="fas fa-plus"></i> Adicionar</button>
     </div>
   </div>
 </div>
@@ -3136,6 +3252,7 @@
       </div>
       <div class="flex items-center gap-2">
         <span id="equip-detail-status-badge" class="badge badge-green">Operacional</span>
+        <button class="btn-secondary" onclick="if(APP.currentEquip) openEditEquipModal(APP.currentEquip.id)"><i class="fas fa-pen"></i> Editar</button>
         <button class="btn-ghost" onclick="showPage('equipment')"><i class="fas fa-arrow-left"></i> Voltar</button>
       </div>
     </div>
@@ -3564,10 +3681,16 @@
 <div id="context-ai-panel" class="ai-context-panel">
   <div class="p-5 border-b border-white/10">
     <div class="flex items-start justify-between gap-4">
-      <div>
-        <div class="text-xs text-slate-500 uppercase tracking-wider mb-1">Assistente IA contextual</div>
-        <h2 class="text-xl font-bold mono" id="context-ai-title">Assistente IA</h2>
-        <p class="text-sm text-slate-400 mt-1" id="context-ai-subtitle">Contexto automático da página atual</p>
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="mascot-stage mascot-stage-panel">
+          <model-viewer class="mascot-model" src="assets/ManuGent_Mascot_3d.glb" loading="eager" reveal="auto" auto-rotate auto-rotate-delay="0" disable-zoom interaction-prompt="none" camera-orbit="25deg 72deg 3.4m" field-of-view="30deg" shadow-intensity="0.65"></model-viewer>
+          <div class="mascot-fallback"><span class="mascot-loader"></span><img src="assets/3d_mascot.png" alt="Mascote ManuGent"></div>
+        </div>
+        <div class="min-w-0">
+          <div class="text-xs text-slate-500 uppercase tracking-wider mb-1">Assistente IA contextual</div>
+          <h2 class="text-xl font-bold mono" id="context-ai-title">Assistente IA</h2>
+          <p class="text-sm text-slate-400 mt-1" id="context-ai-subtitle">Contexto automático da página atual</p>
+        </div>
       </div>
       <button class="btn-ghost" onclick="closeContextAI()"><i class="fas fa-times"></i></button>
     </div>
@@ -3701,6 +3824,7 @@ window.onload = function() {
   else { showLanding(); }
   initSampleData();
   ensureWorkInstallationExamples();
+  setupMascotModels();
   syncBackendWorkOrders();
   renderCalendar();
   enhanceFileInputs();
@@ -3711,6 +3835,7 @@ function showLanding() {
   document.getElementById('landing-page').style.display = 'block';
   document.getElementById('auth-page').style.display = 'none';
   document.getElementById('app-layout').style.display = 'none';
+  setupMascotModels();
 }
 function showAuth(tab) {
   document.getElementById('landing-page').style.display = 'none';
@@ -3723,6 +3848,7 @@ function showApp() {
   document.getElementById('landing-page').style.display = 'none';
   document.getElementById('auth-page').style.display = 'none';
   document.getElementById('app-layout').style.display = 'flex';
+  setupMascotModels();
   setupDetailPages();
   updateUserUI();
   applyPermissions();
@@ -4445,6 +4571,11 @@ function getNotificationIcon(type) {
     incident: 'fa-triangle-exclamation',
     checklist: 'fa-list-check',
     stock: 'fa-warehouse',
+    task: 'fa-list-check',
+    schedule: 'fa-calendar-days',
+    request: 'fa-inbox',
+    work: 'fa-helmet-safety',
+    equipment: 'fa-microchip',
     system: 'fa-robot'
   }[type] || 'fa-bell';
 }
@@ -4456,6 +4587,11 @@ function getNotificationBadge(type) {
     incident: 'badge-red',
     checklist: 'badge-green',
     stock: 'badge-yellow',
+    task: 'badge-purple',
+    schedule: 'badge-blue',
+    request: 'badge-yellow',
+    work: 'badge-purple',
+    equipment: 'badge-red',
     system: 'badge-purple'
   }[type] || 'badge-gray';
 }
@@ -4479,31 +4615,155 @@ function addNotification(data) {
   APP.notifications = APP.notifications.slice(0, 80);
   renderNotifications();
 }
+function isClosedOperationalStatus(status) {
+  return ['Concluída','Cancelada','Fechada','Resolvido','Recebido'].includes(status);
+}
+function parseNotificationDate(value) {
+  if (!value) return null;
+  var date = new Date(value);
+  return isNaN(date.getTime()) ? null : date;
+}
+function getHoursUntil(value, now) {
+  var date = parseNotificationDate(value);
+  if (!date) return null;
+  return (date.getTime() - (now || Date.now())) / 3600000;
+}
+function getTaskDeadline(task, ot) {
+  return task.deadline || task.dueDate || task.date || task.scheduledAt || task.plannedAt || (ot ? ot.date : '');
+}
+function getTaskTitle(task) {
+  return task.description || task.title || task.name || 'Tarefa';
+}
+function isTaskDone(task) {
+  return !!(task.done || task.state === 'OK' || task.status === 'Concluída' || task.status === 'Concluida');
+}
+function notifyDeadline(keyPrefix, dateValue, windows, buildNotification, now) {
+  var diffHours = getHoursUntil(dateValue, now);
+  if (diffHours === null) return;
+  windows.some(function(win) {
+    var match = win.overdue ? diffHours < 0 : diffHours >= 0 && diffHours <= win.hours;
+    if (!match) return false;
+    var data = buildNotification(win, diffHours);
+    if (data) addNotification(Object.assign({ key: keyPrefix + '-' + win.key }, data));
+    return true;
+  });
+}
 function ensureOperationalNotifications() {
   APP.notifications = APP.notifications || [];
   var now = Date.now();
   (APP.ots || []).forEach(function(ot) {
-    if (['Alta','Urgente'].includes(ot.priority) && !['Concluída','Cancelada'].includes(ot.status)) {
+    var closed = isClosedOperationalStatus(ot.status);
+    if (['Alta','Urgente'].includes(ot.priority) && !closed) {
       addNotification({ key:'ot-priority-' + ot.id, type:'ot', title:'OT prioritária ativa', body: ot.id + ' · ' + ot.title + ' está ' + ot.status + '.', targetType:'ot', targetId:ot.id, priority:'high' });
     }
     if (ot.status === 'Aguarda Material') {
       addNotification({ key:'ot-waiting-material-' + ot.id, type:'material', title:'OT aguarda material', body: ot.id + ' precisa de material para avançar.', targetType:'ot', targetId:ot.id, priority:'high' });
     }
-    if (ot.date) {
-      var diffHours = (new Date(ot.date).getTime() - now) / 3600000;
-      if (diffHours >= 0 && diffHours <= 24 && !['Concluída','Cancelada'].includes(ot.status)) {
-        addNotification({ key:'ot-due-24h-' + ot.id, type:'ot', title:'OT agendada nas próximas 24h', body: ot.id + ' · ' + ot.title, targetType:'ot', targetId:ot.id });
+    if (!closed && ot.date) {
+      notifyDeadline('ot-date-' + ot.id, ot.date, [
+        { key:'overdue', overdue:true },
+        { key:'4h', hours:4 },
+        { key:'24h', hours:24 }
+      ], function(win) {
+        if (win.key === 'overdue') return { type:'schedule', title:'OT em atraso', body: ot.id + ' · ' + ot.title + ' deveria ter iniciado em ' + formatDateTime(ot.date) + '.', targetType:'ot', targetId:ot.id, priority:'high' };
+        return { type:'schedule', title: win.key === '4h' ? 'OT agendada em breve' : 'OT agendada nas próximas 24h', body: ot.id + ' · ' + ot.title + ' · ' + formatDateTime(ot.date), targetType:'ot', targetId:ot.id, priority: win.key === '4h' ? 'high' : 'normal' };
+      }, now);
+      if (ot.status === 'Agendada') {
+        notifyDeadline('scheduled-ot-' + ot.id, ot.date, [
+          { key:'today', hours:24 }
+        ], function() {
+          return { type:'schedule', title:'Agendada para execução', body: ot.id + ' está agendada para ' + formatDateTime(ot.date) + '.', targetType:'ot', targetId:ot.id };
+        }, now);
+      }
+    }
+    var pendingTasks = (ot.tasks || []).filter(function(t) { return !isTaskDone(t); });
+    pendingTasks.forEach(function(task, index) {
+      var deadline = getTaskDeadline(task, ot);
+      if (!deadline || closed) return;
+      notifyDeadline('task-deadline-' + ot.id + '-' + index, deadline, [
+        { key:'overdue', overdue:true },
+        { key:'24h', hours:24 }
+      ], function(win) {
+        return {
+          type:'task',
+          title: win.key === 'overdue' ? 'Tarefa em atraso' : 'Tarefa vence nas próximas 24h',
+          body: ot.id + ' · ' + getTaskTitle(task),
+          targetType:'ot',
+          targetId:ot.id,
+          priority: win.key === 'overdue' ? 'high' : 'normal'
+        };
+      }, now);
+    });
+    if (!closed && pendingTasks.length && ot.date) {
+      var taskDiff = getHoursUntil(ot.date, now);
+      if (taskDiff !== null && taskDiff >= 0 && taskDiff <= 24) {
+        addNotification({ key:'tasks-pending-before-ot-' + ot.id, type:'task', title:'Tarefas pendentes antes da OT', body: ot.id + ' tem ' + pendingTasks.length + ' tarefa(s) por executar.', targetType:'ot', targetId:ot.id, priority:'high' });
+      }
+    }
+    if (!closed && getOTOrigin(ot) === 'request') {
+      addNotification({ key:'intervention-request-open-' + ot.id, type:'request', title:'Pedido de intervenção pendente', body: ot.id + ' · ' + ot.title + ' · ' + (ot.status || 'Aberta'), targetType:'ot', targetId:ot.id, priority:['Alta','Urgente'].includes(ot.priority) ? 'high' : 'normal' });
+    }
+    if (!closed && ot.type === 'Obras/Instalações') {
+      if (ot.workStart) {
+        notifyDeadline('work-start-' + ot.id, ot.workStart, [
+          { key:'48h', hours:48 }
+        ], function() {
+          return { type:'work', title:'Obra/instalação prestes a iniciar', body: ot.id + ' · ' + ot.title + ' · início ' + formatDateTime(ot.workStart), targetType:'ot', targetId:ot.id };
+        }, now);
+      }
+      if (ot.workDeadline) {
+        notifyDeadline('work-deadline-' + ot.id, ot.workDeadline, [
+          { key:'overdue', overdue:true },
+          { key:'48h', hours:48 },
+          { key:'7d', hours:168 }
+        ], function(win) {
+          if (win.key === 'overdue') return { type:'work', title:'Obra/instalação em atraso', body: ot.id + ' · entrega prevista era ' + formatDateTime(ot.workDeadline), targetType:'ot', targetId:ot.id, priority:'high' };
+          return { type:'work', title: win.key === '48h' ? 'Obra entrega nas próximas 48h' : 'Obra entrega nos próximos 7 dias', body: ot.id + ' · ' + ot.title + ' · entrega ' + formatDateTime(ot.workDeadline), targetType:'ot', targetId:ot.id, priority: win.key === '48h' ? 'high' : 'normal' };
+        }, now);
+      }
+      var openSteps = (ot.workSteps || []).filter(function(step) { return !step.done && step.status !== 'Concluída'; }).length;
+      if (openSteps && ['Em Curso','Agendada','Aberta'].includes(ot.status)) {
+        addNotification({ key:'work-steps-open-' + ot.id, type:'work', title:'Etapas da obra pendentes', body: ot.id + ' tem ' + openSteps + ' etapa(s) por concluir.', targetType:'ot', targetId:ot.id });
+      }
+      if (!ot.workClientId || !ot.workBuildingId) {
+        addNotification({ key:'work-missing-scope-' + ot.id, type:'work', title:'Obra sem associação completa', body: ot.id + ' precisa de cliente e edifício associados.', targetType:'ot', targetId:ot.id, priority:'high' });
       }
     }
   });
   (APP.purchases || []).forEach(function(p) {
     if (p.status && p.status !== 'Recebido') {
-      addNotification({ key:'purchase-open-' + p.id, type:'purchase', title:'Pedido de compra pendente', body: p.id + ' · ' + (p.item || 'Material') + ' · ' + p.status, targetType:'purchase', targetId:p.id });
+      addNotification({ key:'purchase-open-' + p.id, type:'purchase', title:'Pedido de compra pendente', body: p.id + ' · ' + (p.item || 'Material') + ' · ' + p.status, targetType:'purchase', targetId:p.id, priority:p.status === 'Solicitado' ? 'high' : 'normal' });
+      if (p.requestedByRole === 'tecnico') {
+        addNotification({ key:'tech-material-request-' + p.id, type:'request', title:'Solicitação técnica de material', body: p.id + ' · ' + (p.item || 'Material') + ' x' + Number(p.qty || 1) + (p.otId ? ' · ' + p.otId : ''), targetType:'purchase', targetId:p.id, priority:'high' });
+      }
     }
   });
   (APP.stockMaterials || []).forEach(function(m) {
-    if (Number(m.stock || 0) <= Number(m.minStock || 0)) {
-      addNotification({ key:'stock-low-' + m.id, type:'stock', title:'Stock baixo', body: (m.name || 'Material') + ' está em ' + Number(m.stock || 0) + ' unidade(s).', targetType:'material', targetId:m.id, priority:'high' });
+    var stock = Number(m.stock || 0);
+    var minStock = Number(m.minStock || 0);
+    if (minStock > 0 && stock <= minStock) {
+      addNotification({ key:'stock-low-' + m.id, type:'stock', title:'Stock baixo', body: (m.name || 'Material') + ' está em ' + stock + ' unidade(s). Mínimo definido: ' + minStock + '.', targetType:'material', targetId:m.id, priority:'high' });
+    }
+    if (stock === 0) {
+      addNotification({ key:'stock-empty-' + m.id, type:'stock', title:'Stock esgotado', body: (m.name || 'Material') + ' está sem stock disponível.', targetType:'material', targetId:m.id, priority:'high' });
+    }
+  });
+  (APP.incidents || []).forEach(function(inc) {
+    if (!isClosedOperationalStatus(inc.status) && ['Alta','Crítica'].includes(inc.severity)) {
+      addNotification({ key:'incident-critical-open-' + inc.id, type:'incident', title:'Incidente crítico aberto', body: inc.id + ' · ' + inc.severity + ' · ' + (inc.equipmentName || 'sem equipamento'), targetType:'incident', targetId:inc.id, priority:'high' });
+    }
+  });
+  (APP.equipment || []).forEach(function(eq) {
+    if (['Crítico','Alto'].includes(eq.criticality) && ['Avaria','Em manutenção'].includes(eq.status)) {
+      addNotification({ key:'equipment-critical-unavailable-' + eq.id, type:'equipment', title:'Equipamento crítico indisponível', body: (eq.name || 'Equipamento') + ' está ' + eq.status + '.', targetType:'equipment', targetId:eq.id, priority:'high' });
+    }
+  });
+  (APP.checklists || []).forEach(function(cl) {
+    var tasks = cl.tasks || [];
+    var total = tasks.length;
+    var done = tasks.filter(function(t) { return t.done; }).length;
+    if (total && done < total) {
+      addNotification({ key:'checklist-pending-' + cl.id, type:'checklist', title:'Checklist pendente', body: (cl.title || 'Checklist') + ' tem ' + (total - done) + ' tarefa(s) por concluir.', targetType:'checklist', targetId:cl.id });
     }
   });
   saveData();
@@ -4553,6 +4813,7 @@ function openNotification(id) {
   if (n.targetType === 'incident') return showPage('incidents');
   if (n.targetType === 'material') return showPage('materials');
   if (n.targetType === 'checklist') return showPage('checklists');
+  if (n.targetType === 'equipment' && n.targetId) { showPage('equipment'); return openEquipDetail(n.targetId); }
 }
 function getDefaultContracts() {
   return [
@@ -6591,13 +6852,70 @@ function renderDetailImage(wrapId, imageId, src) {
     wrap.style.display = 'none';
   }
 }
+function setupMascotModels() {
+  document.querySelectorAll('.mascot-model').forEach(function(model) {
+    if (model.dataset.mascotReady) return;
+    model.dataset.mascotReady = 'true';
+    var stage = model.closest('.mascot-stage');
+    model.addEventListener('load', function() {
+      if (stage) {
+        stage.classList.add('loaded');
+        stage.classList.remove('error');
+      }
+    });
+    model.addEventListener('error', function() {
+      if (stage) {
+        stage.classList.remove('loaded');
+        stage.classList.add('error');
+      }
+    });
+  });
+}
 
 // ======================== EQUIPMENT ========================
 function openNewEquipModal() {
   if (!requirePermission('create', 'equipment', 'criar equipamento')) return;
+  APP.editingEquipId = null;
   populateOTSelects();
+  document.getElementById('equip-modal-title').textContent = 'Novo Equipamento';
+  document.getElementById('equip-submit-btn').innerHTML = '<i class="fas fa-plus"></i> Adicionar';
+  ['equip-name','equip-code','equip-brand','equip-model','equip-serial','equip-location','equip-notes'].forEach(function(id) { document.getElementById(id).value = ''; });
+  document.getElementById('equip-category').value = 'AVAC';
+  document.getElementById('equip-criticality').value = 'Crítico';
+  document.getElementById('equip-client').value = '';
+  document.getElementById('equip-install-date').value = '';
+  document.getElementById('equip-status').value = 'Operacional';
   document.getElementById('equip-image-upload').value = '';
   enhanceFileInputs();
+  enhanceSelects();
+  document.getElementById('modal-new-equip').style.display = 'flex';
+}
+function openEditEquipModal(id) {
+  if (!requirePermission('edit', 'equipment', 'editar equipamento')) return;
+  var equip = APP.equipment.find(function(e) { return e.id === id; });
+  if (!equip) return;
+  APP.editingEquipId = id;
+  populateOTSelects();
+  document.getElementById('equip-modal-title').textContent = 'Editar Equipamento';
+  document.getElementById('equip-submit-btn').innerHTML = '<i class="fas fa-save"></i> Guardar equipamento';
+  document.getElementById('equip-name').value = equip.name || '';
+  document.getElementById('equip-code').value = equip.code || '';
+  document.getElementById('equip-brand').value = equip.brand || '';
+  document.getElementById('equip-model').value = equip.model || '';
+  document.getElementById('equip-serial').value = equip.serial || '';
+  document.getElementById('equip-category').value = equip.category || 'AVAC';
+  document.getElementById('equip-location').value = equip.location || '';
+  document.getElementById('equip-criticality').value = equip.criticality || 'Médio';
+  document.getElementById('equip-client').value = equip.clientId || '';
+  document.getElementById('equip-install-date').value = equip.installDate || '';
+  document.getElementById('equip-status').value = equip.status || 'Operacional';
+  document.getElementById('equip-notes').value = equip.notes || '';
+  document.getElementById('equip-image-upload').value = '';
+  enhanceFileInputs();
+  enhanceSelects();
+  ['equip-category','equip-criticality','equip-client','equip-status'].forEach(function(selectId) {
+    syncEnhancedSelect(document.getElementById(selectId));
+  });
   document.getElementById('modal-new-equip').style.display = 'flex';
 }
 async function createEquipment() {
@@ -6607,12 +6925,21 @@ async function createEquipment() {
   var clientId = document.getElementById('equip-client').value;
   var client = APP.clients.find(function(c) { return c.id === clientId; });
   if (!clientId) { showToast('Cliente proprietário é obrigatório.'); return; }
-  var code = document.getElementById('equip-code').value || generateId('EQ');
-  var equip = {
-    id: generateId('EQ'), name: name,
+  var editing = APP.editingEquipId ? APP.equipment.find(function(e) { return e.id === APP.editingEquipId; }) : null;
+  var code = document.getElementById('equip-code').value || (editing ? editing.code : generateId('EQ'));
+  var equip = editing || {
+    id: generateId('EQ'),
+    preventiveRule: null,
+    operatingHours: 0,
+    cycleCount: 0,
+    readings: getDefaultReadings(),
+    createdAt: new Date().toISOString()
+  };
+  Object.assign(equip, {
+    name: name,
     code: code,
-    qrCode: 'MG-' + code + '-' + Date.now().toString(36).toUpperCase(),
-    nfcTag: 'NFC-EQ-' + code,
+    qrCode: equip.qrCode || ('MG-' + code + '-' + Date.now().toString(36).toUpperCase()),
+    nfcTag: equip.nfcTag || ('NFC-EQ-' + code),
     brand: document.getElementById('equip-brand').value,
     model: document.getElementById('equip-model').value,
     serial: document.getElementById('equip-serial').value,
@@ -6624,20 +6951,17 @@ async function createEquipment() {
     installDate: document.getElementById('equip-install-date').value,
     status: document.getElementById('equip-status').value,
     notes: document.getElementById('equip-notes').value,
-    image: image ? image.dataUrl : '',
-    imageName: image ? image.name : '',
-    preventiveRule: null,
-    operatingHours: 0,
-    cycleCount: 0,
-    readings: getDefaultReadings(),
-    createdAt: new Date().toISOString(),
-  };
-  APP.equipment.push(equip);
+    image: image ? image.dataUrl : (equip.image || ''),
+    imageName: image ? image.name : (equip.imageName || ''),
+    updatedAt: new Date().toISOString()
+  });
+  if (!editing) APP.equipment.push(equip);
   saveData(); closeModal('modal-new-equip');
   ['equip-name','equip-code','equip-brand','equip-model','equip-serial','equip-location','equip-notes'].forEach(function(id) { document.getElementById(id).value = ''; });
   document.getElementById('equip-client').value = '';
   document.getElementById('equip-image-upload').value = '';
-  updateDashboard(); renderEquipment(); populateOTSelects(); showToast('Equipamento adicionado!');
+  APP.editingEquipId = null;
+  updateDashboard(); renderEquipment(); populateOTSelects(); showToast(editing ? 'Equipamento atualizado!' : 'Equipamento adicionado!');
 }
 function renderEquipment(list) {
   var items = list || APP.equipment;
@@ -6655,7 +6979,7 @@ function renderEquipment(list) {
     var bg = catBg[e.category] || 'rgba(148,163,184,0.1)';
     var icon = catIcon[e.category] || 'fa-microchip';
     var color = catColor[e.category] || '#94a3b8';
-    return '<div class="card p-5 cursor-pointer" style="transition:all 0.2s" onclick="openEquipDetail(\'' + e.id + '\')">' +
+    return '<div class="card entity-card p-5 cursor-pointer" style="transition:all 0.2s" onclick="openEquipDetail(\'' + e.id + '\')">' +
       (e.image ? '<img src="' + escapeHtml(e.image) + '" alt="' + escapeHtml(e.name) + '" class="w-full rounded-lg border border-white/10 object-cover mb-4" style="height:140px">' : '') +
       '<div class="flex items-start justify-between mb-3">' +
       '<div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:' + bg + '"><i class="fas ' + icon + '" style="color:' + color + '"></i></div>' +
@@ -6667,8 +6991,38 @@ function renderEquipment(list) {
       '<div><i class="fas fa-location-dot"></i><span class="truncate">' + escapeHtml(e.location || '—') + '</span></div>' +
       '</div><div class="flex items-center justify-between text-xs text-slate-500 mt-3">' +
       '<span class="badge badge-gray">' + escapeHtml(e.category) + '</span></div>' +
-      (e.code ? '<div class="text-xs text-slate-600 mt-2 mono">' + e.code + '</div>' : '') + '</div>';
+      (e.code ? '<div class="text-xs text-slate-600 mt-2 mono">' + e.code + '</div>' : '') +
+      '<div class="entity-actions" onclick="event.stopPropagation()">' +
+      '<button class="btn-primary entity-primary-action flex-1" title="Criar OT para este equipamento" onclick="openOTFromEquipId(\'' + e.id + '\')"><i class="fas fa-plus"></i> Criar OT</button>' +
+      '<button class="btn-secondary entity-icon-action" title="Editar equipamento" onclick="openEditEquipModal(\'' + e.id + '\')"><i class="fas fa-pen"></i></button>' +
+      '<button class="btn-secondary entity-icon-action entity-danger-action" title="Apagar equipamento" onclick="deleteEquipment(\'' + e.id + '\')"><i class="fas fa-trash"></i></button></div></div>';
   }).join('');
+}
+function deleteEquipment(id) {
+  if (!requirePermission('delete', 'equipment', 'apagar equipamento')) return;
+  var equip = APP.equipment.find(function(e) { return e.id === id; });
+  if (!equip) return;
+  if (!confirm('Remover este equipamento?')) return;
+  APP.equipment = APP.equipment.filter(function(e) { return e.id !== id; });
+  (APP.ots || []).forEach(function(ot) {
+    if (ot.equipmentId === id) {
+      ot.equipmentId = '';
+      ot.equipmentName = '—';
+    }
+  });
+  (APP.files || []).forEach(function(file) {
+    if (file.equipmentId === id) {
+      file.equipmentId = '';
+      file.equipmentName = '';
+    }
+  });
+  if (APP.currentEquip && APP.currentEquip.id === id) APP.currentEquip = null;
+  saveData();
+  updateDashboard();
+  renderEquipment();
+  renderOTs();
+  populateOTSelects();
+  showToast('Equipamento removido.');
 }
 function openEquipDetail(id) {
   var eq = APP.equipment.find(function(e) { return e.id === id; });
@@ -6750,9 +7104,17 @@ function schedulePreventive() {
 }
 function openOTFromEquip() {
   if (!APP.currentEquip) return;
+  openOTFromEquipId(APP.currentEquip.id);
+}
+function openOTFromEquipId(id) {
+  var equip = APP.equipment.find(function(e) { return e.id === id; });
+  if (!equip) return;
   showPage('equipment');
   openNewOTModal();
-  document.getElementById('ot-equipment').value = APP.currentEquip.id;
+  document.getElementById('ot-title').value = 'Intervenção — ' + equip.name;
+  document.getElementById('ot-equipment').value = equip.id;
+  document.getElementById('ot-location').value = equip.location || '';
+  syncEnhancedSelect(document.getElementById('ot-equipment'));
 }
 function qrCells(token) {
   var seed = 0;
@@ -8771,6 +9133,7 @@ function openContextAI() {
   var panel = document.getElementById('context-ai-panel');
   APP.aiContextPage = APP.currentPage || 'dashboard';
   panel.classList.add('open');
+  setupMascotModels();
   refreshContextAIHeader();
   var messages = document.getElementById('context-ai-messages');
   if (messages && !messages.dataset.started) {
