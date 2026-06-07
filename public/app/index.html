@@ -931,6 +931,40 @@
       width: 6px; height: 6px; background: var(--accent-red);
       border-radius: 50%; position: absolute; top: 2px; right: 2px;
     }
+    .notif-count {
+      align-items: center;
+      background: var(--accent-red);
+      border-radius: 999px;
+      color: white;
+      display: none;
+      font-size: 10px;
+      font-weight: 800;
+      height: 18px;
+      justify-content: center;
+      min-width: 18px;
+      padding: 0 5px;
+      position: absolute;
+      right: -8px;
+      top: -8px;
+    }
+    .notif-dot.hidden,
+    .notif-count.hidden {
+      display: none;
+    }
+    .notif-item.unread {
+      background: rgba(99,102,241,0.08);
+    }
+    .notif-item-title {
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .notif-item-body {
+      color: var(--text-secondary);
+      font-size: 12px;
+      line-height: 1.35;
+      margin-top: 2px;
+    }
 
     .task-row {
       background: var(--bg-card); border: 1px solid var(--border);
@@ -1299,11 +1333,11 @@
     <div id="login-form">
       <div class="mb-4">
         <label class="block text-sm mb-2 text-slate-300">Email</label>
-        <input type="email" id="login-email" class="input-field" placeholder="email@empresa.com">
+        <input type="email" id="login-email" class="input-field" placeholder="email@empresa.com" onkeydown="handleEnterAction(event, doLogin)">
       </div>
       <div class="mb-6">
         <label class="block text-sm mb-2 text-slate-300">Password</label>
-        <input type="password" id="login-pass" class="input-field" placeholder="••••••••">
+        <input type="password" id="login-pass" class="input-field" placeholder="••••••••" onkeydown="handleEnterAction(event, doLogin)">
       </div>
       <button class="btn-primary w-full justify-center py-3" onclick="doLogin()">Entrar</button>
       <div class="divider my-4">ou</div>
@@ -1410,7 +1444,8 @@
       <div class="flex items-center gap-3">
         <button class="btn-ghost" style="position:relative" onclick="toggleNotifications()">
           <i class="fas fa-bell"></i>
-          <span class="notif-dot"></span>
+          <span class="notif-dot hidden" id="notification-dot"></span>
+          <span class="notif-count hidden" id="notification-count">0</span>
         </button>
         <div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-sm font-bold cursor-pointer" id="user-avatar" onclick="showPage('settings')">J</div>
       </div>
@@ -1939,7 +1974,7 @@
           </div>
           <div class="border-t border-white/5 p-4">
             <div class="ai-composer">
-              <textarea id="chat-input" class="input-field ai-textarea" placeholder="Descreva um problema, peça diagnóstico ou solicite uma ação..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"></textarea>
+              <textarea id="chat-input" class="input-field ai-textarea" placeholder="Descreva um problema, peça diagnóstico ou solicite uma ação..." onkeydown="handleTextareaSubmit(event, sendMessage)"></textarea>
               <button class="btn-primary ai-send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
             </div>
             <div class="ai-tool-row">
@@ -2033,7 +2068,7 @@
             <h1 class="text-2xl font-bold mono">Material</h1>
             <p class="text-slate-400 text-sm mt-1">Stock, consumo e material usado em OTs</p>
           </div>
-          <button class="btn-primary" onclick="createStockMaterial()"><i class="fas fa-plus"></i> Novo Material</button>
+          <button class="btn-primary" onclick="createStockMaterial()" id="new-material-page-btn"><i class="fas fa-plus"></i> Novo Material</button>
         </div>
         <div class="card overflow-hidden">
           <table class="data-table"><thead><tr><th>Material</th><th>Categoria</th><th>Stock</th><th>Custo</th><th>Local</th></tr></thead><tbody id="materials-table-body"></tbody></table>
@@ -2791,7 +2826,7 @@
           <div class="card p-4">
             <h4 class="font-medium mb-3 text-sm">Material Gasto</h4>
             <div id="ot-materials-list" class="text-sm text-slate-400 mb-3">Nenhum material registado.</div>
-            <button class="btn-secondary btn-action text-xs w-full" onclick="openAddMaterialModal()"><i class="fas fa-plus"></i> Adicionar material</button>
+            <button class="btn-secondary btn-action text-xs w-full" onclick="openAddMaterialModal()" id="ot-material-action-btn"><i class="fas fa-plus"></i> Adicionar material</button>
           </div>
           <div class="card p-4">
             <h4 class="font-medium mb-3 text-sm">Tempo Registado</h4>
@@ -2829,7 +2864,7 @@
           <div id="ot-copilot-context" class="text-xs text-slate-500 mb-3">Baseado na OT, equipamento, procedimentos e histórico.</div>
           <div id="ot-copilot-messages" class="space-y-2 mb-3 max-h-48 overflow-y-auto"></div>
           <div class="flex gap-2">
-            <input type="text" id="ot-copilot-input" class="input-field text-sm" placeholder="Ex: Como testar o ATS deste gerador?">
+            <input type="text" id="ot-copilot-input" class="input-field text-sm" placeholder="Ex: Como testar o ATS deste gerador?" onkeydown="handleEnterAction(event, sendOTCopilotMessage)">
             <button class="btn-primary px-3" onclick="sendOTCopilotMessage()"><i class="fas fa-paper-plane text-xs"></i></button>
           </div>
           <div class="flex gap-2 flex-wrap mt-2">
@@ -2846,7 +2881,7 @@
           <h4 class="font-medium mb-3 text-sm">Comentários</h4>
           <div id="ot-comments" class="space-y-2 mb-3 max-h-32 overflow-y-auto"></div>
           <div class="flex gap-2">
-            <input type="text" id="ot-comment-input" class="input-field text-sm" placeholder="Adicionar comentário...">
+            <input type="text" id="ot-comment-input" class="input-field text-sm" placeholder="Adicionar comentário..." onkeydown="handleEnterAction(event, addComment)">
             <button class="btn-primary px-3" onclick="addComment()"><i class="fas fa-paper-plane text-xs"></i></button>
           </div>
         </div>
@@ -2999,8 +3034,8 @@
   <div class="modal-content">
     <div class="flex items-center justify-between mb-5">
       <div>
-        <h2 class="text-lg font-semibold">Associar material à OT</h2>
-        <p class="text-sm text-slate-500 mt-1">Escolha um material já registado em stock.</p>
+        <h2 class="text-lg font-semibold" id="ot-material-modal-title">Associar material à OT</h2>
+        <p class="text-sm text-slate-500 mt-1" id="ot-material-modal-subtitle">Escolha um material já registado em stock.</p>
       </div>
       <button class="btn-ghost" onclick="closeModal('modal-add-material')"><i class="fas fa-times"></i></button>
     </div>
@@ -3014,7 +3049,7 @@
       </div>
       <div class="grid md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm mb-2 text-slate-300">Quantidade usada</label>
+          <label class="block text-sm mb-2 text-slate-300" id="ot-material-qty-label">Quantidade usada</label>
           <input type="number" min="1" step="1" id="ot-material-qty" class="input-field" value="1" oninput="updateOTMaterialPreview()">
         </div>
         <div>
@@ -3029,7 +3064,7 @@
     </div>
     <div class="flex gap-3 mt-6">
       <button class="btn-secondary flex-1" onclick="closeModal('modal-add-material')">Cancelar</button>
-      <button class="btn-primary flex-1" onclick="addSelectedMaterialToOT()"><i class="fas fa-link"></i> Associar material</button>
+      <button class="btn-primary flex-1" onclick="addSelectedMaterialToOT()" id="ot-material-submit-btn"><i class="fas fa-link"></i> Associar material</button>
     </div>
   </div>
 </div>
@@ -3436,23 +3471,16 @@
 <!-- Notifications -->
 <div id="notifications-panel" style="display:none;position:fixed;top:60px;right:20px;width:360px;background:#12122a;border:1px solid var(--border-light);border-radius:12px;overflow:hidden;z-index:1001">
   <div class="flex items-center justify-between p-4 border-b border-white/5">
-    <h3 class="font-semibold">Notificações</h3>
-    <button class="btn-ghost text-xs" onclick="closeNotifications()">Fechar</button>
-  </div>
-  <div id="notifications-list" class="max-h-80 overflow-y-auto">
-    <div class="notif-item">
-      <div class="flex items-start gap-3">
-        <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(99,102,241,0.2)">
-          <i class="fas fa-robot text-xs" style="color:var(--accent-purple-light)"></i>
-        </div>
-        <div>
-          <div class="text-sm font-medium">Bem-vindo ao ManuGent!</div>
-          <div class="text-xs text-slate-400 mt-0.5">O assistente IA está pronto para ajudar.</div>
-          <div class="text-xs text-slate-600 mt-1">Agora</div>
-        </div>
-      </div>
+    <div>
+      <h3 class="font-semibold">Notificações</h3>
+      <div class="text-xs text-slate-500" id="notifications-subtitle">Eventos operacionais e pedidos</div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button class="btn-ghost text-xs" onclick="markAllNotificationsRead()">Ler tudo</button>
+      <button class="btn-ghost text-xs" onclick="closeNotifications()">Fechar</button>
     </div>
   </div>
+  <div id="notifications-list" class="max-h-80 overflow-y-auto"></div>
 </div>
 
 <!-- New Checklist Modal -->
@@ -3548,7 +3576,7 @@
   <div class="flex-1 overflow-y-auto p-5 flex flex-col gap-4" id="context-ai-messages"></div>
   <div class="p-4 border-t border-white/10">
     <div class="ai-composer">
-      <textarea id="context-ai-input" class="input-field ai-textarea" placeholder="Ex: criar, listar, analisar, gerar relatório..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendContextAIMessage()}"></textarea>
+      <textarea id="context-ai-input" class="input-field ai-textarea" placeholder="Ex: criar, listar, analisar, gerar relatório..." onkeydown="handleTextareaSubmit(event, sendContextAIMessage)"></textarea>
       <button class="btn-primary ai-send-btn" onclick="sendContextAIMessage()"><i class="fas fa-paper-plane"></i></button>
     </div>
     <div class="ai-tool-row">
@@ -3579,6 +3607,7 @@ var APP = {
   currentFile: null,
   fileModalExistingUploads: [],
   fileModalRemovedExisting: false,
+  notifications: [],
   lastNfcPayload: null,
   aiApprovalCallback: null,
   calendarDate: new Date(),
@@ -3605,6 +3634,7 @@ function saveData() {
       technicians: APP.technicians, clients: APP.clients,
       knowledge: APP.knowledge, files: APP.files, fileFolders: APP.fileFolders, incidents: APP.incidents, checklists: APP.checklists,
       buildings: APP.buildings, stockMaterials: APP.stockMaterials, purchases: APP.purchases, suppliers: APP.suppliers, contracts: APP.contracts, invoices: APP.invoices,
+      notifications: APP.notifications,
     }));
   } catch(e) {}
 }
@@ -3630,6 +3660,7 @@ function loadData() {
       APP.suppliers = d.suppliers || [];
       APP.contracts = d.contracts || [];
       APP.invoices = d.invoices || [];
+      APP.notifications = d.notifications || [];
       APP.authToken = localStorage.getItem('mg_auth_token') || null;
       if (APP.user && !APP.authToken) APP.user = null;
       if (APP.user && APP.user.provider !== 'google' && !APP.users.some(function(u) { return u.email === APP.user.email; })) APP.user = null;
@@ -3702,6 +3733,7 @@ function showApp() {
     renderOTs(); renderEquipment(); renderClients();
     renderBuildings(); renderTechnicians(); renderKnowledge(); renderFiles(); renderIncidents(); renderChecklists();
     renderMaterials(); renderPurchases(); renderQuotes();
+    ensureOperationalNotifications();
     enhanceFileInputs();
     enhanceSelects();
     updateGlobalSearchPlaceholder();
@@ -3934,7 +3966,7 @@ var PAGE_PERMISSIONS = {
 var ACTION_PERMISSIONS = {
   admin: ['*'],
   gestor: ['create:*','edit:*','delete:*','view:*','commercial:*','create:purchases','create:quotes'],
-  tecnico: ['view:*','create:ots','edit:ots','delete:ots','create:incidents','create:files','create:knowledge','create:materials','edit:materials'],
+  tecnico: ['view:*','create:ots','edit:ots','delete:ots','create:incidents','create:files','create:knowledge','create:purchases'],
   cliente: ['view:*','create:ots','create:files']
 };
 var AI_DATA_SCOPE = {
@@ -4009,6 +4041,8 @@ function applyPermissions() {
   if (aiCard) aiCard.style.display = getUserRole() === 'admin' ? 'block' : 'none';
   var aiSettingsBtn = document.getElementById('ai-settings-btn');
   if (aiSettingsBtn) aiSettingsBtn.style.display = getUserRole() === 'admin' ? 'inline-flex' : 'none';
+  var materialBtn = document.getElementById('new-material-page-btn');
+  if (materialBtn) materialBtn.style.display = canDo('create', 'materials') ? 'inline-flex' : 'none';
 }
 function getAIScope(role) {
   return AI_DATA_SCOPE[role || getUserRole()] || AI_DATA_SCOPE.cliente;
@@ -4238,6 +4272,7 @@ function updateDashboard() {
     }).join('');
   }
   renderExecutiveDashboard();
+  renderNotifications();
 }
 function formatCurrency(value) {
   return '€' + Math.round(value || 0).toLocaleString('pt-PT');
@@ -4356,10 +4391,12 @@ function renderAutomationWidgets() {
     return '<div class="flex items-center justify-between p-3 rounded-lg" style="background:rgba(255,255,255,0.04)"><div><div class="text-sm font-medium">' + w.title + '</div><div class="text-xs text-slate-500">' + w.status + ' → Aprovar → Executar</div></div><i class="fas ' + w.icon + ' text-purple-400"></i></div>';
   }).join('');
   var smart = document.getElementById('smart-notifications');
-  if (smart) smart.innerHTML = ['OT atribuída','SLA perto do limite','Preventiva a vencer','Equipamento crítico parado','Escalonamento 30 min'].map(function(n, i) {
-    var channel = i % 3 === 0 ? 'Email' : i % 3 === 1 ? 'SMS' : 'WhatsApp';
-    return '<div class="flex items-center justify-between text-sm py-2 border-b border-white/5"><span>' + n + '</span><span class="badge badge-blue">' + channel + '</span></div>';
-  }).join('');
+  if (smart) {
+    var latest = (APP.notifications || []).slice(0, 5);
+    smart.innerHTML = latest.length ? latest.map(function(n) {
+      return '<div class="flex items-center justify-between gap-3 text-sm py-2 border-b border-white/5 cursor-pointer" onclick="openNotification(\'' + n.id + '\')"><span class="truncate">' + escapeHtml(n.title) + '</span><span class="badge ' + getNotificationBadge(n.type) + '">' + (n.read ? 'Lida' : 'Nova') + '</span></div>';
+    }).join('') : '<p class="text-slate-500 text-sm">Sem notificações ativas.</p>';
+  }
   var stock = document.getElementById('stock-dashboard');
   if (stock) stock.innerHTML = [
     ['Armazém Central', '128 peças'],
@@ -4399,6 +4436,123 @@ function renderCommercialWidgets() {
       return '<div class="flex items-center justify-between text-sm py-2 border-b border-white/5"><div><div class="font-medium">' + d.type + ' ' + d.id + '</div><div class="text-xs text-slate-500">' + d.source + '</div></div><span class="mono">' + formatCurrency(d.value) + '</span></div>';
     }).join('');
   }
+}
+function getNotificationIcon(type) {
+  return {
+    ot: 'fa-wrench',
+    purchase: 'fa-cart-shopping',
+    material: 'fa-boxes-stacked',
+    incident: 'fa-triangle-exclamation',
+    checklist: 'fa-list-check',
+    stock: 'fa-warehouse',
+    system: 'fa-robot'
+  }[type] || 'fa-bell';
+}
+function getNotificationBadge(type) {
+  return {
+    ot: 'badge-blue',
+    purchase: 'badge-yellow',
+    material: 'badge-purple',
+    incident: 'badge-red',
+    checklist: 'badge-green',
+    stock: 'badge-yellow',
+    system: 'badge-purple'
+  }[type] || 'badge-gray';
+}
+function addNotification(data) {
+  APP.notifications = APP.notifications || [];
+  var key = data.key || [data.type, data.targetType, data.targetId, data.title].filter(Boolean).join(':');
+  if (key && APP.notifications.some(function(n) { return n.key === key; })) return;
+  APP.notifications.unshift({
+    id: generateId('NOTIF'),
+    key: key,
+    type: data.type || 'system',
+    title: data.title || 'Notificação',
+    body: data.body || '',
+    targetType: data.targetType || '',
+    targetId: data.targetId || '',
+    priority: data.priority || 'normal',
+    read: false,
+    createdAt: new Date().toISOString(),
+    actor: APP.user ? APP.user.name : 'Sistema'
+  });
+  APP.notifications = APP.notifications.slice(0, 80);
+  renderNotifications();
+}
+function ensureOperationalNotifications() {
+  APP.notifications = APP.notifications || [];
+  var now = Date.now();
+  (APP.ots || []).forEach(function(ot) {
+    if (['Alta','Urgente'].includes(ot.priority) && !['Concluída','Cancelada'].includes(ot.status)) {
+      addNotification({ key:'ot-priority-' + ot.id, type:'ot', title:'OT prioritária ativa', body: ot.id + ' · ' + ot.title + ' está ' + ot.status + '.', targetType:'ot', targetId:ot.id, priority:'high' });
+    }
+    if (ot.status === 'Aguarda Material') {
+      addNotification({ key:'ot-waiting-material-' + ot.id, type:'material', title:'OT aguarda material', body: ot.id + ' precisa de material para avançar.', targetType:'ot', targetId:ot.id, priority:'high' });
+    }
+    if (ot.date) {
+      var diffHours = (new Date(ot.date).getTime() - now) / 3600000;
+      if (diffHours >= 0 && diffHours <= 24 && !['Concluída','Cancelada'].includes(ot.status)) {
+        addNotification({ key:'ot-due-24h-' + ot.id, type:'ot', title:'OT agendada nas próximas 24h', body: ot.id + ' · ' + ot.title, targetType:'ot', targetId:ot.id });
+      }
+    }
+  });
+  (APP.purchases || []).forEach(function(p) {
+    if (p.status && p.status !== 'Recebido') {
+      addNotification({ key:'purchase-open-' + p.id, type:'purchase', title:'Pedido de compra pendente', body: p.id + ' · ' + (p.item || 'Material') + ' · ' + p.status, targetType:'purchase', targetId:p.id });
+    }
+  });
+  (APP.stockMaterials || []).forEach(function(m) {
+    if (Number(m.stock || 0) <= Number(m.minStock || 0)) {
+      addNotification({ key:'stock-low-' + m.id, type:'stock', title:'Stock baixo', body: (m.name || 'Material') + ' está em ' + Number(m.stock || 0) + ' unidade(s).', targetType:'material', targetId:m.id, priority:'high' });
+    }
+  });
+  saveData();
+  renderNotifications();
+}
+function renderNotifications() {
+  var countEl = document.getElementById('notification-count');
+  var dot = document.getElementById('notification-dot');
+  var list = document.getElementById('notifications-list');
+  var subtitle = document.getElementById('notifications-subtitle');
+  var unread = (APP.notifications || []).filter(function(n) { return !n.read; }).length;
+  if (countEl) {
+    countEl.textContent = unread > 9 ? '9+' : String(unread);
+    countEl.classList.toggle('hidden', unread === 0);
+    countEl.style.display = unread ? 'flex' : 'none';
+  }
+  if (dot) dot.classList.toggle('hidden', unread === 0);
+  if (subtitle) subtitle.textContent = unread ? unread + ' por ler' : 'Sem novas notificações';
+  if (!list) return;
+  var rows = (APP.notifications || []).slice(0, 30);
+  if (!rows.length) {
+    list.innerHTML = emptyStateHtml('fa-bell-slash', 'Sem notificações.', '', '', true);
+    return;
+  }
+  list.innerHTML = rows.map(function(n) {
+    return '<div class="notif-item ' + (!n.read ? 'unread' : '') + '" onclick="openNotification(\'' + n.id + '\')">' +
+      '<div class="flex items-start gap-3"><div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(99,102,241,0.18)"><i class="fas ' + getNotificationIcon(n.type) + ' text-xs text-purple-300"></i></div>' +
+      '<div class="min-w-0 flex-1"><div class="flex items-center gap-2"><div class="notif-item-title truncate">' + escapeHtml(n.title) + '</div><span class="badge ' + getNotificationBadge(n.type) + '">' + escapeHtml(n.type || 'info') + '</span></div>' +
+      '<div class="notif-item-body">' + escapeHtml(n.body || '') + '</div><div class="text-xs text-slate-600 mt-1">' + formatDateTime(n.createdAt) + (n.actor ? ' · ' + escapeHtml(n.actor) : '') + '</div></div>' +
+      (!n.read ? '<span class="status-dot dot-green mt-1"></span>' : '') + '</div></div>';
+  }).join('');
+}
+function markAllNotificationsRead() {
+  (APP.notifications || []).forEach(function(n) { n.read = true; });
+  saveData();
+  renderNotifications();
+}
+function openNotification(id) {
+  var n = (APP.notifications || []).find(function(item) { return item.id === id; });
+  if (!n) return;
+  n.read = true;
+  saveData();
+  renderNotifications();
+  closeNotifications();
+  if (n.targetType === 'ot' && n.targetId) { showPage('ots'); return openOTDetail(n.targetId); }
+  if (n.targetType === 'purchase') return showPage('purchases');
+  if (n.targetType === 'incident') return showPage('incidents');
+  if (n.targetType === 'material') return showPage('materials');
+  if (n.targetType === 'checklist') return showPage('checklists');
 }
 function getDefaultContracts() {
   return [
@@ -4464,7 +4618,7 @@ function savePurchaseRequest() {
   var ot = (APP.ots || []).find(function(o) { return o.id === otId; }) || null;
   var materialId = document.getElementById('purchase-material').value;
   var material = (APP.stockMaterials || []).find(function(m) { return m.id === materialId; }) || null;
-  APP.purchases.push({
+  var purchase = {
     id: 'PC-' + String(APP.purchases.length + 1).padStart(3, '0'),
     item: item,
     materialId: material ? material.id : '',
@@ -4477,7 +4631,9 @@ function savePurchaseRequest() {
     value: Number(document.getElementById('purchase-value').value || 0),
     notes: document.getElementById('purchase-notes').value.trim(),
     createdAt: new Date().toISOString()
-  });
+  };
+  APP.purchases.push(purchase);
+  addNotification({ key:'purchase-created-' + purchase.id, type:'purchase', title:'Novo pedido de compra', body: purchase.id + ' · ' + purchase.item, targetType:'purchase', targetId:purchase.id });
   saveData(); closeModal('modal-new-purchase'); renderCommercialWidgets(); renderPurchases(); showToast('Pedido de compra criado.');
 }
 function saveBillingDocument() {
@@ -4664,6 +4820,11 @@ async function saveStockMaterial() {
     photoName: photo ? photo.name : '',
     createdAt: new Date().toISOString()
   });
+  var material = APP.stockMaterials[APP.stockMaterials.length - 1];
+  addNotification({ key:'material-created-' + material.id, type:'material', title:'Material adicionado ao stock', body: material.name + ' · stock ' + material.stock, targetType:'material', targetId:material.id });
+  if (Number(material.stock || 0) <= Number(material.minStock || 0)) {
+    addNotification({ key:'stock-low-' + material.id, type:'stock', title:'Stock baixo', body: material.name + ' está em ' + material.stock + ' unidade(s).', targetType:'material', targetId:material.id, priority:'high' });
+  }
   saveData(); closeModal('modal-new-material'); renderMaterials(); renderCommercialWidgets(); showToast('Material adicionado ao stock.');
 }
 function renderPurchases() {
@@ -5127,6 +5288,15 @@ async function createOT() {
   ot.activity = ot.activity || [];
   ot.activity.push({ text: editing ? 'OT editada' : 'OT criada', time: new Date().toLocaleString('pt-PT') });
   if (!editing) APP.ots.push(ot);
+  addNotification({
+    key: (editing ? 'ot-edited-' : 'ot-created-') + ot.id + '-' + Date.now(),
+    type: 'ot',
+    title: editing ? 'OT atualizada' : 'Nova OT criada',
+    body: ot.id + ' · ' + ot.title + (ot.technicianName && ot.technicianName !== '—' ? ' · Técnico: ' + ot.technicianName : ''),
+    targetType: 'ot',
+    targetId: ot.id,
+    priority: ['Alta','Urgente'].includes(ot.priority) ? 'high' : 'normal'
+  });
   attachTaskHelpFilesToOT(ot, equip);
   attachPendingFilesToOT(ot, equip);
   saveData();
@@ -5442,6 +5612,7 @@ function dropOTOnKanban(event, status) {
   ot.status = status;
   ot.activity = ot.activity || [];
   ot.activity.push({ text: 'Estado alterado via Kanban para ' + status, time: new Date().toLocaleString('pt-PT') });
+  addNotification({ key:'ot-status-' + ot.id + '-' + status + '-' + Date.now(), type:'ot', title:'Estado da OT alterado', body: ot.id + ' · ' + ot.title + ' → ' + status, targetType:'ot', targetId:ot.id, priority: status === 'Aguarda Material' ? 'high' : 'normal' });
   if (APP.currentOT && APP.currentOT.id === id) document.getElementById('ot-detail-status').value = status;
   if (status === 'Concluída' && !ot.report) ot.report = generateAutoReport(ot);
   saveData(); updateDashboard(); renderOTs(); showToast('OT movida para ' + status + '.');
@@ -5470,10 +5641,18 @@ function openOTDetail(id) {
   updateOTTimeDisplay();
   renderOTTimeControls();
   ensureOTTimeTicker();
+  updateOTMaterialActionUI();
   renderOTTasks(); renderOTActivity(); renderOTComments(); renderOTMaterials();
   renderAssociatedFiles('ot', ot.id, 'ot-files-list');
   renderOTCopilot();
   showDetailPage('modal-ot-detail');
+}
+function updateOTMaterialActionUI() {
+  var btn = document.getElementById('ot-material-action-btn');
+  if (!btn) return;
+  btn.innerHTML = getUserRole() === 'tecnico'
+    ? '<i class="fas fa-cart-plus"></i> Solicitar material'
+    : '<i class="fas fa-plus"></i> Adicionar material';
 }
 function renderWorkInstallationDetail(ot) {
   var el = document.getElementById('ot-work-detail');
@@ -5516,6 +5695,7 @@ function updateOTStatus(status) {
     if (reportEl) reportEl.value = APP.currentOT.report;
   }
   APP.currentOT.activity.push({ text: 'Estado alterado para ' + status, time: new Date().toLocaleString('pt-PT') });
+  addNotification({ key:'ot-status-' + APP.currentOT.id + '-' + status + '-' + Date.now(), type:'ot', title:'Estado da OT alterado', body: APP.currentOT.id + ' · ' + APP.currentOT.title + ' → ' + status, targetType:'ot', targetId:APP.currentOT.id, priority: status === 'Aguarda Material' ? 'high' : 'normal' });
   syncEnhancedSelect(document.getElementById('ot-detail-status'));
   saveData(); updateDashboard(); renderOTs(); renderOTActivity();
 }
@@ -5640,6 +5820,7 @@ function createScheduledDemoFlow() {
       activity: [{ text: 'OT preventiva criada localmente', time: new Date().toLocaleString('pt-PT') }]
     };
     APP.ots.push(ot);
+    addNotification({ key:'ot-demo-created-' + ot.id, type:'ot', title:'OT preventiva demo criada', body: ot.id + ' · ' + ot.title, targetType:'ot', targetId:ot.id, priority:'high' });
     saveData(); filterOTs('agendadas'); openOTDetail(ot.id);
     showToast('Backend indisponível; fluxo demo criado localmente.');
   });
@@ -5823,6 +6004,7 @@ function registerOutOfLimitFinding() {
     activity: [{ text: 'Pedido criado automaticamente', time: new Date().toLocaleString('pt-PT') }]
   };
   APP.ots.push(request);
+  addNotification({ key:'intervention-request-' + request.id, type:'ot', title:'Pedido criado por medição fora do limite', body: request.id + ' · ' + request.title, targetType:'ot', targetId:request.id, priority:'high' });
   APP.currentOT.activity.push({ text: 'Medição fora do limite registada: ' + value, time: new Date().toLocaleString('pt-PT') });
   showAutoRequestResult(request.id, 2);
   saveData(); filterOTs('pedidos'); updateDashboard(); renderOTs(); renderOTActivity();
@@ -6106,10 +6288,21 @@ function addMaterial() { openAddMaterialModal(); }
 function openAddMaterialModal() {
   if (!APP.currentOT) return;
   APP.stockMaterials = APP.stockMaterials || [];
+  var technicianRequest = getUserRole() === 'tecnico';
+  var title = document.getElementById('ot-material-modal-title');
+  var subtitle = document.getElementById('ot-material-modal-subtitle');
+  var qtyLabel = document.getElementById('ot-material-qty-label');
+  var submit = document.getElementById('ot-material-submit-btn');
+  if (title) title.textContent = technicianRequest ? 'Solicitar material' : 'Associar material à OT';
+  if (subtitle) subtitle.textContent = technicianRequest ? 'O pedido será enviado para gestão/compras, sem inserir material gasto.' : 'Escolha um material já registado em stock.';
+  if (qtyLabel) qtyLabel.textContent = technicianRequest ? 'Quantidade solicitada' : 'Quantidade usada';
+  if (submit) submit.innerHTML = technicianRequest ? '<i class="fas fa-cart-plus"></i> Solicitar material' : '<i class="fas fa-link"></i> Associar material';
   populateOTMaterialSelect();
   document.getElementById('ot-material-qty').value = '1';
   document.getElementById('ot-material-notes').value = '';
   updateOTMaterialPreview();
+  enhanceSelects();
+  syncEnhancedSelect(document.getElementById('ot-material-stock'));
   document.getElementById('modal-add-material').style.display = 'flex';
 }
 function populateOTMaterialSelect() {
@@ -6145,12 +6338,13 @@ function updateOTMaterialPreview() {
   }
   var stock = Number(material.stock || 0);
   var total = qty * Number(costInput.value || material.cost || 0);
+  var qtyLabel = getUserRole() === 'tecnico' ? 'Qtd. solicitada' : 'Qtd. usada';
   preview.innerHTML = '<div class="flex items-start gap-3">' +
     '<div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:rgba(99,102,241,0.18)"><i class="fas fa-boxes-stacked text-purple-400"></i></div>' +
     '<div class="flex-1 min-w-0"><div class="font-medium text-slate-200">' + escapeHtml(material.name || 'Material') + '</div>' +
     '<div class="text-xs text-slate-500 mt-1">' + escapeHtml(material.category || 'Geral') + ' · ' + escapeHtml(material.location || 'Armazém') + '</div>' +
     '<div class="flex flex-wrap gap-2 mt-3"><span class="badge ' + (stock <= 2 ? 'badge-yellow' : 'badge-green') + '">Stock: ' + stock + '</span>' +
-    '<span class="badge badge-blue">Qtd. usada: ' + qty + '</span><span class="badge badge-purple">Custo: ' + formatCurrency(total) + '</span></div></div></div>';
+    '<span class="badge badge-blue">' + qtyLabel + ': ' + qty + '</span><span class="badge badge-purple">Custo estimado: ' + formatCurrency(total) + '</span></div></div></div>';
 }
 function addSelectedMaterialToOT() {
   if (!APP.currentOT) return;
@@ -6158,9 +6352,10 @@ function addSelectedMaterialToOT() {
   if (!material) { showToast('Selecione um material em stock.'); return; }
   var qty = Math.max(1, Number(document.getElementById('ot-material-qty').value || 1));
   var available = Number(material.stock || 0);
-  if (qty > available) { showToast('Quantidade superior ao stock disponível.'); return; }
   var cost = Number(document.getElementById('ot-material-cost').value || material.cost || 0);
   var notes = document.getElementById('ot-material-notes').value.trim();
+  if (getUserRole() === 'tecnico') return requestMaterialForCurrentOT(material, qty, cost, notes);
+  if (qty > available) { showToast('Quantidade superior ao stock disponível.'); return; }
   APP.currentOT.materials = APP.currentOT.materials || [];
   APP.currentOT.materials.push({
     id: generateId('MATUSE'),
@@ -6185,11 +6380,43 @@ function addSelectedMaterialToOT() {
   updateDashboard();
   showToast('Material associado à OT e stock atualizado.');
 }
+function requestMaterialForCurrentOT(material, qty, cost, notes) {
+  if (!APP.currentOT || !material) return;
+  APP.purchases = APP.purchases || [];
+  var request = {
+    id: 'PC-' + String(APP.purchases.length + 1).padStart(3, '0'),
+    item: material.name,
+    materialId: material.id,
+    materialName: material.name,
+    otId: APP.currentOT.id,
+    otTitle: APP.currentOT.title,
+    supplier: 'A definir',
+    status: 'Solicitado',
+    qty: qty,
+    value: qty * Number(cost || 0),
+    notes: notes || 'Solicitado pelo técnico na OT.',
+    requestedBy: APP.user ? APP.user.name : 'Técnico',
+    requestedByRole: getUserRole(),
+    createdAt: new Date().toISOString()
+  };
+  APP.purchases.push(request);
+  addNotification({ key:'material-request-' + request.id, type:'purchase', title:'Material solicitado por técnico', body: request.id + ' · ' + request.item + ' x' + request.qty + ' · ' + APP.currentOT.id, targetType:'purchase', targetId:request.id, priority:'high' });
+  APP.currentOT.activity = APP.currentOT.activity || [];
+  APP.currentOT.activity.push({ text: 'Material solicitado: ' + material.name + ' x' + qty, time: new Date().toLocaleString('pt-PT') });
+  saveData();
+  closeModal('modal-add-material');
+  renderOTMaterials();
+  renderOTActivity();
+  renderPurchases();
+  updateDashboard();
+  showToast('Solicitação de material enviada para gestão/compras.');
+}
 function renderOTMaterials() {
   var el = document.getElementById('ot-materials-list');
   if (!el) return;
   var materials = (APP.currentOT && APP.currentOT.materials) || [];
-  el.innerHTML = (!materials.length)
+  var requests = APP.currentOT ? (APP.purchases || []).filter(function(p) { return p.otId === APP.currentOT.id && p.requestedByRole === 'tecnico'; }) : [];
+  var materialHtml = (!materials.length)
     ? '<span class="text-slate-400">Nenhum material registado.</span>'
     : materials.map(function(m) {
       var qty = Number(m.qty || 1);
@@ -6199,6 +6426,10 @@ function renderOTMaterials() {
         '<div class="text-xs text-slate-500">' + escapeHtml(m.category || 'Material') + ' · qtd. ' + qty + (m.notes ? ' · ' + escapeHtml(m.notes) : '') + '</div></div>' +
         '<div class="mono text-xs text-slate-400">' + formatCurrency(total) + '</div></div>';
     }).join('');
+  var requestHtml = requests.length ? '<div class="mt-3 pt-3 border-t border-white/5"><div class="text-xs text-slate-500 mb-2">Solicitações pendentes</div>' + requests.map(function(p) {
+    return '<div class="flex items-center justify-between gap-3 py-2 text-sm"><div><div class="text-slate-200">' + escapeHtml(p.item || p.materialName || 'Material') + '</div><div class="text-xs text-slate-500">qtd. ' + Number(p.qty || 1) + ' · ' + escapeHtml(p.status || 'Solicitado') + '</div></div><span class="badge badge-yellow">Solicitado</span></div>';
+  }).join('') + '</div>' : '';
+  el.innerHTML = materialHtml + requestHtml;
 }
 function addTimeLog() {
   if (!APP.currentOT) return;
@@ -6687,6 +6918,7 @@ function runPreventiveAutomation() {
   };
   APP.ots.push(ot);
   rule.lastGeneratedAt = new Date().toISOString();
+  addNotification({ key:'preventive-auto-' + ot.id, type:'ot', title:'Preventiva automática criada', body: ot.id + ' · ' + ot.equipmentName + ' · ' + ot.technicianName, targetType:'ot', targetId:ot.id, priority:ot.priority === 'Alta' ? 'high' : 'normal' });
   saveData(); updateDashboard(); renderOTs(); populatePreventiveFields(eq); showToast('OT preventiva automática criada e atribuída.');
 }
 
@@ -7884,7 +8116,7 @@ async function createIncident() {
   var equipId = document.getElementById('incident-equip').value;
   var equip = APP.equipment.find(function(e) { return e.id === equipId; });
   var media = await readSingleUpload('incident-media-upload');
-  APP.incidents.push({
+  var incident = {
     id: generateId('INC'), description: desc,
     severity: document.getElementById('incident-severity').value,
     status: 'Aberto',
@@ -7893,7 +8125,9 @@ async function createIncident() {
     mediaName: media ? media.name : '',
     mediaType: media ? (media.type || '') : '',
     createdAt: new Date().toISOString(),
-  });
+  };
+  APP.incidents.push(incident);
+  addNotification({ key:'incident-created-' + incident.id, type:'incident', title:'Novo incidente registado', body: incident.id + ' · ' + incident.severity + ' · ' + incident.equipmentName, targetType:'incident', targetId:incident.id, priority:['Alta','Crítica'].includes(incident.severity) ? 'high' : 'normal' });
   saveData(); closeModal('modal-new-incident');
   document.getElementById('incident-desc').value = '';
   document.getElementById('incident-media-upload').value = '';
@@ -7981,7 +8215,7 @@ function saveChecklist() {
   var equipId = document.getElementById('checklist-equipment').value;
   var equip = (APP.equipment || []).find(function(e) { return e.id === equipId; }) || null;
   APP.checklists = APP.checklists || [];
-  APP.checklists.push({
+  var checklist = {
     id: generateId('CHK'),
     title: title,
     description: document.getElementById('checklist-desc').value.trim() || 'Checklist criada manualmente.',
@@ -7991,7 +8225,9 @@ function saveChecklist() {
     equipmentName: equip ? equip.name : '',
     tasks: tasks.map(function(name) { return { name: name, section: equip ? equip.name : 'Geral', help: 'Executar e registar evidência quando necessário.', done: false }; }),
     createdAt: new Date().toISOString()
-  });
+  };
+  APP.checklists.push(checklist);
+  addNotification({ key:'checklist-created-' + checklist.id, type:'checklist', title:'Nova checklist criada', body: checklist.title + ' · ' + checklist.frequency, targetType:'checklist', targetId:checklist.id });
   saveData(); closeModal('modal-new-checklist'); renderChecklists(); showToast('Checklist criada.');
 }
 function openChecklistDetail(type) {
@@ -8458,13 +8694,16 @@ function createAIWorkOrder(title) {
     createdAt: new Date().toISOString()
   };
   APP.ots.push(ot);
+  addNotification({ key:'ai-ot-created-' + ot.id, type:'ot', title:'OT criada pela IA', body: ot.id + ' · ' + ot.title, targetType:'ot', targetId:ot.id, priority:['Alta','Urgente'].includes(ot.priority) ? 'high' : 'normal' });
   saveData(); updateDashboard(); renderOTs(); populateOTSelects(); showPage('ots');
   return 'OT criada: ' + ot.id + ' · ' + ot.title + '.';
 }
 function createAIIncident(title) {
   if (!requirePermission('create', 'incidents', 'registar incidente')) return 'Sem permissão para registar incidente.';
   var equip = APP.equipment[0] || null;
-  APP.incidents.push({ id: generateId('INC'), description: title || 'Incidente registado pela IA', severity: /critica|crítica|urgente/i.test(title) ? 'Crítica' : 'Média', status: 'Aberto', equipmentId: equip ? equip.id : '', equipmentName: equip ? equip.name : '—', createdAt: new Date().toISOString() });
+  var incident = { id: generateId('INC'), description: title || 'Incidente registado pela IA', severity: /critica|crítica|urgente/i.test(title) ? 'Crítica' : 'Média', status: 'Aberto', equipmentId: equip ? equip.id : '', equipmentName: equip ? equip.name : '—', createdAt: new Date().toISOString() };
+  APP.incidents.push(incident);
+  addNotification({ key:'ai-incident-' + incident.id, type:'incident', title:'Incidente registado pela IA', body: incident.id + ' · ' + incident.severity + ' · ' + incident.equipmentName, targetType:'incident', targetId:incident.id, priority:incident.severity === 'Crítica' ? 'high' : 'normal' });
   saveData(); renderIncidents(); showPage('incidents');
   return 'Incidente registado pela IA.';
 }
@@ -8706,6 +8945,33 @@ function closeModal(id) {
   }
   document.getElementById(id).style.display = 'none';
 }
+function getTopOpenModal() {
+  var modals = Array.prototype.slice.call(document.querySelectorAll('.modal-overlay'));
+  return modals.reverse().find(function(modal) {
+    return modal.style.display !== 'none' && !modal.classList.contains('detail-page');
+  }) || null;
+}
+function clickPrimaryModalAction(modal) {
+  if (!modal) return false;
+  var buttons = Array.prototype.slice.call(modal.querySelectorAll('.btn-primary'));
+  var primary = buttons.reverse().find(function(btn) {
+    return !btn.disabled && btn.offsetParent !== null;
+  });
+  if (!primary) return false;
+  primary.click();
+  return true;
+}
+function handleEnterAction(event, action) {
+  if (!event || event.key !== 'Enter' || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return;
+  event.preventDefault();
+  if (typeof action === 'function') action();
+}
+function handleTextareaSubmit(event, action) {
+  if (!event || event.key !== 'Enter' || event.ctrlKey || event.altKey || event.metaKey) return;
+  if (event.shiftKey) return;
+  event.preventDefault();
+  if (typeof action === 'function') action();
+}
 function showToast(msg) {
   var toast = document.createElement('div');
   toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#1a1a3a;border:1px solid rgba(99,102,241,0.5);color:white;padding:12px 20px;border-radius:10px;z-index:9999;font-size:14px;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
@@ -8728,6 +8994,7 @@ function emptyTableState(colspan, icon, message, actionText, actionHandler) {
 }
 function toggleNotifications() {
   var p = document.getElementById('notifications-panel');
+  renderNotifications();
   p.style.display = p.style.display === 'none' ? 'block' : 'none';
 }
 function closeNotifications() { document.getElementById('notifications-panel').style.display = 'none'; }
@@ -8785,7 +9052,22 @@ function closeEnhancedSelects(except) {
     if (wrap !== except) wrap.classList.remove('open');
   });
 }
-document.addEventListener('click', function() { closeEnhancedSelects(); });
+document.addEventListener('click', function(event) {
+  closeEnhancedSelects();
+  var modal = event.target && event.target.classList && event.target.classList.contains('modal-overlay') ? event.target : null;
+  if (modal && modal.id && modal.style.display !== 'none') closeModal(modal.id);
+});
+document.addEventListener('keydown', function(event) {
+  if (event.defaultPrevented) return;
+  if (event.key !== 'Enter' || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return;
+  var target = event.target;
+  var tag = target && target.tagName ? target.tagName.toLowerCase() : '';
+  if (tag === 'textarea' || (target && target.isContentEditable)) return;
+  var modal = getTopOpenModal();
+  if (!modal) return;
+  event.preventDefault();
+  clickPrimaryModalAction(modal);
+});
 function enhanceFileInputs() {
   document.querySelectorAll('input[type="file"].input-field').forEach(function(input) {
     input.classList.add('upload-hidden');
