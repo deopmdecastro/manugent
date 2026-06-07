@@ -502,7 +502,7 @@
     .files-table th:nth-child(5) { width: 20%; }
     .files-table th:nth-child(6) { width: 7%; }
     .files-table th:nth-child(7) { width: 8%; }
-    .files-table th:nth-child(8) { width: 88px; }
+    .files-table th:nth-child(8) { width: 150px; }
     .files-table td {
       vertical-align: middle;
       padding-top: 14px;
@@ -574,6 +574,168 @@
       border-radius: 12px;
     }
     .file-version-action span { display: none; }
+    .file-row-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .file-row-action {
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      justify-content: center;
+      border-radius: 11px;
+    }
+    .entity-card {
+      position: relative;
+      overflow: hidden;
+      border-color: rgba(129,140,248,0.16);
+      background:
+        linear-gradient(135deg, rgba(99,102,241,0.1), rgba(16,185,129,0.035)),
+        var(--bg-card);
+    }
+    .entity-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      pointer-events: none;
+    }
+    .entity-card-cover {
+      width: 100%;
+      height: 132px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 16px;
+    }
+    .entity-avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      font-weight: 800;
+      color: #93c5fd;
+      background: rgba(59,130,246,0.18);
+      border: 1px solid rgba(96,165,250,0.18);
+    }
+    .entity-avatar.round { border-radius: 999px; }
+    .entity-meta {
+      display: grid;
+      gap: 7px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      margin-top: 14px;
+    }
+    .entity-meta div {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .entity-meta i {
+      width: 16px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    .entity-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+    .entity-primary-action {
+      min-height: 42px;
+      padding: 0 16px;
+      justify-content: center;
+      box-shadow: 0 12px 28px rgba(99,102,241,0.2);
+    }
+    .entity-icon-action {
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      border-radius: 12px;
+      justify-content: center;
+      flex: 0 0 auto;
+    }
+    .entity-danger-action {
+      color: #f87171;
+      border-color: rgba(248,113,113,0.22);
+      background: rgba(239,68,68,0.08);
+    }
+    .ai-composer {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: stretch;
+    }
+    .ai-textarea {
+      min-height: 58px;
+      max-height: 150px;
+      resize: vertical;
+      line-height: 1.45;
+      padding-top: 14px;
+      padding-bottom: 14px;
+    }
+    .ai-tool-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .ai-tool-btn {
+      min-height: 36px;
+      padding: 0 12px;
+      border-radius: 10px;
+      font-size: 12px;
+    }
+    .ai-send-btn {
+      min-width: 52px;
+      border-radius: 12px;
+      justify-content: center;
+    }
+    .ai-hidden-upload {
+      display: none !important;
+    }
+    .multi-access-picker {
+      display: grid;
+      gap: 8px;
+      max-height: 154px;
+      overflow-y: auto;
+      padding: 8px;
+      border: 1px solid var(--border-light);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.035);
+    }
+    .multi-access-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 38px;
+      padding: 8px 10px;
+      border: 1px solid transparent;
+      border-radius: 9px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .multi-access-option:hover,
+    .multi-access-option.selected {
+      border-color: rgba(129,140,248,0.36);
+      background: rgba(99,102,241,0.12);
+      color: var(--text-primary);
+    }
+    .multi-access-option i {
+      color: var(--accent-purple-light);
+    }
+    .multi-access-option > i { opacity: 0; }
+    .multi-access-option.selected > i { opacity: 1; }
     @media (max-width: 1100px) {
       .files-toolbar { grid-template-columns: 1fr; max-width: none; }
     }
@@ -1242,7 +1404,7 @@
         <button class="btn-primary global-ai-button" onclick="openContextAI()"><i class="fas fa-robot"></i> Assistente IA</button>
         <div class="search-bar w-64">
           <i class="fas fa-search text-slate-500 text-sm"></i>
-          <input type="text" placeholder="Pesquisar equipamentos, OTs..." onkeyup="globalSearch(this.value)">
+          <input type="text" id="global-search-input" placeholder="Pesquisar..." onkeyup="globalSearch(this.value)">
         </div>
       </div>
       <div class="flex items-center gap-3">
@@ -1577,7 +1739,7 @@
             <h1 class="text-2xl font-bold mono">Edifícios</h1>
             <p class="text-slate-400 text-sm mt-1">Instalações associadas a clientes</p>
           </div>
-          <button class="btn-primary" onclick="createBuilding()"><i class="fas fa-plus"></i> Novo Edifício</button>
+          <button class="btn-primary" onclick="openNewBuildingModal()"><i class="fas fa-plus"></i> Novo Edifício</button>
         </div>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="buildings-grid"></div>
       </div>
@@ -1776,12 +1938,20 @@
             </div>
           </div>
           <div class="border-t border-white/5 p-4">
-            <div class="flex gap-3">
-              <div class="search-bar flex-1">
-                <input type="text" id="chat-input" placeholder="Descreva um problema, peça diagnóstico ou solicite uma ação..." onkeypress="if(event.key==='Enter')sendMessage()">
-              </div>
-              <button class="btn-primary px-4" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            <div class="ai-composer">
+              <textarea id="chat-input" class="input-field ai-textarea" placeholder="Descreva um problema, peça diagnóstico ou solicite uma ação..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"></textarea>
+              <button class="btn-primary ai-send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
             </div>
+            <div class="ai-tool-row">
+              <button class="btn-secondary ai-tool-btn" onclick="triggerAIUpload('chat','file')"><i class="fas fa-paperclip"></i> Ficheiro</button>
+              <button class="btn-secondary ai-tool-btn" onclick="triggerAIUpload('chat','photo')"><i class="fas fa-camera"></i> Foto</button>
+              <button class="btn-secondary ai-tool-btn" onclick="startAIVoiceInput('chat')"><i class="fas fa-microphone"></i> Áudio</button>
+              <button class="btn-secondary ai-tool-btn" onclick="readAIAnyNfc('chat')"><i class="fas fa-wifi"></i> NFC</button>
+              <button class="btn-secondary ai-tool-btn" onclick="triggerAIUpload('chat','qr')"><i class="fas fa-qrcode"></i> QR Code</button>
+            </div>
+            <input type="file" id="chat-ai-file-upload" class="ai-hidden-upload" multiple onchange="handleAIUpload(this,'chat','ficheiro')">
+            <input type="file" id="chat-ai-photo-upload" class="ai-hidden-upload" accept="image/*" capture="environment" onchange="handleAIUpload(this,'chat','foto')">
+            <input type="file" id="chat-ai-qr-upload" class="ai-hidden-upload" accept="image/*" capture="environment" onchange="handleAIQrUpload(this,'chat')">
             <div class="text-xs text-slate-600 mt-2">
               <i class="fas fa-info-circle"></i> A IA pode criar OTs, artigos de conhecimento e responder a questões técnicas. Todas as ações requerem a sua aprovação.
             </div>
@@ -2036,7 +2206,7 @@
 <div id="modal-new-file" class="modal-overlay" style="display:none">
   <div class="modal-content modal-lg">
     <div class="flex items-center justify-between mb-5">
-      <h2 class="text-lg font-semibold">Novo Ficheiro Partilhado</h2>
+      <h2 class="text-lg font-semibold" id="file-modal-title">Novo Ficheiro Partilhado</h2>
       <button class="btn-ghost" onclick="closeModal('modal-new-file')"><i class="fas fa-times"></i></button>
     </div>
     <div class="space-y-4">
@@ -2059,12 +2229,22 @@
           <input type="text" id="file-ref" class="input-field" placeholder="https://... ou nome do ficheiro interno">
           <input type="file" id="file-upload" class="input-field" multiple>
         </div>
+        <div id="file-existing-preview" class="upload-preview active mt-3" style="display:none"></div>
       </div>
       <div id="file-credential-fields" style="display:none">
         <div class="grid md:grid-cols-3 gap-4">
           <div><label class="block text-sm mb-2 text-slate-300">Serviço / sistema *</label><input type="text" id="file-credential-service" class="input-field" placeholder="Ex: Portal Schneider"></div>
           <div><label class="block text-sm mb-2 text-slate-300">Utilizador</label><input type="text" id="file-credential-user" class="input-field" placeholder="Ex: manutencao@empresa.pt"></div>
           <div><label class="block text-sm mb-2 text-slate-300">Cofre / referência *</label><input type="text" id="file-credential-vault" class="input-field" placeholder="Ex: Cofre / SCHNEIDER-UPS-01"></div>
+        </div>
+        <div class="mt-4">
+          <label class="block text-sm mb-2 text-slate-300">Senha</label>
+          <div class="relative">
+            <input type="password" id="file-credential-password" class="input-field pr-12" placeholder="Introduza a senha da credencial">
+            <button type="button" class="btn-ghost" title="Mostrar/ocultar senha" onclick="toggleCredentialPassword()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);height:34px;width:34px;padding:0;justify-content:center">
+              <i class="fas fa-eye" id="file-credential-password-icon"></i>
+            </button>
+          </div>
         </div>
       </div>
       <div id="file-media-fields" style="display:none">
@@ -2081,23 +2261,28 @@
         </div>
         <div id="file-users-field">
           <label class="block text-sm mb-2 text-slate-300">Utilizadores</label>
-          <select id="file-users" class="input-field" multiple size="4"></select>
+          <select id="file-users" class="input-field" multiple size="4" style="display:none"></select>
+          <div id="file-users-picker" class="multi-access-picker"></div>
         </div>
         <div id="file-teams-field">
           <label class="block text-sm mb-2 text-slate-300">Equipas</label>
-          <select id="file-teams" class="input-field" multiple size="4"></select>
+          <select id="file-teams" class="input-field" multiple size="4" style="display:none"></select>
+          <div id="file-teams-picker" class="multi-access-picker"></div>
         </div>
       </div>
       <div class="grid md:grid-cols-3 gap-4">
         <div><label class="block text-sm mb-2 text-slate-300">Cliente associado</label><select id="file-client" class="input-field"><option value="">Sem cliente</option></select></div>
+        <div><label class="block text-sm mb-2 text-slate-300">Edifício associado</label><select id="file-building" class="input-field"><option value="">Sem edifício</option></select></div>
         <div><label class="block text-sm mb-2 text-slate-300">Equipamento associado</label><select id="file-equipment" class="input-field"><option value="">Sem equipamento</option></select></div>
+      </div>
+      <div class="grid md:grid-cols-3 gap-4">
         <div><label class="block text-sm mb-2 text-slate-300">OT associada</label><select id="file-ot" class="input-field"><option value="">Sem OT</option></select></div>
       </div>
       <div><label class="block text-sm mb-2 text-slate-300">Notas da versão</label><input type="text" id="file-version-notes" class="input-field" placeholder="Primeira publicação"></div>
     </div>
     <div class="flex gap-3 mt-6">
       <button class="btn-secondary flex-1" onclick="closeModal('modal-new-file')">Cancelar</button>
-      <button class="btn-primary flex-1" onclick="createSharedFile()"><i class="fas fa-share-nodes"></i> Partilhar</button>
+      <button class="btn-primary flex-1" onclick="createSharedFile()" id="file-submit-btn"><i class="fas fa-share-nodes"></i> Partilhar</button>
     </div>
   </div>
 </div>
@@ -2407,6 +2592,16 @@
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
+          <label class="block text-sm mb-2 text-slate-300">Cliente associado</label>
+          <select id="ot-work-client" class="input-field" onchange="populateWorkBuildingSelect()"><option value="">Selecionar cliente...</option></select>
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Edifício associado</label>
+          <select id="ot-work-building" class="input-field" onchange="syncOTBuildingSelection()"><option value="">Selecionar edifício...</option></select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
           <label class="block text-sm mb-2 text-slate-300">Equipamento</label>
           <select id="ot-equipment" class="input-field"><option value="">Selecionar...</option></select>
         </div>
@@ -2417,14 +2612,6 @@
       </div>
       <div id="ot-work-fields" style="display:none">
         <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm mb-2 text-slate-300">Cliente da obra</label>
-            <select id="ot-work-client" class="input-field" onchange="populateWorkBuildingSelect()"><option value="">Selecionar cliente...</option></select>
-          </div>
-          <div>
-            <label class="block text-sm mb-2 text-slate-300">Edifício / instalação</label>
-            <select id="ot-work-building" class="input-field"><option value="">Selecionar edifício...</option></select>
-          </div>
           <div>
             <label class="block text-sm mb-2 text-slate-300">Tipo de obra / instalação</label>
             <select id="ot-work-kind" class="input-field" onchange="renderWorkStepsEditor()">
@@ -3046,6 +3233,45 @@
   </div>
 </div>
 
+<!-- New Building Modal -->
+<div id="modal-new-building" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-start justify-between gap-4 mb-5">
+      <div>
+        <h2 class="text-lg font-semibold" id="building-modal-title">Novo Edifício / Instalação</h2>
+        <p class="text-sm text-slate-400 mt-1">Associe uma instalação a um cliente e organize as zonas técnicas.</p>
+      </div>
+      <button class="btn-ghost" onclick="closeModal('modal-new-building')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Nome do edifício / instalação *</label>
+        <input type="text" id="building-name" class="input-field" placeholder="Ex: Sede Lisboa, Nave A, Sala UPS">
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Cliente associado *</label>
+        <select id="building-client" class="input-field"></select>
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Imagem do edifício</label>
+        <input type="file" id="building-image-upload" class="input-field" accept="image/*">
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Morada / localização</label>
+        <input type="text" id="building-address" class="input-field" placeholder="Rua, cidade, piso ou zona">
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Pisos, salas ou zonas técnicas</label>
+        <textarea id="building-zones" class="input-field" rows="3" placeholder="Ex: Piso 0, Sala técnica, Cobertura, Quadro elétrico"></textarea>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-new-building')">Cancelar</button>
+      <button class="btn-primary flex-1" onclick="createBuilding()" id="building-submit-btn"><i class="fas fa-plus"></i> Adicionar edifício</button>
+    </div>
+  </div>
+</div>
+
 <!-- New Technician Modal -->
 <div id="modal-new-tech" class="modal-overlay" style="display:none">
   <div class="modal-content">
@@ -3321,10 +3547,20 @@
   </div>
   <div class="flex-1 overflow-y-auto p-5 flex flex-col gap-4" id="context-ai-messages"></div>
   <div class="p-4 border-t border-white/10">
-    <div class="flex gap-2">
-      <input type="text" id="context-ai-input" class="input-field" placeholder="Ex: criar, listar, analisar, gerar relatório..." onkeypress="if(event.key==='Enter')sendContextAIMessage()">
-      <button class="btn-primary px-4" onclick="sendContextAIMessage()"><i class="fas fa-paper-plane"></i></button>
+    <div class="ai-composer">
+      <textarea id="context-ai-input" class="input-field ai-textarea" placeholder="Ex: criar, listar, analisar, gerar relatório..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendContextAIMessage()}"></textarea>
+      <button class="btn-primary ai-send-btn" onclick="sendContextAIMessage()"><i class="fas fa-paper-plane"></i></button>
     </div>
+    <div class="ai-tool-row">
+      <button class="btn-secondary ai-tool-btn" onclick="triggerAIUpload('context','file')"><i class="fas fa-paperclip"></i> Ficheiro</button>
+      <button class="btn-secondary ai-tool-btn" onclick="triggerAIUpload('context','photo')"><i class="fas fa-camera"></i> Foto</button>
+      <button class="btn-secondary ai-tool-btn" onclick="startAIVoiceInput('context')"><i class="fas fa-microphone"></i> Áudio</button>
+      <button class="btn-secondary ai-tool-btn" onclick="readAIAnyNfc('context')"><i class="fas fa-wifi"></i> NFC</button>
+      <button class="btn-secondary ai-tool-btn" onclick="triggerAIUpload('context','qr')"><i class="fas fa-qrcode"></i> QR Code</button>
+    </div>
+    <input type="file" id="context-ai-file-upload" class="ai-hidden-upload" multiple onchange="handleAIUpload(this,'context','ficheiro')">
+    <input type="file" id="context-ai-photo-upload" class="ai-hidden-upload" accept="image/*" capture="environment" onchange="handleAIUpload(this,'context','foto')">
+    <input type="file" id="context-ai-qr-upload" class="ai-hidden-upload" accept="image/*" capture="environment" onchange="handleAIQrUpload(this,'context')">
     <button class="btn-secondary btn-action w-full text-sm mt-3" onclick="executeContextAIAction()"><i class="fas fa-bolt"></i> Executar agora</button>
   </div>
 </div>
@@ -3341,12 +3577,15 @@ var APP = {
   purchases: [], suppliers: [], contracts: [], invoices: [],
   currentOT: null, currentEquip: null,
   currentFile: null,
+  fileModalExistingUploads: [],
+  fileModalRemovedExisting: false,
   lastNfcPayload: null,
   aiApprovalCallback: null,
   calendarDate: new Date(),
   currentPage: 'dashboard',
   aiContextPage: 'dashboard',
   lastContextAICommand: '',
+  authToken: localStorage.getItem('mg_auth_token') || null,
   otFilter: 'agendadas', otStatusFilter: '', otPriorityFilter: '', otTypeFilter: '',
   backendOnline: false, demoTechnicianId: localStorage.getItem('manugentTechnicianId') || '',
   timeTicker: null,
@@ -3391,6 +3630,8 @@ function loadData() {
       APP.suppliers = d.suppliers || [];
       APP.contracts = d.contracts || [];
       APP.invoices = d.invoices || [];
+      APP.authToken = localStorage.getItem('mg_auth_token') || null;
+      if (APP.user && !APP.authToken) APP.user = null;
       if (APP.user && APP.user.provider !== 'google' && !APP.users.some(function(u) { return u.email === APP.user.email; })) APP.user = null;
     }
   } catch(e) {}
@@ -3406,6 +3647,20 @@ function ensureSeedAdmin() {
     admin.name = admin.name || SEEDED_ADMIN.name;
     admin.password = admin.password || SEEDED_ADMIN.password;
   }
+}
+function createSessionToken() {
+  var seed = Date.now() + '-' + Math.random().toString(36).slice(2);
+  return 'mg-session-' + btoa(seed).replace(/=+$/,'');
+}
+function setAuthSession(user) {
+  APP.user = user;
+  APP.authToken = createSessionToken();
+  localStorage.setItem('mg_auth_token', APP.authToken);
+}
+function revokeAuthSession() {
+  APP.authToken = null;
+  APP.user = null;
+  localStorage.removeItem('mg_auth_token');
 }
 
 loadData();
@@ -3449,6 +3704,7 @@ function showApp() {
     renderMaterials(); renderPurchases(); renderQuotes();
     enhanceFileInputs();
     enhanceSelects();
+    updateGlobalSearchPlaceholder();
   }, 50);
 }
 function scrollToSection(id) {
@@ -3481,6 +3737,7 @@ function showPage(page) {
   if (page === 'purchases') renderPurchases();
   if (page === 'quotes') renderQuotes();
   if (page === 'calendar') renderCalendar();
+  updateGlobalSearchPlaceholder();
   refreshContextAIHeader();
 }
 
@@ -3559,18 +3816,18 @@ function doLogin() {
     showAuthMessage('Conta não encontrada ou password incorreta. Crie uma conta antes de entrar.');
     return;
   }
-  APP.user = { name: account.name, email: account.email, role: account.role || 'cliente' };
+  setAuthSession({ name: account.name, email: account.email, role: account.role || 'cliente' });
   saveData(); showApp();
 }
 function doSignup() {
   showAuthMessage('A criação de contas é feita apenas pelo Admin na aba Utilizadores.');
 }
 function doGoogleLogin() {
-  APP.user = { name: 'Utilizador Google', email: 'utilizador@google.com', role: 'admin', provider: 'google' };
+  setAuthSession({ name: 'Utilizador Google', email: 'utilizador@google.com', role: 'admin', provider: 'google' });
   saveData(); showApp();
 }
 function doLogout() {
-  APP.user = null; saveData(); showLanding();
+  revokeAuthSession(); saveData(); showLanding();
 }
 function updateUserUI() {
   if (!APP.user) return;
@@ -3626,7 +3883,7 @@ function renderManagedUsers() {
   if (card) card.style.display = getUserRole() === 'admin' ? 'block' : 'none';
   var tbody = document.getElementById('managed-users-table');
   if (!tbody) return;
-  var users = (APP.users || []).slice();
+  var users = (APP.users || []).filter(function(u) { return matchesSearch(u, ['name','email','role']); });
   if (!users.length) {
     tbody.innerHTML = '<tr><td colspan="5" class="text-center text-slate-500 py-6">Nenhum utilizador registado.</td></tr>';
     return;
@@ -4255,36 +4512,105 @@ function renderBuildings() {
   var el = document.getElementById('buildings-grid');
   if (!el) return;
   APP.buildings = APP.buildings || [];
-  if (APP.buildings.length === 0) {
-    el.innerHTML = emptyGridState('fa-building', 'Nenhum edifício registado.', 'Adicionar edifício', 'createBuilding()');
+  var rows = APP.buildings.filter(function(b) { return matchesSearch(b, ['name','clientName','address','zones']); });
+  if (rows.length === 0) {
+    el.innerHTML = emptyGridState('fa-building', 'Nenhum edifício registado.', 'Adicionar edifício', 'openNewBuildingModal()');
     return;
   }
-  el.innerHTML = APP.buildings.map(function(b) {
+  el.innerHTML = rows.map(function(b) {
     var client = APP.clients.find(function(c) { return c.id === b.clientId; });
     var equipmentCount = APP.equipment.filter(function(e) { return e.clientId === b.clientId; }).length;
-    return '<div class="card p-5">' +
-      '<div class="flex items-start gap-3 mb-4"><div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:rgba(34,197,94,0.14);color:#4ade80"><i class="fas fa-building"></i></div>' +
-      '<div><div class="font-semibold">' + escapeHtml(b.name) + '</div><div class="text-xs text-slate-400">' + escapeHtml(client ? client.name : (b.clientName || 'Sem cliente')) + '</div></div></div>' +
-      '<div class="space-y-2 text-xs text-slate-400">' +
-      (b.address ? '<div><i class="fas fa-location-dot" style="margin-right:8px"></i>' + escapeHtml(b.address) + '</div>' : '') +
-      (b.zones ? '<div><i class="fas fa-layer-group" style="margin-right:8px"></i>' + escapeHtml(b.zones) + '</div>' : '') +
-      '<div><i class="fas fa-microchip" style="margin-right:8px"></i>' + equipmentCount + ' equipamento(s) do cliente</div>' +
-      '</div></div>';
+    var avatar = b.image ? '<img src="' + escapeHtml(b.image) + '" alt="' + escapeHtml(b.name) + '" class="entity-avatar object-cover p-0">' : '<div class="entity-avatar" style="color:#86efac;background:rgba(34,197,94,0.14);border-color:rgba(74,222,128,0.18)"><i class="fas fa-building"></i></div>';
+    return '<div class="card entity-card p-5">' +
+      '<div class="flex items-start gap-3">' + avatar +
+      '<div class="min-w-0 flex-1"><div class="font-semibold text-lg truncate">' + escapeHtml(b.name) + '</div><div class="text-xs text-slate-400 mt-1">' + escapeHtml(client ? client.name : (b.clientName || 'Sem cliente')) + '</div></div></div>' +
+      '<div class="entity-meta">' +
+      (b.address ? '<div><i class="fas fa-location-dot"></i><span class="truncate">' + escapeHtml(b.address) + '</span></div>' : '') +
+      (b.zones ? '<div><i class="fas fa-layer-group"></i><span class="truncate">' + escapeHtml(b.zones) + '</span></div>' : '') +
+      '<div><i class="fas fa-microchip"></i><span>' + equipmentCount + ' equipamento(s) do cliente</span></div>' +
+      '</div><div class="entity-actions"><button class="btn-primary entity-primary-action flex-1" onclick="openOTFromBuilding(\'' + b.id + '\')"><i class="fas fa-plus"></i> Criar OT</button>' +
+      '<button class="btn-secondary entity-icon-action" title="Editar edifício" onclick="openEditBuildingModal(\'' + b.id + '\')"><i class="fas fa-pen"></i></button>' +
+      '<button class="btn-secondary entity-icon-action entity-danger-action" title="Apagar edifício" onclick="deleteBuilding(\'' + b.id + '\')"><i class="fas fa-trash"></i></button></div></div>';
   }).join('');
 }
-function createBuilding() {
+function openNewBuildingModal() {
   if (!requirePermission('create', 'buildings', 'criar edifício')) return;
-  if (!APP.clients.length) { showToast('Crie um cliente antes de adicionar edifícios.'); showPage('clients'); return; }
-  var name = prompt('Nome do edifício / instalação');
-  if (!name) return;
-  var clientHint = APP.clients.map(function(c) { return c.name; }).join(', ');
-  var clientName = prompt('Cliente associado (nomes: ' + clientHint + ')', APP.clients[0].name) || APP.clients[0].name;
-  var client = APP.clients.find(function(c) { return c.name.toLowerCase() === clientName.toLowerCase(); }) || APP.clients[0];
-  var address = prompt('Morada / localização', client.address || '') || '';
-  var zones = prompt('Pisos, salas ou zonas técnicas', 'Piso 0, Sala técnica') || '';
+  if (!(APP.clients || []).length) { showToast('Crie um cliente antes de adicionar edifícios.'); showPage('clients'); return; }
+  APP.editingBuildingId = null;
+  document.getElementById('building-modal-title').textContent = 'Novo Edifício / Instalação';
+  document.getElementById('building-submit-btn').innerHTML = '<i class="fas fa-plus"></i> Adicionar edifício';
+  populateBuildingClientSelect();
+  document.getElementById('building-name').value = '';
+  document.getElementById('building-address').value = '';
+  document.getElementById('building-zones').value = '';
+  document.getElementById('building-image-upload').value = '';
+  var firstClient = (APP.clients || [])[0];
+  if (firstClient) {
+    document.getElementById('building-client').value = firstClient.id;
+    document.getElementById('building-address').value = firstClient.address || '';
+  }
+  enhanceFileInputs();
+  syncEnhancedSelect(document.getElementById('building-client'));
+  document.getElementById('modal-new-building').style.display = 'flex';
+}
+function openEditBuildingModal(id) {
+  if (!requirePermission('edit', 'buildings', 'editar edifício')) return;
+  var b = (APP.buildings || []).find(function(x) { return x.id === id; });
+  if (!b) return;
+  APP.editingBuildingId = id;
+  document.getElementById('building-modal-title').textContent = 'Editar Edifício / Instalação';
+  document.getElementById('building-submit-btn').innerHTML = '<i class="fas fa-save"></i> Guardar edifício';
+  populateBuildingClientSelect();
+  document.getElementById('building-name').value = b.name || '';
+  document.getElementById('building-client').value = b.clientId || '';
+  document.getElementById('building-address').value = b.address || '';
+  document.getElementById('building-zones').value = b.zones || '';
+  document.getElementById('building-image-upload').value = '';
+  enhanceFileInputs();
+  syncEnhancedSelect(document.getElementById('building-client'));
+  document.getElementById('modal-new-building').style.display = 'flex';
+}
+function populateBuildingClientSelect() {
+  var select = document.getElementById('building-client');
+  if (!select) return;
+  select.innerHTML = (APP.clients || []).map(function(c) {
+    return '<option value="' + c.id + '">' + escapeHtml(c.name) + '</option>';
+  }).join('');
+}
+async function createBuilding() {
+  if (!requirePermission('create', 'buildings', 'criar edifício')) return;
+  var name = document.getElementById('building-name').value.trim();
+  if (!name) { showToast('Nome do edifício é obrigatório.', 'error'); return; }
+  var clientId = document.getElementById('building-client').value;
+  var client = (APP.clients || []).find(function(c) { return c.id === clientId; });
+  if (!client) { showToast('Selecione um cliente associado.', 'error'); return; }
+  var address = document.getElementById('building-address').value.trim();
+  var zones = document.getElementById('building-zones').value.trim();
+  var image = await readSingleUpload('building-image-upload');
   APP.buildings = APP.buildings || [];
-  APP.buildings.push({ id: generateId('ED'), name: name, clientId: client.id, clientName: client.name, address: address, zones: zones, createdAt: new Date().toISOString() });
-  saveData(); renderBuildings(); showToast('Edifício associado ao cliente.');
+  var building = APP.editingBuildingId ? APP.buildings.find(function(b) { return b.id === APP.editingBuildingId; }) : null;
+  if (!building) {
+    building = { id: generateId('ED'), createdAt: new Date().toISOString() };
+    APP.buildings.push(building);
+  }
+  Object.assign(building, {
+    name: name,
+    clientId: client.id,
+    clientName: client.name,
+    address: address,
+    zones: zones,
+    image: image ? image.dataUrl : (building.image || ''),
+    imageName: image ? image.name : (building.imageName || ''),
+    updatedAt: new Date().toISOString()
+  });
+  APP.editingBuildingId = null;
+  saveData(); closeModal('modal-new-building'); renderBuildings(); populateOTSelects(); showToast('Edifício guardado.');
+}
+function deleteBuilding(id) {
+  if (!requirePermission('delete', 'buildings', 'apagar edifício')) return;
+  if (!confirm('Remover este edifício?')) return;
+  APP.buildings = (APP.buildings || []).filter(function(b) { return b.id !== id; });
+  saveData(); renderBuildings(); populateOTSelects(); showToast('Edifício removido.');
 }
 function renderMaterials() {
   var tbody = document.getElementById('materials-table-body');
@@ -4295,6 +4621,7 @@ function renderMaterials() {
       rows.push({ name: m.description || m.name || 'Material usado', category: 'Usado em OT', stock: m.qty || 1, cost: m.cost || 0, location: ot.title || ot.id });
     });
   });
+  rows = rows.filter(function(m) { return matchesSearch(m, ['name','category','location','notes']); });
   if (!rows.length) {
     tbody.innerHTML = emptyTableState(5, 'fa-boxes-stacked', 'Nenhum material registado.', 'Adicionar material', 'createStockMaterial()');
     return;
@@ -4343,7 +4670,7 @@ function renderPurchases() {
   var tbody = document.getElementById('purchases-table-body');
   if (!tbody) return;
   APP.purchases = APP.purchases || [];
-  var rows = APP.purchases;
+  var rows = APP.purchases.filter(function(p) { return matchesSearch(p, ['id','item','supplier','status','notes']); });
   var empty = document.getElementById('purchases-empty-state');
   var table = document.getElementById('purchases-table-wrap');
   if (!rows.length) {
@@ -4361,7 +4688,7 @@ function renderPurchases() {
 function renderQuotes() {
   var tbody = document.getElementById('quotes-table-body');
   if (!tbody) return;
-  var rows = APP.invoices && APP.invoices.length ? APP.invoices : [];
+  var rows = APP.invoices && APP.invoices.length ? APP.invoices.filter(function(d) { return matchesSearch(d, ['id','type','source','clientName','otTitle','notes']); }) : [];
   if (!rows.length) {
     tbody.innerHTML = emptyTableState(4, 'fa-file-invoice-dollar', 'Nenhum orçamento ou documento comercial gerado.', 'Gerar orçamento', 'generateBillingDocuments()');
     return;
@@ -4596,9 +4923,11 @@ function openOTFormFileModal() {
   document.getElementById('file-ot').value = ot ? ot.id : '';
   document.getElementById('file-equipment').value = equipId || (ot ? ot.equipmentId : '');
   document.getElementById('file-client').value = (ot && ot.workClientId) || (equip && equip.clientId) || '';
+  document.getElementById('file-building').value = ot ? (ot.workBuildingId || '') : '';
   syncEnhancedSelect(document.getElementById('file-ot'));
   syncEnhancedSelect(document.getElementById('file-equipment'));
   syncEnhancedSelect(document.getElementById('file-client'));
+  syncEnhancedSelect(document.getElementById('file-building'));
 }
 function renderOTFormFiles() {
   var el = document.getElementById('ot-form-files-list');
@@ -4693,6 +5022,7 @@ function populateOTSelects() {
   var fileUsersSel = document.getElementById('file-users');
   var fileTeamsSel = document.getElementById('file-teams');
   var fileClientSel = document.getElementById('file-client');
+  var fileBuildingSel = document.getElementById('file-building');
   var fileEquipSel = document.getElementById('file-equipment');
   var fileOtSel = document.getElementById('file-ot');
   var fileFolderSel = document.getElementById('file-folder');
@@ -4704,6 +5034,7 @@ function populateOTSelects() {
   if (fileUsersSel) fileUsersSel.innerHTML = APP.technicians.map(function(t) { return '<option value="' + t.id + '">' + t.name + '</option>'; }).join('');
   if (fileTeamsSel) fileTeamsSel.innerHTML = getTeamOptions().map(function(t) { return '<option value="' + t + '">' + t + '</option>'; }).join('');
   if (fileClientSel) fileClientSel.innerHTML = '<option value="">Sem cliente</option>' + APP.clients.map(function(c) { return '<option value="' + c.id + '">' + c.name + '</option>'; }).join('');
+  if (fileBuildingSel) fileBuildingSel.innerHTML = '<option value="">Sem edifício</option>' + (APP.buildings || []).map(function(b) { return '<option value="' + b.id + '">' + b.name + (b.clientName ? ' · ' + b.clientName : '') + '</option>'; }).join('');
   if (fileEquipSel) fileEquipSel.innerHTML = '<option value="">Sem equipamento</option>' + APP.equipment.map(function(e) { return '<option value="' + e.id + '">' + e.name + '</option>'; }).join('');
   if (fileOtSel) fileOtSel.innerHTML = '<option value="">Sem OT</option>' + APP.ots.map(function(o) { return '<option value="' + o.id + '">' + o.id + ' - ' + o.title + '</option>'; }).join('');
   if (fileFolderSel) fileFolderSel.innerHTML = '<option value="">Raiz</option>' + getFolderOptionsHtml();
@@ -4711,17 +5042,33 @@ function populateOTSelects() {
   var workClientSel = document.getElementById('ot-work-client');
   if (workClientSel) workClientSel.innerHTML = '<option value="">Selecionar cliente...</option>' + (APP.clients || []).map(function(c) { return '<option value="' + c.id + '">' + c.name + '</option>'; }).join('');
   populateWorkBuildingSelect();
+  renderMultiAccessPickers();
   enhanceSelects();
 }
 function populateWorkBuildingSelect() {
   var buildingSel = document.getElementById('ot-work-building');
   if (!buildingSel) return;
   var clientId = document.getElementById('ot-work-client') ? document.getElementById('ot-work-client').value : '';
+  var current = buildingSel.value;
   var buildings = (APP.buildings || []).filter(function(b) { return !clientId || b.clientId === clientId; });
   buildingSel.innerHTML = '<option value="">Selecionar edifício...</option>' + buildings.map(function(b) {
     return '<option value="' + b.id + '">' + b.name + (b.clientName ? ' · ' + b.clientName : '') + '</option>';
   }).join('');
+  if (current && buildings.some(function(b) { return b.id === current; })) buildingSel.value = current;
   syncEnhancedSelect(buildingSel);
+}
+function syncOTBuildingSelection() {
+  var buildingSel = document.getElementById('ot-work-building');
+  var clientSel = document.getElementById('ot-work-client');
+  if (!buildingSel || !buildingSel.value) return;
+  var building = (APP.buildings || []).find(function(b) { return b.id === buildingSel.value; });
+  if (!building) return;
+  if (clientSel && building.clientId && clientSel.value !== building.clientId) {
+    clientSel.value = building.clientId;
+    syncEnhancedSelect(clientSel);
+  }
+  var locationEl = document.getElementById('ot-location');
+  if (locationEl && !locationEl.value.trim() && building.address) locationEl.value = building.address;
 }
 async function createOT() {
   var title = document.getElementById('ot-title').value.trim();
@@ -4733,8 +5080,9 @@ async function createOT() {
   var tech = APP.technicians.find(function(t) { return t.id === techId; });
   var type = document.getElementById('ot-type').value;
   var isWork = type === 'Obras/Instalações';
-  var workClient = isWork ? (APP.clients || []).find(function(c) { return c.id === document.getElementById('ot-work-client').value; }) : null;
-  var workBuilding = isWork ? (APP.buildings || []).find(function(b) { return b.id === document.getElementById('ot-work-building').value; }) : null;
+  var workBuilding = (APP.buildings || []).find(function(b) { return b.id === document.getElementById('ot-work-building').value; }) || null;
+  var workClient = (APP.clients || []).find(function(c) { return c.id === document.getElementById('ot-work-client').value; }) || null;
+  if (!workClient && workBuilding && workBuilding.clientId) workClient = (APP.clients || []).find(function(c) { return c.id === workBuilding.clientId; }) || null;
   var editing = APP.editingOTId ? APP.ots.find(function(o) { return o.id === APP.editingOTId; }) : null;
   var ot = editing || {
     id: generateId('OT'),
@@ -4944,9 +5292,11 @@ function openOTFormTaskFileModal(index) {
   document.getElementById('file-ot').value = editingOT ? editingOT.id : '';
   document.getElementById('file-equipment').value = equipId || (editingOT ? editingOT.equipmentId : '');
   document.getElementById('file-client').value = (editingOT && editingOT.workClientId) || (equip && equip.clientId) || '';
+  document.getElementById('file-building').value = editingOT ? (editingOT.workBuildingId || '') : '';
   syncEnhancedSelect(document.getElementById('file-ot'));
   syncEnhancedSelect(document.getElementById('file-equipment'));
   syncEnhancedSelect(document.getElementById('file-client'));
+  syncEnhancedSelect(document.getElementById('file-building'));
 }
 function removeOTFormTaskFile(index, fileIndex) {
   var rows = getOTFormTasksDraft();
@@ -5002,6 +5352,7 @@ function getFilteredOTs() {
 }
 function renderOTs() {
   var filtered = getFilteredOTs();
+  filtered = filtered.filter(function(o) { return matchesSearch(o, ['id','title','type','priority','status','equipmentName','technicianName','description','workClientName','workBuildingName','location']); });
   var tbody = document.getElementById('ot-table-body');
   if (!tbody) return;
   if (filtered.length === 0) {
@@ -5688,11 +6039,13 @@ function openTaskHelpFileModal() {
   document.getElementById('file-equipment').value = APP.currentOT.equipmentId || '';
   var equip = (APP.equipment || []).find(function(e) { return e.id === APP.currentOT.equipmentId; }) || null;
   document.getElementById('file-client').value = APP.currentOT.workClientId || (equip && equip.clientId) || '';
+  document.getElementById('file-building').value = APP.currentOT.workBuildingId || '';
   var desc = document.getElementById('task-desc').value.trim();
   if (desc && !document.getElementById('file-name').value.trim()) document.getElementById('file-name').value = desc + ' - apoio técnico';
   syncEnhancedSelect(document.getElementById('file-ot'));
   syncEnhancedSelect(document.getElementById('file-equipment'));
   syncEnhancedSelect(document.getElementById('file-client'));
+  syncEnhancedSelect(document.getElementById('file-building'));
 }
 function renderTaskHelpSelectedFile() {
   var el = document.getElementById('task-file-selected');
@@ -6057,6 +6410,7 @@ async function createEquipment() {
 }
 function renderEquipment(list) {
   var items = list || APP.equipment;
+  if (!list) items = items.filter(function(e) { return matchesSearch(e, ['name','code','brand','model','serial','category','location','status','clientName']); });
   var el = document.getElementById('equipment-grid');
   if (!el) return;
   if (items.length === 0) {
@@ -6075,12 +6429,13 @@ function renderEquipment(list) {
       '<div class="flex items-start justify-between mb-3">' +
       '<div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:' + bg + '"><i class="fas ' + icon + '" style="color:' + color + '"></i></div>' +
       '<span class="badge ' + getEquipStatusClass(e.status) + ' text-xs">' + e.status + '</span></div>' +
-      '<div class="font-semibold mb-1">' + e.name + '</div>' +
-      '<div class="text-xs text-slate-400 mb-3">' + (e.brand ? e.brand + (e.model ? ' &bull; ' + e.model : '') : '—') + '</div>' +
-      '<div class="text-xs text-slate-500 mb-2"><i class="fas fa-building" style="margin-right:4px"></i>' + (e.clientName || 'Sem cliente') + '</div>' +
-      '<div class="flex items-center justify-between text-xs text-slate-500">' +
-      '<span><i class="fas fa-map-marker-alt" style="margin-right:4px"></i>' + (e.location || '—') + '</span>' +
-      '<span class="badge badge-gray">' + e.category + '</span></div>' +
+      '<div class="font-semibold mb-1">' + escapeHtml(e.name) + '</div>' +
+      '<div class="text-xs text-slate-400 mb-3">' + escapeHtml(e.brand ? e.brand + (e.model ? ' · ' + e.model : '') : '—') + '</div>' +
+      '<div class="entity-meta">' +
+      '<div><i class="fas fa-building"></i><span class="truncate">' + escapeHtml(e.clientName || 'Sem cliente') + '</span></div>' +
+      '<div><i class="fas fa-location-dot"></i><span class="truncate">' + escapeHtml(e.location || '—') + '</span></div>' +
+      '</div><div class="flex items-center justify-between text-xs text-slate-500 mt-3">' +
+      '<span class="badge badge-gray">' + escapeHtml(e.category) + '</span></div>' +
       (e.code ? '<div class="text-xs text-slate-600 mt-2 mono">' + e.code + '</div>' : '') + '</div>';
   }).join('');
 }
@@ -6391,19 +6746,20 @@ async function createClient() {
 function renderClients() {
   var el = document.getElementById('clients-grid');
   if (!el) return;
-  if (APP.clients.length === 0) {
+  var rows = APP.clients.filter(function(c) { return matchesSearch(c, ['name','email','phone','address','contract','notes']); });
+  if (rows.length === 0) {
     el.innerHTML = emptyGridState('fa-briefcase', 'Nenhum cliente registado.', 'Adicionar cliente', 'openNewClientModal()');
     return;
   }
-  el.innerHTML = APP.clients.map(function(c) {
-    return '<div class="card p-5">' +
-      (c.image ? '<img src="' + escapeHtml(c.image) + '" alt="' + escapeHtml(c.name) + '" class="w-full rounded-lg border border-white/10 object-cover mb-4" style="height:130px">' : '') +
-      '<div class="flex items-start gap-3 mb-4"><div class="w-10 h-10 rounded-lg flex items-center justify-center font-bold" style="background:rgba(59,130,246,0.2);color:#60a5fa">' + c.name.charAt(0) + '</div>' +
-      '<div><div class="font-semibold">' + c.name + '</div><div class="text-xs text-slate-400">' + c.contract + '</div></div></div>' +
-      '<div class="space-y-1 text-xs text-slate-400">' + (c.email ? '<div><i class="fas fa-envelope" style="margin-right:8px"></i>' + c.email + '</div>' : '') + (c.phone ? '<div><i class="fas fa-phone" style="margin-right:8px"></i>' + c.phone + '</div>' : '') + '</div>' +
-      '<div class="flex gap-2 mt-4"><button class="btn-ghost text-xs flex-1" onclick="openOTFromClient(\'' + c.id + '\')"><i class="fas fa-wrench"></i> Nova OT</button>' +
-      '<button class="btn-ghost text-xs" onclick="openEditClientModal(\'' + c.id + '\')"><i class="fas fa-pen"></i></button>' +
-      '<button class="btn-ghost text-xs" onclick="deleteClient(\'' + c.id + '\')"><i class="fas fa-trash" style="color:var(--accent-red)"></i></button></div></div>';
+  el.innerHTML = rows.map(function(c) {
+    var initial = (c.name || 'C').charAt(0).toUpperCase();
+    return '<div class="card entity-card p-5">' +
+      (c.image ? '<img src="' + escapeHtml(c.image) + '" alt="' + escapeHtml(c.name) + '" class="entity-card-cover">' : '') +
+      '<div class="flex items-start gap-3"><div class="entity-avatar">' + escapeHtml(initial) + '</div>' +
+      '<div class="min-w-0 flex-1"><div class="font-semibold text-lg truncate">' + escapeHtml(c.name) + '</div><div class="text-xs text-slate-400 mt-1">' + escapeHtml(c.contract || 'Sem contrato') + '</div></div></div>' +
+      '<div class="entity-meta">' + (c.email ? '<div><i class="fas fa-envelope"></i><span class="truncate">' + escapeHtml(c.email) + '</span></div>' : '') + (c.phone ? '<div><i class="fas fa-phone"></i><span>' + escapeHtml(c.phone) + '</span></div>' : '') + (c.address ? '<div><i class="fas fa-location-dot"></i><span class="truncate">' + escapeHtml(c.address) + '</span></div>' : '') + '</div>' +
+      '<div class="entity-actions justify-end"><button class="btn-secondary entity-icon-action" title="Editar cliente" onclick="openEditClientModal(\'' + c.id + '\')"><i class="fas fa-pen"></i></button>' +
+      '<button class="btn-secondary entity-icon-action entity-danger-action" title="Apagar cliente" onclick="deleteClient(\'' + c.id + '\')"><i class="fas fa-trash"></i></button></div></div>';
   }).join('');
 }
 function openOTFromClient(id) {
@@ -6412,6 +6768,22 @@ function openOTFromClient(id) {
   openNewOTModal();
   document.getElementById('ot-title').value = 'Assistência — ' + c.name;
   document.getElementById('ot-location').value = c.address || '';
+}
+function openOTFromBuilding(id) {
+  var b = (APP.buildings || []).find(function(x) { return x.id === id; });
+  if (!b) return;
+  openNewOTModal();
+  var client = (APP.clients || []).find(function(c) { return c.id === b.clientId; });
+  document.getElementById('ot-title').value = 'Intervenção — ' + b.name;
+  document.getElementById('ot-type').value = 'Obras/Instalações';
+  updateOTTypeFields();
+  document.getElementById('ot-work-client').value = b.clientId || '';
+  populateWorkBuildingSelect();
+  document.getElementById('ot-work-building').value = b.id;
+  document.getElementById('ot-location').value = b.address || (client ? client.address || '' : '');
+  ['ot-type','ot-work-client','ot-work-building'].forEach(function(selectId) {
+    syncEnhancedSelect(document.getElementById(selectId));
+  });
 }
 function deleteClient(id) {
   if (!requirePermission('delete', 'clients', 'apagar cliente')) return;
@@ -6475,20 +6847,23 @@ async function createTechnician() {
 function renderTechnicians() {
   var el = document.getElementById('technicians-grid');
   if (!el) return;
-  if (APP.technicians.length === 0) {
+  var rows = APP.technicians.filter(function(t) { return matchesSearch(t, ['name','email','phone','specialty','availability']); });
+  if (rows.length === 0) {
     el.innerHTML = emptyGridState('fa-hard-hat', 'Nenhum técnico registado.', 'Adicionar técnico', 'openNewTechModal()');
     return;
   }
   var availColors = {'Disponível':'badge-green','Em campo':'badge-blue','Em férias':'badge-yellow','Indisponível':'badge-red'};
-  el.innerHTML = APP.technicians.map(function(t) {
+  el.innerHTML = rows.map(function(t) {
     var otCount = APP.ots.filter(function(o) { return o.technicianId === t.id && ['Aberta','Em andamento'].includes(o.status); }).length;
-    return '<div class="card p-5"><div class="flex items-start gap-3 mb-4">' +
-      (t.photo ? '<img src="' + escapeHtml(t.photo) + '" alt="' + escapeHtml(t.name) + '" class="w-10 h-10 rounded-full object-cover border border-white/10">' : '<div class="w-10 h-10 rounded-full flex items-center justify-center font-bold" style="background:rgba(99,102,241,0.2);color:#818cf8">' + t.name.charAt(0) + '</div>') +
-      '<div><div class="font-semibold">' + t.name + '</div><span class="badge badge-purple text-xs">' + t.specialty + '</span></div>' +
-      '<span class="ml-auto badge ' + (availColors[t.availability]||'badge-gray') + ' text-xs">' + t.availability + '</span></div>' +
-      '<div class="space-y-1 text-xs text-slate-400 mb-3">' + (t.email ? '<div><i class="fas fa-envelope" style="margin-right:8px"></i>' + t.email + '</div>' : '') +
-      '<div><i class="fas fa-wrench" style="margin-right:8px"></i>' + otCount + ' OT(s) ativas</div></div>' +
-      '<div class="flex gap-2"><button class="btn-ghost text-xs flex-1" onclick="openEditTechModal(\'' + t.id + '\')"><i class="fas fa-pen"></i> Editar</button><button class="btn-ghost text-xs" style="color:var(--accent-red)" onclick="deleteTech(\'' + t.id + '\')"><i class="fas fa-trash"></i></button></div></div>';
+    var initial = (t.name || 'T').charAt(0).toUpperCase();
+    return '<div class="card entity-card p-5"><div class="flex items-start gap-3">' +
+      (t.photo ? '<img src="' + escapeHtml(t.photo) + '" alt="' + escapeHtml(t.name) + '" class="entity-avatar round object-cover p-0">' : '<div class="entity-avatar round" style="color:#c4b5fd;background:rgba(99,102,241,0.2);border-color:rgba(129,140,248,0.22)">' + escapeHtml(initial) + '</div>') +
+      '<div class="min-w-0 flex-1"><div class="font-semibold text-lg truncate">' + escapeHtml(t.name) + '</div><span class="badge badge-purple text-xs mt-1">' + escapeHtml(t.specialty || 'Geral') + '</span></div>' +
+      '<span class="badge ' + (availColors[t.availability]||'badge-gray') + ' text-xs">' + escapeHtml(t.availability || '—') + '</span></div>' +
+      '<div class="entity-meta">' + (t.email ? '<div><i class="fas fa-envelope"></i><span class="truncate">' + escapeHtml(t.email) + '</span></div>' : '') +
+      (t.phone ? '<div><i class="fas fa-phone"></i><span>' + escapeHtml(t.phone) + '</span></div>' : '') +
+      '<div><i class="fas fa-wrench"></i><span>' + otCount + ' OT(s) ativas</span></div></div>' +
+      '<div class="entity-actions justify-end"><button class="btn-secondary entity-icon-action" title="Editar técnico" onclick="openEditTechModal(\'' + t.id + '\')"><i class="fas fa-pen"></i></button><button class="btn-secondary entity-icon-action entity-danger-action" title="Apagar técnico" onclick="deleteTech(\'' + t.id + '\')"><i class="fas fa-trash"></i></button></div></div>';
   }).join('');
 }
 function deleteTech(id) {
@@ -6539,6 +6914,7 @@ async function createKnowledgeArticle() {
 }
 function renderKnowledge(list) {
   var items = list || APP.knowledge;
+  if (!list) items = items.filter(function(a) { return matchesSearch(a, ['id','title','equipment','category','kind','symptom','solution','tools','author']); });
   var el = document.getElementById('knowledge-grid');
   if (!el) return;
   if (items.length === 0) {
@@ -6665,7 +7041,7 @@ function readMultipleUploads(id) {
 function readUploadFile(file) {
   return new Promise(function(resolve, reject) {
     var reader = new FileReader();
-    reader.onload = function() { resolve({ name: file.name, type: file.type, dataUrl: reader.result }); };
+    reader.onload = function() { resolve({ name: file.name, type: file.type, size: file.size, lastModified: file.lastModified, dataUrl: reader.result }); };
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
@@ -6718,9 +7094,46 @@ function escapeHtml(value) {
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
   });
 }
+function currentSearchQuery() {
+  return String(APP.globalSearchQuery || '').trim().toLowerCase();
+}
+function matchesSearch(row, fields) {
+  var q = currentSearchQuery();
+  if (!q) return true;
+  return fields.map(function(field) { return row && row[field] != null ? row[field] : ''; }).join(' ').toLowerCase().includes(q);
+}
+function updateGlobalSearchPlaceholder() {
+  var input = document.getElementById('global-search-input');
+  if (!input) return;
+  var labels = {
+    dashboard:'Pesquisar na visão geral...',
+    ots:'Pesquisar OTs...',
+    equipment:'Pesquisar equipamentos...',
+    clients:'Pesquisar clientes...',
+    buildings:'Pesquisar edifícios...',
+    technicians:'Pesquisar técnicos...',
+    users:'Pesquisar utilizadores...',
+    knowledge:'Pesquisar conhecimento...',
+    files:'Pesquisar ficheiros...',
+    incidents:'Pesquisar incidentes...',
+    checklists:'Pesquisar checklists...',
+    materials:'Pesquisar material...',
+    purchases:'Pesquisar compras...',
+    quotes:'Pesquisar orçamentos...',
+    calendar:'Pesquisar calendário...',
+    'ai-assistant':'Pesquisar ou perguntar à IA...',
+    settings:'Pesquisar definições...'
+  };
+  input.placeholder = labels[APP.currentPage] || 'Pesquisar nesta página...';
+}
 function openNewFileModal() {
   if (!requirePermission('create', 'files', 'adicionar ficheiro')) return;
+  APP.editingFileId = '';
+  APP.fileModalExistingUploads = [];
+  APP.fileModalRemovedExisting = false;
   populateOTSelects();
+  document.getElementById('file-modal-title').textContent = 'Novo Ficheiro Partilhado';
+  document.getElementById('file-submit-btn').innerHTML = '<i class="fas fa-share-nodes"></i> Partilhar';
   document.getElementById('file-type').value = 'Ficheiro';
   document.getElementById('file-version').value = 'v1.0';
   document.getElementById('file-ref').value = '';
@@ -6730,7 +7143,14 @@ function openNewFileModal() {
   document.getElementById('file-credential-service').value = '';
   document.getElementById('file-credential-user').value = '';
   document.getElementById('file-credential-vault').value = '';
+  document.getElementById('file-credential-password').value = '';
+  document.getElementById('file-credential-password').type = 'password';
+  document.getElementById('file-credential-password-icon').className = 'fas fa-eye';
   document.getElementById('file-permission').value = 'all';
+  document.getElementById('file-client').value = '';
+  document.getElementById('file-building').value = '';
+  document.getElementById('file-equipment').value = '';
+  document.getElementById('file-ot').value = '';
   ['file-users','file-teams'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) Array.prototype.slice.call(el.options).forEach(function(opt) { opt.selected = false; });
@@ -6739,6 +7159,8 @@ function openNewFileModal() {
   if (APP.currentOT && isPageActive('modal-ot-detail')) {
     document.getElementById('file-ot').value = APP.currentOT.id;
     document.getElementById('file-equipment').value = APP.currentOT.equipmentId || '';
+    document.getElementById('file-client').value = APP.currentOT.workClientId || '';
+    document.getElementById('file-building').value = APP.currentOT.workBuildingId || '';
   }
   if (APP.currentEquip && isPageActive('modal-equip-detail')) {
     document.getElementById('file-equipment').value = APP.currentEquip.id;
@@ -6746,7 +7168,50 @@ function openNewFileModal() {
   }
   updateFileTypeFields();
   updateFilePermissionFields();
+  renderFileExistingPreview();
   enhanceFileInputs();
+  document.getElementById('modal-new-file').style.display = 'flex';
+}
+function openEditFileModal(id) {
+  if (!requirePermission('edit', 'files', 'editar ficheiro')) return;
+  var f = (APP.files || []).find(function(file) { return file.id === id; });
+  if (!f) return;
+  APP.editingFileId = id;
+  populateOTSelects();
+  document.getElementById('file-modal-title').textContent = 'Editar Ficheiro';
+  document.getElementById('file-submit-btn').innerHTML = '<i class="fas fa-save"></i> Guardar ficheiro';
+  document.getElementById('file-name').value = f.name || '';
+  document.getElementById('file-type').value = f.type || 'Ficheiro';
+  document.getElementById('file-folder').value = f.folderId || '';
+  document.getElementById('file-version').value = (f.versions && f.versions[0] && f.versions[0].version) || 'v1.0';
+  APP.fileModalExistingUploads = buildExistingFileAttachment(f) ? [buildExistingFileAttachment(f)] : [];
+  APP.fileModalRemovedExisting = false;
+  document.getElementById('file-ref').value = f.type === 'Credencial' || /^data:/i.test(f.ref || '') ? '' : (f.ref || '');
+  document.getElementById('file-upload').value = '';
+  document.getElementById('file-desc').value = f.description || '';
+  document.getElementById('file-media-caption').value = f.mediaCaption || '';
+  document.getElementById('file-credential-service').value = f.credentialService || '';
+  document.getElementById('file-credential-user').value = f.credentialUser || '';
+  document.getElementById('file-credential-vault').value = f.type === 'Credencial' ? (f.ref || '') : '';
+  document.getElementById('file-credential-password').value = f.credentialPassword || '';
+  document.getElementById('file-credential-password').type = 'password';
+  document.getElementById('file-credential-password-icon').className = 'fas fa-eye';
+  document.getElementById('file-permission').value = f.permission || 'all';
+  document.getElementById('file-client').value = f.clientId || '';
+  document.getElementById('file-building').value = f.buildingId || '';
+  document.getElementById('file-equipment').value = f.equipmentId || '';
+  document.getElementById('file-ot').value = f.otId || '';
+  ['file-users','file-teams'].forEach(function(selectId) {
+    var select = document.getElementById(selectId);
+    var values = selectId === 'file-users' ? (f.userIds || []) : (f.teams || []);
+    if (select) Array.prototype.slice.call(select.options).forEach(function(opt) { opt.selected = values.includes(opt.value); });
+  });
+  updateFileTypeFields();
+  updateFilePermissionFields();
+  renderFileExistingPreview();
+  enhanceFileInputs();
+  enhanceSelects();
+  ['file-type','file-folder','file-permission','file-client','file-building','file-equipment','file-ot'].forEach(function(selectId) { syncEnhancedSelect(document.getElementById(selectId)); });
   document.getElementById('modal-new-file').style.display = 'flex';
 }
 function openNewFolderModal() {
@@ -6774,6 +7239,11 @@ function updateFileTypeFields() {
   credentialFields.style.display = type === 'Credencial' ? 'block' : 'none';
   mediaFields.style.display = ['Vídeo','Imagem'].includes(type) ? 'block' : 'none';
   refField.style.display = type === 'Credencial' ? 'none' : 'block';
+  if (type === 'Credencial') {
+    APP.fileModalExistingUploads = [];
+    APP.fileModalRemovedExisting = true;
+    renderFileExistingPreview();
+  }
   var labels = {
     'Ficheiro': ['Ficheiro / referência *', 'Ex: manual-ups.pdf ou /docs/manual-ups.pdf'],
     'Link': ['URL *', 'https://...'],
@@ -6792,6 +7262,76 @@ function updateFilePermissionFields() {
   var permission = document.getElementById('file-permission').value;
   document.getElementById('file-users-field').style.display = permission === 'users' ? 'block' : 'none';
   document.getElementById('file-teams-field').style.display = permission === 'teams' ? 'block' : 'none';
+  renderMultiAccessPickers();
+}
+function renderMultiAccessPickers() {
+  renderMultiAccessPicker('file-users', 'file-users-picker', 'fa-user');
+  renderMultiAccessPicker('file-teams', 'file-teams-picker', 'fa-users');
+}
+function renderMultiAccessPicker(selectId, pickerId, icon) {
+  var select = document.getElementById(selectId);
+  var picker = document.getElementById(pickerId);
+  if (!select || !picker) return;
+  var options = Array.prototype.slice.call(select.options);
+  if (!options.length) {
+    picker.innerHTML = '<div class="text-xs text-slate-500 p-2">Sem opções disponíveis.</div>';
+    return;
+  }
+  picker.innerHTML = options.map(function(opt, index) {
+    return '<button type="button" class="multi-access-option ' + (opt.selected ? 'selected' : '') + '" onclick="toggleMultiAccessOption(\'' + selectId + '\',' + index + ')">' +
+      '<span class="inline-flex items-center gap-2 min-w-0"><i class="fas ' + icon + '" style="opacity:.75"></i><span class="truncate">' + escapeHtml(opt.textContent) + '</span></span>' +
+      '<i class="fas fa-check"></i></button>';
+  }).join('');
+}
+function toggleMultiAccessOption(selectId, index) {
+  var select = document.getElementById(selectId);
+  if (!select || !select.options[index]) return;
+  select.options[index].selected = !select.options[index].selected;
+  renderMultiAccessPickers();
+}
+function toggleCredentialPassword() {
+  var input = document.getElementById('file-credential-password');
+  var icon = document.getElementById('file-credential-password-icon');
+  if (!input || !icon) return;
+  var visible = input.type === 'text';
+  input.type = visible ? 'password' : 'text';
+  icon.className = visible ? 'fas fa-eye' : 'fas fa-eye-slash';
+}
+function buildExistingFileAttachment(file) {
+  if (!file || !file.ref || file.type === 'Credencial') return null;
+  return {
+    ref: file.ref,
+    name: file.fileName || getAssetName(file.ref) || file.name || 'Ficheiro carregado',
+    type: file.mimeType || (file.type === 'Imagem' ? 'image/*' : file.type === 'Vídeo' ? 'video/*' : file.type === 'PDF' ? 'application/pdf' : file.type || 'ficheiro'),
+    fileType: file.type || 'Ficheiro'
+  };
+}
+function renderFileExistingPreview() {
+  var preview = document.getElementById('file-existing-preview');
+  if (!preview) return;
+  var current = APP.fileModalExistingUploads && APP.fileModalExistingUploads[0];
+  preview.style.display = current ? 'block' : 'none';
+  preview.classList.toggle('active', !!current);
+  if (!current) {
+    preview.innerHTML = '';
+    return;
+  }
+  var isImg = isImageUrl(current.ref) || String(current.type || '').indexOf('image/') === 0;
+  var thumb = isImg
+    ? '<img src="' + escapeHtml(current.ref) + '" alt="' + escapeHtml(current.name) + '">'
+    : '<i class="fas ' + getUploadIcon({ type: current.type }) + '"></i>';
+  preview.innerHTML = '<div class="upload-preview-item">' +
+    '<div class="upload-preview-thumb">' + thumb + '</div>' +
+    '<div class="upload-preview-meta"><div class="upload-preview-name">' + escapeHtml(current.name) + '</div><div class="upload-preview-info">Anexo atual · ' + escapeHtml(current.fileType || current.type || 'ficheiro') + '</div></div>' +
+    '<button type="button" class="btn-ghost text-xs" style="color:#f87171" onclick="removeExistingFileAttachment()"><i class="fas fa-trash"></i></button>' +
+    '</div>';
+}
+function removeExistingFileAttachment() {
+  APP.fileModalExistingUploads = [];
+  APP.fileModalRemovedExisting = true;
+  var ref = document.getElementById('file-ref');
+  if (ref) ref.value = '';
+  renderFileExistingPreview();
 }
 function getSelectedValues(id) {
   var el = document.getElementById(id);
@@ -6799,23 +7339,66 @@ function getSelectedValues(id) {
   return Array.prototype.slice.call(el.selectedOptions).map(function(o) { return o.value; });
 }
 async function createSharedFile() {
-  if (!requirePermission('create', 'files', 'partilhar ficheiro')) return;
+  if (APP.editingFileId) {
+    if (!requirePermission('edit', 'files', 'editar ficheiro')) return;
+  } else if (!requirePermission('create', 'files', 'partilhar ficheiro')) return;
   var name = document.getElementById('file-name').value.trim();
   var type = document.getElementById('file-type').value;
   var uploads = type === 'Credencial' ? [] : await readMultipleUploads('file-upload');
   var manualRef = document.getElementById('file-ref').value.trim();
   var credentialRef = document.getElementById('file-credential-vault').value.trim();
+  var editingFile = APP.editingFileId ? (APP.files || []).find(function(file) { return file.id === APP.editingFileId; }) : null;
   var hasUploads = uploads.length > 0;
+  var existingAttachment = APP.fileModalExistingUploads && APP.fileModalExistingUploads[0] ? APP.fileModalExistingUploads[0] : null;
   if (type === 'Credencial' && (!name || !credentialRef)) { showToast('Nome e referência são obrigatórios.'); return; }
-  if (type !== 'Credencial' && !hasUploads && (!name || !manualRef)) { showToast('Nome e referência são obrigatórios.'); return; }
+  if (type !== 'Credencial' && !editingFile && !hasUploads && (!name || !manualRef)) { showToast('Nome e referência são obrigatórios.'); return; }
+  if (type !== 'Credencial' && editingFile && !name) { showToast('Nome é obrigatório.'); return; }
+  if (type !== 'Credencial' && editingFile && !hasUploads && !manualRef && !existingAttachment) { showToast('Carregue um ficheiro ou indique uma referência.'); return; }
   if (type === 'Credencial' && !document.getElementById('file-credential-service').value.trim()) { showToast('Serviço / sistema é obrigatório para credenciais.'); return; }
   var clientId = document.getElementById('file-client').value;
+  var buildingId = document.getElementById('file-building').value;
   var equipmentId = document.getElementById('file-equipment').value;
   var otId = document.getElementById('file-ot').value;
   var client = APP.clients.find(function(c) { return c.id === clientId; });
+  var building = (APP.buildings || []).find(function(b) { return b.id === buildingId; });
   var equipment = APP.equipment.find(function(e) { return e.id === equipmentId; });
   var ot = APP.ots.find(function(o) { return o.id === otId; });
   var version = document.getElementById('file-version').value.trim() || 'v1.0';
+  if (editingFile) {
+    var editUpload = uploads[0] || null;
+    var nextRef = type === 'Credencial' ? credentialRef : (editUpload ? editUpload.dataUrl : (manualRef || (existingAttachment ? existingAttachment.ref : '')));
+    editingFile.name = name;
+    editingFile.type = type;
+    editingFile.ref = nextRef;
+    editingFile.fileName = editUpload ? editUpload.name : (manualRef ? '' : (existingAttachment ? existingAttachment.name : ''));
+    editingFile.mimeType = editUpload ? editUpload.type : (manualRef ? '' : (existingAttachment ? existingAttachment.type : ''));
+    editingFile.folderId = document.getElementById('file-folder').value;
+    editingFile.description = document.getElementById('file-desc').value;
+    editingFile.mediaCaption = document.getElementById('file-media-caption').value;
+    editingFile.credentialService = document.getElementById('file-credential-service').value;
+    editingFile.credentialUser = document.getElementById('file-credential-user').value;
+    editingFile.credentialPassword = document.getElementById('file-credential-password').value;
+    editingFile.permission = document.getElementById('file-permission').value;
+    editingFile.userIds = getSelectedValues('file-users');
+    editingFile.teams = getSelectedValues('file-teams');
+    editingFile.clientId = clientId;
+    editingFile.clientName = client ? client.name : '';
+    editingFile.buildingId = buildingId;
+    editingFile.buildingName = building ? building.name : '';
+    editingFile.equipmentId = equipmentId;
+    editingFile.equipmentName = equipment ? equipment.name : '';
+    editingFile.otId = otId;
+    editingFile.otTitle = ot ? ot.title : '';
+    editingFile.updatedAt = new Date().toISOString();
+    if (version && (!editingFile.versions || !editingFile.versions.length)) {
+      editingFile.versions = [{ version: version, notes: document.getElementById('file-version-notes').value || 'Versão editada', ref: editingFile.ref, createdAt: editingFile.updatedAt, author: APP.user ? APP.user.name : 'Gestor' }];
+    }
+    APP.editingFileId = '';
+    APP.fileModalExistingUploads = [];
+    APP.fileModalRemovedExisting = false;
+    saveData(); closeModal('modal-new-file'); renderFiles(); showToast('Ficheiro atualizado.');
+    return;
+  }
   var entries = type === 'Credencial'
     ? [{ ref: credentialRef, uploaded: null, explicitType: type, explicitName: name }]
     : (hasUploads ? uploads.map(function(uploaded) { return { ref: uploaded.dataUrl, uploaded: uploaded, explicitType: inferFileTypeFromUpload(uploaded) || type, explicitName: name || uploaded.name }; }) : [{ ref: manualRef, uploaded: null, explicitType: type, explicitName: name }]);
@@ -6836,11 +7419,14 @@ async function createSharedFile() {
       mediaCaption: document.getElementById('file-media-caption').value,
       credentialService: document.getElementById('file-credential-service').value,
       credentialUser: document.getElementById('file-credential-user').value,
+      credentialPassword: document.getElementById('file-credential-password').value,
       permission: document.getElementById('file-permission').value,
       userIds: getSelectedValues('file-users'),
       teams: getSelectedValues('file-teams'),
       clientId: clientId,
       clientName: client ? client.name : '',
+      buildingId: buildingId,
+      buildingName: building ? building.name : '',
       equipmentId: equipmentId,
       equipmentName: equipment ? equipment.name : '',
       otId: otId,
@@ -6887,7 +7473,7 @@ async function createSharedFile() {
     renderFiles(); showToast(fileRecords.length + ' ficheiro(s) partilhado(s)!');
   }
   APP.fileReturnContext = '';
-  ['file-name','file-ref','file-desc','file-version','file-version-notes','file-media-caption','file-credential-service','file-credential-user','file-credential-vault'].forEach(function(id) { document.getElementById(id).value = ''; });
+  ['file-name','file-ref','file-desc','file-version','file-version-notes','file-media-caption','file-credential-service','file-credential-user','file-credential-vault','file-credential-password'].forEach(function(id) { document.getElementById(id).value = ''; });
   document.getElementById('file-upload').value = '';
 }
 function renderFiles() {
@@ -6895,7 +7481,7 @@ function renderFiles() {
   var qEl = document.getElementById('files-search');
   var typeEl = document.getElementById('files-type-filter');
   var permEl = document.getElementById('files-permission-filter');
-  var q = qEl ? qEl.value.toLowerCase() : '';
+  var q = ((qEl && qEl.value) || APP.globalSearchQuery || '').toLowerCase();
   var type = typeEl ? typeEl.value : '';
   var perm = permEl ? permEl.value : '';
   items = items.filter(function(f) {
@@ -6923,9 +7509,27 @@ function renderFiles() {
       '<td>' + getFileAssociations(f) + '</td>' +
       '<td><span class="file-version-pill">' + ((f.versions || []).length || 1) + '</span></td>' +
       '<td><span class="text-sm text-slate-300">' + updatedLabel + '</span></td>' +
-      '<td class="text-right"><button class="btn-secondary btn-action file-version-action" title="Nova versão" onclick="event.stopPropagation(); addFileVersion(\'' + f.id + '\')"><i class="fas fa-code-branch"></i><span>Nova versão</span></button></td>' +
+      '<td class="text-right"><div class="file-row-actions">' +
+      '<button class="btn-secondary btn-action file-row-action" title="Nova versão" onclick="event.stopPropagation(); addFileVersion(\'' + f.id + '\')"><i class="fas fa-code-branch"></i></button>' +
+      '<button class="btn-secondary btn-action file-row-action" title="Editar ficheiro" onclick="event.stopPropagation(); openEditFileModal(\'' + f.id + '\')"><i class="fas fa-pen"></i></button>' +
+      '<button class="btn-secondary btn-action file-row-action entity-danger-action" title="Eliminar ficheiro" onclick="event.stopPropagation(); deleteFileRecord(\'' + f.id + '\')"><i class="fas fa-trash"></i></button>' +
+      '</div></td>' +
       '</tr>';
   }).join('');
+}
+function deleteFileRecord(id) {
+  if (!requirePermission('delete', 'files', 'eliminar ficheiro')) return;
+  var f = (APP.files || []).find(function(file) { return file.id === id; });
+  if (!f) return;
+  if (!confirm('Eliminar o ficheiro "' + (f.name || id) + '"?')) return;
+  APP.files = (APP.files || []).filter(function(file) { return file.id !== id; });
+  if (APP.currentFile && APP.currentFile.id === id) {
+    APP.currentFile = null;
+    closeModal('modal-file-detail');
+  }
+  saveData();
+  renderFiles();
+  showToast('Ficheiro eliminado.');
 }
 function renderFileMetrics() {
   var files = APP.files || [];
@@ -7121,6 +7725,7 @@ function getPermissionLabel(f) {
 function getFileAssociations(f) {
   var rows = [];
   if (f.clientName) rows.push('<span class="badge badge-blue">' + escapeHtml(f.clientName) + '</span>');
+  if (f.buildingName) rows.push('<span class="badge badge-green">' + escapeHtml(f.buildingName) + '</span>');
   if (f.equipmentName) rows.push('<span class="badge badge-yellow">' + escapeHtml(f.equipmentName) + '</span>');
   if (f.otId) rows.push('<span class="badge badge-gray">' + escapeHtml(f.otId) + '</span>');
   return rows.length ? '<div class="file-chip-list">' + rows.join('') + '</div>' : '<span class="text-xs text-slate-600">Sem associação</span>';
@@ -7155,11 +7760,38 @@ function renderFileDetailMeta(f) {
     ['Associações', stripTags(getFileAssociations(f)) || 'Sem associação'],
     ['Atualizado', f.updatedAt ? new Date(f.updatedAt).toLocaleDateString('pt-PT') : '—']
   ];
-  if (f.type === 'Credencial') rows.splice(1, 0, ['Serviço', f.credentialService || '—'], ['Utilizador', f.credentialUser || '—']);
+  if (f.type === 'Credencial') rows.splice(1, 0, ['Serviço', f.credentialService || '—'], ['Utilizador', renderCredentialUserMeta(f)], ['Senha', f.credentialPassword ? renderCredentialPasswordMeta(f) : '—']);
   if (f.mediaCaption) rows.splice(1, 0, ['Legenda', f.mediaCaption]);
   return rows.map(function(r) {
-    return '<div class="flex justify-between gap-3 py-2 border-b border-white/5"><span class="text-slate-500">' + r[0] + '</span><span class="text-right text-slate-200">' + escapeHtml(r[1]) + '</span></div>';
+    var value = String(r[1] || '').indexOf('<') >= 0 ? r[1] : escapeHtml(r[1]);
+    return '<div class="flex justify-between gap-3 py-2 border-b border-white/5"><span class="text-slate-500">' + r[0] + '</span><span class="text-right text-slate-200">' + value + '</span></div>';
   }).join('');
+}
+function renderCredentialUserMeta(f) {
+  if (!f.credentialUser) return '—';
+  return '<span class="inline-flex items-center gap-2"><span>' + escapeHtml(f.credentialUser) + '</span><button type="button" class="btn-ghost text-xs" title="Copiar utilizador" onclick="copyCredentialValue(\'' + f.id + '\',\'user\')"><i class="fas fa-copy"></i></button></span>';
+}
+function renderCredentialPasswordMeta(f) {
+  var visible = APP.visibleCredentialPasswordId === f.id;
+  var value = visible ? escapeHtml(f.credentialPassword) : '••••••••';
+  return '<span class="inline-flex items-center gap-2"><span class="mono">' + value + '</span><button type="button" class="btn-ghost text-xs" title="' + (visible ? 'Ocultar senha' : 'Mostrar senha') + '" onclick="toggleStoredCredentialPassword(\'' + f.id + '\')"><i class="fas ' + (visible ? 'fa-eye-slash' : 'fa-eye') + '"></i></button><button type="button" class="btn-ghost text-xs" title="Copiar senha" onclick="copyCredentialValue(\'' + f.id + '\',\'password\')"><i class="fas fa-copy"></i></button></span>';
+}
+function copyCredentialValue(id, field) {
+  var f = (APP.files || []).find(function(file) { return file.id === id; });
+  if (!f) return;
+  var value = field === 'password' ? f.credentialPassword : f.credentialUser;
+  if (!value) { showToast('Nada para copiar.'); return; }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(value).then(function() { showToast((field === 'password' ? 'Senha' : 'Utilizador') + ' copiado.'); }).catch(function() { showToast('Não foi possível copiar.'); });
+  } else {
+    showToast('Clipboard não suportado neste browser.');
+  }
+}
+function toggleStoredCredentialPassword(id) {
+  APP.visibleCredentialPasswordId = APP.visibleCredentialPasswordId === id ? '' : id;
+  if (APP.currentFile && APP.currentFile.id === id) {
+    document.getElementById('file-detail-meta').innerHTML = renderFileDetailMeta(APP.currentFile);
+  }
 }
 function renderFileVersions(f) {
   var versions = f.versions || [];
@@ -7270,11 +7902,12 @@ async function createIncident() {
 function renderIncidents() {
   var tbody = document.getElementById('incidents-table-body');
   if (!tbody) return;
-  if (APP.incidents.length === 0) {
+  var rows = APP.incidents.filter(function(inc) { return matchesSearch(inc, ['id','description','equipmentName','severity','status','mediaName']); });
+  if (rows.length === 0) {
     tbody.innerHTML = emptyTableState(6, 'fa-triangle-exclamation', 'Nenhum incidente registado.', 'Adicionar incidente', 'openNewIncidentModal()');
     return;
   }
-  tbody.innerHTML = APP.incidents.slice().reverse().map(function(inc) {
+  tbody.innerHTML = rows.slice().reverse().map(function(inc) {
     var mediaBadge = inc.media ? ' <button class="badge badge-blue cursor-pointer" onclick="event.stopPropagation();openIncidentMedia(\'' + inc.id + '\')"><i class="fas ' + ((inc.mediaType || '').indexOf('video') === 0 ? 'fa-video' : 'fa-image') + '"></i> Ver anexo</button>' : '';
     return '<tr><td class="mono text-xs text-slate-400">' + inc.id + '</td>' +
       '<td class="font-medium" style="color:var(--text-primary)">' + escapeHtml(inc.description) + mediaBadge + '</td>' +
@@ -7306,7 +7939,7 @@ function getAllChecklists() {
 function renderChecklists() {
   var grid = document.getElementById('checklists-grid');
   if (!grid) return;
-  var rows = getAllChecklists();
+  var rows = getAllChecklists().filter(function(cl) { return matchesSearch(cl, ['id','title','frequency','category','notes']); });
   grid.innerHTML = rows.map(function(cl) {
     var total = (cl.tasks || []).length;
     var done = (cl.tasks || []).filter(function(t) { return t.done; }).length;
@@ -7527,6 +8160,103 @@ function clearChat() {
   document.getElementById('chat-messages').innerHTML = '';
   appendChatMessage('Chat limpo. Como posso ajudar?', 'ai');
 }
+function getAIInputByTarget(target) {
+  return document.getElementById(target === 'context' ? 'context-ai-input' : 'chat-input');
+}
+function appendAIMessageByTarget(target, text, type) {
+  if (target === 'context') appendContextAIMessage(text, type || 'user');
+  else appendChatMessage(text, type || 'user');
+}
+function triggerAIUpload(target, kind) {
+  var id = target + '-ai-' + (kind === 'file' ? 'file' : kind === 'photo' ? 'photo' : 'qr') + '-upload';
+  var input = document.getElementById(id);
+  if (input) input.click();
+}
+async function handleAIUpload(input, target, label) {
+  if (!input || !input.files || !input.files.length) return;
+  var files = await readMultipleUploads(input.id);
+  APP.aiChatAttachments = APP.aiChatAttachments || [];
+  files.forEach(function(file) {
+    APP.aiChatAttachments.push({ target: target, label: label, name: file.name, type: file.type, size: file.size, dataUrl: file.dataUrl, createdAt: new Date().toISOString() });
+  });
+  var summary = files.map(function(file) { return '- ' + file.name + ' (' + formatFileSize(file.size || 0) + ')'; }).join('\n');
+  appendAIMessageByTarget(target, 'Anexei ' + files.length + ' ' + label + '(s):\n' + summary, 'user');
+  appendAIMessageByTarget(target, 'Recebi o anexo. Posso usar isto como contexto para analisar, resumir, criar OT, associar a equipamento/cliente ou gerar relatório.', 'ai');
+  input.value = '';
+}
+async function handleAIQrUpload(input, target) {
+  if (!input || !input.files || !input.files[0]) return;
+  var file = input.files[0];
+  appendAIMessageByTarget(target, 'A ler QR Code a partir da imagem: ' + file.name, 'user');
+  try {
+    if (!('BarcodeDetector' in window)) {
+      appendAIMessageByTarget(target, 'Este browser não suporta leitura automática de QR Code. A imagem ficou anexada; posso analisá-la como evidência ou podes usar a leitura QR do equipamento.', 'ai');
+      await handleAIUpload(input, target, 'QR/imagem');
+      return;
+    }
+    var detector = new BarcodeDetector({ formats: ['qr_code'] });
+    var bitmap = await createImageBitmap(file);
+    var codes = await detector.detect(bitmap);
+    if (!codes.length) {
+      appendAIMessageByTarget(target, 'Não encontrei QR Code legível nesta imagem. Tenta aproximar mais a câmara ou melhorar a luz.', 'ai');
+    } else {
+      var raw = codes[0].rawValue || '';
+      appendAIMessageByTarget(target, 'QR Code lido:\n' + raw, 'ai');
+      handleNfcPayload(raw);
+    }
+  } catch (error) {
+    appendAIMessageByTarget(target, 'Não consegui ler o QR Code automaticamente: ' + error.message, 'ai');
+  }
+  input.value = '';
+}
+function startAIVoiceInput(target) {
+  var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    showToast('Reconhecimento de voz não suportado neste browser.');
+    appendAIMessageByTarget(target, 'O browser não suporta ditado por áudio. Podes escrever a mensagem ou carregar um ficheiro de áudio como anexo.', 'ai');
+    return;
+  }
+  var recognition = new SpeechRecognition();
+  recognition.lang = 'pt-PT';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+  showToast('A ouvir... fale agora.');
+  recognition.onresult = function(event) {
+    var text = event.results && event.results[0] && event.results[0][0] ? event.results[0][0].transcript : '';
+    var input = getAIInputByTarget(target);
+    if (input && text) {
+      input.value = (input.value ? input.value + ' ' : '') + text;
+      input.focus();
+    }
+  };
+  recognition.onerror = function(event) {
+    showToast('Áudio indisponível: ' + (event.error || 'erro desconhecido'));
+  };
+  recognition.start();
+}
+async function readAIAnyNfc(target) {
+  appendAIMessageByTarget(target, 'Leitura NFC iniciada. Aproxime a tag de equipamento ou OT.', 'user');
+  if (!('NDEFReader' in window)) {
+    appendAIMessageByTarget(target, 'NFC real não é suportado neste browser. Vou usar a simulação se houver uma OT ou equipamento aberto.', 'ai');
+    simulateNfcRead(APP.currentOT ? 'ot' : 'equipment');
+    return;
+  }
+  try {
+    var reader = new NDEFReader();
+    await reader.scan();
+    showToast('Aproxime a tag NFC.');
+    reader.onreading = function(event) {
+      var payload = '';
+      event.message.records.forEach(function(record) {
+        if (record.recordType === 'text') payload = new TextDecoder().decode(record.data);
+      });
+      appendAIMessageByTarget(target, 'NFC lido:\n' + (payload || 'Sem payload textual'), 'ai');
+      if (payload) handleNfcPayload(payload);
+    };
+  } catch (error) {
+    appendAIMessageByTarget(target, 'Leitura NFC indisponível: ' + error.message, 'ai');
+  }
+}
 function openAISettings() {
   if (getUserRole() !== 'admin') {
     showToast('Apenas Admin pode gerir permissões da IA.');
@@ -7700,7 +8430,7 @@ function executeAIAction(action) {
   if (action.type === 'incidents') return createAIIncident(action.title);
   if (action.type === 'materials') return createAIMaterial(action.title);
   if (action.type === 'files') return createAIFileFolder(action.title);
-  if (action.type === 'buildings') { createBuilding(); return 'Abri o fluxo de criação de edifício.'; }
+  if (action.type === 'buildings') { openNewBuildingModal(); return 'Abri o fluxo de criação de edifício.'; }
   if (action.type === 'purchases') { createPurchaseRequest(); return 'Abri a modal de pedido de compra com dados sugeridos pela IA.'; }
   if (action.type === 'quotes') { generateBillingDocuments(); return 'Abri a modal de orçamento com dados sugeridos pela IA.'; }
   if (action.type === 'checklists') { showPage('checklists'); openNewChecklistModal(); setTimeout(function() { var input = document.getElementById('checklist-title'); if (input) input.value = action.title || 'Checklist sugerida pela IA'; }, 50); return 'Abri a modal de checklist com dados sugeridos pela IA.'; }
@@ -7906,7 +8636,7 @@ function executeContextAIAction() {
   if (page === 'ots') return openNewOTModal();
   if (page === 'equipment') return openNewEquipModal();
   if (page === 'clients') return openNewClientModal();
-  if (page === 'buildings') return createBuilding();
+  if (page === 'buildings') return openNewBuildingModal();
   if (page === 'technicians') return openNewTechModal();
   if (page === 'users') { showPage('users'); generateManagedUserPassword(false); return showToast('Gestão de utilizadores pronta para criar conta.'); }
   if (page === 'knowledge') return openNewKnowledgeModal();
@@ -7967,7 +8697,13 @@ function closeModal(id) {
   if (id === 'modal-new-ot') { showPage('ots'); return; }
   if (id === 'modal-ot-detail') { showPage('ots'); return; }
   if (id === 'modal-equip-detail') { showPage('equipment'); return; }
-  if (id === 'modal-new-file') APP.fileReturnContext = '';
+  if (id === 'modal-new-file') {
+    APP.fileReturnContext = '';
+    APP.editingFileId = '';
+    APP.fileModalExistingUploads = [];
+    APP.fileModalRemovedExisting = false;
+    renderFileExistingPreview();
+  }
   document.getElementById(id).style.display = 'none';
 }
 function showToast(msg) {
@@ -8073,6 +8809,11 @@ function enhanceFileInputs() {
     });
     input.addEventListener('change', function() {
       if (input.multiple) appendSelectedUploadFiles(input);
+      if (input.id === 'file-upload' && input.files && input.files.length) {
+        APP.fileModalExistingUploads = [];
+        APP.fileModalRemovedExisting = true;
+        renderFileExistingPreview();
+      }
       updateFilePickerLabel(input);
       renderUploadPreview(input);
     });
@@ -8150,20 +8891,28 @@ function removeSelectedUploadFile(inputId, index) {
   renderUploadPreview(input);
 }
 function globalSearch(q) {
-  if (!q || q.length < 2) return;
-  var results = [];
-  APP.ots.filter(function(o) { return o.title.toLowerCase().includes(q.toLowerCase()); }).forEach(function(o) {
-    results.push(function() { showPage('ots'); setTimeout(function() { openOTDetail(o.id); }, 100); });
-  });
-  APP.equipment.filter(function(e) { return e.name.toLowerCase().includes(q.toLowerCase()); }).forEach(function(e) {
-    results.push(function() { showPage('equipment'); setTimeout(function() { openEquipDetail(e.id); }, 100); });
-  });
-  (APP.files || []).filter(function(f) {
-    return [f.name, f.type, f.ref, f.description, f.clientName, f.equipmentName, f.otId].join(' ').toLowerCase().includes(q.toLowerCase());
-  }).forEach(function() {
-    results.push(function() { showPage('files'); });
-  });
-  if (results.length > 0) results[0]();
+  APP.globalSearchQuery = String(q || '').trim();
+  var page = APP.currentPage || 'dashboard';
+  if (page === 'dashboard') { updateDashboard(); return; }
+  if (page === 'ots') return renderOTs();
+  if (page === 'equipment') return renderEquipment();
+  if (page === 'clients') return renderClients();
+  if (page === 'buildings') return renderBuildings();
+  if (page === 'technicians') return renderTechnicians();
+  if (page === 'knowledge') return renderKnowledge();
+  if (page === 'files') return renderFiles();
+  if (page === 'incidents') return renderIncidents();
+  if (page === 'checklists') return renderChecklists();
+  if (page === 'materials') return renderMaterials();
+  if (page === 'purchases') return renderPurchases();
+  if (page === 'quotes') return renderQuotes();
+  if (page === 'users') return renderManagedUsers();
+  if (page === 'ai-assistant') {
+    var input = document.getElementById('chat-input');
+    if (input) input.value = APP.globalSearchQuery;
+    return;
+  }
+  showToast('Pesquisa contextual aplicada a esta página.');
 }
 
 // ======================== SAMPLE DATA ========================
