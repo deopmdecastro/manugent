@@ -1549,6 +1549,7 @@
           </div>
           <div class="flex gap-2">
             <button class="btn-ghost text-sm" onclick="clearChat()"><i class="fas fa-trash"></i> Limpar</button>
+            <button class="btn-secondary text-sm" id="ai-settings-btn" onclick="openAISettings()"><i class="fas fa-sliders"></i> Definições da IA</button>
             <button class="btn-secondary text-sm" onclick="showPage('knowledge')"><i class="fas fa-book"></i> Base de conhecimento</button>
           </div>
         </div>
@@ -1835,6 +1836,16 @@
               <div class="text-xs mono" style="color:var(--accent-purple-light)">ManuGent — O conhecimento técnico da sua empresa, transformado em inteligência artificial.</div>
             </div>
           </div>
+        </div>
+        <div class="card p-6 mt-6" id="admin-ai-scope-card">
+          <div class="flex items-center justify-between gap-4 mb-5">
+            <div>
+              <h3 class="font-semibold">Permissões da IA ManuGent</h3>
+              <p class="text-xs text-slate-500 mt-1">Define o escopo real que a IA consome por perfil. Estas regras aplicam-se a listas, análises, relatórios e bloqueios de acesso.</p>
+            </div>
+            <span class="badge badge-purple"><i class="fas fa-robot"></i> IA por perfil</span>
+          </div>
+          <div id="ai-scope-settings" class="grid md:grid-cols-2 xl:grid-cols-4 gap-3 text-sm"></div>
         </div>
       </div>
 
@@ -2169,16 +2180,6 @@
               </div>
             </div>
           </div>
-        </div>
-        <div class="card p-6 mt-6" id="admin-ai-scope-card">
-          <div class="flex items-center justify-between gap-4 mb-5">
-            <div>
-              <h3 class="font-semibold">Permissões da IA ManuGent</h3>
-              <p class="text-xs text-slate-500 mt-1">Define que informação a IA pode consumir em cada perfil de acesso.</p>
-            </div>
-            <span class="badge badge-purple"><i class="fas fa-robot"></i> IA por perfil</span>
-          </div>
-          <div id="ai-scope-settings" class="grid md:grid-cols-2 xl:grid-cols-4 gap-3 text-sm"></div>
         </div>
       </div>
 
@@ -3022,6 +3023,8 @@ function updateUserUI() {
   document.getElementById('settings-email-input').value = APP.user.email;
   document.getElementById('settings-role-input').value = APP.user.role;
   document.getElementById('settings-role-input').disabled = APP.user.role !== 'admin';
+  var aiSettingsBtn = document.getElementById('ai-settings-btn');
+  if (aiSettingsBtn) aiSettingsBtn.style.display = getUserRole() === 'admin' ? 'inline-flex' : 'none';
   if (getUserRole() === 'admin') generateManagedUserPassword(false);
   renderManagedUsers();
   renderAIScopeSettings();
@@ -3114,19 +3117,31 @@ var ACTION_PERMISSIONS = {
 var AI_DATA_SCOPE = {
   admin: {
     modules: ['dashboard','ots','equipment','clients','buildings','technicians','users','knowledge','files','incidents','materials','purchases','quotes','calendar','checklists','ai-assistant','settings'],
-    description: 'Consome toda a base da plataforma: operação, comercial, utilizadores, permissões, histórico e ficheiros.'
+    description: 'Vê tudo, incluindo utilizadores, permissões e dados sensíveis.',
+    includes: ['Toda a base da plataforma', 'Operação e comercial', 'Utilizadores e níveis de permissão', 'Histórico, ficheiros e dados sensíveis'],
+    blocks: ['Nada bloqueado no escopo Admin'],
+    behavior: 'Pode listar, analisar e gerar relatórios com visão total.'
   },
   gestor: {
     modules: ['dashboard','ots','equipment','clients','buildings','technicians','knowledge','files','incidents','materials','purchases','quotes','calendar','checklists','ai-assistant','settings'],
-    description: 'Consome dados operacionais e comerciais necessários para gerir equipa, clientes, OTs, compras e orçamento.'
+    description: 'Vê dados operacionais e comerciais necessários, sem utilizadores/permissões totais.',
+    includes: ['OTs, equipamentos, clientes e edifícios', 'Técnicos e carga operacional', 'Ficheiros permitidos, incidentes, material', 'Compras, orçamentos, calendário e checklists'],
+    blocks: ['Utilizadores internos', 'Gestão total de permissões', 'Credenciais e ficheiros restritos'],
+    behavior: 'A IA responde como apoio à gestão operacional e comercial.'
   },
   tecnico: {
     modules: ['dashboard','ots','equipment','knowledge','files','incidents','materials','calendar','checklists','ai-assistant','settings'],
-    description: 'Consome dados técnicos necessários para executar OTs, consultar equipamentos, procedimentos, ficheiros e material.'
+    description: 'Vê apenas o necessário para executar trabalho técnico.',
+    includes: ['OTs atribuídas ao técnico', 'Equipamentos e histórico técnico', 'Conhecimento e ficheiros técnicos permitidos', 'Incidentes, material, calendário e checklists'],
+    blocks: ['Clientes completos', 'Utilizadores e permissões', 'Compras, orçamentos e credenciais restritas'],
+    behavior: 'A IA filtra OTs por técnico atribuído e evita contexto administrativo.'
   },
   cliente: {
     modules: ['dashboard','ots','equipment','files','calendar','quotes','ai-assistant','settings'],
-    description: 'Consome apenas dados de consulta ligados ao cliente: pedidos/OTs, equipamentos associados, ficheiros e orçamentos.'
+    description: 'Vê apenas dados ligados ao próprio cliente.',
+    includes: ['Pedidos/OTs do cliente', 'Equipamentos associados ao cliente', 'Ficheiros públicos ligados ao cliente', 'Calendário e orçamentos visíveis'],
+    blocks: ['Dados de outros clientes', 'Técnicos, utilizadores e permissões', 'Material, compras, incidentes internos e credenciais'],
+    behavior: 'A IA limita respostas ao cliente identificado pela conta.'
   }
 };
 var AI_MODULE_LABELS = {
@@ -3169,6 +3184,8 @@ function applyPermissions() {
   if (!canAccessPage(APP.currentPage || 'dashboard')) showPage(getDefaultPageForRole());
   var aiCard = document.getElementById('admin-ai-scope-card');
   if (aiCard) aiCard.style.display = getUserRole() === 'admin' ? 'block' : 'none';
+  var aiSettingsBtn = document.getElementById('ai-settings-btn');
+  if (aiSettingsBtn) aiSettingsBtn.style.display = getUserRole() === 'admin' ? 'inline-flex' : 'none';
 }
 function getAIScope(role) {
   return AI_DATA_SCOPE[role || getUserRole()] || AI_DATA_SCOPE.cliente;
@@ -3191,10 +3208,24 @@ function renderAIScopeSettings() {
     var modules = scope.modules.map(function(m) {
       return '<span class="badge badge-gray">' + escapeHtml(AI_MODULE_LABELS[m] || m) + '</span>';
     }).join(' ');
-    return '<div class="p-4 rounded-lg border border-white/10 bg-white/5">' +
-      '<div class="badge ' + getRoleBadgeClass(role) + ' mb-3">' + getRoleLabel(role) + '</div>' +
-      '<p class="text-slate-400 mb-3 leading-relaxed">' + escapeHtml(scope.description) + '</p>' +
-      '<div class="flex flex-wrap gap-1.5">' + modules + '</div></div>';
+    var includes = (scope.includes || []).map(function(item) {
+      return '<li><i class="fas fa-check text-emerald-400"></i><span>' + escapeHtml(item) + '</span></li>';
+    }).join('');
+    var blocks = (scope.blocks || []).map(function(item) {
+      return '<li><i class="fas fa-ban text-rose-400"></i><span>' + escapeHtml(item) + '</span></li>';
+    }).join('');
+    return '<div class="p-4 rounded-lg border border-white/10 bg-white/5 flex flex-col gap-4">' +
+      '<div><div class="badge ' + getRoleBadgeClass(role) + ' mb-3">' + getRoleLabel(role) + '</div>' +
+      '<h4 class="font-semibold mb-1">IA do perfil ' + getRoleLabel(role) + '</h4>' +
+      '<p class="text-slate-400 leading-relaxed">' + escapeHtml(scope.description) + '</p></div>' +
+      '<div><div class="text-xs uppercase tracking-wide text-slate-500 mb-2">Consome</div>' +
+      '<ul class="space-y-1.5 text-sm text-slate-300">' + includes + '</ul></div>' +
+      '<div><div class="text-xs uppercase tracking-wide text-slate-500 mb-2">Bloqueia</div>' +
+      '<ul class="space-y-1.5 text-sm text-slate-300">' + blocks + '</ul></div>' +
+      '<div><div class="text-xs uppercase tracking-wide text-slate-500 mb-2">Módulos permitidos</div>' +
+      '<div class="flex flex-wrap gap-1.5">' + modules + '</div></div>' +
+      '<div class="rounded-lg border border-indigo-400/20 bg-indigo-500/10 p-3 text-xs text-indigo-100"><i class="fas fa-robot mr-1"></i>' + escapeHtml(scope.behavior || '') + '</div>' +
+    '</div>';
   }).join('');
 }
 function getCurrentClientIdentity() {
@@ -6037,6 +6068,20 @@ function quickPrompt(text) {
 function clearChat() {
   document.getElementById('chat-messages').innerHTML = '';
   appendChatMessage('Chat limpo. Como posso ajudar?', 'ai');
+}
+function openAISettings() {
+  if (getUserRole() !== 'admin') {
+    showToast('Apenas Admin pode gerir permissões da IA.');
+    return;
+  }
+  showPage('settings');
+  setTimeout(function() {
+    var card = document.getElementById('admin-ai-scope-card');
+    if (!card) return;
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.style.boxShadow = '0 0 0 1px rgba(99,102,241,.7), 0 0 28px rgba(99,102,241,.28)';
+    setTimeout(function() { card.style.boxShadow = ''; }, 1800);
+  }, 80);
 }
 
 // ======================== INTERNAL MANUGENT IA ========================
