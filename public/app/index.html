@@ -494,6 +494,14 @@
     }
     .modal-lg { max-width: 900px; }
     .modal-xl { max-width: 1100px; }
+    #modal-pause-ot .modal-content {
+      max-width: 760px;
+      min-height: 520px;
+      overflow: visible;
+    }
+    #modal-pause-ot .select-menu {
+      max-height: 320px;
+    }
     .detail-page .modal-content {
       background: transparent;
       border: none;
@@ -503,6 +511,13 @@
       overflow: visible;
       padding: 0;
       width: 100%;
+    }
+    #modal-new-ot.detail-page .modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 1180px;
     }
 
     .tab-btn {
@@ -1229,6 +1244,7 @@
           <div class="flex bg-white/5 rounded-lg p-1">
             <button class="tab-btn active" id="ot-tab-agendadas" onclick="filterOTs('agendadas')">Agendadas</button>
             <button class="tab-btn" id="ot-tab-pedidos" onclick="filterOTs('pedidos')">Pedidos</button>
+            <button class="tab-btn" id="ot-tab-obras" onclick="filterOTs('obras')">Obras/Instalações</button>
           </div>
           <select class="input-field w-auto" onchange="filterOTsByStatus(this.value)" style="width:auto">
             <option value="">Todos os estados</option>
@@ -1243,6 +1259,7 @@
             <option value="">Todos os tipos</option>
             <option>Preventiva</option><option>Inspeção</option><option>Ronda</option><option>Checklist</option>
             <option>Corretiva</option><option>Avaria</option><option>Emergência</option><option>Solicitação</option>
+            <option>Obras/Instalações</option>
           </select>
         </div>
         <div class="flex gap-2 mb-5">
@@ -1627,40 +1644,9 @@
             <h1 class="text-2xl font-bold mono">Checklists</h1>
             <p class="text-slate-400 text-sm mt-1">Rondas e inspeções periódicas</p>
           </div>
-          <button class="btn-primary" onclick="showToast('Funcionalidade em desenvolvimento.')"><i class="fas fa-plus"></i> Nova Checklist</button>
+          <button class="btn-primary" onclick="openNewChecklistModal()"><i class="fas fa-plus"></i> Nova Checklist</button>
         </div>
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div class="wiki-card" onclick="openChecklistDetail('ronda-diaria')">
-            <div class="flex items-center gap-3 mb-3">
-              <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:rgba(59,130,246,0.2)">
-                <i class="fas fa-sun text-blue-400"></i>
-              </div>
-              <div>
-                <div class="font-semibold">Ronda Diária</div>
-                <div class="text-xs text-slate-400">Frequência: Diária</div>
-              </div>
-            </div>
-            <div class="progress-bar mb-2"><div class="progress-fill" style="width:0%"></div></div>
-            <div class="flex items-center justify-between text-xs text-slate-500">
-              <span>0/8 tarefas</span><span class="badge badge-yellow">Pendente</span>
-            </div>
-          </div>
-          <div class="wiki-card" onclick="openChecklistDetail('preventiva-mensal')">
-            <div class="flex items-center gap-3 mb-3">
-              <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:rgba(99,102,241,0.2)">
-                <i class="fas fa-calendar-check text-purple-400"></i>
-              </div>
-              <div>
-                <div class="font-semibold">Manutenção Preventiva Mensal</div>
-                <div class="text-xs text-slate-400">Frequência: Mensal</div>
-              </div>
-            </div>
-            <div class="progress-bar mb-2"><div class="progress-fill" style="width:0%"></div></div>
-            <div class="flex items-center justify-between text-xs text-slate-500">
-              <span>0/12 tarefas</span><span class="badge badge-yellow">Pendente</span>
-            </div>
-          </div>
-        </div>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="checklists-grid"></div>
       </div>
 
       <!-- INCIDENTES -->
@@ -1709,7 +1695,14 @@
           </div>
           <button class="btn-primary" onclick="createPurchaseRequest()"><i class="fas fa-plus"></i> Novo Pedido</button>
         </div>
-        <div class="card overflow-hidden">
+        <div id="purchases-empty-state" class="card" style="display:none">
+          <div class="empty-state">
+            <i class="fas fa-cart-shopping"></i>
+            <p>Nenhum pedido de compra registado.</p>
+            <button class="btn-primary" onclick="createPurchaseRequest()"><i class="fas fa-plus"></i> Adicionar pedido</button>
+          </div>
+        </div>
+        <div id="purchases-table-wrap" class="card overflow-hidden">
           <table class="data-table"><thead><tr><th>ID</th><th>Item</th><th>Fornecedor</th><th>Estado</th><th>Valor</th><th>Data</th></tr></thead><tbody id="purchases-table-body"></tbody></table>
         </div>
       </div>
@@ -1980,12 +1973,196 @@
   </div>
 </div>
 
+<!-- New Material Modal -->
+<div id="modal-new-material" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-semibold">Novo Material</h2>
+      <button class="btn-ghost" onclick="closeModal('modal-new-material')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Nome do material *</label>
+        <input type="text" id="material-name" class="input-field" placeholder="Ex: Rolamento 6205">
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Foto do material</label>
+        <input type="file" id="material-photo-upload" class="input-field" accept="image/*">
+        <div class="text-xs text-slate-500 mt-2">A foto fica disponível na lista de material. Pode remover antes de guardar.</div>
+      </div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Categoria</label>
+          <select id="material-category" class="input-field">
+            <option>Elétrico</option>
+            <option>Mecânico</option>
+            <option>Consumível</option>
+            <option>Ferramenta</option>
+            <option>Segurança</option>
+            <option>Geral</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Localização</label>
+          <input type="text" id="material-location" class="input-field" placeholder="Armazém central">
+        </div>
+      </div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Stock inicial</label>
+          <input type="number" id="material-stock" class="input-field" min="0" value="1">
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Custo unitário</label>
+          <input type="number" id="material-cost" class="input-field" min="0" step="0.01" value="0">
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Stock mínimo</label>
+          <input type="number" id="material-min-stock" class="input-field" min="0" value="1">
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Notas</label>
+        <textarea id="material-notes" class="input-field" rows="3" placeholder="Referência interna, fornecedor preferido ou observações..."></textarea>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button class="btn-secondary flex-1" onclick="closeModal('modal-new-material')">Cancelar</button>
+        <button class="btn-primary flex-1" onclick="saveStockMaterial()"><i class="fas fa-boxes-stacked"></i> Guardar material</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New Purchase Modal -->
+<div id="modal-new-purchase" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-semibold">Novo Pedido de Compra</h2>
+      <button class="btn-ghost" onclick="closeModal('modal-new-purchase')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Item / material *</label>
+        <input type="text" id="purchase-item" class="input-field" placeholder="Ex: Baterias UPS 12V 9Ah">
+      </div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Material em stock</label>
+          <select id="purchase-material" class="input-field" onchange="syncPurchaseMaterial()">
+            <option value="">Sem associação</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">OT associada</label>
+          <select id="purchase-ot" class="input-field">
+            <option value="">Sem OT</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Quantidade</label>
+          <input type="number" id="purchase-qty" class="input-field" min="1" value="1">
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Valor estimado</label>
+          <input type="number" id="purchase-value" class="input-field" min="0" step="0.01" value="0">
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Estado</label>
+          <select id="purchase-status" class="input-field">
+            <option>Aprovação</option>
+            <option>Pedido enviado</option>
+            <option>Recebido</option>
+            <option>Cancelado</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Fornecedor</label>
+        <input type="text" id="purchase-supplier" class="input-field" placeholder="Fornecedor homologado">
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Justificação</label>
+        <textarea id="purchase-notes" class="input-field" rows="3" placeholder="Motivo da compra, urgência, referência de proposta..."></textarea>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button class="btn-secondary flex-1" onclick="closeModal('modal-new-purchase')">Cancelar</button>
+        <button class="btn-primary flex-1" onclick="savePurchaseRequest()"><i class="fas fa-cart-plus"></i> Criar pedido</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New Quote Modal -->
+<div id="modal-new-quote" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-semibold">Novo Orçamento</h2>
+      <button class="btn-ghost" onclick="closeModal('modal-new-quote')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Tipo de documento</label>
+          <select id="quote-type" class="input-field">
+            <option>Orçamento</option>
+            <option>Fatura</option>
+            <option>Relatório</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Cliente</label>
+          <select id="quote-client" class="input-field">
+            <option value="">Sem cliente</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">OT associada</label>
+        <select id="quote-ot" class="input-field" onchange="syncQuoteFromOT()">
+          <option value="">Sem OT</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Origem / descrição *</label>
+        <input type="text" id="quote-source" class="input-field" placeholder="Ex: Intervenção preventiva + material">
+      </div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Horas</label>
+          <input type="number" id="quote-hours" class="input-field" min="0" step="0.25" value="0" oninput="updateQuoteEstimate()">
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Material</label>
+          <input type="number" id="quote-material-value" class="input-field" min="0" step="0.01" value="0" oninput="updateQuoteEstimate()">
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Valor final</label>
+          <input type="number" id="quote-value" class="input-field" min="0" step="0.01" value="0">
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Notas comerciais</label>
+        <textarea id="quote-notes" class="input-field" rows="3" placeholder="Condições, validade, observações para proposta..."></textarea>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button class="btn-secondary flex-1" onclick="closeModal('modal-new-quote')">Cancelar</button>
+        <button class="btn-primary flex-1" onclick="saveBillingDocument()"><i class="fas fa-file-invoice-dollar"></i> Guardar orçamento</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- New OT Modal -->
 <div id="modal-new-ot" class="modal-overlay" style="display:none">
   <div class="modal-content">
     <div class="flex items-center justify-between mb-5">
-      <h2 class="text-lg font-semibold">Nova Ordem de Trabalho</h2>
-      <button class="btn-ghost" onclick="closeModal('modal-new-ot')"><i class="fas fa-times"></i></button>
+      <div>
+        <h2 class="text-xl font-bold mono">Nova Ordem de Trabalho</h2>
+        <p class="text-slate-400 text-sm mt-1">Criação completa de OT, manutenção ou obras/instalações</p>
+      </div>
+      <button class="btn-ghost" onclick="closeModal('modal-new-ot')"><i class="fas fa-arrow-left"></i> Voltar</button>
     </div>
     <div class="space-y-4">
       <div>
@@ -1995,8 +2172,8 @@
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm mb-2 text-slate-300">Tipo</label>
-          <select id="ot-type" class="input-field">
-            <option>Corretiva</option><option>Preventiva</option><option>Preditiva</option><option>Inspeção</option>
+          <select id="ot-type" class="input-field" onchange="updateOTTypeFields()">
+            <option>Corretiva</option><option>Preventiva</option><option>Preditiva</option><option>Inspeção</option><option>Obras/Instalações</option>
           </select>
         </div>
         <div>
@@ -2014,6 +2191,74 @@
         <div>
           <label class="block text-sm mb-2 text-slate-300">Técnico</label>
           <select id="ot-technician" class="input-field"><option value="">Selecionar...</option></select>
+        </div>
+      </div>
+      <div id="ot-work-fields" style="display:none">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm mb-2 text-slate-300">Cliente da obra</label>
+            <select id="ot-work-client" class="input-field" onchange="populateWorkBuildingSelect()"><option value="">Selecionar cliente...</option></select>
+          </div>
+          <div>
+            <label class="block text-sm mb-2 text-slate-300">Edifício / instalação</label>
+            <select id="ot-work-building" class="input-field"><option value="">Selecionar edifício...</option></select>
+          </div>
+          <div>
+            <label class="block text-sm mb-2 text-slate-300">Tipo de obra / instalação</label>
+            <select id="ot-work-kind" class="input-field" onchange="renderWorkStepsEditor()">
+              <option>Instalação elétrica</option>
+              <option>Instalação AVAC</option>
+              <option>Instalação de equipamento</option>
+              <option>Obra civil de suporte</option>
+              <option>Comissionamento</option>
+              <option>Ampliação / remodelação</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm mb-2 text-slate-300">Fase inicial</label>
+            <select id="ot-work-phase" class="input-field">
+              <option>Planeamento</option>
+              <option>Preparação</option>
+              <option>Execução</option>
+              <option>Comissionamento</option>
+              <option>Entrega</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm mb-2 text-slate-300">Data prevista de início</label>
+            <input type="datetime-local" id="ot-work-start" class="input-field">
+          </div>
+          <div>
+            <label class="block text-sm mb-2 text-slate-300">Data prevista de entrega</label>
+            <input type="datetime-local" id="ot-work-deadline" class="input-field">
+          </div>
+          <div>
+            <label class="block text-sm mb-2 text-slate-300">Referência / orçamento</label>
+            <input type="text" id="ot-work-reference" class="input-field" placeholder="Ex: ORC-2026-014">
+          </div>
+          <div>
+            <label class="block text-sm mb-2 text-slate-300">Responsável da obra</label>
+            <input type="text" id="ot-work-manager" class="input-field" placeholder="Ex: Eng. responsável / encarregado">
+          </div>
+          <div>
+            <label class="block text-sm mb-2 text-slate-300">Local exato / zona</label>
+            <input type="text" id="ot-work-zone" class="input-field" placeholder="Ex: Piso 1, sala técnica, cobertura">
+          </div>
+          <div class="col-span-2">
+            <label class="block text-sm mb-2 text-slate-300">Âmbito dos trabalhos</label>
+            <textarea id="ot-work-scope" class="input-field" rows="3" placeholder="Descreva o que será instalado, alterado ou entregue..."></textarea>
+          </div>
+          <div class="col-span-2">
+            <label class="block text-sm mb-2 text-slate-300">Requisitos / segurança</label>
+            <textarea id="ot-work-safety" class="input-field" rows="2" placeholder="Ex: corte de energia, EPIs obrigatórios, acesso condicionado, autorização do cliente..."></textarea>
+          </div>
+          <div class="col-span-2">
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-sm text-slate-300">Estrutura da obra / instalação</label>
+              <button type="button" class="btn-ghost text-xs" onclick="addWorkStepField()"><i class="fas fa-plus"></i> Adicionar passo</button>
+            </div>
+            <div id="ot-work-steps-editor" class="space-y-2"></div>
+          </div>
         </div>
       </div>
       <div>
@@ -2071,6 +2316,7 @@
             <span class="text-slate-500 text-sm">Descrição:</span>
             <p id="ot-detail-desc" class="text-sm mt-1 text-slate-300">—</p>
           </div>
+          <div id="ot-work-detail" class="mt-3 pt-3 border-t border-white/5" style="display:none"></div>
           <div id="ot-detail-image-wrap" class="mt-4" style="display:none">
             <img id="ot-detail-image" alt="Imagem da OT" class="w-full rounded-lg border border-white/10 object-cover" style="max-height:320px">
           </div>
@@ -2684,6 +2930,11 @@
           <select id="incident-severity" class="input-field"><option>Baixa</option><option>Média</option><option>Alta</option><option>Crítica</option></select>
         </div>
       </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Imagem ou vídeo</label>
+        <input type="file" id="incident-media-upload" class="input-field" accept="image/*,video/*">
+        <div class="text-xs text-slate-500 mt-2">Carregue evidência visual do incidente, como foto do equipamento, alarme ou vídeo curto.</div>
+      </div>
     </div>
     <div class="flex gap-3 mt-6">
       <button class="btn-secondary flex-1" onclick="closeModal('modal-new-incident')">Cancelar</button>
@@ -2709,6 +2960,53 @@
           <div class="text-xs text-slate-400 mt-0.5">O assistente IA está pronto para ajudar.</div>
           <div class="text-xs text-slate-600 mt-1">Agora</div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New Checklist Modal -->
+<div id="modal-new-checklist" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-semibold">Nova Checklist</h2>
+      <button class="btn-ghost" onclick="closeModal('modal-new-checklist')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Título *</label>
+        <input type="text" id="checklist-title" class="input-field" placeholder="Ex: Ronda semanal da sala técnica">
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Descrição</label>
+        <textarea id="checklist-desc" class="input-field" rows="2" placeholder="Objetivo e contexto da checklist..."></textarea>
+      </div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Frequência</label>
+          <select id="checklist-frequency" class="input-field">
+            <option>Diária</option><option>Semanal</option><option>Mensal</option><option>Trimestral</option><option>Quando necessário</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Categoria</label>
+          <select id="checklist-category" class="input-field">
+            <option>Operação</option><option>Preventiva</option><option>Segurança</option><option>AVAC</option><option>Elétrica</option><option>Geral</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Equipamento associado</label>
+        <select id="checklist-equipment" class="input-field"><option value="">Sem equipamento</option></select>
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Tarefas *</label>
+        <textarea id="checklist-tasks" class="input-field" rows="6" placeholder="Uma tarefa por linha&#10;Verificar alarmes no painel&#10;Registar temperatura&#10;Confirmar limpeza de filtros"></textarea>
+        <div class="text-xs text-slate-500 mt-2">Cada linha vira uma tarefa executável dentro da checklist.</div>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button class="btn-secondary flex-1" onclick="closeModal('modal-new-checklist')">Cancelar</button>
+        <button class="btn-primary flex-1" onclick="saveChecklist()"><i class="fas fa-check-square"></i> Criar checklist</button>
       </div>
     </div>
   </div>
@@ -2772,7 +3070,7 @@
 var APP = {
   users: [],
   user: null, ots: [], equipment: [], technicians: [],
-  clients: [], knowledge: [], files: [], incidents: [],
+  clients: [], knowledge: [], files: [], incidents: [], checklists: [],
   buildings: [], stockMaterials: [],
   fileFolders: [], currentFileFolder: 'all',
   fileTreeOpen: { root: true },
@@ -2802,7 +3100,7 @@ function saveData() {
     localStorage.setItem('mg_data', JSON.stringify({
       users: APP.users, user: APP.user, ots: APP.ots, equipment: APP.equipment,
       technicians: APP.technicians, clients: APP.clients,
-      knowledge: APP.knowledge, files: APP.files, fileFolders: APP.fileFolders, incidents: APP.incidents,
+      knowledge: APP.knowledge, files: APP.files, fileFolders: APP.fileFolders, incidents: APP.incidents, checklists: APP.checklists,
       buildings: APP.buildings, stockMaterials: APP.stockMaterials, purchases: APP.purchases, suppliers: APP.suppliers, contracts: APP.contracts, invoices: APP.invoices,
     }));
   } catch(e) {}
@@ -2822,6 +3120,7 @@ function loadData() {
       APP.files = d.files || [];
       APP.fileFolders = d.fileFolders || [];
       APP.incidents = d.incidents || [];
+      APP.checklists = d.checklists || [];
       APP.buildings = d.buildings || [];
       APP.stockMaterials = d.stockMaterials || [];
       APP.purchases = d.purchases || [];
@@ -2851,6 +3150,7 @@ window.onload = function() {
   if (APP.user) { showApp(); }
   else { showLanding(); }
   initSampleData();
+  ensureWorkInstallationExamples();
   syncBackendWorkOrders();
   renderCalendar();
   enhanceFileInputs();
@@ -2881,7 +3181,7 @@ function showApp() {
   populateOTSelects();
   setTimeout(function() {
     renderOTs(); renderEquipment(); renderClients();
-    renderBuildings(); renderTechnicians(); renderKnowledge(); renderFiles(); renderIncidents();
+    renderBuildings(); renderTechnicians(); renderKnowledge(); renderFiles(); renderIncidents(); renderChecklists();
     renderMaterials(); renderPurchases(); renderQuotes();
     enhanceFileInputs();
     enhanceSelects();
@@ -2912,6 +3212,7 @@ function showPage(page) {
   if (page === 'knowledge') renderKnowledge();
   if (page === 'files') renderFiles();
   if (page === 'incidents') renderIncidents();
+  if (page === 'checklists') renderChecklists();
   if (page === 'materials') renderMaterials();
   if (page === 'purchases') renderPurchases();
   if (page === 'quotes') renderQuotes();
@@ -2923,6 +3224,7 @@ function setupDetailPages() {
   var content = document.querySelector('.app-content');
   if (!content) return;
   [
+    { id: 'modal-new-ot', nav: 'nav-ots' },
     { id: 'modal-ot-detail', nav: 'nav-ots' },
     { id: 'modal-equip-detail', nav: 'nav-equipment' }
   ].forEach(function(cfg) {
@@ -2937,7 +3239,7 @@ function setupDetailPages() {
 }
 function showDetailPage(id) {
   setupDetailPages();
-  APP.currentPage = id === 'modal-ot-detail' ? 'ots' : id === 'modal-equip-detail' ? 'equipment' : APP.currentPage;
+  APP.currentPage = (id === 'modal-ot-detail' || id === 'modal-new-ot') ? 'ots' : id === 'modal-equip-detail' ? 'equipment' : APP.currentPage;
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
   document.querySelectorAll('.sidebar-item').forEach(function(i) { i.classList.remove('active'); });
   var el = document.getElementById(id);
@@ -3110,7 +3412,7 @@ var PAGE_PERMISSIONS = {
 };
 var ACTION_PERMISSIONS = {
   admin: ['*'],
-  gestor: ['create:*','edit:*','delete:*','view:*','commercial:*'],
+  gestor: ['create:*','edit:*','delete:*','view:*','commercial:*','create:purchases','create:quotes'],
   tecnico: ['view:*','create:ots','edit:ots','create:incidents','create:files','create:knowledge','create:materials','edit:materials'],
   cliente: ['view:*','create:ots','create:files']
 };
@@ -3592,28 +3894,98 @@ function getDefaultBillingDocs() {
 }
 function createPurchaseRequest() {
   if (!requirePermission('create', 'purchases', 'criar requisição de compra')) return;
-  APP.purchases = APP.purchases || [];
-  var sourceOT = APP.ots.slice().reverse().find(function(o) { return ['Alta','Urgente'].includes(o.priority); }) || APP.ots[APP.ots.length - 1];
-  APP.purchases.push({
-    id: 'PC-' + String(APP.purchases.length + 1).padStart(3, '0'),
-    item: sourceOT ? 'Material para ' + sourceOT.title : 'Material crítico',
-    supplier: 'Fornecedor homologado',
-    status: 'Aprovação',
-    value: sourceOT ? Math.max(520, Math.round(getOTCost(sourceOT))) : 650,
-    createdAt: new Date().toISOString()
-  });
-  saveData(); renderCommercialWidgets(); renderPurchases(); showToast('Pedido de compra criado e enviado para aprovação.');
+  try {
+    APP.ots = APP.ots || [];
+    var sourceOT = APP.ots.slice().reverse().find(function(o) { return ['Alta','Urgente'].includes(o.priority); }) || APP.ots[APP.ots.length - 1];
+    populateCommercialModalSelects();
+    document.getElementById('purchase-item').value = sourceOT ? 'Material para ' + sourceOT.title : '';
+    document.getElementById('purchase-material').value = '';
+    document.getElementById('purchase-ot').value = sourceOT ? sourceOT.id : '';
+    document.getElementById('purchase-qty').value = '1';
+    document.getElementById('purchase-value').value = sourceOT ? Math.max(520, Math.round(getOTCost(sourceOT))) : '0';
+    document.getElementById('purchase-status').value = 'Aprovação';
+    document.getElementById('purchase-supplier').value = 'Fornecedor homologado';
+    document.getElementById('purchase-notes').value = '';
+    enhanceSelects();
+    ['purchase-material','purchase-ot','purchase-status'].forEach(function(id) {
+      var sel = document.getElementById(id);
+      if (sel) syncEnhancedSelect(sel);
+    });
+    var modal = document.getElementById('modal-new-purchase');
+    if (modal) modal.style.display = 'flex';
+  } catch (err) {
+    console.error(err);
+    showToast('Não foi possível abrir o pedido de compra. Verifique os dados e tente novamente.');
+  }
 }
 function generateBillingDocuments() {
   if (!requirePermission('create', 'quotes', 'criar orçamento')) return;
+  populateCommercialModalSelects();
+  var sourceOT = APP.ots.slice().reverse()[0] || null;
+  var value = sourceOT ? Math.round(getOTCost(sourceOT) + 35) : 850;
+  document.getElementById('quote-type').value = 'Orçamento';
+  document.getElementById('quote-client').value = sourceOT && sourceOT.clientId ? sourceOT.clientId : '';
+  document.getElementById('quote-ot').value = sourceOT ? sourceOT.id : '';
+  document.getElementById('quote-source').value = sourceOT ? sourceOT.title : 'Horas + deslocações + material';
+  document.getElementById('quote-hours').value = sourceOT ? Math.round(getOTHours(sourceOT) * 100) / 100 : '0';
+  document.getElementById('quote-material-value').value = sourceOT ? Math.round((sourceOT.materials || []).reduce(function(sum, m) { return sum + Number(m.cost || 0) * Number(m.qty || 1); }, 0)) : '0';
+  document.getElementById('quote-value').value = value;
+  document.getElementById('quote-notes').value = '';
+  enhanceSelects();
+  document.getElementById('modal-new-quote').style.display = 'flex';
+}
+function savePurchaseRequest() {
+  if (!requirePermission('create', 'purchases', 'criar requisição de compra')) return;
+  var item = document.getElementById('purchase-item').value.trim();
+  if (!item) { showToast('Indique o item do pedido de compra.'); return; }
+  APP.purchases = APP.purchases || [];
+  var otId = document.getElementById('purchase-ot').value;
+  var ot = (APP.ots || []).find(function(o) { return o.id === otId; }) || null;
+  var materialId = document.getElementById('purchase-material').value;
+  var material = (APP.stockMaterials || []).find(function(m) { return m.id === materialId; }) || null;
+  APP.purchases.push({
+    id: 'PC-' + String(APP.purchases.length + 1).padStart(3, '0'),
+    item: item,
+    materialId: material ? material.id : '',
+    materialName: material ? material.name : '',
+    otId: ot ? ot.id : '',
+    otTitle: ot ? ot.title : '',
+    supplier: document.getElementById('purchase-supplier').value.trim() || 'Fornecedor',
+    status: document.getElementById('purchase-status').value || 'Aprovação',
+    qty: Number(document.getElementById('purchase-qty').value || 1),
+    value: Number(document.getElementById('purchase-value').value || 0),
+    notes: document.getElementById('purchase-notes').value.trim(),
+    createdAt: new Date().toISOString()
+  });
+  saveData(); closeModal('modal-new-purchase'); renderCommercialWidgets(); renderPurchases(); showToast('Pedido de compra criado.');
+}
+function saveBillingDocument() {
+  if (!requirePermission('create', 'quotes', 'criar orçamento')) return;
   APP.invoices = APP.invoices || [];
-  var billable = APP.ots.slice(-3);
-  var value = billable.reduce(function(sum, ot) { return sum + getOTCost(ot) + 35; }, 0) || 850;
+  var type = document.getElementById('quote-type').value || 'Orçamento';
+  var source = document.getElementById('quote-source').value.trim();
+  if (!source) { showToast('Indique a origem ou descrição do documento.'); return; }
   var next = APP.invoices.length + 1;
-  APP.invoices.push({ id:'ORC-' + String(next).padStart(3,'0'), type:'Orçamento', source:'Horas + deslocações + material', value:value });
-  APP.invoices.push({ id:'FAT-' + String(next).padStart(3,'0'), type:'Fatura', source:'OTs faturáveis', value:value });
-  APP.invoices.push({ id:'REL-' + String(next).padStart(3,'0'), type:'Relatório', source:'Resumo técnico automático', value:0 });
-  saveData(); renderCommercialWidgets(); renderQuotes(); showToast('Orçamento, fatura e relatório gerados automaticamente.');
+  var prefix = type === 'Fatura' ? 'FAT' : type === 'Relatório' ? 'REL' : 'ORC';
+  var clientId = document.getElementById('quote-client').value;
+  var client = (APP.clients || []).find(function(c) { return c.id === clientId; }) || null;
+  var otId = document.getElementById('quote-ot').value;
+  var ot = (APP.ots || []).find(function(o) { return o.id === otId; }) || null;
+  APP.invoices.push({
+    id: prefix + '-' + String(next).padStart(3,'0'),
+    type: type,
+    source: source,
+    clientId: client ? client.id : '',
+    clientName: client ? client.name : '',
+    otId: ot ? ot.id : '',
+    otTitle: ot ? ot.title : '',
+    hours: Number(document.getElementById('quote-hours').value || 0),
+    materialValue: Number(document.getElementById('quote-material-value').value || 0),
+    value: Number(document.getElementById('quote-value').value || 0),
+    notes: document.getElementById('quote-notes').value.trim(),
+    createdAt: new Date().toISOString()
+  });
+  saveData(); closeModal('modal-new-quote'); renderCommercialWidgets(); renderQuotes(); showToast(type + ' guardado.');
 }
 function renderBuildings() {
   var el = document.getElementById('buildings-grid');
@@ -3664,29 +4036,60 @@ function renderMaterials() {
     return;
   }
   tbody.innerHTML = rows.map(function(m) {
-    return '<tr><td class="font-medium">' + escapeHtml(m.name || 'Material') + '</td><td><span class="badge badge-blue">' + escapeHtml(m.category || 'Geral') + '</span></td><td>' + escapeHtml(String(m.stock || 0)) + '</td><td class="mono">' + formatCurrency(Number(m.cost || 0)) + '</td><td class="text-slate-400">' + escapeHtml(m.location || 'Armazém') + '</td></tr>';
+    var photo = m.photo ? '<img src="' + m.photo + '" alt="' + escapeHtml(m.photoName || m.name || 'Material') + '" style="width:34px;height:34px;border-radius:8px;object-fit:cover;border:1px solid rgba(255,255,255,.12)">' : '<div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(99,102,241,0.16)"><i class="fas fa-boxes-stacked text-purple-400 text-xs"></i></div>';
+    return '<tr><td class="font-medium"><div class="flex items-center gap-3">' + photo + '<span>' + escapeHtml(m.name || 'Material') + '</span></div></td><td><span class="badge badge-blue">' + escapeHtml(m.category || 'Geral') + '</span></td><td>' + escapeHtml(String(m.stock || 0)) + '</td><td class="mono">' + formatCurrency(Number(m.cost || 0)) + '</td><td class="text-slate-400">' + escapeHtml(m.location || 'Armazém') + '</td></tr>';
   }).join('');
 }
 function createStockMaterial() {
   if (!requirePermission('create', 'materials', 'adicionar material')) return;
-  var name = prompt('Nome do material');
-  if (!name) return;
-  var category = prompt('Categoria', 'Elétrico') || 'Geral';
-  var stock = Number(prompt('Quantidade em stock', '1') || 0);
-  var cost = Number(prompt('Custo unitário', '0') || 0);
-  var location = prompt('Localização', 'Armazém central') || 'Armazém central';
+  document.getElementById('material-name').value = '';
+  document.getElementById('material-photo-upload').value = '';
+  document.getElementById('material-category').value = 'Elétrico';
+  document.getElementById('material-location').value = 'Armazém central';
+  document.getElementById('material-stock').value = '1';
+  document.getElementById('material-cost').value = '0';
+  document.getElementById('material-min-stock').value = '1';
+  document.getElementById('material-notes').value = '';
+  enhanceFileInputs();
+  enhanceSelects();
+  document.getElementById('modal-new-material').style.display = 'flex';
+}
+async function saveStockMaterial() {
+  if (!requirePermission('create', 'materials', 'adicionar material')) return;
+  var name = document.getElementById('material-name').value.trim();
+  if (!name) { showToast('Indique o nome do material.'); return; }
+  var photo = await readSingleUpload('material-photo-upload');
   APP.stockMaterials = APP.stockMaterials || [];
-  APP.stockMaterials.push({ id: generateId('MAT'), name: name, category: category, stock: stock, cost: cost, location: location, createdAt: new Date().toISOString() });
-  saveData(); renderMaterials(); showToast('Material adicionado ao stock.');
+  APP.stockMaterials.push({
+    id: generateId('MAT'),
+    name: name,
+    category: document.getElementById('material-category').value || 'Geral',
+    stock: Number(document.getElementById('material-stock').value || 0),
+    cost: Number(document.getElementById('material-cost').value || 0),
+    minStock: Number(document.getElementById('material-min-stock').value || 0),
+    location: document.getElementById('material-location').value.trim() || 'Armazém central',
+    notes: document.getElementById('material-notes').value.trim(),
+    photo: photo ? photo.dataUrl : '',
+    photoName: photo ? photo.name : '',
+    createdAt: new Date().toISOString()
+  });
+  saveData(); closeModal('modal-new-material'); renderMaterials(); renderCommercialWidgets(); showToast('Material adicionado ao stock.');
 }
 function renderPurchases() {
   var tbody = document.getElementById('purchases-table-body');
   if (!tbody) return;
-  var rows = APP.purchases || [];
+  APP.purchases = APP.purchases || [];
+  var rows = APP.purchases;
+  var empty = document.getElementById('purchases-empty-state');
+  var table = document.getElementById('purchases-table-wrap');
   if (!rows.length) {
-    tbody.innerHTML = emptyTableState(6, 'fa-cart-shopping', 'Nenhum pedido de compra registado.', 'Adicionar pedido', 'createPurchaseRequest()');
+    if (empty) empty.style.display = 'block';
+    if (table) table.style.display = 'none';
+    tbody.innerHTML = '';
     return;
   }
+  if (empty) empty.style.display = 'none';
+  if (table) table.style.display = 'block';
   tbody.innerHTML = rows.slice().reverse().map(function(p) {
     return '<tr><td class="mono">' + escapeHtml(p.id) + '</td><td>' + escapeHtml(p.item) + '</td><td>' + escapeHtml(p.supplier || 'Fornecedor') + '</td><td><span class="badge badge-yellow">' + escapeHtml(p.status || 'Aprovação') + '</span></td><td class="mono">' + formatCurrency(Number(p.value || 0)) + '</td><td class="text-slate-400">' + formatDate(p.createdAt) + '</td></tr>';
   }).join('');
@@ -3704,6 +4107,51 @@ function renderQuotes() {
     return '<tr><td class="mono">' + escapeHtml(d.id) + '</td><td><span class="badge ' + badge + '">' + escapeHtml(d.type) + '</span></td><td>' + escapeHtml(d.source || 'Documento comercial') + '</td><td class="mono">' + formatCurrency(Number(d.value || 0)) + '</td></tr>';
   }).join('');
 }
+function populateCommercialModalSelects() {
+  var materialSel = document.getElementById('purchase-material');
+  if (materialSel) {
+    materialSel.innerHTML = '<option value="">Sem associação</option>' + (APP.stockMaterials || []).map(function(m) {
+      return '<option value="' + escapeHtml(m.id) + '">' + escapeHtml(m.name || 'Material') + ' · stock ' + escapeHtml(String(m.stock || 0)) + '</option>';
+    }).join('');
+  }
+  var purchaseOT = document.getElementById('purchase-ot');
+  var quoteOT = document.getElementById('quote-ot');
+  var otOptions = '<option value="">Sem OT</option>' + (APP.ots || []).slice().reverse().map(function(o) {
+    return '<option value="' + escapeHtml(o.id) + '">' + escapeHtml(o.id + ' · ' + o.title) + '</option>';
+  }).join('');
+  if (purchaseOT) purchaseOT.innerHTML = otOptions;
+  if (quoteOT) quoteOT.innerHTML = otOptions;
+  var quoteClient = document.getElementById('quote-client');
+  if (quoteClient) {
+    quoteClient.innerHTML = '<option value="">Sem cliente</option>' + (APP.clients || []).map(function(c) {
+      return '<option value="' + escapeHtml(c.id) + '">' + escapeHtml(c.name || 'Cliente') + '</option>';
+    }).join('');
+  }
+}
+function syncPurchaseMaterial() {
+  var id = document.getElementById('purchase-material').value;
+  var material = (APP.stockMaterials || []).find(function(m) { return m.id === id; });
+  if (!material) return;
+  document.getElementById('purchase-item').value = material.name || '';
+  document.getElementById('purchase-value').value = Number(material.cost || 0);
+}
+function syncQuoteFromOT() {
+  var id = document.getElementById('quote-ot').value;
+  var ot = (APP.ots || []).find(function(o) { return o.id === id; });
+  if (!ot) return;
+  document.getElementById('quote-source').value = ot.title || ot.id;
+  if (ot.clientId) document.getElementById('quote-client').value = ot.clientId;
+  document.getElementById('quote-hours').value = Math.round(getOTHours(ot) * 100) / 100;
+  document.getElementById('quote-material-value').value = Math.round((ot.materials || []).reduce(function(sum, m) {
+    return sum + Number(m.cost || 0) * Number(m.qty || 1);
+  }, 0));
+  document.getElementById('quote-value').value = Math.round(getOTCost(ot) + 35);
+}
+function updateQuoteEstimate() {
+  var hours = Number(document.getElementById('quote-hours').value || 0);
+  var material = Number(document.getElementById('quote-material-value').value || 0);
+  document.getElementById('quote-value').value = Math.round(hours * 42 + material + 35);
+}
 
 // ======================== OTs ========================
 function generateId(prefix) {
@@ -3714,8 +4162,29 @@ function openNewOTModal() {
   populateOTSelects();
   document.getElementById('ot-date').value = new Date().toISOString().slice(0,16);
   document.getElementById('ot-image-upload').value = '';
+  document.getElementById('ot-type').value = 'Corretiva';
+  document.getElementById('ot-work-client').value = '';
+  document.getElementById('ot-work-building').value = '';
+  document.getElementById('ot-work-kind').value = 'Instalação elétrica';
+  document.getElementById('ot-work-phase').value = 'Planeamento';
+  document.getElementById('ot-work-start').value = '';
+  document.getElementById('ot-work-deadline').value = '';
+  document.getElementById('ot-work-reference').value = '';
+  document.getElementById('ot-work-manager').value = '';
+  document.getElementById('ot-work-zone').value = '';
+  document.getElementById('ot-work-scope').value = '';
+  document.getElementById('ot-work-safety').value = '';
+  populateWorkBuildingSelect();
+  renderWorkStepsEditor();
+  updateOTTypeFields();
   enhanceFileInputs();
-  document.getElementById('modal-new-ot').style.display = 'flex';
+  showDetailPage('modal-new-ot');
+}
+function updateOTTypeFields() {
+  var type = document.getElementById('ot-type').value;
+  var workFields = document.getElementById('ot-work-fields');
+  if (workFields) workFields.style.display = type === 'Obras/Instalações' ? 'block' : 'none';
+  if (type === 'Obras/Instalações') renderWorkStepsEditor();
 }
 function populateOTSelects() {
   var equipSel = document.getElementById('ot-equipment');
@@ -3740,7 +4209,20 @@ function populateOTSelects() {
   if (fileOtSel) fileOtSel.innerHTML = '<option value="">Sem OT</option>' + APP.ots.map(function(o) { return '<option value="' + o.id + '">' + o.id + ' - ' + o.title + '</option>'; }).join('');
   if (fileFolderSel) fileFolderSel.innerHTML = '<option value="">Raiz</option>' + getFolderOptionsHtml();
   if (folderParentSel) folderParentSel.innerHTML = '<option value="">Raiz</option>' + getFolderOptionsHtml();
+  var workClientSel = document.getElementById('ot-work-client');
+  if (workClientSel) workClientSel.innerHTML = '<option value="">Selecionar cliente...</option>' + (APP.clients || []).map(function(c) { return '<option value="' + c.id + '">' + c.name + '</option>'; }).join('');
+  populateWorkBuildingSelect();
   enhanceSelects();
+}
+function populateWorkBuildingSelect() {
+  var buildingSel = document.getElementById('ot-work-building');
+  if (!buildingSel) return;
+  var clientId = document.getElementById('ot-work-client') ? document.getElementById('ot-work-client').value : '';
+  var buildings = (APP.buildings || []).filter(function(b) { return !clientId || b.clientId === clientId; });
+  buildingSel.innerHTML = '<option value="">Selecionar edifício...</option>' + buildings.map(function(b) {
+    return '<option value="' + b.id + '">' + b.name + (b.clientName ? ' · ' + b.clientName : '') + '</option>';
+  }).join('');
+  syncEnhancedSelect(buildingSel);
 }
 async function createOT() {
   var title = document.getElementById('ot-title').value.trim();
@@ -3750,9 +4232,27 @@ async function createOT() {
   var techId = document.getElementById('ot-technician').value;
   var equip = APP.equipment.find(function(e) { return e.id === equipId; });
   var tech = APP.technicians.find(function(t) { return t.id === techId; });
+  var type = document.getElementById('ot-type').value;
+  var isWork = type === 'Obras/Instalações';
+  var workClient = isWork ? (APP.clients || []).find(function(c) { return c.id === document.getElementById('ot-work-client').value; }) : null;
+  var workBuilding = isWork ? (APP.buildings || []).find(function(b) { return b.id === document.getElementById('ot-work-building').value; }) : null;
   var ot = {
     id: generateId('OT'), title: title,
-    type: document.getElementById('ot-type').value,
+    type: type,
+    workKind: isWork ? document.getElementById('ot-work-kind').value : '',
+    workPhase: isWork ? document.getElementById('ot-work-phase').value : '',
+    workClientId: workClient ? workClient.id : '',
+    workClientName: workClient ? workClient.name : '',
+    workBuildingId: workBuilding ? workBuilding.id : '',
+    workBuildingName: workBuilding ? workBuilding.name : '',
+    workStart: isWork ? document.getElementById('ot-work-start').value : '',
+    workDeadline: isWork ? document.getElementById('ot-work-deadline').value : '',
+    workReference: isWork ? document.getElementById('ot-work-reference').value.trim() : '',
+    workManager: isWork ? document.getElementById('ot-work-manager').value.trim() : '',
+    workZone: isWork ? document.getElementById('ot-work-zone').value.trim() : '',
+    workScope: isWork ? document.getElementById('ot-work-scope').value.trim() : '',
+    workSafety: isWork ? document.getElementById('ot-work-safety').value.trim() : '',
+    workSteps: isWork ? collectWorkInstallationSteps() : [],
     priority: document.getElementById('ot-priority').value,
     status: 'Aberta',
     equipmentId: equipId, equipmentName: equip ? equip.name : '—',
@@ -3770,17 +4270,86 @@ async function createOT() {
   APP.ots.push(ot);
   saveData();
   closeModal('modal-new-ot');
-  ['ot-title','ot-desc','ot-location'].forEach(function(id) { document.getElementById(id).value = ''; });
+  ['ot-title','ot-desc','ot-location','ot-work-reference','ot-work-manager','ot-work-zone','ot-work-scope','ot-work-safety'].forEach(function(id) { document.getElementById(id).value = ''; });
   document.getElementById('ot-image-upload').value = '';
   updateDashboard(); renderOTs(); showToast('OT criada com sucesso!');
+}
+function renderWorkStepsEditor(steps) {
+  var wrap = document.getElementById('ot-work-steps-editor');
+  if (!wrap) return;
+  var list = steps || getWorkInstallationSteps(document.getElementById('ot-work-kind').value || 'Instalação elétrica');
+  wrap.innerHTML = list.map(function(step, index) {
+    var name = typeof step === 'string' ? step : step.name;
+    return '<div class="flex items-center gap-2 work-step-field">' +
+      '<span class="badge badge-gray" style="min-width:28px;justify-content:center">' + (index + 1) + '</span>' +
+      '<input type="text" class="input-field work-step-input" value="' + escapeHtml(name) + '" placeholder="Passo da obra / instalação">' +
+      '<button type="button" class="btn-ghost text-xs" style="color:var(--accent-red)" onclick="removeWorkStepField(' + index + ')"><i class="fas fa-trash"></i></button>' +
+      '</div>';
+  }).join('');
+}
+function getCurrentWorkStepNames() {
+  return Array.prototype.slice.call(document.querySelectorAll('#ot-work-steps-editor .work-step-input')).map(function(input) {
+    return input.value.trim();
+  });
+}
+function addWorkStepField() {
+  var names = getCurrentWorkStepNames();
+  names.push('');
+  renderWorkStepsEditor(names.map(function(name) { return { name:name, done:false }; }));
+  var inputs = document.querySelectorAll('#ot-work-steps-editor .work-step-input');
+  if (inputs.length) inputs[inputs.length - 1].focus();
+}
+function removeWorkStepField(index) {
+  var names = getCurrentWorkStepNames();
+  names.splice(index, 1);
+  if (!names.length) names = [''];
+  renderWorkStepsEditor(names.map(function(name) { return { name:name, done:false }; }));
+}
+function collectWorkInstallationSteps() {
+  var names = getCurrentWorkStepNames().filter(Boolean);
+  if (!names.length) names = getWorkInstallationSteps(document.getElementById('ot-work-kind').value || 'Instalação elétrica').map(function(step) { return step.name || step; });
+  return names.map(function(name) { return { name:name, done:false }; });
+}
+function getWorkInstallationSteps(kind) {
+  var commonStart = [
+    { name:'Levantamento técnico e validação de requisitos', done:false },
+    { name:'Preparação de materiais, equipa e segurança', done:false }
+  ];
+  var commonEnd = [
+    { name:'Testes, comissionamento e correções', done:false },
+    { name:'Entrega ao cliente e documentação final', done:false }
+  ];
+  var map = {
+    'Instalação elétrica': ['Validar esquema elétrico e proteções', 'Executar cablagem, quadro e ligações', 'Testar isolamento, continuidade e cargas'],
+    'Instalação AVAC': ['Validar layout, drenagens e alimentação', 'Instalar unidades, tubagens e suportes', 'Testar funcionamento, pressões e temperaturas'],
+    'Instalação de equipamento': ['Preparar base, fixações e acessos', 'Instalar equipamento e interligações', 'Executar parametrização e teste funcional'],
+    'Obra civil de suporte': ['Preparar área, sinalização e proteção', 'Executar suporte, passagem ou infraestrutura', 'Validar acabamento e limpeza final'],
+    'Comissionamento': ['Rever checklist de arranque', 'Executar testes funcionais e segurança', 'Registar parâmetros e relatório de aceitação'],
+    'Ampliação / remodelação': ['Mapear impacto sobre operação existente', 'Executar alterações por fases', 'Validar integração com sistemas atuais']
+  };
+  var specific = (map[kind] || []).map(function(name) { return { name:name, done:false }; });
+  return commonStart.concat(specific).concat(commonEnd);
+}
+function formatDateTime(value) {
+  if (!value) return 'Sem data definida';
+  var date = new Date(value);
+  if (isNaN(date.getTime())) return value;
+  return date.toLocaleString('pt-PT');
+}
+function formatDate(value) {
+  if (!value) return '—';
+  var date = new Date(value);
+  if (isNaN(date.getTime())) return value;
+  return date.toLocaleDateString('pt-PT');
 }
 function getFilteredOTs() {
   var list = APP.ots.slice().reverse();
   if (APP.otFilter === 'agendadas') list = list.filter(function(o) { return getOTOrigin(o) === 'scheduled'; });
   if (APP.otFilter === 'pedidos') list = list.filter(function(o) { return getOTOrigin(o) === 'request'; });
+  if (APP.otFilter === 'obras') list = list.filter(function(o) { return o.type === 'Obras/Instalações'; });
   if (APP.otStatusFilter) list = list.filter(function(o) { return o.status === APP.otStatusFilter; });
   if (APP.otPriorityFilter) list = list.filter(function(o) { return o.priority === APP.otPriorityFilter; });
-  if (APP.otTypeFilter) list = list.filter(function(o) { return o.type === APP.otTypeFilter; });
+  if (APP.otTypeFilter && APP.otFilter !== 'obras') list = list.filter(function(o) { return o.type === APP.otTypeFilter; });
   return list;
 }
 function renderOTs() {
@@ -3807,7 +4376,7 @@ function renderOTs() {
 }
 function filterOTs(tab) {
   APP.otFilter = tab;
-  ['agendadas','pedidos'].forEach(function(k) {
+  ['agendadas','pedidos','obras'].forEach(function(k) {
     var el = document.getElementById('ot-tab-' + k);
     if (el) el.classList.remove('active');
   });
@@ -3882,6 +4451,7 @@ function openOTDetail(id) {
   document.getElementById('ot-detail-date').textContent = ot.date ? new Date(ot.date).toLocaleString('pt-PT') : '—';
   document.getElementById('ot-detail-location').textContent = ot.location || '—';
   document.getElementById('ot-detail-desc').textContent = ot.description || '—';
+  renderWorkInstallationDetail(ot);
   renderDetailImage('ot-detail-image-wrap', 'ot-detail-image', ot.image);
   document.getElementById('ot-nfc-token').textContent = ot.nfcTag;
   document.getElementById('ot-report').value = ot.report || '';
@@ -3893,6 +4463,38 @@ function openOTDetail(id) {
   renderAssociatedFiles('ot', ot.id, 'ot-files-list');
   renderOTCopilot();
   showDetailPage('modal-ot-detail');
+}
+function renderWorkInstallationDetail(ot) {
+  var el = document.getElementById('ot-work-detail');
+  if (!el) return;
+  if (!ot || ot.type !== 'Obras/Instalações') {
+    el.style.display = 'none';
+    el.innerHTML = '';
+    return;
+  }
+  var steps = ot.workSteps && ot.workSteps.length ? ot.workSteps : getWorkInstallationSteps(ot.workKind || 'Instalação de equipamento');
+  var meta = [
+    ['Cliente', ot.workClientName || 'Sem cliente associado'],
+    ['Edifício', ot.workBuildingName || 'Sem edifício associado'],
+    ['Início previsto', formatDateTime(ot.workStart)],
+    ['Entrega prevista', formatDateTime(ot.workDeadline)],
+    ['Referência', ot.workReference || 'Sem referência'],
+    ['Responsável', ot.workManager || 'Sem responsável definido'],
+    ['Zona', ot.workZone || ot.location || 'Sem zona definida']
+  ];
+  el.style.display = 'block';
+  el.innerHTML = '<div class="flex flex-wrap gap-2 mb-3">' +
+    '<span class="badge badge-purple"><i class="fas fa-helmet-safety"></i> ' + escapeHtml(ot.workKind || 'Obra/Instalação') + '</span>' +
+    '<span class="badge badge-blue"><i class="fas fa-diagram-project"></i> Fase: ' + escapeHtml(ot.workPhase || 'Planeamento') + '</span></div>' +
+    '<div class="grid md:grid-cols-3 gap-3 mb-4">' + meta.map(function(item) {
+      return '<div class="p-3 rounded-lg bg-white/5 border border-white/10"><div class="text-xs text-slate-500 uppercase tracking-wide mb-1">' + item[0] + '</div><div class="text-sm text-slate-200">' + escapeHtml(item[1]) + '</div></div>';
+    }).join('') + '</div>' +
+    (ot.workScope ? '<div class="mb-3"><div class="text-slate-500 text-sm mb-1">Âmbito dos trabalhos</div><div class="text-sm text-slate-200 leading-relaxed">' + escapeHtml(ot.workScope) + '</div></div>' : '') +
+    (ot.workSafety ? '<div class="mb-4"><div class="text-slate-500 text-sm mb-1">Requisitos / segurança</div><div class="text-sm text-slate-200 leading-relaxed">' + escapeHtml(ot.workSafety) + '</div></div>' : '') +
+    '<div class="text-slate-500 text-sm mb-2">Estrutura da obra / instalação:</div>' +
+    '<div class="space-y-2">' + steps.map(function(step, i) {
+      return '<div class="flex items-center gap-3 text-sm"><span class="badge ' + (step.done ? 'badge-green' : 'badge-gray') + '">' + (i + 1) + '</span><span class="text-slate-300">' + escapeHtml(step.name || step) + '</span></div>';
+    }).join('') + '</div>';
 }
 function updateOTStatus(status) {
   if (!APP.currentOT) return;
@@ -3935,7 +4537,8 @@ var BACKEND_TYPE_TO_UI = {
   corrective: 'Corretiva',
   breakdown: 'Avaria',
   emergency: 'Emergência',
-  customer_request: 'Solicitação'
+  customer_request: 'Solicitação',
+  works_installation: 'Obras/Instalações'
 };
 function apiRequest(path, options) {
   return fetch(path, options || {}).then(function(res) {
@@ -3949,7 +4552,7 @@ function apiRequest(path, options) {
 }
 function getOTOrigin(ot) {
   if (ot.origin) return ot.origin;
-  return ['Preventiva','Inspeção','Ronda','Checklist','Preditiva'].includes(ot.type) ? 'scheduled' : 'request';
+  return ['Preventiva','Inspeção','Ronda','Checklist','Preditiva','Obras/Instalações'].includes(ot.type) ? 'scheduled' : 'request';
 }
 function mapBackendOT(ot) {
   return {
@@ -4063,6 +4666,9 @@ function openPauseOTModal() {
   document.getElementById('ot-pause-other').value = '';
   document.getElementById('ot-pause-note').value = '';
   updatePauseReasonField();
+  enhanceSelects();
+  var pauseReasonSelect = document.getElementById('ot-pause-reason');
+  if (pauseReasonSelect) syncEnhancedSelect(pauseReasonSelect);
   document.getElementById('modal-pause-ot').style.display = 'flex';
 }
 function updatePauseReasonField() {
@@ -5863,23 +6469,32 @@ function stripTags(html) {
 // ======================== INCIDENTS ========================
 function openNewIncidentModal() {
   if (!requirePermission('create', 'incidents', 'registar incidente')) return;
-  populateOTSelects(); document.getElementById('modal-new-incident').style.display = 'flex';
+  populateOTSelects();
+  document.getElementById('incident-desc').value = '';
+  document.getElementById('incident-media-upload').value = '';
+  enhanceFileInputs();
+  document.getElementById('modal-new-incident').style.display = 'flex';
 }
-function createIncident() {
+async function createIncident() {
   if (!requirePermission('create', 'incidents', 'registar incidente')) return;
   var desc = document.getElementById('incident-desc').value.trim();
   if (!desc) { showToast('Descrição é obrigatória.'); return; }
   var equipId = document.getElementById('incident-equip').value;
   var equip = APP.equipment.find(function(e) { return e.id === equipId; });
+  var media = await readSingleUpload('incident-media-upload');
   APP.incidents.push({
     id: generateId('INC'), description: desc,
     severity: document.getElementById('incident-severity').value,
     status: 'Aberto',
     equipmentId: equipId, equipmentName: equip ? equip.name : '—',
+    media: media ? media.dataUrl : '',
+    mediaName: media ? media.name : '',
+    mediaType: media ? (media.type || '') : '',
     createdAt: new Date().toISOString(),
   });
   saveData(); closeModal('modal-new-incident');
   document.getElementById('incident-desc').value = '';
+  document.getElementById('incident-media-upload').value = '';
   renderIncidents(); showToast('Incidente registado!');
 }
 function renderIncidents() {
@@ -5890,21 +6505,94 @@ function renderIncidents() {
     return;
   }
   tbody.innerHTML = APP.incidents.slice().reverse().map(function(inc) {
+    var mediaBadge = inc.media ? ' <button class="badge badge-blue cursor-pointer" onclick="event.stopPropagation();openIncidentMedia(\'' + inc.id + '\')"><i class="fas ' + ((inc.mediaType || '').indexOf('video') === 0 ? 'fa-video' : 'fa-image') + '"></i> Ver anexo</button>' : '';
     return '<tr><td class="mono text-xs text-slate-400">' + inc.id + '</td>' +
-      '<td class="font-medium" style="color:var(--text-primary)">' + inc.description + '</td>' +
+      '<td class="font-medium" style="color:var(--text-primary)">' + escapeHtml(inc.description) + mediaBadge + '</td>' +
       '<td>' + (inc.equipmentName || '—') + '</td>' +
       '<td><span class="badge ' + getSeverityClass(inc.severity) + '">' + inc.severity + '</span></td>' +
       '<td><span class="badge ' + getStatusClass(inc.status) + '">' + inc.status + '</span></td>' +
       '<td class="text-xs">' + new Date(inc.createdAt).toLocaleDateString('pt-PT') + '</td></tr>';
   }).join('');
 }
+function openIncidentMedia(id) {
+  var inc = (APP.incidents || []).find(function(i) { return i.id === id; });
+  if (!inc || !inc.media) return;
+  window.open(inc.media, '_blank');
+}
 function getSeverityClass(s) {
   return {Crítica:'badge-red',Alta:'badge-yellow',Média:'badge-blue',Baixa:'badge-green'}[s] || 'badge-gray';
 }
 
 // ======================== CHECKLISTS ========================
+function getDefaultChecklists() {
+  return [
+    Object.assign({ id: 'ronda-diaria', frequency: 'Diária', category: 'Operação', icon: 'fa-sun', iconColor: 'text-blue-400', iconBg: 'rgba(59,130,246,0.2)', system: true }, getRondaDiaria()),
+    Object.assign({ id: 'preventiva-mensal', frequency: 'Mensal', category: 'Preventiva', icon: 'fa-calendar-check', iconColor: 'text-purple-400', iconBg: 'rgba(99,102,241,0.2)', system: true }, getPreventivaMensal())
+  ];
+}
+function getAllChecklists() {
+  return getDefaultChecklists().concat(APP.checklists || []);
+}
+function renderChecklists() {
+  var grid = document.getElementById('checklists-grid');
+  if (!grid) return;
+  var rows = getAllChecklists();
+  grid.innerHTML = rows.map(function(cl) {
+    var total = (cl.tasks || []).length;
+    var done = (cl.tasks || []).filter(function(t) { return t.done; }).length;
+    var pct = total ? Math.round((done / total) * 100) : 0;
+    var icon = cl.icon || 'fa-list-check';
+    var iconBg = cl.iconBg || 'rgba(34,197,94,0.16)';
+    var iconColor = cl.iconColor || 'text-green-400';
+    return '<div class="wiki-card" onclick="openChecklistDetail(\'' + escapeHtml(cl.id) + '\')">' +
+      '<div class="flex items-center gap-3 mb-3">' +
+      '<div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:' + iconBg + '">' +
+      '<i class="fas ' + icon + ' ' + iconColor + '"></i></div>' +
+      '<div><div class="font-semibold">' + escapeHtml(cl.title) + '</div>' +
+      '<div class="text-xs text-slate-400">Frequência: ' + escapeHtml(cl.frequency || 'Quando necessário') + '</div></div></div>' +
+      '<div class="progress-bar mb-2"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
+      '<div class="flex items-center justify-between text-xs text-slate-500">' +
+      '<span>' + done + '/' + total + ' tarefas</span><span class="badge ' + (pct === 100 ? 'badge-green' : 'badge-yellow') + '">' + (pct === 100 ? 'Concluída' : 'Pendente') + '</span></div></div>';
+  }).join('');
+}
+function openNewChecklistModal() {
+  if (!requirePermission('create', 'checklists', 'criar checklist')) return;
+  document.getElementById('checklist-title').value = '';
+  document.getElementById('checklist-desc').value = '';
+  document.getElementById('checklist-frequency').value = 'Diária';
+  document.getElementById('checklist-category').value = 'Operação';
+  document.getElementById('checklist-tasks').value = '';
+  var equip = document.getElementById('checklist-equipment');
+  if (equip) equip.innerHTML = '<option value="">Sem equipamento</option>' + (APP.equipment || []).map(function(e) {
+    return '<option value="' + escapeHtml(e.id) + '">' + escapeHtml(e.name || 'Equipamento') + '</option>';
+  }).join('');
+  enhanceSelects();
+  document.getElementById('modal-new-checklist').style.display = 'flex';
+}
+function saveChecklist() {
+  if (!requirePermission('create', 'checklists', 'criar checklist')) return;
+  var title = document.getElementById('checklist-title').value.trim();
+  var tasks = document.getElementById('checklist-tasks').value.split('\n').map(function(t) { return t.trim(); }).filter(Boolean);
+  if (!title) { showToast('Indique o título da checklist.'); return; }
+  if (!tasks.length) { showToast('Adicione pelo menos uma tarefa.'); return; }
+  var equipId = document.getElementById('checklist-equipment').value;
+  var equip = (APP.equipment || []).find(function(e) { return e.id === equipId; }) || null;
+  APP.checklists = APP.checklists || [];
+  APP.checklists.push({
+    id: generateId('CHK'),
+    title: title,
+    description: document.getElementById('checklist-desc').value.trim() || 'Checklist criada manualmente.',
+    frequency: document.getElementById('checklist-frequency').value,
+    category: document.getElementById('checklist-category').value,
+    equipmentId: equip ? equip.id : '',
+    equipmentName: equip ? equip.name : '',
+    tasks: tasks.map(function(name) { return { name: name, section: equip ? equip.name : 'Geral', help: 'Executar e registar evidência quando necessário.', done: false }; }),
+    createdAt: new Date().toISOString()
+  });
+  saveData(); closeModal('modal-new-checklist'); renderChecklists(); showToast('Checklist criada.');
+}
 function openChecklistDetail(type) {
-  var cl = type === 'ronda-diaria' ? getRondaDiaria() : getPreventivaMensal();
+  var cl = getAllChecklists().find(function(item) { return item.id === type; }) || getRondaDiaria();
   document.getElementById('checklist-detail-title').textContent = cl.title;
   document.getElementById('checklist-detail-desc').textContent = cl.description;
   document.getElementById('checklist-tasks-list').innerHTML = cl.tasks.map(function(t, i) {
@@ -6243,9 +6931,9 @@ function executeAIAction(action) {
   if (action.type === 'materials') return createAIMaterial(action.title);
   if (action.type === 'files') return createAIFileFolder(action.title);
   if (action.type === 'buildings') { createBuilding(); return 'Abri o fluxo de criação de edifício.'; }
-  if (action.type === 'purchases') { createPurchaseRequest(); return 'Pedido de compra criado pela IA.'; }
-  if (action.type === 'quotes') { generateBillingDocuments(); return 'Orçamento/documentos comerciais gerados pela IA.'; }
-  if (action.type === 'checklists') { showPage('checklists'); return 'Abri Checklists. Pode usar a rotina sugerida pela IA.'; }
+  if (action.type === 'purchases') { createPurchaseRequest(); return 'Abri a modal de pedido de compra com dados sugeridos pela IA.'; }
+  if (action.type === 'quotes') { generateBillingDocuments(); return 'Abri a modal de orçamento com dados sugeridos pela IA.'; }
+  if (action.type === 'checklists') { showPage('checklists'); openNewChecklistModal(); setTimeout(function() { var input = document.getElementById('checklist-title'); if (input) input.value = action.title || 'Checklist sugerida pela IA'; }, 50); return 'Abri a modal de checklist com dados sugeridos pela IA.'; }
   if (action.type === 'calendar') { showPage('calendar'); return 'Abri o calendário para otimizar agenda.'; }
   return 'Ação executada.';
 }
@@ -6282,10 +6970,13 @@ function createAIIncident(title) {
 }
 function createAIMaterial(title) {
   if (!requirePermission('create', 'materials', 'adicionar material')) return 'Sem permissão para adicionar material.';
-  APP.stockMaterials = APP.stockMaterials || [];
-  APP.stockMaterials.push({ id: generateId('MAT'), name: title || 'Material criado pela IA', category: 'Geral', stock: 1, cost: 0, location: 'Armazém central', createdAt: new Date().toISOString() });
-  saveData(); renderMaterials(); showPage('materials');
-  return 'Material adicionado ao stock.';
+  showPage('materials');
+  createStockMaterial();
+  setTimeout(function() {
+    var input = document.getElementById('material-name');
+    if (input) input.value = title || 'Material sugerido pela IA';
+  }, 50);
+  return 'Abri a modal de material com dados sugeridos pela IA.';
 }
 function createAIFileFolder(title) {
   if (!requirePermission('create', 'files', 'criar pasta')) return 'Sem permissão para criar pasta/ficheiro.';
@@ -6455,7 +7146,7 @@ function executeContextAIAction() {
   if (page === 'purchases') return createPurchaseRequest();
   if (page === 'quotes') return generateBillingDocuments();
   if (page === 'calendar') { showPage('calendar'); return showToast('IA pronta para otimizar a agenda.'); }
-  if (page === 'checklists') { showPage('checklists'); return showToast('IA pronta para criar/checkar rotinas.'); }
+  if (page === 'checklists') return openNewChecklistModal();
   quickPrompt(APP.lastContextAICommand || 'Analisar sistema');
   showPage('ai-assistant');
 }
@@ -6503,6 +7194,7 @@ function isPageActive(id) {
   return !!(el && el.classList.contains('active'));
 }
 function closeModal(id) {
+  if (id === 'modal-new-ot') { showPage('ots'); return; }
   if (id === 'modal-ot-detail') { showPage('ots'); return; }
   if (id === 'modal-equip-detail') { showPage('equipment'); return; }
   document.getElementById(id).style.display = 'none';
@@ -6767,6 +7459,55 @@ function initSampleData() {
       { id:'FILE-007', name:'Checklist de entrega ao cliente', type:'Outro documento', ref:'checklist-entrega-cliente.docx', folderId:'FOLDER-CLIENTE', description:'Documento geral para validação após intervenção.', permission:'all', userIds:[], teams:[], clientId:'CL-001', clientName:'Cliente Industrial Demo', equipmentId:'', equipmentName:'', otId:'OT-000001', otTitle:'Verificação mensal UPS Galaxy VS', versions:[{ version:'v1.0', notes:'Modelo inicial', ref:'checklist-entrega-cliente.docx', createdAt:new Date().toISOString(), author:'Sistema ManuGent' }], createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), owner:'Sistema ManuGent' }
     ];
   }
+}
+function ensureWorkInstallationExamples() {
+  APP.ots = APP.ots || [];
+  if (APP.ots.some(function(o) { return o.type === 'Obras/Instalações' && o.sampleWorkInstallation; })) return;
+  var baseDate = Date.now() + 86400000 * 2;
+  var tech = APP.technicians && APP.technicians[0] ? APP.technicians[0] : null;
+  var eq = APP.equipment && APP.equipment[0] ? APP.equipment[0] : null;
+  var examples = [
+    { kind:'Instalação elétrica', title:'Obra - Novo quadro elétrico da sala UPS', desc:'Instalação de quadro dedicado, proteções, cablagem e testes de carga.' },
+    { kind:'Instalação AVAC', title:'Instalação - Unidade AVAC da sala técnica', desc:'Montagem de unidade, drenagem, alimentação elétrica e ensaio funcional.' },
+    { kind:'Instalação de equipamento', title:'Instalação - UPS Galaxy VS apoio produção', desc:'Preparação de base, colocação do equipamento, ligações e parametrização inicial.' },
+    { kind:'Obra civil de suporte', title:'Obra civil - Base técnica para gerador', desc:'Execução de base, passagem técnica e preparação de zona de manutenção.' },
+    { kind:'Comissionamento', title:'Comissionamento - Gerador e ATS', desc:'Validação de arranque, transferência automática, alarmes e relatório de aceitação.' },
+    { kind:'Ampliação / remodelação', title:'Remodelação - Expansão da sala técnica', desc:'Alteração por fases da infraestrutura existente com mínima interrupção operacional.' }
+  ];
+  examples.forEach(function(item, index) {
+    APP.ots.push({
+      id: 'OT-OBRA-' + String(index + 1).padStart(3, '0'),
+      title: item.title,
+      type: 'Obras/Instalações',
+      workKind: item.kind,
+      workPhase: index < 2 ? 'Planeamento' : index < 4 ? 'Execução' : 'Comissionamento',
+      workSteps: getWorkInstallationSteps(item.kind),
+      origin: 'scheduled',
+      priority: index === 0 || index === 4 ? 'Alta' : 'Média',
+      status: index === 5 ? 'Aberta' : 'Agendada',
+      equipmentId: eq ? eq.id : '',
+      equipmentName: eq ? eq.name : '—',
+      technicianId: tech ? tech.id : '',
+      technicianName: tech ? tech.name : '—',
+      date: new Date(baseDate + index * 86400000).toISOString().slice(0,16),
+      description: item.desc,
+      location: eq ? eq.location : 'Instalação do cliente',
+      image: '',
+      imageName: '',
+      nfcTag: 'NFC-OT-OBRA-' + String(index + 1).padStart(3, '0'),
+      tasks: getWorkInstallationSteps(item.kind).map(function(step) {
+        return { description: step.name, type: 'check', done: false, state: null, help: 'Validar evidência, segurança e documentação desta etapa.' };
+      }),
+      materials: [],
+      timeLogs: [],
+      comments: [],
+      report: '',
+      activity: [{ text:'Exemplo de Obras/Instalações criado', time:new Date().toLocaleString('pt-PT') }],
+      sampleWorkInstallation: true,
+      createdAt: new Date().toISOString()
+    });
+  });
+  saveData();
 }
 </script>
 </body>
