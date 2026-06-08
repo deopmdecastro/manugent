@@ -338,6 +338,58 @@ interface AIMessage {
   content: string
 }
 
+class AIProviderError extends Error {
+  provider: string
+  status: number
+  code: string
+  userMessage: string
+
+  constructor(provider: string, status: number, code: string, userMessage: string, technicalMessage?: string) {
+    super(technicalMessage || userMessage)
+    this.name = 'AIProviderError'
+    this.provider = provider
+    this.status = status
+    this.code = code
+    this.userMessage = userMessage
+  }
+}
+
+function classifyAIProviderError(provider: string, status: number, error: Record<string, unknown>, fallback: string): AIProviderError {
+  const payload = (error?.error || {}) as Record<string, unknown>
+  const message = String(payload.message || fallback)
+  const providerCode = String(payload.code || payload.type || '').toLowerCase()
+  const normalized = `${message} ${providerCode}`.toLowerCase()
+  const providerName = provider === 'openai' ? 'OpenAI' : 'Groq'
+
+  if (normalized.includes('quota') || normalized.includes('insufficient_quota') || status === 402 || status === 429) {
+    return new AIProviderError(
+      provider,
+      status,
+      'provider_quota',
+      `A quota da ${providerName} está esgotada ou indisponível. O Assistente IA ManuGent continua em modo local.`,
+      message
+    )
+  }
+
+  if (status === 401 || status === 403 || normalized.includes('invalid_api_key') || normalized.includes('unauthorized')) {
+    return new AIProviderError(
+      provider,
+      status,
+      'provider_auth',
+      `A chave da ${providerName} não foi aceite. Confirme a chave nas configurações do servidor.`,
+      message
+    )
+  }
+
+  return new AIProviderError(
+    provider,
+    status,
+    'provider_unavailable',
+    `A API da ${providerName} não respondeu corretamente. O Assistente IA ManuGent continua em modo local.`,
+    message
+  )
+}
+
 async function callOpenAI(messages: AIMessage[], model: string, apiKey: string): Promise<string> {
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -355,8 +407,7 @@ async function callOpenAI(messages: AIMessage[], model: string, apiKey: string):
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({})) as Record<string, unknown>
-    const errMsg = (error?.error as Record<string, unknown>)?.message as string || `OpenAI error ${response.status}`
-    throw new Error(errMsg)
+    throw classifyAIProviderError('openai', response.status, error, `OpenAI error ${response.status}`)
   }
 
   const data = await response.json() as {
@@ -382,8 +433,7 @@ async function callGroq(messages: AIMessage[], model: string, apiKey: string): P
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({})) as Record<string, unknown>
-    const errMsg = (error?.error as Record<string, unknown>)?.message as string || `Groq error ${response.status}`
-    throw new Error(errMsg)
+    throw classifyAIProviderError('groq', response.status, error, `Groq error ${response.status}`)
   }
 
   const data = await response.json() as {
@@ -558,6 +608,14 @@ app.post('/api/ai/chat', async (c) => {
   } catch (error) {
     const msg = error instanceof Error ? error.message : 'Erro no agente de IA'
     console.error('[AI Chat Error]', msg)
+    if (error instanceof AIProviderError) {
+      return c.json({
+        error: error.userMessage,
+        code: error.code,
+        provider: error.provider,
+        fallback: true,
+      }, error.code === 'provider_quota' ? 402 : 503)
+    }
     return jsonError(c, msg, 500)
   }
 })
@@ -688,7 +746,7 @@ app.get('/api/stats', async (c) => {
     db.query(`
       select
         count(*) as total,
-        count(*) filter (where status = 'active') as active
+        count(*) as active
       from equipment
     `),
     db.query(`

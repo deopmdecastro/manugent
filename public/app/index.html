@@ -722,18 +722,58 @@
     }
     .ai-dot { display: inline-block; font-size: 8px; }
     .backend-status-bar {
-      background: rgba(16,185,129,0.08);
-      border: 1px solid rgba(16,185,129,0.2);
-      border-radius: 8px;
-      padding: 6px 12px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
       font-size: 12px;
+    }
+    .system-status-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 48px;
+      padding: 10px 12px;
+      border: 1px solid rgba(148,163,184,0.16);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.035);
+    }
+    .system-status-card.online {
+      border-color: rgba(16,185,129,0.26);
+      background: rgba(16,185,129,0.08);
+    }
+    .system-status-card.offline {
+      border-color: rgba(245,158,11,0.28);
+      background: rgba(245,158,11,0.08);
+    }
+    .system-status-card.error {
+      border-color: rgba(248,113,113,0.28);
+      background: rgba(248,113,113,0.08);
+    }
+    .system-status-title {
       display: flex;
       align-items: center;
       gap: 8px;
+      font-weight: 700;
+      color: var(--text-primary);
     }
-    .backend-status-bar.offline {
-      background: rgba(245,158,11,0.08);
-      border-color: rgba(245,158,11,0.2);
+    .system-status-detail {
+      margin-top: 2px;
+      color: var(--text-muted);
+      line-height: 1.25;
+    }
+    .system-status-pill {
+      flex: 0 0 auto;
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0;
+      color: var(--text-primary);
+      background: rgba(255,255,255,0.08);
+    }
+    @media (max-width: 780px) {
+      .backend-status-bar { grid-template-columns: 1fr; }
     }
     .multi-access-picker {
       display: grid;
@@ -1156,9 +1196,9 @@
       z-index: 0;
     }
     .mascot-stage-hero {
-      width: min(240px, 60vw);
-      height: 210px;
-      margin: 0 auto 28px;
+      width: min(430px, 78vw);
+      height: 300px;
+      margin: -8px auto 18px;
       border: 0;
       border-radius: 0;
       background: transparent;
@@ -1166,8 +1206,8 @@
       overflow: visible;
     }
     .mascot-stage-hero::after {
-      inset: auto 12% 4% 12%;
-      height: 26px;
+      inset: auto 18% 9% 18%;
+      height: 22px;
       background: rgba(129,140,248,0.34);
       filter: blur(18px);
     }
@@ -1185,10 +1225,42 @@
     }
     .mascot-model {
       position: absolute;
-      inset: 0;
+      inset: -8px 0 0;
       width: 100%;
       height: 100%;
       z-index: 1;
+      --progress-bar-height: 0px;
+      --progress-bar-color: transparent;
+      --progress-mask: transparent;
+    }
+    .mascot-stage-hero .mascot-model {
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      contain: strict;
+    }
+    .mascot-static-image {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center;
+      display: block;
+      filter: drop-shadow(0 18px 34px rgba(129,140,248,0.42));
+      animation: mascotFloat 3.6s ease-in-out infinite;
+    }
+    .mascot-stage-hero .mascot-static-image {
+      width: min(220px, 58vw);
+      height: 100%;
+      margin: 0 auto;
+      object-fit: contain;
+    }
+    .mascot-stage-chat .mascot-static-image,
+    .mascot-stage-panel .mascot-static-image {
+      width: 92%;
+      height: 92%;
+      margin: 4%;
     }
     .mascot-fallback {
       position: absolute;
@@ -1205,12 +1277,17 @@
       text-transform: uppercase;
     }
     .mascot-loader {
-      width: 42px;
-      height: 42px;
+      width: 30px;
+      height: 30px;
       border-radius: 999px;
-      border: 3px solid rgba(129,140,248,0.18);
+      border: 2px solid rgba(129,140,248,0.14);
       border-top-color: var(--accent-purple-light);
       animation: mascotSpin 1s linear infinite;
+    }
+    .mascot-loading-label {
+      font-size: 10px;
+      opacity: .68;
+      letter-spacing: .08em;
     }
     .mascot-fallback img {
       display: none;
@@ -1522,7 +1599,7 @@
       <span class="mono text-xs text-green-400 tracking-widest">AI-POWERED MAINTENANCE OPERATING SYSTEM</span>
     </div>
     <div class="mascot-stage mascot-stage-hero">
-      <model-viewer class="mascot-model" data-src="assets/ManuGent_Mascot_3d.glb" loading="eager" reveal="auto" camera-controls auto-rotate auto-rotate-delay="0" disable-zoom interaction-prompt="none" camera-orbit="25deg 72deg 3.4m" field-of-view="28deg" shadow-intensity="0.7" exposure="1.05"></model-viewer>
+      <model-viewer class="mascot-model" data-src="assets/ManuGent_Mascot_3d.glb" loading="eager" reveal="auto" camera-controls auto-rotate auto-rotate-delay="3500" disable-zoom interaction-prompt="none" camera-orbit="205deg 70deg 4.9m" min-camera-orbit="auto 52deg 4.6m" max-camera-orbit="auto 84deg 5.8m" field-of-view="30deg" min-field-of-view="28deg" max-field-of-view="34deg" shadow-intensity="0.7" exposure="1.05"></model-viewer>
       <div class="mascot-fallback"><span class="mascot-loader"></span><span class="mascot-loading-label">A carregar mascote 3D</span><img src="assets/3d_mascot.png" alt="Mascote ManuGent"></div>
     </div>
     <h1 class="text-5xl md:text-6xl font-black leading-tight mb-6">
@@ -2335,8 +2412,7 @@
         <div class="flex items-center justify-between mb-6">
           <div class="flex items-center gap-4">
             <div class="mascot-stage mascot-stage-chat">
-              <model-viewer class="mascot-model" data-src="assets/ManuGent_Mascot_3d.glb" loading="eager" reveal="auto" auto-rotate auto-rotate-delay="0" disable-zoom interaction-prompt="none" camera-orbit="25deg 72deg 3.4m" field-of-view="30deg" shadow-intensity="0.65"></model-viewer>
-              <div class="mascot-fallback"><span class="mascot-loader"></span><img src="assets/3d_mascot.png" alt="Mascote ManuGent"></div>
+              <img src="assets/icon3d_mascot.png" alt="Mascote ManuGent" class="mascot-static-image">
             </div>
             <div>
               <h1 class="text-2xl font-bold mono">Assistente IA ManuGent</h1>
@@ -2352,9 +2428,16 @@
             <button class="btn-secondary text-sm" onclick="showPage('knowledge')"><i class="fas fa-book"></i> Base de conhecimento</button>
           </div>
         </div>
-        <!-- Backend status bar -->
+        <!-- System status -->
         <div id="backend-status-bar" class="backend-status-bar mb-4" style="display:none">
-          <span class="status-dot dot-yellow"></span><span>A verificar ligação ao servidor...</span>
+          <div class="system-status-card offline">
+            <div><div class="system-status-title"><span class="status-dot dot-yellow"></span>Backend</div><div class="system-status-detail">A verificar ligação ao servidor...</div></div>
+            <span class="system-status-pill">A verificar</span>
+          </div>
+          <div class="system-status-card offline">
+            <div><div class="system-status-title"><span class="status-dot dot-yellow"></span>APIs de IA</div><div class="system-status-detail">A verificar OpenAI/Groq...</div></div>
+            <span class="system-status-pill">A verificar</span>
+          </div>
         </div>
         <div class="flex gap-2 mb-5 flex-wrap">
           <button class="badge badge-purple cursor-pointer" style="padding:8px 12px" onclick="quickPrompt('Criar OT preventiva para o gerador')"><i class="fas fa-plus"></i> Criar OT preventiva</button>
@@ -4082,8 +4165,7 @@
     <div class="flex items-start justify-between gap-4">
       <div class="flex items-center gap-3 min-w-0">
         <div class="mascot-stage mascot-stage-panel">
-          <model-viewer class="mascot-model" data-src="assets/ManuGent_Mascot_3d.glb" loading="eager" reveal="auto" auto-rotate auto-rotate-delay="0" disable-zoom interaction-prompt="none" camera-orbit="25deg 72deg 3.4m" field-of-view="30deg" shadow-intensity="0.65"></model-viewer>
-          <div class="mascot-fallback"><span class="mascot-loader"></span><img src="assets/3d_mascot.png" alt="Mascote ManuGent"></div>
+          <img src="assets/icon3d_mascot.png" alt="Mascote ManuGent" class="mascot-static-image">
         </div>
         <div class="min-w-0">
           <div class="text-xs text-slate-500 uppercase tracking-wider mb-1">Assistente IA ManuGent</div>
@@ -4294,23 +4376,37 @@ function quickLandingSupport(text) {
   if (input) input.value = text;
   sendLandingSupportMessage();
 }
-function sendLandingSupportMessage() {
+async function sendLandingSupportMessage() {
   var input = document.getElementById('landing-support-input');
   if (!input) return;
   var text = input.value.trim();
   if (!text) return;
   appendLandingSupportMessage(text, 'user');
   input.value = '';
-  setTimeout(function() {
-    appendLandingSupportMessage(getLandingSupportResponse(text), 'ai');
-  }, 180);
+  APP.landingSupportHistory = APP.landingSupportHistory || [];
+  APP.landingSupportHistory.push({ role: 'user', content: text });
+  if (APP.landingSupportHistory.length > 20) APP.landingSupportHistory = APP.landingSupportHistory.slice(-20);
+
+  var aiText = await askOnlineAI(text, APP.landingSupportHistory.slice(0, -1), {
+    page: 'landing',
+    module: 'landing',
+    intent: 'support',
+    userRole: 'visitor',
+    system: 'Responde como Assistente IA ManuGent para dúvidas sobre a plataforma, módulos, preços iniciais, primeiros passos, permissões, OTs, ficheiros e IA. Não inventes dados comerciais não presentes; orienta para começar grátis quando necessário.'
+  }, function(errData) {
+    appendLandingSupportMessage(getFriendlyAIError(errData), 'ai');
+  });
+
+  if (!aiText) aiText = getLandingSupportResponse(text);
+  APP.landingSupportHistory.push({ role: 'assistant', content: aiText });
+  appendLandingSupportMessage(aiText, 'ai');
 }
 function appendLandingSupportMessage(text, type) {
   var messages = document.getElementById('landing-support-messages');
   if (!messages) return;
   var bubble = document.createElement('div');
   bubble.className = 'support-chat-bubble ' + (type === 'user' ? 'user' : 'ai');
-  bubble.innerHTML = escapeHtml(text);
+  bubble.innerHTML = type === 'ai' ? renderMarkdown(text) : escapeHtml(text);
   messages.appendChild(bubble);
   messages.scrollTop = messages.scrollHeight;
 }
@@ -6505,6 +6601,77 @@ function apiRequest(path, options) {
     return res.json();
   });
 }
+function getAIProviderStatusLabel() {
+  var data = APP.aiProviderStatus || {};
+  if (data.configured) {
+    return {
+      state: 'online',
+      dot: 'dot-green pulse',
+      title: 'APIs de IA',
+      detail: 'Online — ' + String(data.provider || 'IA').toUpperCase() + (data.model ? ' · ' + data.model : ''),
+      pill: 'Online'
+    };
+  }
+  if (data.reason === 'provider_quota') {
+    return {
+      state: 'offline',
+      dot: 'dot-yellow',
+      title: 'APIs de IA',
+      detail: 'Quota esgotada — Assistente em modo local',
+      pill: 'Quota'
+    };
+  }
+  if (data.reason === 'provider_auth') {
+    return {
+      state: 'offline',
+      dot: 'dot-yellow',
+      title: 'APIs de IA',
+      detail: 'Chave inválida — Assistente em modo local',
+      pill: 'Configurar'
+    };
+  }
+  if (!canUseBackendApi() || data.offline || data.reason === 'file-protocol') {
+    return {
+      state: 'offline',
+      dot: 'dot-yellow',
+      title: 'APIs de IA',
+      detail: 'Offline — abra pelo localhost para usar ChatGPT/Groq',
+      pill: 'Modo local'
+    };
+  }
+  return {
+    state: 'offline',
+    dot: 'dot-yellow',
+    title: 'APIs de IA',
+    detail: 'Sem configuração ativa — usa respostas locais',
+    pill: 'Local'
+  };
+}
+function renderSystemStatusBar(extra) {
+  var bar = document.getElementById('backend-status-bar');
+  if (!bar) return;
+  var backendOnline = APP.backendOnline === true;
+  var backendKnown = typeof APP.backendOnline === 'boolean';
+  var backendState = backendOnline ? 'online' : 'offline';
+  var backendDetail = backendOnline
+    ? ((extra && extra.backendDetail) || 'Online — dados sincronizados com o servidor')
+    : (!canUseBackendApi() ? 'Offline — página aberta em ficheiro local' : 'Offline — modo local ativo');
+  var backendPill = backendOnline ? 'Online' : (backendKnown ? 'Offline' : 'A verificar');
+  var backendDot = backendOnline ? 'dot-green pulse' : 'dot-yellow';
+  var ai = getAIProviderStatusLabel();
+  bar.style.display = 'grid';
+  bar.innerHTML =
+    '<div class="system-status-card ' + backendState + '">' +
+      '<div><div class="system-status-title"><span class="status-dot ' + backendDot + '"></span><i class="fas fa-server"></i> Backend</div>' +
+      '<div class="system-status-detail">' + escapeHtml(backendDetail) + '</div></div>' +
+      '<span class="system-status-pill">' + escapeHtml(backendPill) + '</span>' +
+    '</div>' +
+    '<div class="system-status-card ' + ai.state + '">' +
+      '<div><div class="system-status-title"><span class="status-dot ' + ai.dot + '"></span><i class="fas fa-brain"></i> ' + escapeHtml(ai.title) + '</div>' +
+      '<div class="system-status-detail">' + escapeHtml(ai.detail) + '</div></div>' +
+      '<span class="system-status-pill">' + escapeHtml(ai.pill) + '</span>' +
+    '</div>';
+}
 function getOTOrigin(ot) {
   if (ot.origin) return ot.origin;
   return ['Preventiva','Inspeção','Ronda','Checklist','Preditiva','Obras/Instalações'].includes(ot.type) ? 'scheduled' : 'request';
@@ -6572,21 +6739,10 @@ function syncBackendWorkOrders() {
       APP.backendNotifications = unreadNotifs;
     }
     saveData(); updateDashboard(); renderOTs();
-    // Update backend status indicator
-    var backendBar = document.getElementById('backend-status-bar');
-    if (backendBar) {
-      backendBar.style.display = 'flex';
-      backendBar.className = 'backend-status-bar';
-      backendBar.innerHTML = '<span class="status-dot dot-green"></span><span>Backend online — ' + ((results[0].workOrders || []).length + (results[1].workOrders || []).length) + ' OTs sincronizadas</span>';
-    }
+    renderSystemStatusBar({ backendDetail: 'Online — ' + ((results[0].workOrders || []).length + (results[1].workOrders || []).length) + ' OTs sincronizadas' });
   }).catch(function() {
     APP.backendOnline = false;
-    var backendBar = document.getElementById('backend-status-bar');
-    if (backendBar) {
-      backendBar.style.display = 'flex';
-      backendBar.className = 'backend-status-bar offline';
-      backendBar.innerHTML = '<span class="status-dot dot-yellow"></span><span>Backend offline — modo local ativo</span>';
-    }
+    renderSystemStatusBar();
   });
 }
 function createScheduledDemoFlow() {
@@ -7299,7 +7455,8 @@ function renderOTCopilot() {
   }
   messages.innerHTML = APP.currentOT.copilotMessages.map(function(m) {
     var align = m.type === 'user' ? 'margin-left:auto;background:var(--accent-purple);color:white' : 'background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-primary)';
-    return '<div class="text-xs p-2 rounded-lg" style="max-width:92%;white-space:pre-line;' + align + '">' + escapeHtml(m.text) + '</div>';
+    var body = m.type === 'ai' ? renderMarkdown(m.text) : escapeHtml(m.text);
+    return '<div class="text-xs p-2 rounded-lg" style="max-width:92%;white-space:pre-line;' + align + '">' + body + '</div>';
   }).join('');
   messages.scrollTop = messages.scrollHeight;
 }
@@ -7312,29 +7469,68 @@ function askOTCopilot(text) {
   if (input) input.value = text;
   sendOTCopilotMessage();
 }
-function sendOTCopilotMessage() {
+async function sendOTCopilotMessage() {
   var input = document.getElementById('ot-copilot-input');
   if (!input || !APP.currentOT) return;
   var text = input.value.trim();
   if (!text) return;
   APP.currentOT.copilotMessages = APP.currentOT.copilotMessages || [];
   APP.currentOT.copilotMessages.push({ type:'user', text:text });
-  APP.currentOT.copilotMessages.push({ type:'ai', text:getOTCopilotResponse(text) });
   input.value = '';
   saveData(); renderOTCopilot();
+
+  var ot = APP.currentOT;
+  var eq = getCurrentOTEquipment();
+  var relatedProcedures = getRelatedOTProcedures(text, ot, eq);
+  var history = getRelatedOTHistory(ot);
+  var onlineText = await askOnlineAI(text, (ot.copilotMessages || []).slice(0, -1).map(function(m) {
+    return { role: m.type === 'user' ? 'user' : 'assistant', content: m.text };
+  }), Object.assign(buildAIContext(), {
+    page: 'ot-detail',
+    module: 'ots',
+    intent: 'technical-copilot',
+    userRole: getUserRole(),
+    currentOT: ot,
+    equipment: eq,
+    procedures: relatedProcedures,
+    equipmentHistory: history,
+    system: 'Responde como Copiloto Técnico de uma Ordem de Trabalho. Usa a OT atual, equipamento, tarefas, procedimentos, histórico e ficheiros. Dá passos técnicos seguros, objetivos e acionáveis. Se faltar informação, pede medições ou confirmações antes de concluir.'
+  }), function(errData) {
+    APP.currentOT.copilotMessages.push({ type:'ai', text:getFriendlyAIError(errData) });
+    saveData(); renderOTCopilot();
+  });
+
+  if (onlineText) {
+    APP.currentOT.copilotMessages.push({ type:'ai', text:onlineText });
+  } else {
+    APP.currentOT.copilotMessages.push({ type:'ai', text:getOTCopilotResponse(text) });
+  }
+  saveData(); renderOTCopilot();
 }
+
+function getRelatedOTProcedures(question, ot, eq) {
+  var q = String(question || '').toLowerCase();
+  var eqName = (eq && eq.name) || (ot && ot.equipmentName) || '';
+  return APP.knowledge.filter(function(k) {
+    var hay = ((k.title || '') + ' ' + (k.equipment || '') + ' ' + (k.category || '') + ' ' + (k.solution || '')).toLowerCase();
+    return hay.includes((eq && eq.category || '').toLowerCase()) || hay.includes(eqName.toLowerCase().split(' ')[0]) || q.split(' ').some(function(word) { return word.length > 4 && hay.includes(word); });
+  }).slice(0, 4);
+}
+
+function getRelatedOTHistory(ot) {
+  if (!ot) return [];
+  return APP.ots.filter(function(o) {
+    return o.id !== ot.id && (o.equipmentId === ot.equipmentId || o.equipmentName === ot.equipmentName);
+  }).slice(-5);
+}
+
 function getOTCopilotResponse(question) {
   var q = question.toLowerCase();
   var ot = APP.currentOT;
   var eq = getCurrentOTEquipment();
   var eqName = (eq && eq.name) || ot.equipmentName || 'equipamento';
-  var relatedProcedures = APP.knowledge.filter(function(k) {
-    var hay = ((k.title || '') + ' ' + (k.equipment || '') + ' ' + (k.category || '') + ' ' + (k.solution || '')).toLowerCase();
-    return hay.includes((eq && eq.category || '').toLowerCase()) || hay.includes(eqName.toLowerCase().split(' ')[0]) || q.split(' ').some(function(word) { return word.length > 4 && hay.includes(word); });
-  }).slice(0, 2);
-  var history = APP.ots.filter(function(o) {
-    return o.id !== ot.id && (o.equipmentId === ot.equipmentId || o.equipmentName === ot.equipmentName);
-  }).slice(-3);
+  var relatedProcedures = getRelatedOTProcedures(question, ot, eq).slice(0, 2);
+  var history = getRelatedOTHistory(ot).slice(-3);
   if (q.includes('ats') || q.includes('gerador')) {
     return 'Teste ATS para ' + eqName + '\n\n1. Confirmar condições de segurança e comunicar a sala/cliente\n2. Verificar combustível, óleo, bateria de arranque e alarmes ativos\n3. Simular falha de rede no quadro/ATS conforme procedimento autorizado\n4. Confirmar arranque do gerador e tempo de transferência\n5. Medir tensão/frequência em carga e observar estabilidade\n6. Repor rede, confirmar retorno automático e registar tempos\n\nProcedimentos encontrados: ' + (relatedProcedures.length ? relatedProcedures.map(function(p) { return p.title; }).join(', ') : 'Gerador — Teste ATS') + '\nHistórico interno: ' + (history.length ? history.length + ' OT(s) anteriores neste ativo.' : 'sem falhas anteriores registadas neste ativo.');
   }
@@ -9463,16 +9659,29 @@ APP.aiChatHistory = APP.aiChatHistory || [];
 APP.aiSessionId = APP.aiSessionId || ('sess-' + Date.now() + '-' + Math.random().toString(36).slice(2));
 APP.aiProviderStatus = APP.aiProviderStatus || null;
 
+function canUseBackendApi() {
+  return window.location.protocol === 'http:' || window.location.protocol === 'https:';
+}
+
 async function checkAIStatus() {
+  if (!canUseBackendApi()) {
+    APP.aiProviderStatus = { configured: false, offline: true, reason: 'file-protocol' };
+    updateAIStatusIndicator(APP.aiProviderStatus);
+    return;
+  }
   try {
     var res = await fetch('/api/ai/status');
     if (res.ok) {
       var data = await res.json();
       APP.aiProviderStatus = data;
       updateAIStatusIndicator(data);
+    } else {
+      APP.aiProviderStatus = { configured: false, offline: true, reason: 'status-http-' + res.status };
+      updateAIStatusIndicator(APP.aiProviderStatus);
     }
   } catch (e) {
-    APP.aiProviderStatus = { configured: false };
+    APP.aiProviderStatus = { configured: false, offline: true, reason: 'network' };
+    updateAIStatusIndicator(APP.aiProviderStatus);
   }
 }
 
@@ -9483,10 +9692,30 @@ function updateAIStatusIndicator(data) {
   if (data && data.configured) {
     statusEl.textContent = 'Agente IA ativo — ' + data.provider + ' (' + data.model + ')';
     if (dotEl) { dotEl.className = 'status-dot dot-green pulse'; }
+  } else if (data && data.reason === 'provider_quota') {
+    statusEl.textContent = 'APIs de IA sem quota — modo local';
+    if (dotEl) { dotEl.className = 'status-dot dot-yellow'; }
+  } else if (data && data.reason === 'provider_auth') {
+    statusEl.textContent = 'APIs de IA sem autenticação — modo local';
+    if (dotEl) { dotEl.className = 'status-dot dot-yellow'; }
+  } else if (data && data.offline) {
+    statusEl.textContent = 'APIs de IA offline — modo local';
+    if (dotEl) { dotEl.className = 'status-dot dot-yellow'; }
   } else {
     statusEl.textContent = 'IA sem configuração — modo local';
     if (dotEl) { dotEl.className = 'status-dot dot-yellow'; }
   }
+  renderSystemStatusBar();
+}
+
+function setAIProviderOffline(reason, provider) {
+  APP.aiProviderStatus = {
+    configured: false,
+    offline: true,
+    reason: reason || 'provider-error',
+    provider: provider || (APP.aiProviderStatus && APP.aiProviderStatus.provider) || 'openai'
+  };
+  updateAIStatusIndicator(APP.aiProviderStatus);
 }
 
 function buildAIContext() {
@@ -9528,6 +9757,59 @@ function renderMarkdown(text) {
     .replace(/\n/g,'<br>');
 }
 
+function getFriendlyAIError(errData) {
+  var code = errData && errData.code;
+  if (code === 'provider_quota') {
+    return 'A quota da API de IA está esgotada. Vou continuar em modo local. Para voltar à IA real, atualize a quota/faturação ou configure outra chave.';
+  }
+  if (code === 'provider_auth') {
+    return 'A chave da API de IA não foi aceite. Vou continuar em modo local até a configuração ser corrigida.';
+  }
+  if (code === 'provider_unavailable') {
+    return 'A API de IA não respondeu corretamente. Vou continuar em modo local.';
+  }
+  return (errData && errData.error) || 'A API de IA não respondeu. Vou continuar em modo local.';
+}
+
+async function ensureAIStatusReady() {
+  if (!APP.aiProviderStatus && canUseBackendApi()) {
+    await checkAIStatus();
+  }
+  return canUseBackendApi() && APP.aiProviderStatus && APP.aiProviderStatus.configured;
+}
+
+async function askOnlineAI(message, history, context, onError) {
+  var online = await ensureAIStatusReady();
+  if (!online) return null;
+
+  try {
+    var res = await fetch('/api/ai/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: message,
+        history: history || [],
+        context: context || buildAIContext(),
+        sessionId: APP.aiSessionId
+      })
+    });
+
+    if (res.ok) {
+      var data = await res.json();
+      return data.text || '';
+    }
+
+    var errData = await res.json().catch(function() { return {}; });
+    setAIProviderOffline(errData.code || ('chat-http-' + res.status), errData.provider);
+    if (onError) onError(errData);
+    return null;
+  } catch (e) {
+    setAIProviderOffline('network');
+    if (onError) onError({ code: 'network', error: 'Falha de rede. Vou continuar em modo local.' });
+    return null;
+  }
+}
+
 async function sendMessage() {
   var input = document.getElementById('chat-input');
   var msg = (input && input.value) ? input.value.trim() : '';
@@ -9540,7 +9822,7 @@ async function sendMessage() {
   if (APP.aiChatHistory.length > 20) APP.aiChatHistory = APP.aiChatHistory.slice(-20);
 
   // Check if backend AI is available
-  var useRealAI = APP.aiProviderStatus && APP.aiProviderStatus.configured;
+  var useRealAI = canUseBackendApi() && APP.aiProviderStatus && APP.aiProviderStatus.configured;
 
   if (useRealAI) {
     appendAITypingIndicator();
@@ -9563,7 +9845,8 @@ async function sendMessage() {
         appendChatMessage(aiText, 'ai', data.provider, data.model);
       } else {
         var errData = await res.json().catch(function() { return {}; });
-        appendChatMessage('Erro na IA: ' + (errData.error || 'Erro desconhecido'), 'ai-error');
+        setAIProviderOffline(errData.code || ('chat-http-' + res.status), errData.provider);
+        appendChatMessage(getFriendlyAIError(errData), 'ai-error');
         // Fallback to internal
         var fallback = runInternalAICommand(msg, APP.currentPage || 'ai-assistant');
         appendChatMessage(fallback.text, 'ai');
@@ -10064,27 +10347,52 @@ function runContextAIChip(text) {
   document.getElementById('context-ai-input').value = text;
   sendContextAIMessage();
 }
-function sendContextAIMessage() {
+async function sendContextAIMessage() {
   var input = document.getElementById('context-ai-input');
   var msg = input.value.trim();
   if (!msg) return;
   APP.lastContextAICommand = msg;
   appendContextAIMessage(msg, 'user');
   input.value = '';
-  setTimeout(function() {
-    var result = runInternalAICommand(msg, APP.currentPage || APP.aiContextPage || 'dashboard');
-    appendContextAIMessage(result.text, 'ai');
-    if (result.action) requestAIAction(result.action, appendContextAIMessage);
-  }, 250);
+
+  APP.contextAIHistory = APP.contextAIHistory || [];
+  APP.contextAIHistory.push({ role: 'user', content: msg });
+  if (APP.contextAIHistory.length > 20) APP.contextAIHistory = APP.contextAIHistory.slice(-20);
+
+  var page = APP.currentPage || APP.aiContextPage || 'dashboard';
+  var ctx = getCurrentAIContext();
+  var aiText = await askOnlineAI(msg, APP.contextAIHistory.slice(0, -1), Object.assign(buildAIContext(), {
+    page: page,
+    module: page,
+    contextTitle: ctx.title,
+    availableActions: ctx.actions,
+    userRole: getUserRole(),
+    system: 'Responde como Assistente IA ManuGent contextual. Usa o contexto da página atual, respeita permissões, e quando o utilizador pedir uma ação explica o que vais executar e pede confirmação se alterar dados.'
+  }), function(errData) {
+    appendContextAIMessage(getFriendlyAIError(errData), 'ai-error');
+  });
+
+  if (aiText) {
+    APP.contextAIHistory.push({ role: 'assistant', content: aiText });
+    appendContextAIMessage(aiText, 'ai');
+    return;
+  }
+
+  var result = runInternalAICommand(msg, page);
+  APP.contextAIHistory.push({ role: 'assistant', content: result.text });
+  appendContextAIMessage(result.text, 'ai');
+  if (result.action) requestAIAction(result.action, appendContextAIMessage);
 }
 function appendContextAIMessage(text, type) {
   var chat = document.getElementById('context-ai-messages');
   if (!chat) return;
   var div = document.createElement('div');
-  div.className = (type === 'user' ? 'chat-bubble-user' : 'chat-bubble-ai') + ' fade-in';
+  div.className = (type === 'user' ? 'chat-bubble-user' : type === 'ai-error' ? 'chat-bubble-error' : 'chat-bubble-ai') + ' fade-in';
   div.innerHTML = type === 'ai'
-    ? '<div class="flex items-center gap-2 mb-2"><div class="w-6 h-6 rounded flex items-center justify-center" style="background:var(--accent-purple)"><i class="fas fa-robot text-xs text-white"></i></div><span class="text-xs font-semibold" style="color:var(--accent-purple-light)">Assistente IA ManuGent</span></div><div class="text-sm" style="white-space:pre-line">' + escapeHtml(text) + '</div>'
-    : '<div class="text-sm">' + escapeHtml(text) + '</div>';
+    ? '<div class="flex items-center gap-2 mb-2"><div class="w-6 h-6 rounded flex items-center justify-center" style="background:var(--accent-purple)"><i class="fas fa-robot text-xs text-white"></i></div><span class="text-xs font-semibold" style="color:var(--accent-purple-light)">Assistente IA ManuGent</span></div><div class="text-sm" style="line-height:1.7">' + renderMarkdown(text) + '</div>'
+    : type === 'ai-error'
+      ? '<div class="flex items-center gap-2 mb-1"><i class="fas fa-exclamation-triangle text-amber-400 text-xs"></i><span class="text-xs text-amber-400">Aviso</span></div><div class="text-sm text-amber-300">' + escapeHtml(text) + '</div>'
+      : '<div class="text-sm">' + escapeHtml(text) + '</div>';
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
 }
