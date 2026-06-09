@@ -1550,6 +1550,10 @@
       border-color: var(--accent-purple-light);
     }
     .source-pill { border: 1px solid var(--border-light); border-radius: 999px; padding: 4px 8px; font-size: 11px; color: var(--text-secondary); }
+    #mobile-shell { display: none; }
+    .mobile-menu-btn { display: none; }
+    .mobile-sidebar-backdrop { display: none; }
+    .mobile-bottom-nav { display: none; }
     @media print {
       body * { visibility: hidden; }
       #equipment-print-label, #equipment-print-label * { visibility: visible; }
@@ -1557,19 +1561,333 @@
     }
 
     @media (max-width: 768px) {
+      body { background: #070817; }
+      #app-root {
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
       #app-sidebar {
-        position: static;
-        width: 100%;
+        border-right-color: rgba(129,140,248,0.28);
+        box-shadow: 22px 0 70px rgba(0,0,0,0.5);
+        height: 100vh;
+        left: 0;
+        max-width: 82vw;
         min-width: 0;
-        height: auto;
+        position: fixed;
+        top: 0;
+        transform: translateX(-105%);
+        transition: transform 0.25s ease;
+        width: 286px;
+        z-index: 1600;
+      }
+      body.mobile-menu-open #app-sidebar { transform: translateX(0); }
+      body.mobile-menu-open .mobile-sidebar-backdrop {
+        background: rgba(0,0,0,0.58);
+        display: block;
+        inset: 0;
+        position: fixed;
+        z-index: 1500;
       }
       #app-main {
         bottom: auto;
         left: 0;
         min-height: 100vh;
+        padding-top: 72px;
         position: relative;
         right: auto;
         top: auto;
+        width: 100%;
+      }
+      .app-topbar {
+        align-items: center;
+        border-bottom: none;
+        min-height: 72px;
+        padding: 12px 16px !important;
+        backdrop-filter: blur(18px);
+        background: rgba(7,8,23,0.92);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+        left: 0;
+        position: fixed;
+        right: 0;
+        top: 0;
+        z-index: 900;
+      }
+      .app-topbar .global-ai-button,
+      .app-topbar .search-bar {
+        display: none;
+      }
+      .mobile-menu-btn {
+        align-items: center;
+        background: transparent;
+        border: none;
+        color: var(--text-primary);
+        display: inline-flex;
+        font-size: 22px;
+        height: 42px;
+        justify-content: center;
+        width: 42px;
+      }
+      .app-content {
+        display: none;
+      }
+      body.mobile-detail-active .app-content {
+        display: block;
+        padding: 0 12px 104px !important;
+      }
+      body.mobile-page-active .app-content {
+        display: block;
+        padding: 0 12px 116px !important;
+      }
+      body.mobile-detail-active #mobile-shell {
+        display: none;
+      }
+      body.mobile-page-active #mobile-shell {
+        display: none;
+      }
+      body.mobile-detail-active .detail-page {
+        padding: 0;
+      }
+      #mobile-shell {
+        display: block;
+        min-height: calc(100vh - 72px);
+        padding: 0 16px 128px;
+      }
+      .mobile-view { display: none; }
+      .mobile-view.active { display: block; animation: fadeIn 0.22s ease; }
+      .mobile-hello {
+        margin: 8px 0 18px;
+      }
+      .mobile-hello h1 {
+        font-size: 21px;
+        font-weight: 850;
+        letter-spacing: 0;
+      }
+      .mobile-muted { color: #93a4c7; }
+      .mobile-stat-grid {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-bottom: 14px;
+      }
+      .mobile-card {
+        background: linear-gradient(180deg, rgba(28,30,55,0.96), rgba(18,19,42,0.96));
+        border: 1px solid rgba(129,140,248,0.18);
+        border-radius: 14px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 16px 36px rgba(0,0,0,0.22);
+      }
+      .mobile-stat {
+        min-height: 82px;
+        padding: 14px;
+      }
+      .mobile-stat .label {
+        color: #b8c4df;
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .mobile-stat .value {
+        color: #fff;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 25px;
+        font-weight: 800;
+        line-height: 1.1;
+        margin-top: 6px;
+      }
+      .mobile-icon {
+        align-items: center;
+        border-radius: 12px;
+        display: inline-flex;
+        height: 38px;
+        justify-content: center;
+        width: 38px;
+      }
+      .mobile-section-title {
+        align-items: center;
+        display: flex;
+        justify-content: space-between;
+        margin: 18px 0 10px;
+      }
+      .mobile-section-title h2 {
+        font-size: 16px;
+        font-weight: 800;
+      }
+      .mobile-ot-card {
+        margin-bottom: 12px;
+        padding: 13px;
+      }
+      .mobile-ot-head {
+        align-items: flex-start;
+        display: flex;
+        gap: 12px;
+      }
+      .mobile-thumb {
+        background: rgba(99,102,241,0.13);
+        border: 1px solid rgba(129,140,248,0.22);
+        border-radius: 12px;
+        height: 72px;
+        object-fit: cover;
+        width: 72px;
+      }
+      .mobile-ot-title {
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1.25;
+      }
+      .mobile-ot-meta {
+        color: #a8b8da;
+        font-size: 12px;
+        line-height: 1.7;
+        margin-top: 5px;
+      }
+      .mobile-action-row {
+        display: grid;
+        gap: 9px;
+        grid-template-columns: 1fr 1fr;
+        margin-top: 12px;
+      }
+      .mobile-btn {
+        align-items: center;
+        border-radius: 9px;
+        display: inline-flex;
+        font-size: 13px;
+        font-weight: 800;
+        gap: 8px;
+        justify-content: center;
+        min-height: 42px;
+        padding: 10px 12px;
+      }
+      .mobile-ai-card {
+        padding: 16px;
+      }
+      .mobile-ai-card img {
+        height: 42px;
+        width: 42px;
+      }
+      .mobile-ai-suggestion {
+        color: #cbd7f4;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+      .mobile-tab-row {
+        display: flex;
+        gap: 7px;
+        margin: 8px 0 14px;
+        overflow-x: auto;
+        padding-bottom: 2px;
+      }
+      .mobile-chip {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(129,140,248,0.18);
+        border-radius: 8px;
+        color: #b9c7e8;
+        cursor: pointer;
+        flex: 0 0 auto;
+        font-size: 12px;
+        font-weight: 750;
+        padding: 8px 10px;
+      }
+      .mobile-chip.active {
+        background: var(--accent-purple);
+        color: white;
+      }
+      .mobile-agenda-list {
+        border-left: 1px solid rgba(129,140,248,0.28);
+        margin-left: 18px;
+        padding-left: 18px;
+      }
+      .mobile-agenda-item {
+        margin-bottom: 12px;
+        padding: 12px;
+        position: relative;
+      }
+      .mobile-agenda-item:before {
+        background: var(--accent-purple-light);
+        border-radius: 999px;
+        box-shadow: 0 0 0 4px rgba(99,102,241,0.18);
+        content: '';
+        height: 9px;
+        left: -23px;
+        position: absolute;
+        top: 19px;
+        width: 9px;
+      }
+      .mobile-view.mobile-ai-view {
+        display: none;
+      }
+      .mobile-view.mobile-ai-view.active {
+        min-height: calc(100vh - 176px);
+        display: flex;
+        flex-direction: column;
+        padding-bottom: 22px;
+      }
+      .mobile-ai-hero {
+        text-align: center;
+        padding: 8px 0 16px;
+      }
+      .mobile-ai-hero img {
+        filter: drop-shadow(0 16px 32px rgba(99,102,241,0.35));
+        margin: 0 auto;
+        width: 132px;
+      }
+      .mobile-quick-grid {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin: 14px 0;
+      }
+      .mobile-quick-card {
+        padding: 13px;
+        text-align: left;
+      }
+      .mobile-chat-shortcut {
+        margin-top: auto;
+      }
+      .mobile-bottom-nav {
+        align-items: center;
+        background: rgba(9,11,28,0.98);
+        border: 1px solid rgba(129,140,248,0.2);
+        border-radius: 24px 24px 0 0;
+        bottom: 0;
+        box-shadow: 0 -18px 50px rgba(0,0,0,0.55);
+        display: grid;
+        grid-template-columns: 1fr 92px 1fr;
+        left: 8px;
+        min-height: 78px;
+        padding: 10px 24px calc(10px + env(safe-area-inset-bottom));
+        position: fixed;
+        right: 8px;
+        z-index: 1200;
+      }
+      .mobile-nav-item {
+        align-items: center;
+        color: #96a6c8;
+        display: flex;
+        flex-direction: column;
+        font-size: 11px;
+        gap: 4px;
+      }
+      .mobile-nav-item.active { color: #7f8cff; }
+      .mobile-nav-ai {
+        align-items: center;
+        background: radial-gradient(circle at center, rgba(129,140,248,0.68), rgba(99,102,241,0.28) 56%, transparent 72%);
+        border: none;
+        border-radius: 999px;
+        display: flex;
+        justify-content: center;
+        height: 78px;
+        margin-top: -26px;
+      }
+      .mobile-nav-ai img {
+        filter: drop-shadow(0 0 14px rgba(129,140,248,0.76));
+        height: 66px;
+        transform: translateY(-2px);
+        width: 66px;
+      }
+      .modal-content,
+      .ai-context-panel {
+        max-width: calc(100vw - 18px);
+      }
+      .ai-context-panel {
+        width: 100vw;
       }
     }
   </style>
@@ -1907,6 +2225,7 @@
     <!-- Top bar -->
     <div class="app-topbar flex items-center justify-between px-6 py-3 border-b border-white/5 sticky top-0 z-50">
       <div class="flex items-center gap-3">
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu(true)" aria-label="Abrir menu"><i class="fas fa-bars"></i></button>
         <button class="btn-primary global-ai-button" onclick="openContextAI()"><i class="fas fa-robot"></i> Assistente IA ManuGent</button>
         <div class="search-bar w-64">
           <i class="fas fa-search text-slate-500 text-sm"></i>
@@ -1922,6 +2241,73 @@
         <div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-sm font-bold cursor-pointer" id="user-avatar" onclick="showPage('settings')">J</div>
       </div>
     </div>
+    <div class="mobile-sidebar-backdrop" onclick="toggleMobileMenu(false)"></div>
+
+    <section id="mobile-shell">
+      <div id="mobile-home" class="mobile-view active">
+        <div class="mobile-hello">
+          <h1 id="mobile-greeting">Bom dia</h1>
+          <p class="mobile-muted text-sm" id="mobile-today-summary">—</p>
+        </div>
+        <div class="mobile-stat-grid" id="mobile-stats"></div>
+        <div id="mobile-next-intervention"></div>
+        <div id="mobile-ai-suggestion"></div>
+      </div>
+
+      <div id="mobile-ots" class="mobile-view">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h1 class="text-xl font-bold mono">Ordens de Trabalho</h1>
+            <p class="mobile-muted text-sm">Trabalhos para executar</p>
+          </div>
+          <button class="btn-ghost" onclick="showPage('ots')"><i class="fas fa-search"></i></button>
+        </div>
+        <div class="mobile-tab-row" id="mobile-ot-tabs"></div>
+        <div id="mobile-ot-list"></div>
+      </div>
+
+      <div id="mobile-ai" class="mobile-view mobile-ai-view">
+        <div class="mobile-ai-hero">
+          <img src="assets/icon3d_mascot.png" alt="Assistente IA ManuGent">
+          <div class="flex items-center justify-center gap-2 text-sm text-slate-400">
+            <span class="status-dot dot-green"></span> ManuGent IA · Sempre disponível
+          </div>
+          <h1 class="text-2xl font-bold mt-4">Olá João! 👋</h1>
+          <p class="mobile-muted">Como posso ajudar?</p>
+        </div>
+        <div id="mobile-ai-messages" class="flex flex-col gap-3 mb-3"></div>
+        <div class="mobile-quick-grid">
+          <button class="mobile-card mobile-quick-card" onclick="mobileQuickAI('Pesquisar OT')"><i class="fas fa-search text-purple-300"></i><div class="font-semibold mt-2">Pesquisar OT</div><div class="text-xs text-slate-500">Encontrar ordens</div></button>
+          <button class="mobile-card mobile-quick-card" onclick="mobileQuickAI('Planear semana')"><i class="fas fa-calendar-check text-green-300"></i><div class="font-semibold mt-2">Planear semana</div><div class="text-xs text-slate-500">Organizar trabalhos</div></button>
+          <button class="mobile-card mobile-quick-card" onclick="mobileQuickAI('Criar OT')"><i class="fas fa-clipboard-list text-yellow-300"></i><div class="font-semibold mt-2">Criar OT</div><div class="text-xs text-slate-500">Nova ordem</div></button>
+          <button class="mobile-card mobile-quick-card" onclick="mobileQuickAI('Ver atrasos')"><i class="fas fa-clock text-red-300"></i><div class="font-semibold mt-2">Ver atrasos</div><div class="text-xs text-slate-500">OTs em atraso</div></button>
+          <button class="mobile-card mobile-quick-card" onclick="mobileQuickAI('Gerar relatório')"><i class="fas fa-file-lines text-emerald-300"></i><div class="font-semibold mt-2">Gerar relatório</div><div class="text-xs text-slate-500">Relatórios e KPI</div></button>
+          <button class="mobile-card mobile-quick-card" onclick="mobileQuickAI('Consultar equipamento')"><i class="fas fa-microchip text-slate-300"></i><div class="font-semibold mt-2">Consultar equipamento</div><div class="text-xs text-slate-500">Histórico e detalhes</div></button>
+        </div>
+        <div class="mobile-chat-shortcut ai-composer">
+          <textarea id="mobile-ai-input" class="input-field ai-textarea" placeholder="Escreva uma mensagem..." onkeydown="handleTextareaSubmit(event, sendMobileAIMessage)"></textarea>
+          <button class="btn-primary ai-send-btn" onclick="sendMobileAIMessage()"><i class="fas fa-arrow-right"></i></button>
+        </div>
+      </div>
+
+      <div id="mobile-agenda" class="mobile-view">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h1 class="text-xl font-bold mono">Agenda</h1>
+            <p class="mobile-muted text-sm" id="mobile-agenda-title">Junho 2026</p>
+          </div>
+          <button class="btn-ghost" onclick="showPage('calendar')"><i class="fas fa-calendar-alt"></i></button>
+        </div>
+        <div class="mobile-tab-row" id="mobile-week-row"></div>
+        <div class="mobile-agenda-list" id="mobile-agenda-list"></div>
+      </div>
+    </section>
+
+    <nav class="mobile-bottom-nav">
+      <button class="mobile-nav-item" id="mobile-nav-ots" onclick="setMobileTab('ots')"><i class="fas fa-clipboard-list"></i><span>OTs</span></button>
+      <button class="mobile-nav-ai" onclick="setMobileTab('ai')" aria-label="Assistente IA ManuGent"><img src="assets/icon3d_mascot.png" alt=""></button>
+      <button class="mobile-nav-item" id="mobile-nav-agenda" onclick="setMobileTab('agenda')"><i class="fas fa-calendar-alt"></i><span>Agenda</span></button>
+    </nav>
 
     <div class="app-content p-6">
 
@@ -4464,6 +4850,279 @@ function showPage(page) {
   if (page === 'ai-assistant') checkAIStatus();
   updateGlobalSearchPlaceholder();
   refreshContextAIHeader();
+  syncMobilePage(page);
+  updateMobileBodyMode(page);
+}
+
+function isMobileDetailPage(page) {
+  return ['modal-new-ot','modal-ot-detail','modal-new-equip','modal-equip-detail','article-detail'].includes(page);
+}
+
+function isMobileShellPage(page) {
+  return ['dashboard','ots','calendar'].includes(page);
+}
+
+function updateMobileBodyMode(page) {
+  var mobile = isMobileViewport();
+  var detail = mobile && isMobileDetailPage(page);
+  var normalPage = mobile && !detail && !isMobileShellPage(page);
+  document.body.classList.toggle('mobile-detail-active', detail);
+  document.body.classList.toggle('mobile-page-active', normalPage);
+  if (normalPage || detail) {
+    ['ots','agenda'].forEach(function(name) {
+      var nav = document.getElementById('mobile-nav-' + name);
+      if (nav) nav.classList.remove('active');
+    });
+  }
+}
+
+function isMobileViewport() {
+  return window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+}
+
+function toggleMobileMenu(open) {
+  document.body.classList.toggle('mobile-menu-open', !!open);
+}
+
+window.addEventListener('resize', function() {
+  updateMobileBodyMode(APP.currentPage || 'dashboard');
+  if (isMobileViewport()) renderMobileApp();
+});
+
+function setMobileView(view) {
+  ['home','ots','ai','agenda'].forEach(function(name) {
+    var el = document.getElementById('mobile-' + name);
+    if (el) el.classList.toggle('active', name === view);
+  });
+  ['ots','agenda'].forEach(function(name) {
+    var nav = document.getElementById('mobile-nav-' + name);
+    if (nav) nav.classList.toggle('active', name === view);
+  });
+}
+
+function setMobileTab(tab) {
+  document.body.classList.remove('mobile-detail-active', 'mobile-page-active');
+  if (tab === 'ots') {
+    APP.mobileOTFilter = APP.mobileOTFilter || 'agendadas';
+    APP.currentPage = 'ots';
+    setMobileView('ots');
+    renderMobileOTs();
+    return;
+  }
+  if (tab === 'agenda') {
+    APP.currentPage = 'calendar';
+    setMobileView('agenda');
+    renderMobileAgenda();
+    return;
+  }
+  APP.currentPage = 'ai-assistant';
+  setMobileView('ai');
+}
+
+function syncMobilePage(page) {
+  toggleMobileMenu(false);
+  renderMobileApp();
+  if (!isMobileViewport()) return;
+  if (page === 'ots') return setMobileTab('ots');
+  if (page === 'calendar') return setMobileTab('agenda');
+  if (page === 'dashboard') setMobileView('home');
+}
+
+function renderMobileApp() {
+  renderMobileHome();
+  renderMobileOTs();
+  renderMobileAgenda();
+}
+
+function getMobileRelevantOTs() {
+  return (APP.ots || []).slice().sort(function(a, b) {
+    return new Date(a.date || a.createdAt || 0) - new Date(b.date || b.createdAt || 0);
+  });
+}
+
+function getMobileOpenOTs() {
+  return (APP.ots || []).filter(function(o) {
+    return !['Concluída','Cancelada','Fechada'].includes(o.status);
+  });
+}
+
+function isOTOverdue(ot) {
+  if (!ot || !ot.date || ['Concluída','Cancelada','Fechada'].includes(ot.status)) return false;
+  return new Date(ot.date).getTime() < Date.now();
+}
+
+function renderMobileHome() {
+  var shell = document.getElementById('mobile-home');
+  if (!shell) return;
+  var name = (APP.user && APP.user.name ? APP.user.name.split(' ')[0] : 'João');
+  var open = getMobileOpenOTs();
+  var today = new Date().toISOString().slice(0,10);
+  var todayOTs = open.filter(function(o) { return String(o.date || '').slice(0,10) === today; });
+  var running = open.filter(function(o) { return o.status === 'Em Curso'; });
+  var overdue = open.filter(isOTOverdue);
+  var done = (APP.ots || []).filter(function(o) { return ['Concluída','Fechada'].includes(o.status); });
+  var greeting = document.getElementById('mobile-greeting');
+  var summary = document.getElementById('mobile-today-summary');
+  if (greeting) greeting.textContent = 'Bom dia, ' + name + ' 👋';
+  if (summary) summary.textContent = (todayOTs.length || open.length) + ' trabalhos para hoje';
+  var stats = document.getElementById('mobile-stats');
+  if (stats) {
+    stats.innerHTML = [
+      mobileStatHtml('OTs hoje', todayOTs.length || open.length, 'fa-calendar-day', 'rgba(99,102,241,0.22)', '#8da2ff'),
+      mobileStatHtml('Em curso', running.length, 'fa-play', 'rgba(16,185,129,0.18)', '#34d399'),
+      mobileStatHtml('Atrasadas', overdue.length, 'fa-clock', 'rgba(239,68,68,0.18)', '#f87171'),
+      mobileStatHtml('Fechadas', done.length, 'fa-check', 'rgba(99,102,241,0.2)', '#8b8cff')
+    ].join('');
+  }
+  renderMobileNextIntervention(open);
+  renderMobileAISuggestion(todayOTs, overdue);
+}
+
+function mobileStatHtml(label, value, icon, bg, color) {
+  return '<div class="mobile-card mobile-stat">' +
+    '<div class="flex items-start justify-between"><div><div class="label">' + label + '</div><div class="value">' + value + '</div></div>' +
+    '<span class="mobile-icon" style="background:' + bg + ';color:' + color + '"><i class="fas ' + icon + '"></i></span></div></div>';
+}
+
+function renderMobileNextIntervention(open) {
+  var el = document.getElementById('mobile-next-intervention');
+  if (!el) return;
+  var next = (open || getMobileOpenOTs()).filter(function(o) { return o.date; }).sort(function(a,b) { return new Date(a.date) - new Date(b.date); })[0] || (open || [])[0];
+  if (!next) {
+    el.innerHTML = '<div class="mobile-card mobile-ai-card"><div class="mobile-section-title" style="margin:0 0 6px"><h2>Próxima intervenção</h2></div><p class="mobile-muted text-sm">Nenhuma intervenção agendada.</p></div>';
+    return;
+  }
+  var img = next.image || 'assets/3d_mascot.png';
+  el.innerHTML = '<div class="mobile-section-title"><h2>Próxima intervenção</h2><span class="badge badge-purple">' + getMobileTimeUntil(next.date) + '</span></div>' +
+    '<div class="mobile-card mobile-ot-card"><div class="mobile-ot-head"><img class="mobile-thumb" src="' + img + '" alt="">' +
+    '<div class="min-w-0 flex-1"><div class="mobile-ot-title">' + escapeHtml(next.equipmentName || next.title) + '</div>' +
+    '<div class="mobile-ot-meta"><div><i class="fas fa-location-dot"></i> ' + escapeHtml(next.location || next.workBuildingName || 'Sem local') + '</div>' +
+    '<div><i class="fas fa-clock"></i> ' + (next.date ? new Date(next.date).toLocaleTimeString('pt-PT', { hour:'2-digit', minute:'2-digit' }) : 'Sem hora') + '</div></div>' +
+    '<div class="flex flex-wrap gap-2 mt-2"><span class="badge badge-purple">' + escapeHtml(next.type || 'OT') + '</span><span class="badge ' + getPriorityClass(next.priority) + '">' + escapeHtml(next.priority || 'Média') + '</span></div></div></div>' +
+    '<button class="btn-primary mobile-btn w-full mt-3" onclick="openOTDetail(\'' + next.id + '\')">Iniciar trabalho <i class="fas fa-play ml-auto"></i></button></div>';
+}
+
+function getMobileTimeUntil(value) {
+  if (!value) return 'Sem hora';
+  var diff = new Date(value).getTime() - Date.now();
+  if (diff < 0) return 'Atrasada';
+  var mins = Math.round(diff / 60000);
+  if (mins < 60) return 'Em ' + mins + ' min';
+  return 'Em ' + Math.round(mins / 60) + ' h';
+}
+
+function renderMobileAISuggestion(todayOTs, overdue) {
+  var el = document.getElementById('mobile-ai-suggestion');
+  if (!el) return;
+  var lowStock = (APP.stockMaterials || []).filter(function(m) { return Number(m.stock || m.qty || 0) <= Number(m.minStock || m.minimum || 1); });
+  el.innerHTML = '<div class="mobile-card mobile-ai-card mt-4">' +
+    '<div class="flex items-start gap-3"><img src="assets/icon3d_mascot.png" alt=""><div class="min-w-0 flex-1">' +
+    '<div class="flex items-center justify-between"><div class="font-semibold text-indigo-300">ManuGent IA</div><span class="badge badge-purple">Sugestão</span></div>' +
+    '<div class="mobile-ai-suggestion mt-2">Detetei algumas situações que podem precisar da tua atenção:<br><br>' +
+    '<span style="color:#7c8cff">●</span> ' + (todayOTs.length || getMobileOpenOTs().length) + ' OTs agendadas para hoje<br>' +
+    '<span style="color:#f87171">●</span> ' + overdue.length + ' OT em atraso<br>' +
+    '<span style="color:#fbbf24">●</span> ' + lowStock.length + ' material em falta ou stock baixo</div>' +
+    '<button class="btn-ghost text-sm mt-3" onclick="setMobileTab(\'ots\')">Ver detalhes <i class="fas fa-chevron-right"></i></button></div></div></div>';
+}
+
+function renderMobileOTs() {
+  var tabs = document.getElementById('mobile-ot-tabs');
+  var list = document.getElementById('mobile-ot-list');
+  if (!tabs || !list) return;
+  APP.mobileOTFilter = APP.mobileOTFilter || 'agendadas';
+  var tabDefs = [
+    ['agendadas','Agendadas'],
+    ['curso','Em curso'],
+    ['pausadas','Pausadas'],
+    ['fechadas','Fechadas']
+  ];
+  tabs.innerHTML = tabDefs.map(function(t) {
+    return '<button class="mobile-chip ' + (APP.mobileOTFilter === t[0] ? 'active' : '') + '" onclick="APP.mobileOTFilter=\'' + t[0] + '\';renderMobileOTs()">' + t[1] + '</button>';
+  }).join('');
+  var rows = getMobileRelevantOTs().filter(function(o) {
+    if (APP.mobileOTFilter === 'curso') return o.status === 'Em Curso';
+    if (APP.mobileOTFilter === 'pausadas') return ['Pausada','Aguarda Material','Aguarda Cliente','Aguarda decisão superior'].includes(o.status);
+    if (APP.mobileOTFilter === 'fechadas') return ['Concluída','Fechada'].includes(o.status);
+    return !['Concluída','Fechada','Cancelada'].includes(o.status);
+  });
+  list.innerHTML = rows.length ? rows.map(renderMobileOTCard).join('') : '<div class="mobile-card p-5 text-center mobile-muted">Nenhuma OT nesta vista.</div>';
+}
+
+function renderMobileOTCard(o) {
+  return '<div class="mobile-card mobile-ot-card">' +
+    '<div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="flex items-center gap-2 text-xs text-indigo-300 mono"><i class="fas fa-calendar-day"></i> ' + escapeHtml(o.id) + '</div>' +
+    '<div class="text-xs text-slate-400 mt-2">' + escapeHtml(o.type || 'OT') + '</div><div class="mobile-ot-title mt-1">' + escapeHtml(o.title || 'Sem título') + '</div>' +
+    '<div class="mobile-ot-meta"><div><i class="fas fa-clock"></i> ' + formatDateTime(o.date) + '</div><div><i class="fas fa-location-dot"></i> ' + escapeHtml(o.location || o.workBuildingName || 'Sem local') + '</div><div><i class="fas fa-user-hard-hat"></i> ' + escapeHtml(o.technicianName || 'Sem técnico') + '</div></div></div>' +
+    '<span class="badge ' + getStatusClass(o.status) + '">' + escapeHtml(o.status || 'Aberta') + '</span></div>' +
+    '<div class="mobile-action-row"><button class="btn-secondary mobile-btn" onclick="openOTDetail(\'' + o.id + '\')">Abrir</button><button class="btn-primary mobile-btn" onclick="openOTDetail(\'' + o.id + '\')">Iniciar</button></div></div>';
+}
+
+function renderMobileAgenda() {
+  var title = document.getElementById('mobile-agenda-title');
+  var week = document.getElementById('mobile-week-row');
+  var list = document.getElementById('mobile-agenda-list');
+  if (!title || !week || !list) return;
+  var now = new Date();
+  title.textContent = now.toLocaleDateString('pt-PT', { month:'long', year:'numeric' });
+  var start = new Date(now);
+  start.setDate(now.getDate() - now.getDay() + 1);
+  var days = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+  week.innerHTML = days.map(function(day, i) {
+    var d = new Date(start); d.setDate(start.getDate() + i);
+    var active = d.toDateString() === now.toDateString();
+    return '<button class="mobile-chip ' + (active ? 'active' : '') + '"><div>' + day + '</div><div class="mono">' + d.getDate() + '</div></button>';
+  }).join('');
+  var rows = getMobileRelevantOTs().filter(function(o) { return o.date; }).slice(0, 8);
+  list.innerHTML = rows.length ? rows.map(function(o) {
+    return '<div class="mobile-card mobile-agenda-item"><div class="text-xs text-slate-400 mono">' + new Date(o.date).toLocaleTimeString('pt-PT', { hour:'2-digit', minute:'2-digit' }) + '</div>' +
+      '<div class="font-semibold mt-1">' + escapeHtml(o.title || o.equipmentName || 'Intervenção') + '</div><div class="text-xs text-slate-500 mt-1">' + escapeHtml(o.location || o.equipmentName || 'Sem local') + '</div>' +
+      '<span class="badge ' + getPriorityClass(o.priority) + ' mt-2">' + escapeHtml(o.type || 'OT') + '</span></div>';
+  }).join('') : '<div class="mobile-card mobile-agenda-item mobile-muted">Nenhuma intervenção agendada.</div>';
+}
+
+function mobileQuickAI(text) {
+  setMobileTab('ai');
+  var input = document.getElementById('mobile-ai-input');
+  if (input) input.value = text;
+  sendMobileAIMessage();
+}
+
+function appendMobileAIMessage(text, type) {
+  var list = document.getElementById('mobile-ai-messages');
+  if (!list) return;
+  var div = document.createElement('div');
+  div.className = (type === 'user' ? 'chat-bubble-user' : type === 'ai-error' ? 'chat-bubble-error' : 'chat-bubble-ai') + ' fade-in';
+  div.innerHTML = type === 'user' ? '<div class="text-sm">' + escapeHtml(text) + '</div>' :
+    type === 'ai-error' ? '<div class="text-sm text-amber-300">' + escapeHtml(text) + '</div>' :
+    '<div class="flex items-center gap-2 mb-2"><div class="w-6 h-6 rounded flex items-center justify-center" style="background:var(--accent-purple)"><i class="fas fa-robot text-xs text-white"></i></div><span class="text-xs font-semibold" style="color:var(--accent-purple-light)">Assistente IA ManuGent</span></div><div class="text-sm" style="line-height:1.65">' + renderMarkdown(text) + '</div>';
+  list.appendChild(div);
+  div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+async function sendMobileAIMessage() {
+  var input = document.getElementById('mobile-ai-input');
+  var text = input ? input.value.trim() : '';
+  if (!text) return;
+  if (input) input.value = '';
+  appendMobileAIMessage(text, 'user');
+  APP.mobileAIHistory = APP.mobileAIHistory || [];
+  APP.mobileAIHistory.push({ role: 'user', content: text });
+  var aiText = await askOnlineAI(text, APP.mobileAIHistory.slice(0, -1), Object.assign(buildAIContext(), {
+    page: 'mobile',
+    module: APP.currentPage || 'dashboard',
+    intent: 'mobile-assistant',
+    userRole: getUserRole(),
+    system: 'Responde como Assistente IA ManuGent no modo mobile. Sê curto, prático e orientado a ações rápidas para OTs, agenda, equipamentos e operação.'
+  }), function(errData) {
+    appendMobileAIMessage(getFriendlyAIError(errData), 'ai-error');
+  });
+  if (!aiText) {
+    var fallback = runInternalAICommand(text, APP.currentPage || 'dashboard');
+    aiText = fallback.text;
+    if (fallback.action) requestAIAction(fallback.action, appendMobileAIMessage);
+  }
+  APP.mobileAIHistory.push({ role: 'assistant', content: aiText });
+  appendMobileAIMessage(aiText, 'ai');
 }
 
 function setupDetailPages() {
@@ -4496,6 +5155,7 @@ function showDetailPage(id) {
   if (nav) nav.classList.add('active');
   var main = document.getElementById('app-main');
   if (main) main.scrollTop = 0;
+  updateMobileBodyMode(id);
 }
 
 // ======================== AUTH ========================
@@ -4994,6 +5654,7 @@ function updateDashboard() {
   }
   renderExecutiveDashboard();
   renderNotifications();
+  renderMobileApp();
 }
 function formatCurrency(value) {
   return '€' + Math.round(value || 0).toLocaleString('pt-PT');
@@ -6398,6 +7059,7 @@ function renderOTs() {
     }).join('');
   }
   renderKanban(filtered);
+  renderMobileOTs();
 }
 function renderOTActionButtons(o) {
   var html = '<div class="flex items-center gap-1 justify-end">' +
