@@ -7,7 +7,8 @@ RUN npm ci
 
 COPY src ./src
 COPY public ./public
-RUN npm run build:api && npm prune --omit=dev
+COPY vite.frontend.config.ts ./vite.frontend.config.ts
+RUN npm run build && npm prune --omit=dev
 
 ENV NODE_ENV=production
 

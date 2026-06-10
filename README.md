@@ -153,6 +153,16 @@ npm run build
 npm start
 ```
 
+### Frontend React incremental
+```bash
+npm run dev:frontend
+npm run build:frontend
+```
+
+A nova base React fica em `src/frontend` e compila para `public/react`.
+O frontend legado continua disponível em `/app/index.html` durante a migração gradual.
+Depois de executar `npm run build`, a versão React pode ser aberta em `/react`.
+
 ---
 
 ## Configurar Agente IA
@@ -182,7 +192,8 @@ Sem configuração, o assistente usa **modo local** (respostas pré-definidas) �
 ```
 manugent/
 ├── src/
-│   └── server.ts          # API Hono (Node.js) — backend completo
+│   ├── server.ts          # API Hono (Node.js) — backend completo
+│   └── frontend/          # Base React modular em migração
 ├── public/
 │   └── app/
 │       ├── index.html     # SPA Frontend completa

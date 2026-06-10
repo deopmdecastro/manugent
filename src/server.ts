@@ -35,6 +35,8 @@ app.use('/api/*', cors({
 
 app.use('/app/*', serveStatic({ root: './public' }))
 app.use('/static/*', serveStatic({ root: './public' }))
+app.use('/react/*', serveStatic({ root: './public' }))
+app.get('/react', (c) => c.redirect('/react/index.html'))
 
 // ── Domain Constants ──────────────────────────────────────────────────────────
 

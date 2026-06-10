@@ -1017,6 +1017,7 @@
       border-right: 1px solid var(--border); height: 100vh;
       display: flex; flex-direction: column; position: fixed; left: 0; top: 0;
       overflow-y: auto; z-index: 100;
+      transition: width 0.24s ease, min-width 0.24s ease, transform 0.24s ease;
     }
     #app-main {
       background: var(--bg-primary);
@@ -1028,6 +1029,40 @@
       position: fixed;
       right: 0;
       top: 0;
+      transition: left 0.24s ease;
+    }
+    body.sidebar-collapsed #app-sidebar {
+      min-width: 76px;
+      width: 76px;
+    }
+    body.sidebar-collapsed #app-main {
+      left: 76px;
+    }
+    body.sidebar-collapsed #app-sidebar .brand-logo {
+      max-width: 42px !important;
+      object-fit: contain;
+      object-position: left center;
+    }
+    body.sidebar-collapsed #sidebar-user-email,
+    body.sidebar-collapsed #sidebar-user-name,
+    body.sidebar-collapsed #app-sidebar .text-xs.uppercase,
+    body.sidebar-collapsed #ot-count-badge,
+    body.sidebar-collapsed #app-sidebar .sidebar-item span {
+      display: none !important;
+    }
+    body.sidebar-collapsed #app-sidebar .sidebar-item {
+      font-size: 0;
+      gap: 0;
+      justify-content: center;
+      padding: 11px 0;
+    }
+    body.sidebar-collapsed #app-sidebar .sidebar-item i {
+      font-size: 15px;
+      width: auto;
+    }
+    .sidebar-collapse-btn {
+      border-color: rgba(129,140,248,0.28);
+      flex-shrink: 0;
     }
     .app-topbar {
       background: var(--bg-primary);
@@ -1597,6 +1632,9 @@
         right: auto;
         top: auto;
         width: 100%;
+      }
+      body.sidebar-collapsed #app-main {
+        left: 0;
       }
       .app-topbar {
         align-items: center;
@@ -2226,6 +2264,7 @@
     <div class="app-topbar flex items-center justify-between px-6 py-3 border-b border-white/5 sticky top-0 z-50">
       <div class="flex items-center gap-3">
         <button class="mobile-menu-btn" onclick="toggleMobileMenu(true)" aria-label="Abrir menu"><i class="fas fa-bars"></i></button>
+        <button class="btn-ghost sidebar-collapse-btn" id="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Recolher menu"><i class="fas fa-angles-left"></i></button>
         <button class="btn-primary global-ai-button" onclick="openContextAI()"><i class="fas fa-robot"></i> Assistente IA ManuGent</button>
         <div class="search-bar w-64">
           <i class="fas fa-search text-slate-500 text-sm"></i>
@@ -4718,6 +4757,7 @@ function showApp() {
   document.getElementById('landing-page').style.display = 'none';
   document.getElementById('auth-page').style.display = 'none';
   document.getElementById('app-layout').style.display = 'flex';
+  initSidebarState();
   setupMascotModels();
   setupDetailPages();
   updateUserUI();
@@ -4882,6 +4922,24 @@ function isMobileViewport() {
 
 function toggleMobileMenu(open) {
   document.body.classList.toggle('mobile-menu-open', !!open);
+}
+
+function applySidebarState(collapsed) {
+  document.body.classList.toggle('sidebar-collapsed', !!collapsed);
+  var btn = document.getElementById('sidebar-collapse-btn');
+  if (!btn) return;
+  btn.title = collapsed ? 'Expandir menu' : 'Recolher menu';
+  btn.innerHTML = '<i class="fas ' + (collapsed ? 'fa-angles-right' : 'fa-angles-left') + '"></i>';
+}
+
+function toggleSidebarCollapse() {
+  var collapsed = !document.body.classList.contains('sidebar-collapsed');
+  localStorage.setItem('manugentSidebarCollapsed', collapsed ? '1' : '0');
+  applySidebarState(collapsed);
+}
+
+function initSidebarState() {
+  applySidebarState(localStorage.getItem('manugentSidebarCollapsed') === '1');
 }
 
 window.addEventListener('resize', function() {

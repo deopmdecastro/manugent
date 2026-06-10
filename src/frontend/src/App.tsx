@@ -1,0 +1,10 @@
+import { AppShell } from './layouts/AppShell'
+import { DashboardPage } from './pages/DashboardPage'
+
+export function App() {
+  return (
+    <AppShell>
+      <DashboardPage />
+    </AppShell>
+  )
+}

@@ -5,25 +5,32 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "npm run build:api",
+    "build": "npm run build:api && npm run build:frontend",
     "build:api": "esbuild src/server.ts --bundle --platform=node --format=esm --outfile=dist/server.js --packages=external",
+    "build:frontend": "vite build --config vite.frontend.config.ts",
+    "dev:frontend": "vite --config vite.frontend.config.ts",
     "start": "node dist/server.js",
     "preview": "npm run build && node dist/server.js",
-    "lint": "node_modules/.bin/tsc --noEmit",
+    "lint": "tsc --noEmit",
     "deploy": "npm run build && wrangler pages deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.6",
+    "@vitejs/plugin-react": "^5.2.0",
     "dotenv": "^16.6.1",
     "hono": "^4.12.23",
-    "pg": "^8.16.3"
+    "pg": "^8.16.3",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
   },
   "devDependencies": {
     "@hono/vite-build": "^1.2.0",
     "@hono/vite-dev-server": "^0.25.2",
     "@types/node": "^22.0.0",
     "@types/pg": "^8.15.5",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
     "esbuild": "^0.25.12",
     "tsx": "^4.20.6",
     "typescript": "^5.8.3",
