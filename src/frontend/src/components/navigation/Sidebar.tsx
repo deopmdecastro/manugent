@@ -1,4 +1,5 @@
-import { NAV_ITEMS } from '../../config/navigation'
+import { useEffect, useState } from 'react'
+import { ROUTES } from '../../router/routes'
 
 type SidebarProps = {
   collapsed: boolean
@@ -7,72 +8,74 @@ type SidebarProps = {
 }
 
 export function Sidebar({ collapsed, mobileOpen, onCloseMobile }: SidebarProps) {
+  const [currentRoute, setCurrentRoute] = useState(() => window.location.hash.slice(1) || 'dashboard')
+
+  useEffect(() => {
+    const onHash = () => setCurrentRoute(window.location.hash.slice(1) || 'dashboard')
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+
+  const navItems = ROUTES.filter(r => r.shell && r.label && r.icon).map(r => ({
+    id: r.path,
+    label: r.label!,
+    icon: r.icon!,
+    section: (['dashboard','ots','equipment','clients'].includes(r.path) ? 'principal' :
+              ['buildings','technicians','projects','presets','editor','files','calendar'].includes(r.path) ? 'gestao' :
+              'sistema'),
+  }))
+
+  const sections: Record<string, { label: string; items: typeof navItems }> = {
+    principal: { label: 'Principal', items: navItems.filter(i => i.section === 'principal') },
+    gestao: { label: 'Gestão', items: navItems.filter(i => i.section === 'gestao') },
+    sistema: { label: 'Sistema', items: navItems.filter(i => i.section === 'sistema') },
+  }
+
+  const handleNav = (route: string) => {
+    window.location.hash = route
+    if (mobileOpen) onCloseMobile()
+  }
+
   return (
-    <aside
-      className={`sidebar${mobileOpen ? ' open' : ''}`}
-      aria-label="Navegação principal"
-    >
+    <aside className={`sidebar${mobileOpen ? ' open' : ''}`} aria-label="Navegação principal">
       <div className="sidebar-brand">
-        <img
-          src="/app/assets/ManuGent_logo.png"
-          alt="ManuGent"
-          className="sidebar-brand-full"
-        />
-        <img
-          src="/app/assets/icon_manugent.png"
-          alt="M"
-          className="sidebar-brand-icon"
-        />
+        <span onClick={() => handleNav('dashboard')} style={{ cursor: 'pointer' }}>
+          <img src="/app/assets/ManuGent_logo.png" alt="ManuGent" />
+        </span>
+        <span onClick={() => handleNav('dashboard')} style={{ cursor: 'pointer' }}>
+          <img src="/app/assets/icon_manugent.png" alt="M" className="sidebar-brand-icon" />
+        </span>
       </div>
       <nav className="sidebar-nav">
-        {/* Section: Principal */}
-        <div className="sidebar-nav-section">
-          <div className="sidebar-nav-section-label">Principal</div>
-          {NAV_ITEMS.filter((i) => ['dashboard', 'ots', 'equipment', 'clients'].includes(i.id)).map((item) => (
-            <button
-              className={`sidebar-link${item.id === 'dashboard' ? ' active' : ''}`}
-              key={item.id}
-              title={collapsed && !mobileOpen ? item.label : undefined}
-              onClick={() => { if (mobileOpen) onCloseMobile() }}
-            >
-              <i className={item.icon} aria-hidden="true" />
-              <span>{item.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Section: Gestão */}
-        <div className="sidebar-nav-section">
-          <div className="sidebar-nav-section-label">Gestão</div>
-          {NAV_ITEMS.filter((i) => ['buildings', 'technicians', 'files', 'calendar'].includes(i.id)).map((item) => (
-            <button
-              className="sidebar-link"
-              key={item.id}
-              title={collapsed && !mobileOpen ? item.label : undefined}
-              onClick={() => { if (mobileOpen) onCloseMobile() }}
-            >
-              <i className={item.icon} aria-hidden="true" />
-              <span>{item.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Section: Sistema */}
-        <div className="sidebar-nav-section">
-          <div className="sidebar-nav-section-label">Sistema</div>
-          {NAV_ITEMS.filter((i) => ['ai', 'settings'].includes(i.id)).map((item) => (
-            <button
-              className={`sidebar-link${item.id === 'ai' ? ' animate-pulse-glow' : ''}`}
-              key={item.id}
-              title={collapsed && !mobileOpen ? item.label : undefined}
-              onClick={() => { if (mobileOpen) onCloseMobile() }}
-            >
-              <i className={item.icon} aria-hidden="true" />
-              <span>{item.label}</span>
-            </button>
-          ))}
-        </div>
+        {Object.entries(sections).map(([key, sec]) => (
+          <div className="sidebar-nav-section" key={key}>
+            <div className="sidebar-nav-section-label">{sec.label}</div>
+            {sec.items.map(item => (
+              <button
+                key={item.id}
+                className={`sidebar-link${currentRoute === item.id ? ' active' : ''}`}
+                title={collapsed && !mobileOpen ? item.label : undefined}
+                onClick={() => handleNav(item.id)}
+              >
+                <i className={item.icon} aria-hidden="true" />
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </div>
+        ))}
       </nav>
+      {/* User area at bottom */}
+      <div style={{ padding: '12px', borderTop: '1px solid var(--border)', marginTop: 'auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 6px' }}>
+          <i className="fas fa-circle" style={{ color: 'var(--accent-green)', fontSize: 8 }} />
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Sistema operacional</span>
+        </div>
+        {!collapsed && (
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', padding: '0 22px', marginTop: 2 }}>
+            v2.0.0
+          </div>
+        )}
+      </div>
     </aside>
   )
 }
