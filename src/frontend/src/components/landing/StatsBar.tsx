@@ -61,6 +61,7 @@ export function StatsBar() {
     <section className="l-stats">
       <div className="l-stats-inner l-reveal">
         <div className="l-stats-trust">
+          <img src="/app/assets/icon_manugent.png" alt="" className="l-stats-trust-icon" />
           <span className="l-stats-trust-label">Confiado por equipas em todo o mundo</span>
         </div>
         <div className="l-stats-grid">
