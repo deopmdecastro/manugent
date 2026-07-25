@@ -1338,6 +1338,9 @@ app.notFound((c) => c.json({ error: 'Not found' }, 404))
 // Serve react/index.html for client-side routed paths (BrowserRouter)
 app.get('/landing', (c) => c.redirect('/react/index.html'))
 app.get('/login', (c) => c.redirect('/react/index.html'))
+app.get('/dashboard', (c) => c.redirect('/app/index.html'))
+app.get('/dashboard/*', (c) => c.redirect('/app/index.html'))
+app.get('/settings', (c) => c.redirect('/app/index.html'))
 
 app.get('/', (c) => c.redirect('/react/index.html'))
 app.onError((error, c) => {

@@ -18,7 +18,6 @@ export function LoginPage() {
     }
     try {
       await login(email)
-      // Redirect to the legacy dashboard app
       window.location.href = '/app/'
     } catch {
       setError('Erro ao iniciar sessão. Tenta novamente.')
@@ -27,7 +26,6 @@ export function LoginPage() {
 
   return (
     <div className="login-page">
-      {/* Decorative orbs */}
       <div style={{ position: 'absolute', top: '10%', left: '10%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.15), transparent)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', bottom: '5%', right: '8%', width: 250, height: 250, borderRadius: '50%', background: 'radial-gradient(circle, rgba(6,182,212,0.1), transparent)', pointerEvents: 'none' }} />
 
@@ -38,11 +36,11 @@ export function LoginPage() {
         <h1 className="login-title">Bem-vindo de volta</h1>
         <p className="login-subtitle">Acede à tua plataforma de manutenção inteligente</p>
 
-        {/* Quick role selector */}
         <div style={{ display: 'flex', gap: 6, marginBottom: 24, justifyContent: 'center' }}>
           {(['admin','gestor','tecnico','cliente'] as const).map(role => (
             <button
               key={role}
+              type="button"
               className={`badge ${email.includes(role) ? 'badge-primary' : ''}`}
               style={{
                 cursor: 'pointer', padding: '6px 12px', fontSize: 12,

@@ -143,7 +143,6 @@ export function useAuth() {
 
   const logout = useCallback(() => {
     persist(null)
-    window.location.href = '/login'
   }, [])
 
   const hasPermission = useCallback((permission: Permission): boolean => {

@@ -12,7 +12,6 @@ export interface RouteConfig {
 }
 
 export const ROUTES: RouteConfig[] = [
-  // ── Public ──
   { path: 'landing', component: LandingPage, public: true, label: 'Início' },
   { path: 'login', component: LoginPage, public: true, label: 'Login' },
 ]

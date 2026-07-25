@@ -79,9 +79,10 @@
 
 /* ── Scroll reveal (fade-up on enter viewport) ── */
 .l-reveal {
-  opacity: 0; transform: translateY(24px);
+  opacity: 1; transform: translateY(0);
   transition: opacity .7s cubic-bezier(.4,0,.2,1), transform .7s cubic-bezier(.4,0,.2,1);
 }
+.l-page.l-reveal-ready .l-reveal:not(.l-in-view) { opacity: 0; transform: translateY(24px); }
 .l-reveal.l-in-view { opacity: 1; transform: translateY(0); }
 .l-reveal-delay-1 { transition-delay: .12s; }
 @media (prefers-reduced-motion: reduce) {

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { Navbar } from '../components/landing/Navbar'
 import { Hero } from '../components/landing/Hero'
 import { StatsBar } from '../components/landing/StatsBar'
@@ -7,9 +8,44 @@ import { CTASection } from '../components/landing/CTASection'
 import { Footer } from '../components/landing/Footer'
 
 export function LandingPage() {
+  const pageRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const pageElement = pageRef.current
+    if (!pageElement) return
+
+    const revealElements = Array.from(pageElement.querySelectorAll<HTMLElement>('.l-reveal'))
+    const showElement = (element: HTMLElement) => element.classList.add('l-in-view')
+
+    if (!('IntersectionObserver' in window)) {
+      revealElements.forEach(showElement)
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            showElement(entry.target as HTMLElement)
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { rootMargin: '0px 0px -10% 0px', threshold: 0.08 },
+    )
+
+    revealElements.forEach(element => {
+      const rect = element.getBoundingClientRect()
+      if (rect.top < window.innerHeight && rect.bottom > 0) showElement(element)
+      else observer.observe(element)
+    })
+    pageElement.classList.add('l-reveal-ready')
+
+    return () => observer.disconnect()
+  }, [])
 
   return (
-    <div className="l-page">
+    <div ref={pageRef} className="l-page">
       {/* Ambient background layer: noise + slow-drifting particles */}
       <div className="l-noise" aria-hidden="true" />
       <div className="l-particles" aria-hidden="true">

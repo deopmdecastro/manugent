@@ -5486,9 +5486,31 @@ function loadData() {
       APP.notifications = d.notifications || [];
       APP.authToken = localStorage.getItem('mg_auth_token') || null;
       if (APP.user && !APP.authToken) APP.user = null;
-      if (APP.user && APP.user.provider !== 'google' && !APP.users.some(function(u) { return u.email === APP.user.email; })) APP.user = null;
+      if (APP.user && APP.authToken) ensureCurrentUserAccount();
+      if (APP.user && APP.user.provider !== 'google' && !APP.users.some(function(u) { return String(u.email || '').toLowerCase() === String(APP.user.email || '').toLowerCase(); })) APP.user = null;
     }
   } catch(e) {}
+}
+function ensureCurrentUserAccount() {
+  if (!APP.user || !APP.user.email || APP.user.provider === 'google') return;
+  APP.users = APP.users || [];
+  var email = String(APP.user.email).toLowerCase();
+  var role = normalizeRole(APP.user.role || 'admin');
+  var account = APP.users.find(function(u) { return String(u.email || '').toLowerCase() === email; });
+  if (!account) {
+    APP.users.push({
+      name: APP.user.name || APP.user.email,
+      email: APP.user.email,
+      password: '',
+      role: role,
+      externalAuth: true,
+      createdAt: new Date().toISOString()
+    });
+  } else {
+    account.name = account.name || APP.user.name || APP.user.email;
+    account.role = account.role || role;
+  }
+  APP.user.role = role;
 }
 function ensureSeedAdmin() {
   APP.users = APP.users || [];
@@ -5516,12 +5538,19 @@ function revokeAuthSession() {
   APP.user = null;
   localStorage.removeItem('mg_auth_token');
 }
+function redirectToReactRoute(path) {
+  if (window.location.protocol === 'file:') {
+    showLanding();
+    return;
+  }
+  window.location.replace(path);
+}
 
 loadData();
 ensureSeedAdmin();
 window.onload = function() {
   if (APP.user) { showApp(); }
-  else { showLanding(); }
+  else { redirectToReactRoute('/landing'); return; }
   initSampleData();
   ensureWorkInstallationExamples();
   setupMascotModels();
@@ -6241,7 +6270,7 @@ function doGoogleLogin() {
   saveData(); showApp();
 }
 function doLogout() {
-  revokeAuthSession(); saveData(); showLanding();
+  revokeAuthSession(); saveData(); redirectToReactRoute('/login');
 }
 function updateUserUI() {
   if (!APP.user) return;
