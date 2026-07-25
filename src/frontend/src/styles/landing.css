@@ -40,7 +40,7 @@
   --l-badge-bg: rgba(17,22,58,.64);
   --l-nav-scroll-bg: rgba(9,9,15,.82);
   --l-title-glow: rgba(255,255,255,.08);
-  --l-bg-desktop: linear-gradient(180deg, #07081d 0%, #080923 48%, #090a24 100%);
+  --l-bg-desktop: linear-gradient(160deg, #09090F 0%, #0d0d1f 40%, #0d0d1a 100%);
 }
 
 /* ── Light theme override (scoped to the landing page) ───────────────────── */
@@ -91,10 +91,10 @@
   content: '';
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background:
-    radial-gradient(ellipse 70% 50% at 50% -5%, rgba(124,58,237,.10), transparent 55%),
-    radial-gradient(ellipse 50% 40% at 85% 70%, rgba(99,102,241,.06), transparent 55%),
-    radial-gradient(ellipse 40% 30% at 15% 50%, rgba(56,189,248,.03), transparent 55%),
-    var(--l-bg);
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(124,58,237,.08), transparent 55%),
+    radial-gradient(ellipse 60% 50% at 80% 80%, rgba(56,189,248,.06), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(139,92,246,.04), transparent 60%),
+    var(--l-bg-desktop);
 }
 
 /* ── Ambient noise texture (very soft, breaks up flat gradients) ── */
@@ -771,9 +771,9 @@
 @media (min-width: 769px) {
   .l-page::before {
     background:
-      radial-gradient(ellipse 58% 40% at 70% 22%, rgba(108,48,255,.18), transparent 58%),
-      radial-gradient(ellipse 42% 30% at 18% 54%, rgba(57,73,255,.08), transparent 62%),
-      radial-gradient(ellipse 78% 55% at 50% 112%, rgba(82,38,210,.12), transparent 64%),
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(124,58,237,.08), transparent 55%),
+      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(56,189,248,.06), transparent 55%),
+      radial-gradient(ellipse 50% 40% at 50% 50%, rgba(139,92,246,.04), transparent 60%),
       var(--l-bg-desktop);
   }
 
