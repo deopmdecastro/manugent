@@ -54,6 +54,14 @@ export function LoginPage() {
 
   return (
     <div className="auth-page" data-theme={lightPreview ? 'light' : 'dark'}>
+      {/* Ambient background layer: noise + slow-drifting particles (matching landing page) */}
+      <div className="auth-noise" aria-hidden="true" />
+      <div className="auth-particles" aria-hidden="true">
+        {Array.from({ length: 14 }).map((_, i) => (
+          <span key={i} className={`auth-particle auth-particle-${(i % 4) + 1}`} />
+        ))}
+      </div>
+
       <header className="auth-topbar">
         <Link to="/landing" className="auth-brand">
           <img src="/app/assets/ManuGent_logo.png" alt="ManuGent" className="auth-brand-logo" />
