@@ -96,8 +96,14 @@ function HeroVisual() {
       <div className="l-hero-glow l-hero-glow-2" />
       <div className="l-hero-glow l-hero-glow-3" />
 
-      {/* Pedestal glow — a large ellipse under the robot */}
-      <div className="l-hero-pedestal" />
+      {/* Pedestal base image under the robot */}
+      <div className="l-hero-pedestal">
+        <img
+          src="/app/assets/pedestal_base.png"
+          alt=""
+          className="l-hero-pedestal-img"
+        />
+      </div>
 
       {/* Robot */}
       <div className="l-hero-robot">
