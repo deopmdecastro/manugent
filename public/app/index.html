@@ -5499,22 +5499,29 @@ function ensurePageBackButtons() {
     var header = pageEl.querySelector(':scope > .flex.items-center.justify-between.mb-6');
     if (!header || header.querySelector('.page-back-btn')) return;
     var actions = header.children[1];
-    if (!actions) {
-      actions = document.createElement('div');
-      actions.className = 'flex gap-2';
-      header.appendChild(actions);
-    } else if (!actions.classList.contains('flex')) {
-      var wrap = document.createElement('div');
-      wrap.className = 'flex gap-2';
-      header.appendChild(wrap);
-      actions = wrap;
-    }
     var btn = document.createElement('button');
     btn.className = 'btn-secondary page-back-btn';
     btn.type = 'button';
     btn.innerHTML = '<i class="fas fa-arrow-left"></i> Voltar';
     btn.onclick = goBackPage;
-    actions.appendChild(btn);
+    if (!actions) {
+      // No actions container yet — create one with just the back button
+      actions = document.createElement('div');
+      actions.className = 'flex items-center gap-2';
+      actions.appendChild(btn);
+      header.appendChild(actions);
+    } else if (actions.classList.contains('flex') && actions.classList.contains('gap-2')) {
+      // Already a flex container with buttons (e.g. "Novo" + optional extras)
+      // Insert back button as the FIRST child so it appears on the left of the group
+      actions.insertBefore(btn, actions.firstChild);
+    } else {
+      // Single button/child — wrap existing + back into a flex row
+      var wrap = document.createElement('div');
+      wrap.className = 'flex items-center gap-2';
+      wrap.appendChild(btn);
+      wrap.appendChild(actions);
+      header.appendChild(wrap);
+    }
   });
 }
 
