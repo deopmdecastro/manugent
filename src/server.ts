@@ -9,6 +9,7 @@ import { Hono, type Context } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { Pool } from 'pg'
+import { fuzzySearch, disambiguate, processWithCorrections, buildNLPContextPrefix, type FuzzyMatch } from './lib/fuzzy-search.js'
 
 // ── Configuration ───────────────────────────────────────────────────────────
 
@@ -582,6 +583,7 @@ function buildContextMessage(context: Record<string, unknown>): string {
     })
   }
 
+  lines.push('\nDICA: Use GET /api/fuzzy/:entity?q=QUERY para pesquisar equipamentos, tecnicos, clientes ou OTs com tolerancia a erros ortograficos. Entidades: equipment, technicians, users, clients, work-orders.')
   return lines.join('\n')
 }
 
@@ -668,6 +670,10 @@ app.post('/api/ai/chat', async (c) => {
       return jsonError(c, 'message é obrigatório')
     }
 
+    // NLP pre-processing: spell correction + intent detection
+    const nlp = processWithCorrections(body.message)
+    const nlpPrefix = buildNLPContextPrefix(nlp)
+
     const contextMessage = buildContextMessage(body.context || {})
 
     // Build messages array for the AI
@@ -675,6 +681,10 @@ app.post('/api/ai/chat', async (c) => {
       { role: 'system', content: MANUGENT_SYSTEM_PROMPT },
     ]
 
+    // Inject NLP corrections as system context
+    if (nlpPrefix) {
+      messages.push({ role: 'system', content: nlpPrefix })
+    }
     // Add context as system message if available
     if (contextMessage) {
       messages.push({ role: 'system', content: contextMessage })
@@ -726,6 +736,96 @@ app.post('/api/ai/chat', async (c) => {
       }, error.code === 'provider_quota' ? 402 : 503)
     }
     return jsonError(c, msg, 500)
+  }
+})
+
+
+// ── Routes: Fuzzy Search ────────────────────────────────────────────────────
+
+app.get('/api/fuzzy/:entity', async (c) => {
+  try {
+    const db = requirePool()
+    const entity = c.req.param('entity')
+    const query = c.req.query('q') || ''
+    const limit = Math.min(Number(c.req.query('limit') || '10'), 20)
+
+    if (!query) return jsonError(c, 'Query string ?q= is required')
+
+    let rows: Array<{ id: string; name: string; extra?: string }> = []
+
+    switch (entity) {
+      case 'equipment': {
+        const result = await db.query(
+          `select e.id, e.name, e.code, e.location, e.brand, e.model, c.name as client_name
+           from equipment e join clients c on c.id = e.client_id
+           order by e.name asc`
+        )
+        rows = result.rows.map(r => ({
+          id: r.id,
+          name: r.name,
+          extra: `${r.code || ''} — ${r.brand || ''} ${r.model || ''} — ${r.location || ''} — ${r.client_name}`,
+        }))
+        break
+      }
+      case 'technicians':
+      case 'users': {
+        const result = await db.query(
+          `select u.id, u.name, u.email, u.role, t.name as team_name
+           from users u left join teams t on t.id = u.team_id
+           where u.role in ('technician', 'admin', 'supervisor')
+           order by u.name asc`
+        )
+        rows = result.rows.map(r => ({
+          id: r.id,
+          name: r.name,
+          extra: `${r.role}${r.team_name ? ' — ' + r.team_name : ''}${r.email ? ' — ' + r.email : ''}`,
+        }))
+        break
+      }
+      case 'clients': {
+        const result = await db.query('select id, name, email, phone from clients order by name asc')
+        rows = result.rows.map(r => ({
+          id: r.id,
+          name: r.name,
+          extra: `${r.email || ''}${r.phone ? ' — ' + r.phone : ''}`,
+        }))
+        break
+      }
+      case 'work-orders': {
+        const result = await db.query(
+          `select wo.id::text, wo.title as name, wo.status, wo.priority, e.name as equipment_name, c.name as client_name
+           from work_orders wo
+           join equipment e on e.id = wo.equipment_id
+           join clients c on c.id = wo.client_id
+           where wo.status not in ('completed', 'cancelled')
+           order by wo.created_at desc
+           limit 100`
+        )
+        rows = result.rows.map(r => ({
+          id: r.id,
+          name: r.title,
+          extra: `${r.status} | ${r.priority} | ${r.equipment_name} | ${r.client_name}`,
+        }))
+        break
+      }
+      case 'materials':
+        return c.json({ entity, query, matches: [], suggestion: 'Pesquisa de materiais indisponível na BD.' })
+      default:
+        return jsonError(c, `Entidade "${entity}" nao suportada. Use: equipment, technicians, users, clients, work-orders, materials`)
+    }
+
+    const matches = fuzzySearch(query, rows, (r) => r.name + ' ' + (r.extra || ''), 0.4, limit)
+    const result = disambiguate(query, rows, (r) => r.name + ' ' + (r.extra || ''), 0.4)
+
+    return c.json({
+      entity, query,
+      matches: matches.map(m => ({ id: m.item.id, name: m.item.name, extra: m.item.extra, score: Math.round(m.score * 100) / 100 })),
+      exactMatch: result.exact ? { id: result.exact.id, name: result.exact.name, extra: result.exact.extra } : null,
+      suggestion: result.needsConfirmation ? result.suggestion : '',
+      needsConfirmation: result.needsConfirmation,
+    })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Fuzzy search failed')
   }
 })
 
