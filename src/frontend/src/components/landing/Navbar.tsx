@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 
 const NAV_LINKS = [
-  { label: 'Funcionalidades', href: '#features' },
-  { label: 'Módulos', href: '#modules' },
-  { label: 'IA', href: '#ai' },
-  { label: 'Preços', href: '#pricing' },
+  { label: 'Funcionalidades', href: '/landing#features' },
+  { label: 'Módulos', href: '/landing#modules' },
+  { label: 'IA', href: '/landing#ai' },
+  { label: 'Preços', href: '/landing#pricing' },
 ]
 
 const RESOURCES_DROPDOWN = [
@@ -29,9 +30,9 @@ export function Navbar() {
   return (
     <nav className={`l-nav${scrolled ? ' is-scrolled' : ''}`}>
       <div className="l-nav-inner">
-        <a href="#top" className="l-nav-logo" aria-label="ManuGent">
+        <Link to="/landing" className="l-nav-logo" aria-label="ManuGent">
           <img src="/app/assets/ManuGent_logo.png" alt="ManuGent" height="38" />
-        </a>
+        </Link>
 
         <div className={`l-nav-links${mobileOpen ? ' is-open' : ''}`}>
           {NAV_LINKS.map(link => (
@@ -59,10 +60,10 @@ export function Navbar() {
         </div>
 
         <div className="l-nav-actions">
-          <a href="#login" className="l-nav-login">Entrar</a>
-          <a href="#login" className="l-btn l-btn-primary l-btn-sm">
+          <Link to="/login" className="l-nav-login">Entrar</Link>
+          <Link to="/login" className="l-btn l-btn-primary l-btn-sm">
             Começar grátis
-          </a>
+          </Link>
         </div>
 
         <button
@@ -74,7 +75,6 @@ export function Navbar() {
         </button>
       </div>
 
-      {/* Mobile overlay */}
       {mobileOpen && <div className="l-nav-overlay" onClick={() => setMobileOpen(false)} />}
     </nav>
   )

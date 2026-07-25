@@ -1,61 +1,63 @@
-import { useState, useEffect, useCallback } from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AppShell } from './layouts/AppShell'
 import { AuthGuard } from './guards/AuthGuard'
 import { useAuth } from './hooks/useAuth'
-import { findRoute } from './router/routes'
-
-function useHashRoute() {
-  const [route, setRoute] = useState(() => window.location.hash.slice(1) || 'landing')
-
-  useEffect(() => {
-    const onHashChange = () => setRoute(window.location.hash.slice(1) || 'landing')
-    window.addEventListener('hashchange', onHashChange)
-    return () => window.removeEventListener('hashchange', onHashChange)
-  }, [])
-
-  const navigate = useCallback((path: string) => {
-    window.location.hash = path
-  }, [])
-
-  return { route, navigate, setRoute }
-}
+import { ROUTES } from './router/routes'
 
 export function App() {
-  const { route } = useHashRoute()
-  const { isAuthenticated, user } = useAuth()
-  const config = findRoute(route)
+  const { isAuthenticated } = useAuth()
 
-  // Default to landing if route not found
-  if (!config) {
-    window.location.hash = 'landing'
-    return null
-  }
-
-  // Public routes — no auth or shell
-  if (config.public) {
-    return <config.component />
-  }
-
-  // If not authenticated and route requires auth, show auth guard
-  if (!isAuthenticated && !config.public) {
-    return <AuthGuard><config.component /></AuthGuard>
-  }
-
-  // Authenticated routes with shell
-  if (config.shell) {
-    return (
-      <AppShell>
-        <AuthGuard requiredRole={config.minRole}>
-          <config.component />
-        </AuthGuard>
-      </AppShell>
-    )
-  }
-
-  // Authenticated, no shell
   return (
-    <AuthGuard requiredRole={config.minRole}>
-      <config.component />
-    </AuthGuard>
+    <BrowserRouter>
+      <Routes>
+        {ROUTES.map((r) => {
+          const Component = r.component
+          const key = r.path
+
+          if (r.public) {
+            return <Route key={key} path={`/${key}`} element={<Component />} />
+          }
+
+          if (r.shell) {
+            return (
+              <Route
+                key={key}
+                path={`/${key}`}
+                element={
+                  isAuthenticated ? (
+                    <AppShell>
+                      <AuthGuard requiredRole={r.minRole}>
+                        <Component />
+                      </AuthGuard>
+                    </AppShell>
+                  ) : (
+                    <Navigate to="/login" replace />
+                  )
+                }
+              />
+            )
+          }
+
+          return (
+            <Route
+              key={key}
+              path={`/${key}`}
+              element={
+                isAuthenticated ? (
+                  <AuthGuard requiredRole={r.minRole}>
+                    <Component />
+                  </AuthGuard>
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
+          )
+        })}
+
+        {/* Catch-all: redirect to landing */}
+        <Route path="*" element={<Navigate to="/landing" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }

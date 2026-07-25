@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { ROUTES } from '../../router/routes'
 
 type SidebarProps = {
@@ -8,21 +8,15 @@ type SidebarProps = {
 }
 
 export function Sidebar({ collapsed, mobileOpen, onCloseMobile }: SidebarProps) {
-  const [currentRoute, setCurrentRoute] = useState(() => window.location.hash.slice(1) || 'dashboard')
-
-  useEffect(() => {
-    const onHash = () => setCurrentRoute(window.location.hash.slice(1) || 'dashboard')
-    window.addEventListener('hashchange', onHash)
-    return () => window.removeEventListener('hashchange', onHash)
-  }, [])
+  const navigate = useNavigate()
+  const location = useLocation()
 
   const navItems = ROUTES.filter(r => r.shell && r.label && r.icon).map(r => ({
     id: r.path,
     label: r.label!,
     icon: r.icon!,
-    section: (['dashboard','ots','equipment','clients'].includes(r.path) ? 'principal' :
-              ['buildings','technicians','projects','presets','editor','files','calendar'].includes(r.path) ? 'gestao' :
-              'sistema'),
+    section: r.path.startsWith('dashboard') ? 'principal' :
+              ['projects','presets'].includes(r.path) ? 'gestao' : 'sistema',
   }))
 
   const sections: Record<string, { label: string; items: typeof navItems }> = {
@@ -31,18 +25,18 @@ export function Sidebar({ collapsed, mobileOpen, onCloseMobile }: SidebarProps) 
     sistema: { label: 'Sistema', items: navItems.filter(i => i.section === 'sistema') },
   }
 
-  const handleNav = (route: string) => {
-    window.location.hash = route
+  const handleNav = (path: string) => {
+    navigate(`/${path}`)
     if (mobileOpen) onCloseMobile()
   }
 
   return (
     <aside className={`sidebar${mobileOpen ? ' open' : ''}`} aria-label="Navegação principal">
       <div className="sidebar-brand">
-        <span onClick={() => handleNav('dashboard')} style={{ cursor: 'pointer' }}>
+        <span onClick={() => handleNav('dashboard/admin')} style={{ cursor: 'pointer' }}>
           <img src="/app/assets/ManuGent_logo.png" alt="ManuGent" />
         </span>
-        <span onClick={() => handleNav('dashboard')} style={{ cursor: 'pointer' }}>
+        <span onClick={() => handleNav('dashboard/admin')} style={{ cursor: 'pointer' }}>
           <img src="/app/assets/icon_manugent.png" alt="M" className="sidebar-brand-icon" />
         </span>
       </div>
@@ -53,7 +47,7 @@ export function Sidebar({ collapsed, mobileOpen, onCloseMobile }: SidebarProps) 
             {sec.items.map(item => (
               <button
                 key={item.id}
-                className={`sidebar-link${currentRoute === item.id ? ' active' : ''}`}
+                className={`sidebar-link${location.pathname === `/${item.id}` ? ' active' : ''}`}
                 title={collapsed && !mobileOpen ? item.label : undefined}
                 onClick={() => handleNav(item.id)}
               >
@@ -64,17 +58,11 @@ export function Sidebar({ collapsed, mobileOpen, onCloseMobile }: SidebarProps) 
           </div>
         ))}
       </nav>
-      {/* User area at bottom */}
       <div style={{ padding: '12px', borderTop: '1px solid var(--border)', marginTop: 'auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 6px' }}>
           <i className="fas fa-circle" style={{ color: 'var(--accent-green)', fontSize: 8 }} />
           <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Sistema operacional</span>
         </div>
-        {!collapsed && (
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', padding: '0 22px', marginTop: 2 }}>
-            v2.0.0
-          </div>
-        )}
       </div>
     </aside>
   )

@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { Link } from 'react-router-dom'
 
 export function Hero() {
   return (
@@ -30,10 +31,10 @@ export function Hero() {
 
           {/* CTAs */}
           <div className="l-hero-actions">
-            <a href="#login" className="l-btn l-btn-primary l-btn-lg">
+            <Link to="/login" className="l-btn l-btn-primary l-btn-lg">
               Começar grátis <span className="l-btn-arrow">→</span>
-            </a>
-            <a href="#features" className="l-btn l-btn-ghost">
+            </Link>
+            <Link to="/landing#features" className="l-btn l-btn-ghost">
               Ver funcionalidades
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2" />
@@ -41,7 +42,7 @@ export function Hero() {
                 <rect x="1.5" y="9" width="5.5" height="5.5" rx="1.2" />
                 <rect x="9" y="9" width="5.5" height="5.5" rx="1.2" />
               </svg>
-            </a>
+            </Link>
           </div>
 
           {/* Perks */}
