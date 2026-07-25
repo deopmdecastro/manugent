@@ -1334,6 +1334,11 @@ app.post('/api/client-portal/quotes/:quoteId/approve', async (c) => {
 // ── Catch-all ─────────────────────────────────────────────────────────────────
 
 app.notFound((c) => c.json({ error: 'Not found' }, 404))
+// ── React SPA fallback ────────────────────────────────────────────────────
+// Serve react/index.html for client-side routed paths (BrowserRouter)
+app.get('/landing', (c) => c.redirect('/react/index.html'))
+app.get('/login', (c) => c.redirect('/react/index.html'))
+
 app.get('/', (c) => c.redirect('/react/index.html'))
 app.onError((error, c) => {
   console.error('[Unhandled Error]', error)
