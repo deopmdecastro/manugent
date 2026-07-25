@@ -407,7 +407,7 @@
 .l-hero-pedestal {
   position: absolute; bottom: 10px; left: 50%;
   transform: translateX(-50%);
-  width: 720px; height: 330px; z-index: 1;
+  width: 850px; height: 400px; z-index: 1;
   display: flex; align-items: flex-end; justify-content: center;
   pointer-events: none;
 }
@@ -423,7 +423,7 @@
 
 /* Robot */
 .l-hero-robot {
-  position: absolute; bottom: 86px; left: 50%; transform: translateX(-50%);
+  position: absolute; bottom: 116px; left: 50%; transform: translateX(-50%);
   z-index: 2;
   animation: l-robot-float 3.8s ease-in-out infinite;
   filter: drop-shadow(0 16px 48px rgba(124,58,237,.35));
@@ -1004,12 +1004,12 @@
 
   .l-hero-pedestal {
     bottom: 4px;
-    width: 880px;
-    height: 390px;
+    width: 1040px;
+    height: 470px;
   }
 
   .l-hero-robot {
-    bottom: 126px;
+    bottom: 166px;
   }
 
   .l-hero-robot img {
