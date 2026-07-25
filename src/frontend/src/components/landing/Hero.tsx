@@ -145,24 +145,24 @@ function HeroVisual() {
       />
 
       {/* ── Connecting Lines (SVG) ── */}
-      <svg className="l-hero-lines" viewBox="0 0 600 500" fill="none">
+      <svg className="l-hero-lines" viewBox="0 0 600 560" fill="none">
         <defs>
           <linearGradient id="lineGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="rgba(129,140,248,.35)" />
+            <stop offset="0%" stopColor="rgba(129,140,248,.4)" />
             <stop offset="100%" stopColor="rgba(99,102,241,.05)" />
           </linearGradient>
           <linearGradient id="lineGrad2" x1="100%" y1="0%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="rgba(129,140,248,.35)" />
+            <stop offset="0%" stopColor="rgba(129,140,248,.4)" />
             <stop offset="100%" stopColor="rgba(99,102,241,.05)" />
           </linearGradient>
         </defs>
-        {/* Lines from robot center to each card */}
-        <path d="M300 250 Q200 120 110 70" stroke="url(#lineGrad1)" strokeWidth="1.2" strokeDasharray="4 6" opacity="0.3" />
-        <path d="M300 250 Q400 120 490 70" stroke="url(#lineGrad2)" strokeWidth="1.2" strokeDasharray="4 6" opacity="0.3" />
-        <path d="M300 250 Q180 220 100 190" stroke="url(#lineGrad1)" strokeWidth="1" strokeDasharray="3 7" opacity="0.25" />
-        <path d="M300 250 Q420 220 500 190" stroke="url(#lineGrad2)" strokeWidth="1" strokeDasharray="3 7" opacity="0.25" />
-        <path d="M300 250 Q200 340 110 380" stroke="url(#lineGrad1)" strokeWidth="1" strokeDasharray="4 6" opacity="0.2" />
-        <path d="M300 250 Q400 340 490 380" stroke="url(#lineGrad2)" strokeWidth="1" strokeDasharray="4 6" opacity="0.2" />
+        {/* Lines from robot center to each card, matching the tightened cluster */}
+        <path d="M300 310 Q220 190 148 108" stroke="url(#lineGrad1)" strokeWidth="1.4" strokeDasharray="4 6" opacity="0.35" />
+        <path d="M300 310 Q380 190 452 108" stroke="url(#lineGrad2)" strokeWidth="1.4" strokeDasharray="4 6" opacity="0.35" />
+        <path d="M300 310 Q190 280 100 258" stroke="url(#lineGrad1)" strokeWidth="1.2" strokeDasharray="3 7" opacity="0.3" />
+        <path d="M300 310 Q410 280 500 258" stroke="url(#lineGrad2)" strokeWidth="1.2" strokeDasharray="3 7" opacity="0.3" />
+        <path d="M300 310 Q220 370 158 418" stroke="url(#lineGrad1)" strokeWidth="1.2" strokeDasharray="4 6" opacity="0.28" />
+        <path d="M300 310 Q380 370 442 418" stroke="url(#lineGrad2)" strokeWidth="1.2" strokeDasharray="4 6" opacity="0.28" />
       </svg>
     </div>
   )
@@ -172,12 +172,12 @@ function HeroVisual() {
 type CardPos = 'top-left' | 'top-right' | 'mid-left' | 'mid-right' | 'bottom-left' | 'bottom-right'
 
 const CARD_POSITIONS: Record<CardPos, { top: string; left?: string; right?: string }> = {
-  'top-left':     { top: '2%',  left: '-4%' },
-  'top-right':    { top: '2%',  right: '-4%' },
-  'mid-left':     { top: '26%', left: '-8%' },
-  'mid-right':    { top: '26%', right: '-8%' },
-  'bottom-left':  { top: '68%', left: '-4%' },
-  'bottom-right': { top: '68%', right: '-4%' },
+  'top-left':     { top: '4%',  left: '4%' },
+  'top-right':    { top: '4%',  right: '4%' },
+  'mid-left':     { top: '30%', left: '-2%' },
+  'mid-right':    { top: '30%', right: '-2%' },
+  'bottom-left':  { top: '62%', left: '6%' },
+  'bottom-right': { top: '62%', right: '6%' },
 }
 
 function FloatingCard({ pos, label, value, sub, color }: {

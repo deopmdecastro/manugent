@@ -290,7 +290,7 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 .l-hero-scene {
   position: relative;
-  width: 100%; height: 520px;
+  width: 100%; height: 560px;
   display: flex; align-items: center; justify-content: center;
 }
 
@@ -300,8 +300,8 @@
   pointer-events: none;
 }
 .l-hero-glow-1 {
-  width: 280px; height: 280px; background: rgba(124,58,237,.22);
-  top: 15%; left: 50%; transform: translateX(-50%);
+  width: 340px; height: 340px; background: rgba(124,58,237,.24);
+  top: 12%; left: 50%; transform: translateX(-50%);
   animation: l-glow-breathe 4s ease-in-out infinite;
 }
 .l-hero-glow-2 {
@@ -321,16 +321,16 @@
 
 /* Pedestal — glowing ellipse under robot */
 .l-hero-pedestal {
-  position: absolute; bottom: 44px; left: 50%;
+  position: absolute; bottom: 52px; left: 50%;
   transform: translateX(-50%);
-  width: 200px; height: 20px;
-  background: radial-gradient(ellipse, rgba(124,58,237,.55) 0%, transparent 70%);
-  border-radius: 50%; filter: blur(14px);
+  width: 260px; height: 28px;
+  background: radial-gradient(ellipse, rgba(124,58,237,.7) 0%, transparent 70%);
+  border-radius: 50%; filter: blur(16px);
   animation: l-pedestal-pulse 3s ease-in-out infinite;
 }
 @keyframes l-pedestal-pulse {
-  0%, 100% { transform: translateX(-50%) scale(1); opacity: .7; }
-  50% { transform: translateX(-50%) scale(1.2); opacity: 1; }
+  0%, 100% { transform: translateX(-50%) scale(1); opacity: .75; }
+  50% { transform: translateX(-50%) scale(1.15); opacity: 1; }
 }
 
 /* Robot */
@@ -340,7 +340,7 @@
   animation: l-robot-float 3.8s ease-in-out infinite;
   filter: drop-shadow(0 16px 48px rgba(124,58,237,.35));
 }
-.l-hero-robot img { width: 170px; height: auto; display: block; }
+.l-hero-robot img { width: 230px; height: auto; display: block; }
 @keyframes l-robot-float {
   0%, 100% { transform: translateX(-50%) translateY(0); }
   50% { transform: translateX(-50%) translateY(-10px); }
@@ -602,8 +602,8 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 1024px) {
   .l-hero-grid { grid-template-columns: 1fr; gap: 56px; }
-  .l-hero-scene { height: 440px; }
-  .l-hero-robot img { width: 140px; }
+  .l-hero-scene { height: 460px; }
+  .l-hero-robot img { width: 190px; }
   .l-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 28px; }
   .l-features-grid { grid-template-columns: repeat(2, 1fr); }
   .l-footer-grid { grid-template-columns: repeat(2, 1fr); gap: 36px; }
@@ -638,8 +638,8 @@
   .l-hero { padding: 110px 20px 60px; }
   .l-hero-title { font-size: 34px; }
   .l-hero-desc { font-size: 15px; }
-  .l-hero-scene { height: 340px; }
-  .l-hero-robot img { width: 110px; }
+  .l-hero-scene { height: 360px; }
+  .l-hero-robot img { width: 150px; }
   .l-hero-perks { flex-direction: column; flex-wrap: wrap; gap: 14px; }
   .l-float-card { padding: 10px 13px; }
   .l-float-card-value { font-size: 17px; }
