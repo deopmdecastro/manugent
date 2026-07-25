@@ -1334,7 +1334,7 @@ app.post('/api/client-portal/quotes/:quoteId/approve', async (c) => {
 // ── Catch-all ─────────────────────────────────────────────────────────────────
 
 app.notFound((c) => c.json({ error: 'Not found' }, 404))
-app.get('/', (c) => c.redirect('/app/index.html'))
+app.get('/', (c) => c.redirect('/react/index.html'))
 app.onError((error, c) => {
   console.error('[Unhandled Error]', error)
   if (error instanceof DatabaseNotConfiguredError) {
