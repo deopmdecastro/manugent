@@ -222,7 +222,7 @@ button { font: inherit; }
 .auth-card-links p a { margin-left: 4px; font-weight: 600; }
 
 /* Footer */
-.auth-footer { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 48px 48px 32px; color: var(--text-muted); font-size: 13px; }
+.auth-footer { position: relative; z-index: 1; max-width: 1280px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 48px 48px 32px; color: var(--text-muted); font-size: 13px; }
 .auth-footer p { text-align: center; }
 .auth-version-badge, .auth-secure-badge { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; background: var(--glass-bg); border: 1px solid var(--glass-border); font-weight: 600; white-space: nowrap; }
 .auth-version-badge i { font-size: 6px; color: #34d399; }
