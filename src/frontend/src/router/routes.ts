@@ -3,8 +3,6 @@ import type { Role } from '../hooks/useAuth'
 import { DashboardPage } from '../pages/DashboardPage'
 import { LoginPage } from '../pages/LoginPage'
 import { LandingPage } from '../pages/LandingPage'
-import { ProjectsPage } from '../pages/ProjectsPage'
-import { PresetsPage } from '../pages/PresetsPage'
 import { UserDashboardPage } from '../pages/user/UserDashboardPage'
 import { SettingsPage } from '../pages/SettingsPage'
 
@@ -30,8 +28,6 @@ export const ROUTES: RouteConfig[] = [
   { path: 'dashboard/clients', component: DashboardPage, shell: true, label: 'Clientes', icon: 'fas fa-briefcase' },
   { path: 'dashboard/buildings', component: DashboardPage, shell: true, label: 'Edifícios', icon: 'fas fa-building' },
   { path: 'dashboard/technicians', component: DashboardPage, shell: true, label: 'Técnicos', icon: 'fas fa-hard-hat' },
-  { path: 'projects', component: ProjectsPage, shell: true, label: 'Projetos', icon: 'fas fa-diagram-project' },
-  { path: 'presets', component: PresetsPage, shell: true, label: 'Presets', icon: 'fas fa-layer-group' },
   { path: 'dashboard/files', component: DashboardPage, shell: true, label: 'Ficheiros', icon: 'fas fa-folder-open' },
   { path: 'dashboard/ai', component: DashboardPage, shell: true, label: 'Assistente IA', icon: 'fas fa-robot' },
   { path: 'dashboard/calendar', component: DashboardPage, shell: true, label: 'Calendário', icon: 'fas fa-calendar-alt' },
