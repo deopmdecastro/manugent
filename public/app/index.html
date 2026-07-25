@@ -13,25 +13,61 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
+      /* ── Backgrounds (landing-aligned) ── */
       --bg-primary: #09090F;
-      --bg-secondary: #121224;
-      --bg-card: #121224;
-      --bg-card-hover: #1a1a38;
+      --bg-secondary: #0d0d1f;
+      --bg-card: rgba(18,18,36,0.65);
+      --bg-card-solid: #121224;
+      --bg-card-hover: rgba(18,18,36,0.85);
       --bg-sidebar: #0a0b1e;
+      --bg-desktop: linear-gradient(160deg, #09090F 0%, #0d0d1f 40%, #0d0d1a 100%);
+
+      /* ── Surfaces / Glass layers ── */
+      --surface-a: rgba(18,18,36,0.4);
+      --surface-b: rgba(18,18,36,0.6);
+      --surface-c: rgba(18,18,36,0.9);
+      --surface-d: rgba(15,15,30,0.72);
+      --surface-e: rgba(15,15,28,0.96);
+      --surface-hover: rgba(255,255,255,0.04);
+      --surface-hover-strong: rgba(255,255,255,0.1);
+
+      /* ── Layout ── */
       --sidebar-width: 232px;
       --sidebar-collapsed-width: 76px;
+
+      /* ── Accent colors ── */
+      --accent: #7C3AED;
       --accent-purple: #7C3AED;
+      --accent-light: #8B5CF6;
       --accent-purple-light: #8B5CF6;
       --accent-blue: #6366F1;
       --accent-green: #10b981;
       --accent-red: #ef4444;
       --accent-yellow: #f59e0b;
       --accent-cyan: #06b6d4;
-      --text-primary: #f1f5f9;
-      --text-secondary: #94a3b8;
-      --text-muted: #475569;
-      --border: rgba(124,58,237,0.18);
-      --border-light: rgba(124,58,237,0.28);
+      --accent-glow: rgba(124,58,237,0.25);
+      --accent-glow-strong: rgba(99,102,241,0.15);
+
+      /* ── Typography ── */
+      --text-primary: #FAFAFA;
+      --text-secondary: #A1A1AA;
+      --text-muted: #71717A;
+
+      /* ── Borders & Separators ── */
+      --border: rgba(255,255,255,0.08);
+      --border-light: rgba(255,255,255,0.14);
+      --border-glow: rgba(124,58,237,0.35);
+      --hairline-a: rgba(255,255,255,0.06);
+      --hairline-b: rgba(255,255,255,0.08);
+      --hairline-c: rgba(255,255,255,0.13);
+      --hairline-d: rgba(255,255,255,0.15);
+      --hairline-e: rgba(255,255,255,0.2);
+
+      /* ── Shadows ── */
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2);
+      --shadow: 0 4px 24px rgba(0,0,0,0.3);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,0.5);
+      --shadow-glow: 0 0 30px rgba(124,58,237,0.25);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -70,7 +106,7 @@
       border: 1px solid var(--border);
       border-radius: 12px;
     }
-    .card:hover { border-color: var(--border-light); }
+    .card:hover { border-color: var(--hairline-d); background: var(--bg-card-hover); }
     .page > .card + .card,
     .page > .card + .grid,
     .page > .grid + .card,
@@ -125,8 +161,8 @@
       position: relative;
       white-space: nowrap;
     }
-    .sidebar-item:hover { background: rgba(99,102,241,0.1); color: var(--text-primary); }
-    .sidebar-item.active { background: rgba(99,102,241,0.15); color: var(--accent-purple-light); }
+    .sidebar-item:hover { background: var(--surface-hover); color: var(--text-primary); }
+    .sidebar-item.active { background: var(--surface-hover-strong); color: var(--accent-light); }
     .sidebar-item i { width: 18px; text-align: center; }
     .sidebar-label {
       overflow: hidden;
@@ -250,8 +286,9 @@
       min-height: 42px;
       vertical-align: middle;
     }
-    .btn-primary:hover { background: #5254cc; }
-    .btn-primary i, .btn-secondary i, .btn-ghost i {
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(124,58,237,0.45); }
+    .btn-primary:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(124,58,237,0.3); }
+.btn-primary i, .btn-secondary i, .btn-ghost i {
       align-items: center;
       display: inline-flex;
       flex: 0 0 auto;
@@ -273,7 +310,7 @@
       min-height: 42px;
       vertical-align: middle;
     }
-    .btn-secondary:hover { border-color: var(--accent-purple); color: var(--text-primary); }
+    .btn-secondary:hover { border-color: var(--hairline-e); color: var(--text-primary); background: var(--surface-hover); transform: translateY(-1px); }
     .btn-ghost {
       background: transparent; color: var(--text-secondary);
       border: none; padding: 8px 12px; border-radius: 6px;
@@ -291,7 +328,7 @@
       width: 100%; font-size: 14px; transition: all 0.2s;
       font-family: 'Inter', sans-serif;
     }
-    .input-field:focus { outline: none; border-color: var(--accent-purple); background: rgba(99,102,241,0.05); }
+    .input-field:focus { outline: none; border-color: var(--accent-light); background: rgba(124,58,237,0.06); box-shadow: 0 0 0 3px rgba(124,58,237,0.12); }
     .input-field::placeholder { color: var(--text-muted); }
 
     select.input-field {
@@ -590,7 +627,7 @@
       background: var(--bg-card); border: 1px solid var(--border);
       border-radius: 12px; padding: 20px; transition: all 0.2s;
     }
-    .metric-card:hover { border-color: var(--border-light); }
+    .metric-card:hover { border-color: var(--hairline-d); background: var(--bg-card-hover); }
 
     .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
     .dot-green { background: var(--accent-green); }
@@ -610,7 +647,7 @@
       padding: 14px 16px; border-bottom: 1px solid var(--border);
       font-size: 14px; color: var(--text-secondary);
     }
-    .data-table tr:hover td { background: rgba(255,255,255,0.02); cursor: pointer; }
+    .data-table tr:hover td { background: var(--surface-hover); cursor: pointer; }
     .data-table tr:last-child td { border-bottom: none; }
     .files-toolbar {
       display: grid;
@@ -1111,8 +1148,8 @@
       color: var(--text-secondary); background: transparent; border: none;
       font-family: 'Inter', sans-serif;
     }
-    .tab-btn.active { background: var(--accent-purple); color: white; }
-    .tab-btn:hover:not(.active) { color: var(--text-primary); background: var(--bg-card-hover); }
+    .tab-btn.active { background: linear-gradient(135deg, #7C3AED, #6366F1); color: white; box-shadow: 0 2px 12px rgba(124,58,237,0.3); }
+    .tab-btn:hover:not(.active) { color: var(--text-primary); background: var(--surface-hover); }
 
     .nav-link { color: var(--text-secondary); font-size: 14px; cursor: pointer; transition: color 0.2s; }
     .nav-link:hover { color: var(--text-primary); }
