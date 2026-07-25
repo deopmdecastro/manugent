@@ -169,7 +169,7 @@
 }
 .l-btn-sm { padding: 8px 16px; font-size: 13px; border-radius: 8px; }
 .l-btn-md { padding: 10px 20px; }
-.l-btn-lg { padding: 14px 28px; font-size: 15px; border-radius: 12px; }
+.l-btn-lg { padding: 12px 24px; font-size: 14px; border-radius: 11px; }
 
 .l-btn-outline {
   background: transparent; color: var(--l-text);
@@ -908,18 +908,18 @@
   }
 
   .l-btn-lg {
-    min-width: 250px;
-    height: 74px;
+    min-width: 220px;
+    height: 64px;
     justify-content: center;
-    padding: 0 32px;
+    padding: 0 26px;
     border-radius: 11px;
-    font-size: 19px;
+    font-size: 17px;
     font-weight: 800;
   }
 
   .l-btn-ghost {
-    min-width: 288px;
-    height: 74px;
+    min-width: 250px;
+    height: 64px;
     justify-content: center;
     border: 1px solid var(--l-hairline-c);
     border-radius: 11px;
@@ -933,8 +933,8 @@
   }
 
   .l-btn-arrow {
-    margin-left: 14px;
-    font-size: 24px;
+    margin-left: 12px;
+    font-size: 20px;
   }
 
   .l-hero-perks {
