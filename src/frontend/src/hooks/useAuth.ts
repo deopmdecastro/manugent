@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useSyncExternalStore } from 'react'
 
 export type Role = 'admin' | 'gestor' | 'tecnico' | 'cliente'
 export type Permission = 
@@ -18,6 +18,47 @@ export interface User {
   avatar?: string
   teamId?: string
   teamName?: string
+}
+
+const AUTH_KEY = 'manugent.user'
+
+// ── External store that survives hash changes ──
+let currentUserSnapshot: User | null = null
+
+function getSnapshot(): User | null {
+  if (currentUserSnapshot) return currentUserSnapshot
+  try {
+    const raw = sessionStorage.getItem(AUTH_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as User
+      currentUserSnapshot = parsed
+      return parsed
+    }
+  } catch { /* ignore */ }
+  return null
+}
+
+function subscribe(cb: () => void) {
+  const handler = () => {
+    currentUserSnapshot = null // force re-read
+    cb()
+  }
+  window.addEventListener('manugent:auth', handler)
+  window.addEventListener('storage', handler)
+  return () => {
+    window.removeEventListener('manugent:auth', handler)
+    window.removeEventListener('storage', handler)
+  }
+}
+
+function persist(user: User | null) {
+  currentUserSnapshot = user
+  if (user) {
+    sessionStorage.setItem(AUTH_KEY, JSON.stringify(user))
+  } else {
+    sessionStorage.removeItem(AUTH_KEY)
+  }
+  window.dispatchEvent(new Event('manugent:auth'))
 }
 
 const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
@@ -60,46 +101,28 @@ const MOCK_USERS: Record<string, User> = {
   cliente: { id: 'u4', name: 'Cliente Demo', email: 'cliente@demo.pt', role: 'cliente' },
 }
 
-let currentUser: User | null = null
-
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(() => {
-    // Try restore from session
-    const stored = sessionStorage.getItem('manugent.user')
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as User
-        currentUser = parsed
-        return parsed
-      } catch { /* ignore */ }
-    }
-    return currentUser
-  })
+  // useSyncExternalStore survives hash changes — always in sync
+  const user = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
   const [loading, setLoading] = useState(false)
 
   const login = useCallback(async (email: string, role?: Role) => {
     setLoading(true)
-    // Simulate API call
-    await new Promise(r => setTimeout(r, 800))
-    
-    // Quick login by role keyword
+    await new Promise(r => setTimeout(r, 600))
+
     let foundRole: Role = role || 'admin'
     if (email.includes('gestor')) foundRole = 'gestor'
     else if (email.includes('tecnico')) foundRole = 'tecnico'
     else if (email.includes('cliente')) foundRole = 'cliente'
-    
+
     const loggedUser = MOCK_USERS[foundRole]
-    currentUser = loggedUser
-    sessionStorage.setItem('manugent.user', JSON.stringify(loggedUser))
-    setUser(loggedUser)
+    persist(loggedUser)
     setLoading(false)
     return loggedUser
   }, [])
 
   const logout = useCallback(() => {
-    currentUser = null
-    sessionStorage.removeItem('manugent.user')
-    setUser(null)
+    persist(null)
     window.location.hash = '#login'
   }, [])
 
@@ -108,21 +131,5 @@ export function useAuth() {
     return ROLE_PERMISSIONS[user.role]?.includes(permission) ?? false
   }, [user])
 
-  const canAccess = useCallback((route: string): boolean => {
-    if (!user) return false
-    const routePermMap: Record<string, Permission> = {
-      dashboard: 'dashboard:view',
-      ots: 'ots:view', equipment: 'equipment:view',
-      clients: 'clients:view', buildings: 'equipment:view',
-      technicians: 'technicians:view', projects: 'projects:view',
-      presets: 'presets:view', editor: 'editor:view',
-      files: 'files:view', ai: 'ai:use', calendar: 'calendar:view',
-      settings: 'settings:view',
-    }
-    const perm = routePermMap[route]
-    if (!perm) return true
-    return hasPermission(perm)
-  }, [user, hasPermission])
-
-  return { user, loading, login, logout, hasPermission, canAccess, isAuthenticated: !!user }
+  return { user, loading, login, logout, hasPermission, isAuthenticated: !!user }
 }
