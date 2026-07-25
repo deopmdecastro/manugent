@@ -1,5 +1,8 @@
 import 'dotenv/config'
 
+import { existsSync, readFileSync } from 'node:fs'
+import { join, resolve } from 'node:path'
+
 import { serve } from '@hono/node-server'
 import { serveStatic } from '@hono/node-server/serve-static'
 import { Hono, type Context } from 'hono'
@@ -25,6 +28,7 @@ const pool = databaseUrl
 // ── App Setup ─────────────────────────────────────────────────────────────────
 
 const app = new Hono()
+const publicDir = resolve(process.cwd(), 'public')
 
 app.use('*', logger())
 app.use('/api/*', cors({
@@ -36,7 +40,24 @@ app.use('/api/*', cors({
 app.use('/app/*', serveStatic({ root: './public' }))
 app.use('/static/*', serveStatic({ root: './public' }))
 app.use('/react/*', serveStatic({ root: './public' }))
-app.get('/react', (c) => c.redirect('/react/index.html'))
+
+function serveHtmlShell(c: Context, relativePath: string) {
+  const filePath = join(publicDir, relativePath)
+
+  if (!existsSync(filePath)) {
+    return c.text(`Missing static shell: ${relativePath}`, 503)
+  }
+
+  return c.html(readFileSync(filePath, 'utf8'))
+}
+
+const serveReactShell = (c: Context) => serveHtmlShell(c, 'react/index.html')
+const serveLegacyShell = (c: Context) => serveHtmlShell(c, 'app/index.html')
+
+app.get('/react', (c) => c.redirect('/landing'))
+app.get('/app', (c) => c.redirect('/app/'))
+app.get('/app/login', (c) => c.redirect('/login'))
+app.get('/app/landing', (c) => c.redirect('/landing'))
 
 // ── Domain Constants ──────────────────────────────────────────────────────────
 
@@ -1335,14 +1356,17 @@ app.post('/api/client-portal/quotes/:quoteId/approve', async (c) => {
 
 app.notFound((c) => c.json({ error: 'Not found' }, 404))
 // ── React SPA fallback ────────────────────────────────────────────────────
-// Serve react/index.html for client-side routed paths (BrowserRouter)
-app.get('/landing', (c) => c.redirect('/react/index.html'))
-app.get('/login', (c) => c.redirect('/react/index.html'))
-app.get('/dashboard', (c) => c.redirect('/app/index.html'))
-app.get('/dashboard/*', (c) => c.redirect('/app/index.html'))
-app.get('/settings', (c) => c.redirect('/app/index.html'))
+// Public React shell routes
+app.get('/', serveReactShell)
+app.get('/landing', serveReactShell)
+app.get('/login', serveReactShell)
+app.get('/react/index.html', serveReactShell)
 
-app.get('/', (c) => c.redirect('/react/index.html'))
+// Legacy dashboard shell aliases
+app.get('/dashboard', serveLegacyShell)
+app.get('/dashboard/*', serveLegacyShell)
+app.get('/settings', serveLegacyShell)
+app.get('/settings/*', serveLegacyShell)
 app.onError((error, c) => {
   console.error('[Unhandled Error]', error)
   if (error instanceof DatabaseNotConfiguredError) {

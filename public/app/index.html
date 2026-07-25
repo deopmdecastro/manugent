@@ -2671,257 +2671,10 @@
 </head>
 <body>
 
-<!-- ====================== LANDING PAGE ====================== -->
-<div id="landing-page" class="hero-bg min-h-screen">
-  <nav class="flex items-center justify-between px-8 py-4 border-b border-white/5">
-    <div class="flex items-center gap-3">
-      <img src="assets/ManuGent_logo.png" alt="ManuGent" class="brand-logo topbar">
-    </div>
-    <div class="hidden md:flex items-center gap-8">
-      <span class="nav-link" onclick="scrollToSection('features')">Funcionalidades</span>
-      <span class="nav-link" onclick="scrollToSection('modules')">Módulos</span>
-      <span class="nav-link" onclick="scrollToSection('ia')">IA</span>
-    </div>
-    <div class="flex items-center gap-3">
-      <button class="btn-ghost" onclick="showAuth('login')">Entrar</button>
-      <button class="btn-primary" onclick="openAccessRequestModal()">Começar grátis</button>
-    </div>
-  </nav>
+<!-- Legacy landing/auth removed in favor of the React public site -->
+<div id="landing-page" hidden></div>
+<div id="auth-page" hidden></div>
 
-  <div class="max-w-4xl mx-auto text-center px-6 pt-24 pb-16">
-    <div class="inline-flex items-center gap-2 mb-6 bg-white/5 px-4 py-2 rounded-full border border-white/10">
-      <span class="status-dot dot-green pulse"></span>
-      <span class="mono text-xs text-green-400 tracking-widest">AI-POWERED MAINTENANCE OPERATING SYSTEM</span>
-    </div>
-    <div class="mascot-stage mascot-stage-hero">
-      <model-viewer class="mascot-model" data-src="assets/ManuGent_Mascot_3d.glb" loading="eager" reveal="auto" camera-controls auto-rotate auto-rotate-delay="3500" disable-zoom interaction-prompt="none" camera-orbit="205deg 70deg 4.9m" min-camera-orbit="auto 52deg 4.6m" max-camera-orbit="auto 84deg 5.8m" field-of-view="30deg" min-field-of-view="28deg" max-field-of-view="34deg" shadow-intensity="0.7" exposure="1.05"></model-viewer>
-      <div class="mascot-fallback"><span class="mascot-loader"></span><span class="mascot-loading-label">A carregar mascote 3D</span><img src="assets/3d_mascot.png" alt="Mascote ManuGent"></div>
-    </div>
-    <h1 class="text-5xl md:text-6xl font-black leading-tight mb-6">
-      O conhecimento<br>técnico,<br>
-      <span style="color: var(--accent-purple-light)">transformado em IA.</span>
-    </h1>
-    <p class="text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-      ManuGent é o agente inteligente de manutenção industrial: CMMS, base de conhecimento e técnico sénior digital — tudo numa plataforma que aprende com a sua equipa.
-    </p>
-    <div class="flex items-center justify-center gap-4 flex-wrap">
-      <button class="btn-primary text-base px-6 py-3" onclick="openAccessRequestModal()">
-        Começar grátis <i class="fas fa-arrow-right"></i>
-      </button>
-      <button class="btn-secondary text-base px-6 py-3" onclick="scrollToSection('features')">
-        Ver funcionalidades
-      </button>
-    </div>
-  </div>
-
-  <div class="max-w-4xl mx-auto px-6 pb-16">
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div class="card p-5 text-center">
-        <div class="text-3xl font-black text-white mb-1">-45%</div>
-        <div class="text-xs text-slate-500 mono tracking-wider">MTTR</div>
-      </div>
-      <div class="card p-5 text-center">
-        <div class="text-3xl font-black text-white mb-1">-60%</div>
-        <div class="text-xs text-slate-500 mono tracking-wider">TEMPO RESPOSTA</div>
-      </div>
-      <div class="card p-5 text-center">
-        <div class="text-3xl font-black text-white mb-1">100%</div>
-        <div class="text-xs text-slate-500 mono tracking-wider">RETENÇÃO CONHECIMENTO</div>
-      </div>
-      <div class="card p-5 text-center">
-        <div class="text-3xl font-black text-white mb-1">24/7</div>
-        <div class="text-xs text-slate-500 mono tracking-wider">OTS AUTOMÁTICAS</div>
-      </div>
-    </div>
-  </div>
-
-  <div id="features" class="max-w-6xl mx-auto px-6 py-16">
-    <div class="text-center mb-12">
-      <h2 class="text-3xl font-bold mb-3">Tudo o que precisa de manutenção</h2>
-      <p class="text-slate-400">Plataforma completa para equipas técnicas industriais</p>
-    </div>
-    <div class="grid md:grid-cols-3 gap-6">
-      <div class="card p-6">
-        <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center mb-4">
-          <i class="fas fa-robot text-purple-400"></i>
-        </div>
-        <h3 class="font-semibold mb-2">Assistente IA ManuGent</h3>
-        <p class="text-sm text-slate-400">Diagnóstico inteligente, procedimentos automáticos e conhecimento técnico instantâneo.</p>
-      </div>
-      <div class="card p-6">
-        <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center mb-4">
-          <i class="fas fa-clipboard-list text-blue-400"></i>
-        </div>
-        <h3 class="font-semibold mb-2">CMMS Inteligente</h3>
-        <p class="text-sm text-slate-400">Ordens de trabalho, checklists, planeamento e gestão completa de manutenção.</p>
-      </div>
-      <div class="card p-6">
-        <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center mb-4">
-          <i class="fas fa-book text-green-400"></i>
-        </div>
-        <h3 class="font-semibold mb-2">Base de Conhecimento</h3>
-        <p class="text-sm text-slate-400">Capture e preserve o conhecimento técnico da equipa. Nunca mais perca experiência.</p>
-      </div>
-      <div class="card p-6">
-        <div class="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center mb-4">
-          <i class="fas fa-microchip text-yellow-400"></i>
-        </div>
-        <h3 class="font-semibold mb-2">Gestão de Ativos</h3>
-        <p class="text-sm text-slate-400">Equipamentos, manuais, histórico e manutenção preventiva num só lugar.</p>
-      </div>
-      <div class="card p-6">
-        <div class="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center mb-4">
-          <i class="fas fa-calendar-alt text-red-400"></i>
-        </div>
-        <h3 class="font-semibold mb-2">Planeamento Automático</h3>
-        <p class="text-sm text-slate-400">IA agenda intervenções, evita conflitos e otimiza recursos da equipa.</p>
-      </div>
-      <div class="card p-6">
-        <div class="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center mb-4">
-          <i class="fas fa-chart-line text-cyan-400"></i>
-        </div>
-        <h3 class="font-semibold mb-2">Analytics &amp; KPIs</h3>
-        <p class="text-sm text-slate-400">MTTR, MTBF, disponibilidade e indicadores de desempenho em tempo real.</p>
-      </div>
-    </div>
-  </div>
-
-  <div id="modules" class="max-w-6xl mx-auto px-6 py-16 border-t border-white/5">
-    <div class="text-center mb-12">
-      <h2 class="text-3xl font-bold mb-3">Módulos especializados</h2>
-      <p class="text-slate-400">Cada área da manutenção coberta por agentes IA especializados</p>
-    </div>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div class="card p-4 text-center hover:border-purple-500/50 transition-all cursor-pointer">
-        <i class="fas fa-wind text-2xl text-blue-400 mb-3 block"></i>
-        <div class="font-medium text-sm">Agente AVAC</div>
-      </div>
-      <div class="card p-4 text-center hover:border-purple-500/50 transition-all cursor-pointer">
-        <i class="fas fa-bolt text-2xl text-yellow-400 mb-3 block"></i>
-        <div class="font-medium text-sm">Agente Elétrico</div>
-      </div>
-      <div class="card p-4 text-center hover:border-purple-500/50 transition-all cursor-pointer">
-        <i class="fas fa-cogs text-2xl text-purple-400 mb-3 block"></i>
-        <div class="font-medium text-sm">Agente Automação</div>
-      </div>
-      <div class="card p-4 text-center hover:border-purple-500/50 transition-all cursor-pointer">
-        <i class="fas fa-building text-2xl text-green-400 mb-3 block"></i>
-        <div class="font-medium text-sm">Agente Facilities</div>
-      </div>
-      <div class="card p-4 text-center hover:border-purple-500/50 transition-all cursor-pointer">
-        <i class="fas fa-calendar text-2xl text-red-400 mb-3 block"></i>
-        <div class="font-medium text-sm">Agente Planeamento</div>
-      </div>
-      <div class="card p-4 text-center hover:border-purple-500/50 transition-all cursor-pointer">
-        <i class="fas fa-shopping-cart text-2xl text-cyan-400 mb-3 block"></i>
-        <div class="font-medium text-sm">Agente Compras</div>
-      </div>
-      <div class="card p-4 text-center hover:border-purple-500/50 transition-all cursor-pointer">
-        <i class="fas fa-stethoscope text-2xl text-orange-400 mb-3 block"></i>
-        <div class="font-medium text-sm">Agente Diagnóstico</div>
-      </div>
-      <div class="card p-4 text-center hover:border-purple-500/50 transition-all cursor-pointer">
-        <i class="fas fa-chart-bar text-2xl text-pink-400 mb-3 block"></i>
-        <div class="font-medium text-sm">Agente Analytics</div>
-      </div>
-    </div>
-  </div>
-
-  <div id="ia" class="max-w-4xl mx-auto px-6 py-16 text-center">
-    <div class="card p-12" style="background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1));">
-      <h2 class="text-3xl font-bold mb-4">Pronto para começar?</h2>
-      <p class="text-slate-400 mb-8">Junte-se a centenas de equipas que já transformaram a sua manutenção com IA.</p>
-      <button class="btn-primary text-base px-8 py-3 glow-purple" onclick="openAccessRequestModal()">
-        Começar grátis <i class="fas fa-arrow-right"></i>
-      </button>
-    </div>
-  </div>
-
-  <footer class="border-t border-white/5 py-8 text-center text-slate-500 text-sm">
-    <div class="flex items-center justify-center gap-2 mb-2">
-      <img src="assets/ManuGent_logo.png" alt="ManuGent" class="brand-logo compact">
-    </div>
-    <p>O conhecimento técnico da sua empresa, transformado em inteligência artificial.</p>
-  </footer>
-
-  <button class="landing-support-button" onclick="event.stopPropagation(); openLandingSupportChat()" aria-label="Abrir Assistente IA ManuGent">
-    <img src="assets/icon3d_mascot.png" alt="">
-    <span>Assistente IA ManuGent</span>
-  </button>
-
-  <div id="landing-support-modal" class="support-chat-popover" style="display:none" onclick="event.stopPropagation()">
-    <div class="support-chat-modal">
-      <div class="support-chat-header">
-        <div class="flex items-start justify-between gap-4">
-          <div class="flex items-center gap-3 min-w-0">
-            <img src="assets/icon3d_mascot.png" alt="Mascote ManuGent" class="support-chat-avatar">
-            <div class="min-w-0">
-              <div class="text-xs text-slate-500 uppercase tracking-wider mb-1">Suporte da plataforma</div>
-              <h2 class="text-xl font-bold mono">Assistente IA ManuGent</h2>
-              <p class="text-sm text-slate-400 mt-1">Dúvidas, funcionalidades e primeiros passos</p>
-            </div>
-          </div>
-          <button class="btn-ghost" onclick="closeLandingSupportChat()"><i class="fas fa-times"></i></button>
-        </div>
-      </div>
-      <div class="support-chat-body">
-        <div id="landing-support-messages" class="support-chat-messages"></div>
-        <div class="support-chat-quick">
-          <button class="support-chip" onclick="quickLandingSupport('O que é a ManuGent?')">O que é?</button>
-          <button class="support-chip" onclick="quickLandingSupport('Como começar?')">Como começar</button>
-          <button class="support-chip" onclick="quickLandingSupport('Que módulos existem?')">Módulos</button>
-          <button class="support-chip" onclick="quickLandingSupport('Como funciona a IA?')">IA</button>
-          <button class="support-chip" onclick="quickLandingSupport('Como funcionam ficheiros e OTs?')">Ficheiros e OTs</button>
-        </div>
-      </div>
-      <div class="support-chat-composer">
-        <div class="ai-composer">
-          <textarea id="landing-support-input" class="input-field ai-textarea" placeholder="Pergunte sobre a ManuGent..." onkeydown="handleTextareaSubmit(event, sendLandingSupportMessage)"></textarea>
-          <button class="btn-primary ai-send-btn" onclick="sendLandingSupportMessage()"><i class="fas fa-paper-plane"></i></button>
-        </div>
-        <div class="text-xs text-slate-600 mt-2">Enter envia. Shift+Enter cria uma nova linha.</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ====================== AUTH PAGE ====================== -->
-<div id="auth-page" class="hero-bg min-h-screen items-center justify-center p-6" style="display:none">
-  <div style="position:absolute;top:20px;left:20px">
-    <button class="btn-ghost" onclick="showLanding()"><i class="fas fa-arrow-left"></i> Voltar</button>
-  </div>
-  <div class="auth-card">
-    <div class="flex items-center gap-3 mb-6">
-      <div>
-        <img src="assets/ManuGent_logo.png" alt="ManuGent" class="brand-logo auth">
-        <div class="text-xs text-slate-400">Agente IA de manutenção</div>
-      </div>
-    </div>
-    <div id="auth-message" class="auth-message"><i class="fas fa-circle-exclamation mt-0.5"></i><span id="auth-message-text"></span></div>
-    <div id="login-form">
-      <div class="mb-4">
-        <label class="block text-sm mb-2 text-slate-300">Email</label>
-        <input type="email" id="login-email" class="input-field" placeholder="email@empresa.com" onkeydown="handleEnterAction(event, doLogin)">
-      </div>
-      <div class="mb-6">
-        <label class="block text-sm mb-2 text-slate-300">Password</label>
-        <input type="password" id="login-pass" class="input-field" placeholder="••••••••" onkeydown="handleEnterAction(event, doLogin)">
-      </div>
-      <button class="btn-primary w-full justify-center py-3" onclick="doLogin()">Entrar</button>
-      <div class="divider my-4">ou</div>
-      <button class="btn-secondary w-full justify-center py-3" onclick="doGoogleLogin()">
-        <i class="fab fa-google"></i> Continuar com Google
-      </button>
-      <div class="mt-5 p-3 rounded-lg border border-white/10 bg-white/5 text-xs text-slate-400">
-        <div class="font-semibold text-slate-300 mb-1">Acesso inicial</div>
-        <div>Admin seed: <span class="mono text-slate-200">admin@manugent.local</span></div>
-        <div>Password: <span class="mono text-slate-200">admin123</span></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ====================== APP LAYOUT ====================== -->
 <div id="app-layout" style="display:none">
   <aside id="app-sidebar">
     <div class="p-4 border-b border-white/5">
@@ -5550,7 +5303,7 @@ loadData();
 ensureSeedAdmin();
 window.onload = function() {
   if (APP.user) { showApp(); }
-  else { redirectToReactRoute('/landing'); return; }
+  else { redirectToReactRoute('/login'); return; }
   initSampleData();
   ensureWorkInstallationExamples();
   setupMascotModels();
@@ -5564,20 +5317,13 @@ window.onload = function() {
 };
 
 function showLanding() {
-  document.getElementById('landing-page').style.display = 'block';
-  document.getElementById('auth-page').style.display = 'none';
-  document.getElementById('app-layout').style.display = 'none';
-  document.body.classList.remove('sidebar-collapsed', 'mobile-menu-open');
-  setupMascotModels();
+  redirectToReactRoute('/landing');
 }
 function showAuth(tab) {
-  document.getElementById('landing-page').style.display = 'none';
-  document.getElementById('auth-page').style.display = 'flex';
-  document.getElementById('app-layout').style.display = 'none';
-  switchAuthTab('login');
-  setTimeout(enhanceSelects, 20);
+  redirectToReactRoute('/login');
 }
 function showApp() {
+  var initialPage = getInitialLegacyPageFromLocation();
   document.getElementById('landing-page').style.display = 'none';
   document.getElementById('auth-page').style.display = 'none';
   document.getElementById('app-layout').style.display = 'flex';
@@ -5597,6 +5343,7 @@ function showApp() {
     enhanceFileInputs();
     enhanceSelects();
     updateGlobalSearchPlaceholder();
+    showPage(initialPage);
   }, 50);
 }
 function scrollToSection(id) {
@@ -5660,6 +5407,26 @@ function appendLandingSupportMessage(text, type) {
   messages.appendChild(bubble);
   messages.scrollTop = messages.scrollHeight;
 }
+function getInitialLegacyPageFromLocation() {
+  var params = new URLSearchParams(window.location.search || '');
+  var page = params.get('page');
+  if (page) return page;
+  var pathname = (window.location.pathname || '').replace(/\/+$/, '') || '/';
+  if (pathname === '/settings') return 'settings';
+  return 'dashboard';
+}
+function getLegacyPathForPage(page) {
+  if (page === 'dashboard') return '/dashboard';
+  if (page === 'settings') return '/settings';
+  return '/app/?page=' + encodeURIComponent(page);
+}
+function syncLegacyLocation(page) {
+  if (window.location.protocol !== 'http:' && window.location.protocol !== 'https:') return;
+  var target = getLegacyPathForPage(page);
+  var current = window.location.pathname + window.location.search;
+  if (current !== target) window.history.replaceState({ page: page }, '', target);
+}
+
 function getLandingSupportResponse(text) {
   var q = String(text || '').toLowerCase();
   if (q.includes('começar') || q.includes('gratis') || q.includes('grátis') || q.includes('teste') || q.includes('entrar')) {
@@ -5691,6 +5458,7 @@ function showPage(page) {
     page = getDefaultPageForRole();
   }
   APP.currentPage = page;
+  syncLegacyLocation(page);
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
   document.querySelectorAll('.sidebar-item').forEach(function(i) { i.classList.remove('active'); });
   var pageEl = document.getElementById('page-' + page);
