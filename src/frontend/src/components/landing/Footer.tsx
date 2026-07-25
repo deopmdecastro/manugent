@@ -32,7 +32,7 @@ export function Footer() {
       {/* Top row: brand + newsletter */}
       <div className="l-footer-top">
         <div className="l-footer-brand">
-          <img src="/app/assets/ManuGent_logo.png" alt="ManuGent" height="40" />
+          <img src="/app/assets/ManuGent_logo.png" alt="ManuGent" height="48" />
           <p>
             {t.footer.brandDesc}
           </p>
