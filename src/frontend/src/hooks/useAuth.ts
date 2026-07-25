@@ -47,8 +47,40 @@ function subscribe(cb: () => void) {
 
 function persist(user: User | null) {
   currentUser = user
+
+  // React app auth (sessionStorage)
   if (user) sessionStorage.setItem(AUTH_KEY, JSON.stringify(user))
   else sessionStorage.removeItem(AUTH_KEY)
+
+  // Legacy dashboard auth bridge (localStorage)
+  if (user) {
+    try {
+      // Ensure mg_data exists (preserve existing data if any)
+      const existingRaw = localStorage.getItem('mg_data')
+      const existingData = existingRaw ? JSON.parse(existingRaw) : {}
+      existingData.user = {
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      }
+      localStorage.setItem('mg_data', JSON.stringify(existingData))
+      // Create session token for legacy dashboard
+      const seed = Date.now() + '-' + Math.random().toString(36).slice(2)
+      const token = 'mg-session-' + btoa(seed).replace(/=+$/, '')
+      localStorage.setItem('mg_auth_token', token)
+    } catch { /* ignore bridge errors */ }
+  } else {
+    localStorage.removeItem('mg_auth_token')
+    try {
+      const existingRaw = localStorage.getItem('mg_data')
+      if (existingRaw) {
+        const existingData = JSON.parse(existingRaw)
+        delete existingData.user
+        localStorage.setItem('mg_data', JSON.stringify(existingData))
+      }
+    } catch { /* ignore bridge errors */ }
+  }
+
   window.dispatchEvent(new Event('manugent:auth'))
 }
 

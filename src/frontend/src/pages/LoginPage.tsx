@@ -1,10 +1,9 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 export function LoginPage() {
   const { login, loading } = useAuth()
-  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -19,7 +18,8 @@ export function LoginPage() {
     }
     try {
       await login(email)
-      navigate('/dashboard/admin')
+      // Redirect to the legacy dashboard app
+      window.location.href = '/app/'
     } catch {
       setError('Erro ao iniciar sessão. Tenta novamente.')
     }
