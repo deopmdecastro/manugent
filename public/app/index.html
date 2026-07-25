@@ -2831,6 +2831,122 @@
     @media (max-width: 900px) { .dashboard-hero { padding: 22px; } .dashboard-hero__title { font-size: 28px; } .metric-card--hero { min-height: 168px; } .app-content { padding: 22px 18px 30px !important; } }
     @media (max-width: 640px) { .dashboard-hero__title { font-size: 24px; } .dashboard-hero__date { width: 100%; justify-content: center; } .metric-card__spark { opacity: 0.5; } }
 
+    /* ── Sidebar refresh: user card, icon chips, richer nav states ── */
+    #app-sidebar {
+      position: relative;
+    }
+    #app-sidebar::after {
+      content: '';
+      position: absolute; top: 0; right: 0; bottom: 0; width: 1px;
+      background: linear-gradient(180deg, rgba(129,140,248,0.22), rgba(129,140,248,0.02) 40%, rgba(129,140,248,0.1));
+      pointer-events: none;
+    }
+
+    .sidebar-user-card {
+      margin: 12px 12px 4px;
+      padding: 14px 14px 16px;
+      border-radius: 16px;
+      background: linear-gradient(160deg, rgba(124,58,237,0.1), rgba(15,23,42,0.5));
+      border: 1px solid rgba(129,140,248,0.16);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+    .sidebar-user-card__label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+      color: #a78bfa; opacity: 0.85; margin-bottom: 10px;
+    }
+    .sidebar-user-card__row { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .sidebar-user-avatar {
+      flex-shrink: 0; width: 36px; height: 36px; border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; color: #fff;
+      background: linear-gradient(135deg, #8B5CF6, #6366F1 55%, #38BDF8);
+      box-shadow: 0 4px 14px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+    }
+    .sidebar-user-card__meta { min-width: 0; }
+    .sidebar-user-card__name {
+      font-size: 13.5px; font-weight: 600; color: var(--text-primary);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .sidebar-user-card__email {
+      font-size: 11.5px; color: var(--text-muted);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px;
+    }
+    body.sidebar-collapsed .sidebar-user-card { display: none; }
+
+    .sidebar-item {
+      border-radius: 11px;
+      margin: 0 2px;
+    }
+    .sidebar-item i {
+      flex-shrink: 0; width: 30px; height: 30px; min-width: 30px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 9px; font-size: 14px;
+      background: rgba(148,163,184,0.05);
+      border: 1px solid rgba(148,163,184,0.06);
+      color: var(--text-secondary);
+      transition: all 0.22s cubic-bezier(.4,0,.2,1);
+    }
+    .sidebar-item:hover i {
+      background: linear-gradient(135deg, rgba(124,58,237,0.28), rgba(56,189,248,0.14));
+      border-color: rgba(129,140,248,0.34);
+      color: #fff;
+      transform: scale(1.06);
+    }
+    .sidebar-item.active i {
+      background: linear-gradient(135deg, #7C3AED, #6366F1);
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(99,102,241,0.45);
+    }
+    .sidebar-item.active {
+      position: relative;
+      font-weight: 600;
+    }
+    .sidebar-item.active::before {
+      content: '';
+      position: absolute; left: -2px; top: 50%; transform: translateY(-50%);
+      width: 3px; height: 56%; border-radius: 0 4px 4px 0;
+      background: linear-gradient(180deg, #C4B5FD, #6366F1);
+      box-shadow: 0 0 10px rgba(139,92,246,0.65);
+    }
+
+    #app-sidebar nav { padding-top: 4px; }
+    .sidebar-section-label {
+      margin: 16px 14px 6px !important;
+      padding-top: 12px !important;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+      color: var(--text-muted);
+      border-top: 1px solid rgba(148,163,184,0.08);
+    }
+
+    #ot-count-badge {
+      border-radius: 999px; font-weight: 700;
+      background: rgba(239,68,68,0.16); color: #fca5a5;
+      border: 1px solid rgba(239,68,68,0.24);
+      padding: 1px 7px;
+    }
+
+    #nav-ai-assistant {
+      background: linear-gradient(135deg, rgba(124,58,237,0.14), rgba(56,189,248,0.06));
+      border: 1px solid rgba(139,92,246,0.22);
+    }
+    #nav-ai-assistant i {
+      background: linear-gradient(135deg, #8B5CF6, #38BDF8);
+      color: #fff; border-color: transparent;
+    }
+    #nav-ai-assistant:hover { border-color: rgba(139,92,246,0.4); }
+    #nav-ai-assistant .status-dot.dot-green {
+      box-shadow: 0 0 8px rgba(16,185,129,0.8);
+      animation: sidebarDotPulse 2.2s ease-in-out infinite;
+    }
+    @keyframes sidebarDotPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.55; transform: scale(0.85); }
+    }
+
+    #app-sidebar::-webkit-scrollbar { width: 5px; }
+    #app-sidebar::-webkit-scrollbar-thumb { background: rgba(129,140,248,0.22); border-radius: 3px; }
+    #app-sidebar::-webkit-scrollbar-track { background: transparent; }
   </style>
 </head>
 <body>
@@ -2846,10 +2962,15 @@
         <img src="assets/ManuGent_logo.png" alt="ManuGent" class="brand-logo compact" style="height:36px;max-width:160px">
       </div>
     </div>
-    <div class="px-4 py-3 border-b border-white/5">
-      <div class="text-xs text-slate-500 uppercase tracking-wider mb-1">Operação</div>
-      <div class="text-sm font-medium" id="sidebar-user-name">Bem-vindo</div>
-      <div class="text-xs text-slate-500" id="sidebar-user-email"></div>
+    <div class="sidebar-user-card">
+      <div class="sidebar-user-card__label">Operação</div>
+      <div class="sidebar-user-card__row">
+        <div class="sidebar-user-avatar" id="sidebar-user-avatar">A</div>
+        <div class="sidebar-user-card__meta">
+          <div class="sidebar-user-card__name" id="sidebar-user-name">Bem-vindo</div>
+          <div class="sidebar-user-card__email" id="sidebar-user-email"></div>
+        </div>
+      </div>
     </div>
     <nav class="flex-1 p-3 space-y-1">
       <div class="sidebar-item active" onclick="showPage('dashboard')" id="nav-dashboard">
@@ -6222,6 +6343,8 @@ function updateUserUI() {
   var av = n.charAt(0).toUpperCase();
   document.getElementById('user-avatar').textContent = av;
   document.getElementById('settings-avatar').textContent = av;
+  var sidebarAv = document.getElementById('sidebar-user-avatar');
+  if (sidebarAv) sidebarAv.textContent = av;
   document.getElementById('settings-name').textContent = n;
   document.getElementById('settings-email').textContent = APP.user.email;
   document.getElementById('settings-role-badge').textContent = getRoleLabel(APP.user.role);
