@@ -2,12 +2,38 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
+const ROLES = [
+  { key: 'admin', label: 'admin', email: 'admin@manugent.pt' },
+  { key: 'gestor', label: 'gestor', email: 'gestor@manugent.pt' },
+  { key: 'tecnico', label: 'técnico', email: 'tecnico@manugent.pt' },
+  { key: 'cliente', label: 'cliente', email: 'cliente@demo.pt' },
+] as const
+
+const FEATURES = [
+  {
+    icon: 'fa-chart-line',
+    title: 'Dashboards inteligentes',
+    desc: 'Dados em tempo real para decisões assertivas',
+  },
+  {
+    icon: 'fa-boxes-stacked',
+    title: 'Gestão de ativos',
+    desc: 'Controlo completo do ciclo de vida dos equipamentos',
+  },
+  {
+    icon: 'fa-shield-halved',
+    title: 'Segurança e confiabilidade',
+    desc: 'Autenticação real, dados protegidos e acesso controlado',
+  },
+]
+
 export function LoginPage() {
   const { login, loading } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [lightPreview, setLightPreview] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -24,69 +50,155 @@ export function LoginPage() {
     }
   }
 
+  const activeRole = ROLES.find(r => email === r.email)?.key
+
   return (
-    <div className="login-page">
-      <div style={{ position: 'absolute', top: '10%', left: '10%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.15), transparent)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: '5%', right: '8%', width: 250, height: 250, borderRadius: '50%', background: 'radial-gradient(circle, rgba(6,182,212,0.1), transparent)', pointerEvents: 'none' }} />
-
-      <div className="login-card">
-        <Link to="/landing">
-          <img src="/app/assets/ManuGent_logo.png" alt="ManuGent" className="login-logo" />
+    <div className="auth-page" data-theme={lightPreview ? 'light' : 'dark'}>
+      <header className="auth-topbar">
+        <Link to="/landing" className="auth-brand">
+          <img src="/app/assets/icon_manugent_white.png" alt="" className="auth-brand-mark" />
+          <span className="auth-brand-text">
+            <strong>ManuGent</strong>
+            <small>Plataforma de Manutenção Inteligente</small>
+          </span>
         </Link>
-        <h1 className="login-title">Bem-vindo de volta</h1>
-        <p className="login-subtitle">Acede à tua plataforma de manutenção inteligente</p>
-
-        <div style={{ display: 'flex', gap: 6, marginBottom: 24, justifyContent: 'center' }}>
-          {(['admin','gestor','tecnico','cliente'] as const).map(role => (
-            <button
-              key={role}
-              type="button"
-              className={`badge ${email.includes(role) ? 'badge-primary' : ''}`}
-              style={{
-                cursor: 'pointer', padding: '6px 12px', fontSize: 12,
-                background: email.includes(role) ? undefined : 'rgba(99,102,241,0.06)',
-                border: email.includes(role) ? undefined : '1px solid var(--border)',
-                transition: 'all 0.2s ease', borderRadius: 'var(--radius)', color: 'var(--text-secondary)',
-              }}
-              onClick={() => setEmail(`${role}@manugent.pt`)}
-            >
-              {role}
-            </button>
-          ))}
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          <div className="login-field">
-            <label htmlFor="email">Email</label>
-            <input id="email" type="email" className="glass-input" placeholder="admin@manugent.pt" value={email} onChange={e => setEmail(e.target.value)} required autoFocus />
-          </div>
-          <div className="login-field">
-            <label htmlFor="password">Password</label>
-            <div style={{ position: 'relative' }}>
-              <input id="password" type={showPassword ? 'text' : 'password'} className="glass-input" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required style={{ paddingRight: 42 }} />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 14 }} aria-label={showPassword ? 'Esconder password' : 'Mostrar password'}>
-                <i className={`fas fa-${showPassword ? 'eye-slash' : 'eye'}`} />
-              </button>
-            </div>
-          </div>
-
-          {error && (
-            <div style={{ color: '#f87171', fontSize: 13, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <i className="fas fa-exclamation-circle" /> {error}
-            </div>
-          )}
-
-          <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 8, padding: '14px 24px' }} disabled={loading}>
-            {loading ? <><i className="fas fa-spinner fa-spin" /> A entrar...</> : <><i className="fas fa-sign-in-alt" /> Entrar</>}
+        <div className="auth-topbar-actions">
+          <button
+            type="button"
+            className="auth-icon-btn"
+            onClick={() => setLightPreview(v => !v)}
+            aria-label={lightPreview ? 'Ativar tema escuro' : 'Pré-visualizar tema claro'}
+            title={lightPreview ? 'Tema escuro' : 'Tema claro'}
+          >
+            <i className={`fas ${lightPreview ? 'fa-moon' : 'fa-sun'}`} />
           </button>
-        </form>
-
-        <div className="login-footer">
-          <a href="#">Esqueci a password</a>
-          <span style={{ margin: '0 8px', color: 'var(--text-muted)' }}>·</span>
-          <Link to="/landing">Voltar ao site</Link>
+          <span className="auth-lang-chip" title="Mais idiomas brevemente">
+            <i className="fas fa-globe" /> Português
+          </span>
         </div>
-      </div>
+      </header>
+
+      <main className="auth-main">
+        <section className="auth-pitch">
+          <span className="badge badge-primary auth-eyebrow">
+            <i className="fas fa-wand-magic-sparkles" /> Gestão inteligente
+          </span>
+          <h1 className="auth-headline">
+            Simplifique.<br />
+            Otimize.<br />
+            <span className="auth-headline-accent">Transforme.</span>
+          </h1>
+          <p className="auth-subhead">
+            O ManuGent ajuda a tua equipa a gerir manutenção, ativos e ordens de serviço
+            de forma eficiente e inteligente.
+          </p>
+
+          <ul className="auth-feature-list">
+            {FEATURES.map(f => (
+              <li key={f.title} className="auth-feature">
+                <span className="auth-feature-icon"><i className={`fas ${f.icon}`} /></span>
+                <span>
+                  <strong>{f.title}</strong>
+                  <small>{f.desc}</small>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="auth-card-wrap">
+          <div className="auth-card">
+            <div className="auth-card-avatar">
+              <img src="/app/assets/icon_manugent_white.png" alt="ManuGent" />
+            </div>
+            <h2 className="auth-card-title">Bem-vindo de volta!</h2>
+            <p className="auth-card-subtitle">Acede à tua conta para continuar</p>
+
+            <div className="auth-role-pills" role="tablist" aria-label="Escolher perfil de demonstração">
+              {ROLES.map(r => (
+                <button
+                  key={r.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeRole === r.key}
+                  className={`auth-role-pill ${activeRole === r.key ? 'is-active' : ''}`}
+                  onClick={() => setEmail(r.email)}
+                >
+                  <i className="fas fa-user" /> {r.label}
+                </button>
+              ))}
+            </div>
+
+            <form onSubmit={handleSubmit} noValidate>
+              <div className="auth-field">
+                <label htmlFor="email">Email</label>
+                <div className="auth-input-group">
+                  <i className="fas fa-envelope" />
+                  <input
+                    id="email"
+                    type="email"
+                    placeholder="admin@manugent.pt"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    autoComplete="username"
+                    required
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <div className="auth-field">
+                <label htmlFor="password">Password</label>
+                <div className="auth-input-group">
+                  <i className="fas fa-lock" />
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••••••"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="auth-input-adornment"
+                    onClick={() => setShowPassword(v => !v)}
+                    aria-label={showPassword ? 'Esconder password' : 'Mostrar password'}
+                  >
+                    <i className={`fas fa-${showPassword ? 'eye-slash' : 'eye'}`} />
+                  </button>
+                </div>
+              </div>
+
+              {error && (
+                <div className="auth-error" role="alert">
+                  <i className="fas fa-circle-exclamation" /> {error}
+                </div>
+              )}
+
+              <button type="submit" className="btn btn-primary auth-submit" disabled={loading}>
+                {loading
+                  ? <><i className="fas fa-spinner fa-spin" /> A entrar...</>
+                  : <><i className="fas fa-right-to-bracket" /> Entrar</>}
+              </button>
+            </form>
+
+            <div className="auth-divider"><span>ou</span></div>
+
+            <div className="auth-card-links">
+              <a href="#"><i className="fas fa-lock" /> Esqueci a password</a>
+              <p>Não tens uma conta? <a href="#">Contacta o administrador.</a></p>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="auth-footer">
+        <span className="auth-version-badge"><i className="fas fa-circle" /> v2.0.0</span>
+        <p>© {new Date().getFullYear()} ManuGent. Todos os direitos reservados.</p>
+        <span className="auth-secure-badge"><i className="fas fa-circle-check" /> Seguro e protegido</span>
+      </footer>
     </div>
   )
 }
