@@ -117,28 +117,36 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   ],
 }
 
-const MOCK_USERS: Record<string, User> = {
-  admin: { id: 'u1', name: 'Admin ManuGent', email: 'admin@manugent.pt', role: 'admin', teamName: 'Direção' },
-  gestor: { id: 'u2', name: 'Gestor Silva', email: 'gestor@manugent.pt', role: 'gestor', teamName: 'Operações' },
-  tecnico: { id: 'u3', name: 'Técnico Costa', email: 'tecnico@manugent.pt', role: 'tecnico', teamName: 'Equipa Manutenção' },
-  cliente: { id: 'u4', name: 'Cliente Demo', email: 'cliente@demo.pt', role: 'cliente' },
-}
-
 export function useAuth() {
   const user = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
   const [loading, setLoading] = useState(false)
 
-  const login = useCallback(async (email: string, role?: Role) => {
+  const login = useCallback(async (email: string, password: string) => {
     setLoading(true)
-    await new Promise(r => setTimeout(r, 600))
-    let foundRole: Role = role || 'admin'
-    if (email.includes('gestor')) foundRole = 'gestor'
-    else if (email.includes('tecnico')) foundRole = 'tecnico'
-    else if (email.includes('cliente')) foundRole = 'cliente'
-    const loggedUser = MOCK_USERS[foundRole]
-    persist(loggedUser)
-    setLoading(false)
-    return loggedUser
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        throw new Error(data?.error || 'Credenciais inválidas.')
+      }
+      const raw = data.user as { id: string; name: string; email: string; role: Role; team_id?: string; team_name?: string }
+      const loggedUser: User = {
+        id: raw.id,
+        name: raw.name,
+        email: raw.email,
+        role: raw.role,
+        teamId: raw.team_id,
+        teamName: raw.team_name,
+      }
+      persist(loggedUser)
+      return loggedUser
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   const logout = useCallback(() => {
