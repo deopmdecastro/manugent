@@ -1,7 +1,10 @@
 import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
+import { useLanguage } from '../../contexts/LanguageContext'
 
 export function Hero() {
+  const { t } = useLanguage()
+
   return (
     <section className="l-hero">
       <div className="l-hero-grid">
@@ -10,32 +13,30 @@ export function Hero() {
           {/* Badge */}
           <div className="l-hero-badge">
             <span className="l-hero-badge-dot" />
-            AI-POWERED MAINTENANCE OPERATING SYSTEM
+            {t.hero.badge}
           </div>
 
           {/* Title */}
           <h1 className="l-hero-title">
-            O conhecimento
+            {t.hero.titleLine1}
             <br />
-            técnico,
+            {t.hero.titleLine2}
             <br />
-            <span className="l-hero-title-gradient">transformado em IA.</span>
+            <span className="l-hero-title-gradient">{t.hero.titleGradient}</span>
           </h1>
 
           {/* Description */}
           <p className="l-hero-desc">
-            ManuGent é o agente inteligente de manutenção industrial: CMMS, base de
-            conhecimento e técnico sénior digital — tudo numa plataforma que aprende
-            com a sua equipa.
+            {t.hero.desc}
           </p>
 
           {/* CTAs */}
           <div className="l-hero-actions">
             <Link to="/login" className="l-btn l-btn-primary l-btn-lg">
-              Começar grátis <span className="l-btn-arrow">→</span>
+              {t.hero.ctaPrimary} <span className="l-btn-arrow">→</span>
             </Link>
             <Link to="/landing#features" className="l-btn l-btn-ghost">
-              Ver funcionalidades
+              {t.hero.ctaSecondary}
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2" />
                 <rect x="9" y="1.5" width="5.5" height="5.5" rx="1.2" />
@@ -52,8 +53,8 @@ export function Hero() {
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8 1L3 3v4c0 3.5 2 6.5 5 8 3-1.5 5-4.5 5-8V3L8 1z"/><path d="M5.8 8l1.6 1.6 3-3.2"/></svg>
               </div>
               <div>
-                <strong>Seguro e confiável</strong>
-                <span>Dados protegidos</span>
+                <strong>{t.hero.perks[0].title}</strong>
+                <span>{t.hero.perks[0].desc}</span>
               </div>
             </div>
             <div className="l-hero-perk">
@@ -61,8 +62,8 @@ export function Hero() {
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" stroke="none"><path d="M8.6 1L3 9h3.6l-1.2 6L12 7H8.4z"/></svg>
               </div>
               <div>
-                <strong>Implementação rápida</strong>
-                <span>Em poucos dias</span>
+                <strong>{t.hero.perks[1].title}</strong>
+                <span>{t.hero.perks[1].desc}</span>
               </div>
             </div>
             <div className="l-hero-perk">
@@ -70,8 +71,8 @@ export function Hero() {
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="5" cy="5" r="2"/><circle cx="11" cy="5" r="2"/><path d="M3 13l3-3 2 2 4-4"/></svg>
               </div>
               <div>
-                <strong>Feito para equipas</strong>
-                <span>Colaboração inteligente</span>
+                <strong>{t.hero.perks[2].title}</strong>
+                <span>{t.hero.perks[2].desc}</span>
               </div>
             </div>
           </div>
@@ -90,6 +91,9 @@ export function Hero() {
    HERO VISUAL — Robot + Floating Cards + Connecting Lines
    ═══════════════════════════════════════════════════════════════════ */
 function HeroVisual() {
+  const { t } = useLanguage()
+  const cards = t.hero.cards
+
   return (
     <div className="l-hero-scene">
       {/* Background glows */}
@@ -114,49 +118,49 @@ function HeroVisual() {
       {/* ── Floating Cards ── */}
       <FloatingCard
         pos="top-left"
-        label="Ordens de Serviço"
+        label={cards.orders.label}
         value="128"
-        sub="Abertas"
+        sub={cards.orders.sub}
         icon="check"
         color="#818cf8"
       />
       <FloatingCard
         pos="top-right"
-        label="Manutenções"
+        label={cards.maintenance.label}
         value="96%"
-        sub="Concluídas"
+        sub={cards.maintenance.sub}
         icon="tool"
         color="#34d399"
       />
       <FloatingCard
         pos="mid-left"
-        label="Ativos"
+        label={cards.assets.label}
         value="342"
-        sub="Total"
+        sub={cards.assets.sub}
         icon="box"
         color="#fbbf24"
       />
       <FloatingCard
         pos="mid-right"
-        label="IA Insights"
+        label={cards.ai.label}
         value="24"
-        sub="Recomendações"
+        sub={cards.ai.sub}
         icon="brain"
         color="#c084fc"
       />
       <FloatingCard
         pos="bottom-left"
-        label="Inventário"
+        label={cards.inventory.label}
         value="1.284"
-        sub="Itens"
+        sub={cards.inventory.sub}
         icon="inventory"
         color="#fb923c"
       />
       <FloatingCard
         pos="bottom-right"
-        label="Economia"
+        label={cards.savings.label}
         value="23%"
-        sub="Redução de custos"
+        sub={cards.savings.sub}
         icon="money"
         color="#38bdf8"
       />

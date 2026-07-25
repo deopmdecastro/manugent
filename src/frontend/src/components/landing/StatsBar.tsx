@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
+import { useLanguage } from '../../contexts/LanguageContext'
 
-const STATS = [
-  { value: 2500, prefix: '+', suffix: '', label: 'Utilizadores ativos' },
-  { value: 15000, prefix: '+', suffix: '', label: 'Ordens de serviço' },
-  { value: 98, prefix: '+', suffix: '%', label: 'Satisfação dos clientes' },
-  { value: 23, prefix: '-', suffix: '%', label: 'Redução de custos' },
+const STAT_META = [
+  { value: 2500, prefix: '+', suffix: '' },
+  { value: 15000, prefix: '+', suffix: '' },
+  { value: 98, prefix: '+', suffix: '%' },
+  { value: 23, prefix: '-', suffix: '%' },
 ]
 
-// Portuguese thousands grouping: 2500 -> "2.500", 15000 -> "15.000"
+// Portuguese/European thousands grouping: 2500 -> "2.500", 15000 -> "15.000"
 function formatPt(n: number): string {
   return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
@@ -57,18 +58,21 @@ function AnimatedCounter({ value, prefix, suffix, label }: { value: number; pref
 }
 
 export function StatsBar() {
+  const { t } = useLanguage()
+  const stats = STAT_META.map((meta, i) => ({ ...meta, label: t.stats.items[i].label }))
+
   return (
     <section className="l-stats">
       <div className="l-stats-inner l-reveal">
         <div className="l-stats-trust">
           <img src="/app/assets/icon_manugent.png" alt="" className="l-stats-trust-icon" />
           <span className="l-stats-trust-copy">
-            <strong>Confiado por equipas</strong>
-            <span>em todo o mundo</span>
+            <strong>{t.stats.trustTitle}</strong>
+            <span>{t.stats.trustSub}</span>
           </span>
         </div>
         <div className="l-stats-grid">
-          {STATS.map(s => (
+          {stats.map(s => (
             <AnimatedCounter key={s.label} value={s.value} prefix={s.prefix} suffix={s.suffix} label={s.label} />
           ))}
         </div>

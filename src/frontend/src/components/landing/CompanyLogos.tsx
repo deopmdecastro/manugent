@@ -1,3 +1,5 @@
+import { useLanguage } from '../../contexts/LanguageContext'
+
 const COMPANIES = [
   { name: 'ENGIE', width: 90 },
   { name: 'Vallourec', width: 100 },
@@ -8,9 +10,11 @@ const COMPANIES = [
 ]
 
 export function CompanyLogos() {
+  const { t } = useLanguage()
+
   return (
     <section className="l-companies l-reveal">
-      <p className="l-companies-label">Empresas que confiam na ManuGent</p>
+      <p className="l-companies-label">{t.companies.label}</p>
       <div className="l-companies-row">
         {COMPANIES.map(c => (
           <div key={c.name} className="l-company-logo" style={{ minWidth: c.width }}>

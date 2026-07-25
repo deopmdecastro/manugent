@@ -1,35 +1,10 @@
 import { Link } from 'react-router-dom'
+import { useLanguage } from '../../contexts/LanguageContext'
 
-const FOOTER_GROUPS = [
-  {
-    title: 'Produto',
-    links: [
-      { label: 'Funcionalidades', href: '#features' },
-      { label: 'Preços', href: '#pricing' },
-      { label: 'Documentação', href: '#' },
-      { label: 'API', href: '#' },
-      { label: 'Changelog', href: '#' },
-    ],
-  },
-  {
-    title: 'Empresa',
-    links: [
-      { label: 'Sobre', href: '#' },
-      { label: 'Blog', href: '#' },
-      { label: 'Carreiras', href: '#' },
-      { label: 'Contacto', href: '#' },
-      { label: 'Parceiros', href: '#' },
-    ],
-  },
-  {
-    title: 'Legal',
-    links: [
-      { label: 'Privacidade', href: '#' },
-      { label: 'Termos', href: '#' },
-      { label: 'GDPR', href: '#' },
-      { label: 'Cookies', href: '#' },
-    ],
-  },
+const FOOTER_HREFS = [
+  ['#features', '#pricing', '#', '#', '#'],
+  ['#', '#', '#', '#', '#'],
+  ['#', '#', '#', '#'],
 ]
 
 const SOCIAL_LINKS = [
@@ -46,6 +21,12 @@ function SocialIcon({ icon }: { icon: string }) {
 }
 
 export function Footer() {
+  const { t } = useLanguage()
+  const groups = t.footer.groups.map((g, gi) => ({
+    title: g.title,
+    links: g.links.map((label, li) => ({ label, href: FOOTER_HREFS[gi][li] })),
+  }))
+
   return (
     <footer className="l-footer">
       {/* Top row: brand + newsletter */}
@@ -53,20 +34,19 @@ export function Footer() {
         <div className="l-footer-brand">
           <img src="/app/assets/ManuGent_logo.png" alt="ManuGent" height="40" />
           <p>
-            Plataforma CMMS inteligente com agente IA integrado.
-            Manutenção industrial do futuro, hoje.
+            {t.footer.brandDesc}
           </p>
           <div className="l-footer-socials">
             {SOCIAL_LINKS.map(link => (
               <a key={link.label} href={link.href} aria-label={link.label} target="_blank" rel="noopener noreferrer">
-                <i className={link.icon} />
+                <SocialIcon icon={link.icon} />
               </a>
             ))}
           </div>
         </div>
 
         <div className="l-footer-links-grid">
-          {FOOTER_GROUPS.map(group => (
+          {groups.map(group => (
             <div className="l-footer-column" key={group.title}>
               <h4>{group.title}</h4>
               {group.links.map(link => (
@@ -79,8 +59,8 @@ export function Footer() {
 
       <div className="l-footer-bottom">
         <span className="l-footer-badge l-footer-version"><i className="fas fa-circle" /> v2.0.0</span>
-        <span className="l-footer-copyright">© {new Date().getFullYear()} ManuGent. Todos os direitos reservados.</span>
-        <span className="l-footer-badge l-footer-secure"><i className="fas fa-circle-check" /> Seguro e protegido</span>
+        <span className="l-footer-copyright">© {new Date().getFullYear()} ManuGent. {t.footer.copyright}</span>
+        <span className="l-footer-badge l-footer-secure"><i className="fas fa-circle-check" /> {t.footer.secure}</span>
       </div>
     </footer>
   )

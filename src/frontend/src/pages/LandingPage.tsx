@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useTheme } from '../contexts/ThemeContext'
 import { Navbar } from '../components/landing/Navbar'
 import { Hero } from '../components/landing/Hero'
 import { StatsBar } from '../components/landing/StatsBar'
@@ -9,6 +10,7 @@ import { Footer } from '../components/landing/Footer'
 
 export function LandingPage() {
   const pageRef = useRef<HTMLDivElement>(null)
+  const { theme } = useTheme()
 
   useEffect(() => {
     const pageElement = pageRef.current
@@ -45,7 +47,7 @@ export function LandingPage() {
   }, [])
 
   return (
-    <div ref={pageRef} className="l-page">
+    <div ref={pageRef} className="l-page" data-theme={theme}>
       {/* Ambient background layer: noise + slow-drifting particles */}
       <div className="l-noise" aria-hidden="true" />
       <div className="l-particles" aria-hidden="true">
