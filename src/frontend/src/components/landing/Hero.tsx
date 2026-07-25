@@ -43,8 +43,8 @@ export function Hero() {
           {/* Perks */}
           <div className="l-hero-perks">
             <div className="l-hero-perk">
-              <div className="l-hero-perk-icon l-hero-perk-icon-outline">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8 1L3 3v4c0 3.5 2 6.5 5 8 3-1.5 5-4.5 5-8V3L8 1z"/></svg>
+              <div className="l-hero-perk-icon l-hero-perk-icon-green">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8 1L3 3v4c0 3.5 2 6.5 5 8 3-1.5 5-4.5 5-8V3L8 1z"/><path d="M5.8 8l1.6 1.6 3-3.2"/></svg>
               </div>
               <div>
                 <strong>Seguro e confiável</strong>
@@ -52,8 +52,8 @@ export function Hero() {
               </div>
             </div>
             <div className="l-hero-perk">
-              <div className="l-hero-perk-icon l-hero-perk-icon-outline">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M13 4L5.5 11.5 3 9"/></svg>
+              <div className="l-hero-perk-icon l-hero-perk-icon-violet">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" stroke="none"><path d="M8.6 1L3 9h3.6l-1.2 6L12 7H8.4z"/></svg>
               </div>
               <div>
                 <strong>Implementação rápida</strong>
@@ -61,7 +61,7 @@ export function Hero() {
               </div>
             </div>
             <div className="l-hero-perk">
-              <div className="l-hero-perk-icon l-hero-perk-icon-outline">
+              <div className="l-hero-perk-icon l-hero-perk-icon-blue">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="5" cy="5" r="2"/><circle cx="11" cy="5" r="2"/><path d="M3 13l3-3 2 2 4-4"/></svg>
               </div>
               <div>
@@ -124,24 +124,24 @@ function HeroVisual() {
       />
       <FloatingCard
         pos="mid-right"
-        label="Economia"
-        value="23%"
-        sub="Redução de custos"
-        color="#38bdf8"
-      />
-      <FloatingCard
-        pos="bottom-left"
         label="IA Insights"
         value="24"
         sub="Recomendações"
         color="#c084fc"
       />
       <FloatingCard
-        pos="bottom-right"
+        pos="bottom-left"
         label="Inventário"
         value="1.284"
         sub="Itens"
         color="#fb923c"
+      />
+      <FloatingCard
+        pos="bottom-right"
+        label="Economia"
+        value="23%"
+        sub="Redução de custos"
+        color="#38bdf8"
       />
 
       {/* ── Connecting Lines (SVG) ── */}
