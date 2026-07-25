@@ -147,7 +147,7 @@ button { font: inherit; }
 @keyframes authFadeInLeft { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
 
 .auth-page { min-height: 100vh; display: flex; flex-direction: column; position: relative; background: var(--bg-primary); overflow: hidden; transition: background-color 0.3s ease; }
-.auth-page::before { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0; background: radial-gradient(ellipse 55% 45% at 15% 15%, var(--accent-glow) 0%, transparent 60%), radial-gradient(ellipse 45% 40% at 85% 75%, rgba(6,182,212,0.12) 0%, transparent 60%), radial-gradient(ellipse 40% 35% at 90% 10%, rgba(139,92,246,0.1) 0%, transparent 60%); }
+.auth-page::before { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0; background: radial-gradient(ellipse 70% 50% at 50% -5%, rgba(124,58,237,.10), transparent 55%), radial-gradient(ellipse 50% 40% at 85% 70%, rgba(99,102,241,.06), transparent 55%), radial-gradient(ellipse 40% 30% at 15% 50%, rgba(56,189,248,.03), transparent 55%), var(--bg-primary); }
 
 .auth-page[data-theme='light'] {
   --bg-primary: #f6f7fb;
@@ -162,7 +162,7 @@ button { font: inherit; }
 }
 
 /* Topbar */
-.auth-topbar { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; padding: 28px 48px; gap: 16px; }
+.auth-topbar { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; padding: 0 48px; gap: 16px; height: 96px; max-width: 1692px; margin: 0 auto; width: 100%; }
 .auth-brand { display: flex; align-items: center; text-decoration: none; }
 .auth-brand-logo { height: 48px; width: auto; display: block; }
 .auth-topbar-actions { display: flex; align-items: center; gap: 10px; }
@@ -303,7 +303,7 @@ button { font: inherit; }
   .editor-toolbar { width: 100%; flex-direction: row; flex-wrap: wrap; }
   .editor-toolbar-panel { flex: 1; min-width: 200px; }
   .editor-canvas { min-height: 400px; }
-  .auth-topbar { padding: 22px 28px; }
+  .auth-topbar { height: 64px; padding: 0 28px; max-width: none; }
   .auth-main { flex-direction: column; gap: 40px; padding: 12px 28px 40px; text-align: center; }
   .auth-pitch { max-width: 560px; }
   .auth-headline { font-size: 42px; }
@@ -334,7 +334,7 @@ button { font: inherit; }
   .metric-card-value { font-size: 24px; }
   .page-title { font-size: 24px; }
   .sidebar-toggle { width: 32px; height: 32px; font-size: 10px; }
-  .auth-topbar { padding: 18px 20px; }
+  .auth-topbar { height: 56px; padding: 0 20px; max-width: none; }
   .auth-brand-logo { height: 40px; }
   .auth-main { padding: 8px 20px 32px; gap: 32px; }
   .auth-headline { font-size: 32px; }
