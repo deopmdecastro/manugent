@@ -30,7 +30,7 @@ export function Navbar() {
     <nav className={`l-nav${scrolled ? ' is-scrolled' : ''}`}>
       <div className="l-nav-inner">
         <a href="#top" className="l-nav-logo" aria-label="ManuGent">
-          <img src="/app/assets/ManuGent_logo.png" alt="ManuGent" height="28" />
+          <img src="/app/assets/ManuGent_logo.png" alt="ManuGent" height="38" />
         </a>
 
         <div className={`l-nav-links${mobileOpen ? ' is-open' : ''}`}>

@@ -3,7 +3,7 @@ export function Footer() {
     <footer className="l-footer">
       <div className="l-footer-grid">
         <div className="l-footer-brand">
-          <img src="/app/assets/ManuGent_logo.png" alt="ManuGent" height="24" />
+          <img src="/app/assets/ManuGent_logo.png" alt="ManuGent" height="30" />
           <p>
             Plataforma CMMS inteligente com agente IA integrado.
             Manutenção industrial do futuro, hoje.
