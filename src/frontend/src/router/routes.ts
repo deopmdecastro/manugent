@@ -5,7 +5,6 @@ import { LoginPage } from '../pages/LoginPage'
 import { LandingPage } from '../pages/LandingPage'
 import { ProjectsPage } from '../pages/ProjectsPage'
 import { PresetsPage } from '../pages/PresetsPage'
-import { EditorPage } from '../pages/EditorPage'
 import { UserDashboardPage } from '../pages/user/UserDashboardPage'
 import { SettingsPage } from '../pages/SettingsPage'
 
@@ -38,7 +37,6 @@ export const ROUTES: RouteConfig[] = [
   { path: 'technicians', component: DashboardPage, shell: true, label: 'Técnicos', icon: 'fas fa-hard-hat' },
   { path: 'projects', component: ProjectsPage, shell: true, label: 'Projetos', icon: 'fas fa-diagram-project' },
   { path: 'presets', component: PresetsPage, shell: true, label: 'Presets', icon: 'fas fa-layer-group' },
-  { path: 'editor', component: EditorPage, shell: true, label: 'Editor', icon: 'fas fa-pen-ruler' },
   { path: 'files', component: DashboardPage, shell: true, label: 'Ficheiros', icon: 'fas fa-folder-open' },
   { path: 'ai', component: DashboardPage, shell: true, label: 'Assistente IA', icon: 'fas fa-robot' },
   { path: 'calendar', component: DashboardPage, shell: true, label: 'Calendário', icon: 'fas fa-calendar-alt' },
