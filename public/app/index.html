@@ -163,7 +163,14 @@
     }
     .sidebar-item:hover { background: var(--surface-hover); color: var(--text-primary); }
     .sidebar-item.active { background: var(--surface-hover-strong); color: var(--accent-light); }
-    .sidebar-item i { width: 18px; text-align: center; }
+    .sidebar-item.active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; border-radius: 0 3px 3px 0; background: linear-gradient(180deg, #818CF8, #C4B5FD); box-shadow: 0 0 12px rgba(129,140,248,0.6); }
+    .sidebar-item i { width: 18px; text-align: center; transition: transform 0.2s ease; }
+    .sidebar-item:hover i { transform: scale(1.12); }
+    .sidebar-item.active i { transform: scale(1.08); }
+    .page-header { margin-bottom: 24px; }
+    .page-header h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; }
+    .page-header h1 span { background: linear-gradient(135deg, #C4B5FD, #818CF8 60%, #38BDF8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .page-header p { margin-top: 6px; color: var(--text-secondary); font-size: 14px; }
     .sidebar-label {
       overflow: hidden;
       text-overflow: ellipsis;
@@ -2804,44 +2811,55 @@
     .data-table tr:hover td { background: rgba(99,102,241,0.05); }
     .dashboard-hero {
       position: relative; overflow: hidden;
-      padding: 32px 32px 28px;
-      border-radius: 24px;
+      padding: 34px 34px 30px;
+      border-radius: 26px;
       border: 1px solid var(--hairline-b);
       background:
-        radial-gradient(circle at 78% 12%, rgba(99,102,241,0.22), transparent 42%),
-        radial-gradient(circle at 18% 18%, rgba(168,85,247,0.14), transparent 36%),
-        radial-gradient(circle at 50% 100%, rgba(124,58,237,0.08), transparent 50%),
+        radial-gradient(circle at 78% 12%, rgba(99,102,241,0.24), transparent 44%),
+        radial-gradient(circle at 18% 18%, rgba(168,85,247,0.16), transparent 38%),
+        radial-gradient(circle at 50% 100%, rgba(124,58,237,0.1), transparent 52%),
         var(--surface-b);
       box-shadow: var(--shadow-lg), inset 0 1px 0 var(--surface-hover);
     }
-    .dashboard-hero::after { content: ''; position: absolute; inset: auto -4% -30% auto; width: 300px; height: 300px; border-radius: 999px; background: radial-gradient(circle, rgba(99,102,241,0.25), transparent 55%); filter: blur(20px); pointer-events: none; }
+    .dashboard-hero::after { content: ''; position: absolute; inset: auto -4% -30% auto; width: 320px; height: 320px; border-radius: 999px; background: radial-gradient(circle, rgba(99,102,241,0.28), transparent 55%); filter: blur(24px); pointer-events: none; animation: heroGlow 9s ease-in-out infinite; }
+    @keyframes heroGlow { 0%,100% { transform: translate(0,0); opacity: 0.9; } 50% { transform: translate(-12px,-8px); opacity: 1; } }
     .dashboard-hero__eyebrow { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: rgba(124,58,237,0.14); border: 1px solid rgba(124,58,237,0.3); color: #C4B5FD; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; box-shadow: 0 0 20px rgba(124,58,237,0.15); }
+    .dashboard-hero__eyebrow i { animation: eyebrowPulse 2.4s ease-in-out infinite; }
+    @keyframes eyebrowPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
     .dashboard-hero__title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-top: 18px; flex-wrap: wrap; }
     .dashboard-hero__title { margin: 0; font-size: 34px; line-height: 1.02; letter-spacing: -0.03em; }
+    .dashboard-hero__title span { background: linear-gradient(135deg, #C4B5FD, #818CF8 60%, #38BDF8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
     .dashboard-hero__subtitle { margin-top: 10px; color: var(--text-secondary); font-size: 14px; }
-    .dashboard-hero__date { display: inline-flex; align-items: center; gap: 10px; padding: 12px 18px; min-height: 48px; border-radius: 14px; background: var(--surface-d); border: 1px solid var(--hairline-c); color: var(--text-primary); font-size: 13px; font-weight: 700; white-space: nowrap; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+    .dashboard-hero__date { display: inline-flex; align-items: center; gap: 10px; padding: 12px 18px; min-height: 48px; border-radius: 14px; background: var(--surface-d); border: 1px solid var(--hairline-c); color: var(--text-primary); font-size: 13px; font-weight: 700; white-space: nowrap; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+    .dashboard-hero__date:hover { border-color: rgba(129,140,248,0.4); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
     .metric-card { position: relative; overflow: hidden; min-height: 122px; }
-    .metric-card--hero { min-height: 192px; padding: 24px; border-radius: 20px; transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease; }
-    .metric-card--hero::before { content: ''; position: absolute; inset: 0 auto auto 0; width: 100%; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.18), rgba(255,255,255,0)); }
-    .metric-card--hero:hover { transform: translateY(-2px); border-color: var(--hairline-d); box-shadow: var(--shadow-lg), 0 0 30px rgba(124,58,237,0.12); }
-    .metric-card--compact { min-height: 138px; padding: 20px; border-radius: 16px; transition: transform 0.22s ease, box-shadow 0.22s ease; }
-    .metric-card--compact:hover { transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+    .metric-card--hero { min-height: 196px; padding: 24px; border-radius: 20px; transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease; }
+    .metric-card--hero::before { content: ''; position: absolute; inset: 0 auto auto 0; width: 100%; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,255,255,0)); }
+    .metric-card--hero::after { content: ''; position: absolute; inset: auto -20% -40% auto; width: 200px; height: 200px; border-radius: 999px; background: radial-gradient(circle, rgba(124,58,237,0.14), transparent 60%); filter: blur(20px); pointer-events: none; opacity: 0; transition: opacity 0.3s ease; }
+    .metric-card--hero:hover { transform: translateY(-3px); border-color: var(--hairline-d); box-shadow: var(--shadow-lg), 0 0 34px rgba(124,58,237,0.16); }
+    .metric-card--hero:hover::after { opacity: 1; }
+    .metric-card--compact { min-height: 140px; padding: 20px; border-radius: 16px; transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease; }
+    .metric-card--compact:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: var(--hairline-c); }
     .metric-card__header { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
     .metric-card__label { color: var(--text-muted); font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
-    .metric-card__icon { width: 48px; height: 48px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--hairline-a); box-shadow: inset 0 1px 0 var(--surface-hover); flex-shrink: 0; font-size: 18px; }
+    .metric-card__icon { width: 48px; height: 48px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--hairline-a); box-shadow: inset 0 1px 0 var(--surface-hover); flex-shrink: 0; font-size: 18px; transition: transform 0.25s ease; }
+    .metric-card--hero:hover .metric-card__icon { transform: scale(1.08) rotate(-3deg); }
     .metric-card__icon--purple { background: rgba(124,58,237,0.2); color: #C4B5FD; }
     .metric-card__icon--green { background: rgba(16,185,129,0.18); color: #6EE7B7; }
     .metric-card__icon--amber { background: rgba(239,68,68,0.18); color: #FCA5A5; }
     .metric-card__icon--blue { background: rgba(99,102,241,0.18); color: #93C5FD; }
-    .metric-card__value { color: var(--text-primary); font-size: 2.25rem; font-weight: 800; line-height: 1; letter-spacing: -0.03em; }
+    .metric-card__value { color: var(--text-primary); font-size: 2.25rem; font-weight: 800; line-height: 1; letter-spacing: -0.03em; transition: color 0.2s ease; }
+    .metric-card--hero:hover .metric-card__value { color: #fff; }
     .metric-card__value--compact { margin-top: 16px; font-size: 1.9rem; font-weight: 800; }
     .metric-card__sub { margin-top: 12px; color: var(--text-secondary); font-size: 13px; line-height: 1.35; }
     .metric-card__status { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; color: var(--text-secondary); font-size: 12px; font-weight: 600; }
-    .metric-card__status::before { content: ''; width: 7px; height: 7px; border-radius: 999px; background: currentColor; box-shadow: 0 0 12px currentColor; }
+    .metric-card__status::before { content: ''; width: 7px; height: 7px; border-radius: 999px; background: currentColor; box-shadow: 0 0 12px currentColor; animation: statusPulse 2.6s ease-in-out infinite; }
+    @keyframes statusPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
     .metric-card__status--success { color: #34d399; }
     .metric-card__status--alert { color: #f97316; }
     .metric-card__status--info { color: #60a5fa; }
-    .metric-card__spark { position: absolute; right: 14px; bottom: 10px; opacity: 0.75; pointer-events: none; }
+    .metric-card__spark { position: absolute; right: 14px; bottom: 10px; opacity: 0.75; pointer-events: none; transition: opacity 0.25s ease; }
+    .metric-card--hero:hover .metric-card__spark { opacity: 1; }
     .metric-card__spark svg { width: 130px; height: 52px; display: block; }
     .dashboard-compact-grid .metric-card__sub { margin-top: 10px; font-size: 12px; }
     .dashboard-mini-bar { display: grid; gap: 8px; }
@@ -2878,6 +2896,12 @@
     #page-dashboard .card button.card:hover { transform: translateY(-3px); border-color: var(--accent-light); box-shadow: 0 8px 30px rgba(124,58,237,0.2); }
     #page-dashboard .card button.card i { font-size: 24px; transition: transform 0.2s ease; }
     #page-dashboard .card button.card:hover i { transform: scale(1.1); }
+    .quick-action { position: relative; overflow: hidden; }
+    .quick-action::after { content: ''; position: absolute; inset: auto -30% -50% auto; width: 140px; height: 140px; border-radius: 999px; background: radial-gradient(circle, rgba(124,58,237,0.16), transparent 60%); filter: blur(18px); pointer-events: none; opacity: 0; transition: opacity 0.3s ease; }
+    .quick-action:hover::after { opacity: 1; }
+    .quick-action i { transition: transform 0.25s cubic-bezier(.4,0,.2,1); }
+    .quick-action:hover i { transform: scale(1.18) translateY(-2px); }
+    .badge-purple { background: rgba(124,58,237,0.18); color: #C4B5FD; border: 1px solid rgba(124,58,237,0.28); padding: 3px 10px; border-radius: 999px; display: inline-flex; align-items: center; gap: 5px; }
     @media (max-width: 900px) { .dashboard-hero { position: relative; overflow: hidden; padding: 28px 28px 24px; border-radius: 28px; border: 1px solid var(--hairline-b); background: radial-gradient(circle at 78% 12%, rgba(99,102,241,0.18), transparent 38%), radial-gradient(circle at 18% 18%, rgba(168,85,247,0.12), transparent 32%), var(--surface-b); box-shadow: var(--shadow-lg), inset 0 1px 0 var(--surface-hover); padding: 22px; } .dashboard-hero__title { font-size: 28px; } .metric-card--hero { min-height: 168px; } .app-content { padding: 22px 18px 30px !important; } }
     @media (max-width: 640px) { .dashboard-hero__title { font-size: 24px; } .dashboard-hero__date { width: 100%; justify-content: center; } .metric-card__spark { opacity: 0.5; } }
 
@@ -3176,10 +3200,10 @@
 
       <!-- NOTIFICAÇÕES -->
       <div id="page-notifications" class="page fade-in">
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-6 page-header">
           <div>
-            <h1 class="text-2xl font-bold mono">Notificações</h1>
-            <p class="text-slate-400 text-sm mt-1" id="notifications-page-subtitle">Eventos operacionais e pedidos</p>
+            <h1 class="mono">Notificações</h1>
+            <p id="notifications-page-subtitle">Eventos operacionais e pedidos</p>
           </div>
           <div class="flex gap-2">
             <button class="btn-secondary" onclick="markAllNotificationsRead()"><i class="fas fa-check-double"></i> Ler tudo</button>
@@ -3331,23 +3355,30 @@
           <div id="dash-ots-list"><p class="text-slate-500 text-sm">Nenhuma OT criada ainda.</p></div>
         </div>
         <div class="card p-5">
-          <h3 class="font-semibold mb-4">Ações rápidas</h3>
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold">Ações rápidas</h3>
+            <span class="badge badge-purple text-xs"><i class="fas fa-bolt"></i> Atalhos</span>
+          </div>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <button class="card p-4 text-center hover:border-purple-500/50 transition-all" onclick="openNewOTModal()">
+            <button class="card p-4 text-center quick-action" onclick="openNewOTModal()">
               <i class="fas fa-plus-circle text-purple-400 text-xl mb-2 block"></i>
-              <div class="text-sm">Nova OT</div>
+              <div class="text-sm font-semibold">Nova OT</div>
+              <div class="text-xs text-slate-500 mt-1">Criar ordem</div>
             </button>
-            <button class="card p-4 text-center hover:border-blue-500/50 transition-all" onclick="openNewEquipModal()">
+            <button class="card p-4 text-center quick-action" onclick="openNewEquipModal()">
               <i class="fas fa-microchip text-blue-400 text-xl mb-2 block"></i>
-              <div class="text-sm">Novo Equipamento</div>
+              <div class="text-sm font-semibold">Novo Equipamento</div>
+              <div class="text-xs text-slate-500 mt-1">Registar ativo</div>
             </button>
-            <button class="card p-4 text-center hover:border-green-500/50 transition-all" onclick="showPage('ai-assistant')">
+            <button class="card p-4 text-center quick-action" onclick="showPage('ai-assistant')">
               <i class="fas fa-robot text-green-400 text-xl mb-2 block"></i>
-              <div class="text-sm">Assistente IA ManuGent</div>
+              <div class="text-sm font-semibold">Assistente IA</div>
+              <div class="text-xs text-slate-500 mt-1">Diagnóstico</div>
             </button>
-            <button class="card p-4 text-center hover:border-yellow-500/50 transition-all" onclick="openNewKnowledgeModal()">
+            <button class="card p-4 text-center quick-action" onclick="openNewKnowledgeModal()">
               <i class="fas fa-book-open text-yellow-400 text-xl mb-2 block"></i>
-              <div class="text-sm">Novo Artigo</div>
+              <div class="text-sm font-semibold">Novo Artigo</div>
+              <div class="text-xs text-slate-500 mt-1">Base de conhecimento</div>
             </button>
           </div>
         </div>
@@ -3355,10 +3386,10 @@
 
       <!-- ORDENS DE TRABALHO -->
       <div id="page-ots" class="page fade-in">
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-6 page-header">
           <div>
-            <h1 class="text-2xl font-bold mono">Ordens de Trabalho</h1>
-            <p class="text-slate-400 text-sm mt-1">Gestão de intervenções e manutenção</p>
+            <h1 class="mono">Ordens de <span>Trabalho</span></h1>
+            <p>Gestão de intervenções e manutenção</p>
           </div>
           <div class="flex gap-2">
             <button class="btn-secondary" onclick="createScheduledDemoFlow()"><i class="fas fa-bolt"></i> Criar fluxo demo</button>
@@ -3462,10 +3493,10 @@
 
       <!-- EQUIPAMENTOS -->
       <div id="page-equipment" class="page fade-in">
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-6 page-header">
           <div>
-            <h1 class="text-2xl font-bold mono">Equipamentos</h1>
-            <p class="text-slate-400 text-sm mt-1">Gestão de ativos e histórico técnico</p>
+            <h1 class="mono">Equipamentos</h1>
+            <p>Gestão de ativos e histórico técnico</p>
           </div>
           <button class="btn-primary" onclick="openNewEquipModal()"><i class="fas fa-plus"></i> Novo Equipamento</button>
         </div>
@@ -3495,10 +3526,10 @@
 
       <!-- CLIENTES -->
       <div id="page-clients" class="page fade-in">
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-6 page-header">
           <div>
-            <h1 class="text-2xl font-bold mono">Clientes</h1>
-            <p class="text-slate-400 text-sm mt-1">Gestão de clientes e edifícios</p>
+            <h1 class="mono">Clientes</h1>
+            <p>Gestão de clientes e edifícios</p>
           </div>
           <button class="btn-primary" onclick="openNewClientModal()"><i class="fas fa-plus"></i> Novo Cliente</button>
         </div>
@@ -3513,10 +3544,10 @@
 
       <!-- EDIFÍCIOS -->
       <div id="page-buildings" class="page fade-in">
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-6 page-header">
           <div>
-            <h1 class="text-2xl font-bold mono">Edifícios</h1>
-            <p class="text-slate-400 text-sm mt-1">Instalações associadas a clientes</p>
+            <h1 class="mono">Edifícios</h1>
+            <p>Instalações associadas a clientes</p>
           </div>
           <button class="btn-primary" onclick="openNewBuildingModal()"><i class="fas fa-plus"></i> Novo Edifício</button>
         </div>
@@ -3525,10 +3556,10 @@
 
       <!-- TÉCNICOS -->
       <div id="page-technicians" class="page fade-in">
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-6 page-header">
           <div>
-            <h1 class="text-2xl font-bold mono">Técnicos</h1>
-            <p class="text-slate-400 text-sm mt-1">Gestão da equipa técnica</p>
+            <h1 class="mono">Técnicos</h1>
+            <p>Gestão da equipa técnica</p>
           </div>
           <button class="btn-primary" onclick="openNewTechModal()"><i class="fas fa-plus"></i> Novo Técnico</button>
         </div>
@@ -3543,10 +3574,10 @@
 
       <!-- CONHECIMENTO -->
       <div id="page-knowledge" class="page fade-in">
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-6 page-header">
           <div>
-            <h1 class="text-2xl font-bold mono">Procedimentos Técnicos</h1>
-            <p class="text-slate-400 text-sm mt-1">Passos, fotos, vídeos, PDFs e soluções por equipamento</p>
+            <h1 class="mono">Procedimentos <span>Técnicos</span></h1>
+            <p>Passos, fotos, vídeos, PDFs e soluções por equipamento</p>
           </div>
           <button class="btn-primary" onclick="openNewKnowledgeModal()"><i class="fas fa-plus"></i> Novo Procedimento</button>
         </div>
@@ -3572,7 +3603,7 @@
 
       <!-- DETALHE DO ARTIGO -->
       <div id="page-article-detail" class="page fade-in">
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-6 page-header">
           <div class="flex items-center gap-3">
             <button class="btn-ghost" onclick="showPage('knowledge')"><i class="fas fa-arrow-left"></i></button>
             <div>
@@ -3580,8 +3611,8 @@
                 <span id="article-detail-category" class="badge badge-purple">Procedimento</span>
                 <span id="article-detail-id" class="text-xs text-slate-500 mono">KB</span>
               </div>
-              <h1 id="article-detail-title" class="text-2xl font-bold mono">Artigo</h1>
-              <p id="article-detail-subtitle" class="text-slate-400 text-sm mt-1">Detalhe técnico do procedimento</p>
+              <h1 id="article-detail-title" class="mono">Artigo</h1>
+              <p id="article-detail-subtitle">Detalhe técnico do procedimento</p>
             </div>
           </div>
           <button class="btn-secondary" onclick="openNewKnowledgeModal()"><i class="fas fa-plus"></i> Novo Procedimento</button>
@@ -3624,10 +3655,10 @@
 
       <!-- FICHEIROS -->
       <div id="page-files" class="page fade-in">
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-6 page-header">
           <div>
-            <h1 class="text-2xl font-bold mono">Ficheiros</h1>
-            <p class="text-slate-400 text-sm mt-1">Documentos, links, vídeos, imagens, esquemas e credenciais partilhados</p>
+            <h1 class="mono">Ficheiros</h1>
+            <p>Documentos, links, vídeos, imagens, esquemas e credenciais partilhados</p>
           </div>
           <div class="flex gap-2">
             <button class="btn-secondary" onclick="openNewFolderModal()"><i class="fas fa-folder-plus"></i> Nova Pasta</button>
@@ -3681,14 +3712,14 @@
 
       <!-- ASSISTENTE IA -->
       <div id="page-ai-assistant" class="page fade-in">
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-6 page-header">
           <div class="flex items-center gap-4">
             <div class="mascot-stage mascot-stage-chat">
               <img src="assets/icon3d_mascot.png" alt="Mascote ManuGent" class="mascot-static-image">
             </div>
             <div>
-              <h1 class="text-2xl font-bold mono">Assistente IA ManuGent</h1>
-              <p class="text-slate-400 text-sm mt-1 flex items-center gap-2">
+              <h1 class="mono">Assistente IA <span>ManuGent</span></h1>
+              <p class="flex items-center gap-2">
                 <span class="status-dot dot-green pulse" id="ai-status-dot"></span>
                 <span id="ai-status-text">A verificar estado da IA...</span>
               </p>
@@ -3756,10 +3787,10 @@
 
       <!-- CALENDÁRIO -->
       <div id="page-calendar" class="page fade-in">
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-6 page-header">
           <div>
-            <h1 class="text-2xl font-bold mono">Calendário</h1>
-            <p class="text-slate-400 text-sm mt-1">Planeamento e agendamento de intervenções</p>
+            <h1 class="mono">Calendário</h1>
+            <p>Planeamento e agendamento de intervenções</p>
           </div>
           <button class="btn-primary" onclick="openNewOTModal()"><i class="fas fa-plus"></i> Agendar</button>
         </div>
@@ -3788,10 +3819,10 @@
 
       <!-- CHECKLISTS -->
       <div id="page-checklists" class="page fade-in">
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-6 page-header">
           <div>
-            <h1 class="text-2xl font-bold mono">Checklists</h1>
-            <p class="text-slate-400 text-sm mt-1">Rondas e inspeções periódicas</p>
+            <h1 class="mono">Checklists</h1>
+            <p>Rondas e inspeções periódicas</p>
           </div>
           <button class="btn-primary" onclick="openNewChecklistModal()"><i class="fas fa-plus"></i> Nova Checklist</button>
         </div>
@@ -3800,10 +3831,10 @@
 
       <!-- INCIDENTES -->
       <div id="page-incidents" class="page fade-in">
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-6 page-header">
           <div>
-            <h1 class="text-2xl font-bold mono">Incidentes</h1>
-            <p class="text-slate-400 text-sm mt-1">Registo de falhas e ocorrências</p>
+            <h1 class="mono">Incidentes</h1>
+            <p>Registo de falhas e ocorrências</p>
           </div>
           <button class="btn-primary" onclick="openNewIncidentModal()"><i class="fas fa-plus"></i> Novo Incidente</button>
         </div>
@@ -3823,10 +3854,10 @@
 
       <!-- MATERIAL -->
       <div id="page-materials" class="page fade-in">
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-6 page-header">
           <div>
-            <h1 class="text-2xl font-bold mono">Material</h1>
-            <p class="text-slate-400 text-sm mt-1">Stock, consumo e material usado em OTs</p>
+            <h1 class="mono">Material</h1>
+            <p>Stock, consumo e material usado em OTs</p>
           </div>
           <button class="btn-primary" onclick="createStockMaterial()" id="new-material-page-btn"><i class="fas fa-plus"></i> Novo Material</button>
         </div>
@@ -3837,10 +3868,10 @@
 
       <!-- COMPRAS -->
       <div id="page-purchases" class="page fade-in">
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-6 page-header">
           <div>
-            <h1 class="text-2xl font-bold mono">Compras</h1>
-            <p class="text-slate-400 text-sm mt-1">Pedidos, aprovações e receção de material</p>
+            <h1 class="mono">Compras</h1>
+            <p>Pedidos, aprovações e receção de material</p>
           </div>
           <button class="btn-primary" onclick="createPurchaseRequest()"><i class="fas fa-plus"></i> Novo Pedido</button>
         </div>
@@ -3858,10 +3889,10 @@
 
       <!-- ORÇAMENTOS -->
       <div id="page-quotes" class="page fade-in">
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-6 page-header">
           <div>
-            <h1 class="text-2xl font-bold mono">Orçamentos</h1>
-            <p class="text-slate-400 text-sm mt-1">Propostas, faturas e documentos comerciais</p>
+            <h1 class="mono">Orçamentos</h1>
+            <p>Propostas, faturas e documentos comerciais</p>
           </div>
           <button class="btn-primary" onclick="generateBillingDocuments()"><i class="fas fa-file-circle-plus"></i> Gerar Orçamento</button>
         </div>
@@ -3872,9 +3903,9 @@
 
       <!-- UTILIZADORES -->
       <div id="page-users" class="page fade-in">
-        <div class="mb-6">
-          <h1 class="text-2xl font-bold mono">Utilizadores</h1>
-          <p class="text-slate-400 text-sm mt-1">Contas, senhas iniciais e níveis de permissões da plataforma</p>
+        <div class="mb-6 page-header">
+          <h1 class="mono">Utilizadores</h1>
+          <p>Contas, senhas iniciais e níveis de permissões da plataforma</p>
         </div>
         <div class="card p-6" id="admin-users-card">
           <div class="flex items-center justify-between gap-4 mb-5">
@@ -3921,9 +3952,9 @@
 
       <!-- SETTINGS -->
       <div id="page-settings" class="page fade-in">
-        <div class="mb-6">
-          <h1 class="text-2xl font-bold mono">Definições</h1>
-          <p class="text-slate-400 text-sm mt-1">Perfil e configurações da plataforma</p>
+        <div class="mb-6 page-header">
+          <h1 class="mono">Definições</h1>
+          <p>Perfil e configurações da plataforma</p>
         </div>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="card p-6">
