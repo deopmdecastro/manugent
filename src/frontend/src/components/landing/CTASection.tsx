@@ -1,7 +1,7 @@
 export function CTASection() {
   return (
     <section className="l-section l-cta">
-      <div className="l-cta-card">
+      <div className="l-cta-card l-reveal">
         <div className="l-cta-glow" />
         <h2 className="l-cta-title">
           Pronto para transformar

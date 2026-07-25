@@ -54,7 +54,7 @@ function AnimatedCounter({ value, suffix }: { value: number; suffix: string }) {
 export function StatsBar() {
   return (
     <section className="l-stats">
-      <div className="l-stats-inner">
+      <div className="l-stats-inner l-reveal">
         <div className="l-stats-trust">
           <span className="l-stats-trust-label">Confiado por equipas em todo o mundo</span>
         </div>

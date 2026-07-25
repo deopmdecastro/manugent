@@ -34,7 +34,7 @@ const FEATURES = [
 export function FeaturesGrid() {
   return (
     <section id="features" className="l-section">
-      <div className="l-section-header">
+      <div className="l-section-header l-reveal">
         <span className="l-section-badge">Plataforma</span>
         <h2 className="l-section-title">
           Tudo o que precisas para
@@ -47,7 +47,7 @@ export function FeaturesGrid() {
         </p>
       </div>
 
-      <div className="l-features-grid">
+      <div className="l-features-grid l-reveal l-reveal-delay-1">
         {FEATURES.map((f, i) => (
           <div key={i} className="l-feature-card">
             <div className="l-feature-card-icon">

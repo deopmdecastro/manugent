@@ -3,7 +3,7 @@ export function Hero() {
     <section className="l-hero">
       <div className="l-hero-grid">
         {/* ── LEFT COLUMN ── */}
-        <div className="l-hero-content">
+        <div className="l-hero-content l-reveal">
           {/* Badge */}
           <div className="l-hero-badge">
             <span className="l-hero-badge-dot" />
@@ -31,6 +31,12 @@ export function Hero() {
             </a>
             <a href="#features" className="l-btn l-btn-ghost">
               Ver funcionalidades
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2" />
+                <rect x="9" y="1.5" width="5.5" height="5.5" rx="1.2" />
+                <rect x="1.5" y="9" width="5.5" height="5.5" rx="1.2" />
+                <rect x="9" y="9" width="5.5" height="5.5" rx="1.2" />
+              </svg>
             </a>
           </div>
 
@@ -67,7 +73,7 @@ export function Hero() {
         </div>
 
         {/* ── RIGHT COLUMN: Hero Visual ── */}
-        <div className="l-hero-visual">
+        <div className="l-hero-visual l-reveal l-reveal-delay-1">
           <HeroVisual />
         </div>
       </div>

@@ -9,7 +9,7 @@ const COMPANIES = [
 
 export function CompanyLogos() {
   return (
-    <section className="l-companies">
+    <section className="l-companies l-reveal">
       <p className="l-companies-label">Empresas que confiam na ManuGent</p>
       <div className="l-companies-row">
         {COMPANIES.map(c => (
