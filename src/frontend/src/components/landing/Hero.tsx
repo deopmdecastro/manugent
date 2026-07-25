@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react'
+
 export function Hero() {
   return (
     <section className="l-hero">
@@ -12,7 +14,9 @@ export function Hero() {
 
           {/* Title */}
           <h1 className="l-hero-title">
-            O conhecimento técnico,
+            O conhecimento
+            <br />
+            técnico,
             <br />
             <span className="l-hero-title-gradient">transformado em IA.</span>
           </h1>
@@ -106,6 +110,7 @@ function HeroVisual() {
         label="Ordens de Serviço"
         value="128"
         sub="Abertas"
+        icon="check"
         color="#818cf8"
       />
       <FloatingCard
@@ -113,6 +118,7 @@ function HeroVisual() {
         label="Manutenções"
         value="96%"
         sub="Concluídas"
+        icon="tool"
         color="#34d399"
       />
       <FloatingCard
@@ -120,6 +126,7 @@ function HeroVisual() {
         label="Ativos"
         value="342"
         sub="Total"
+        icon="box"
         color="#fbbf24"
       />
       <FloatingCard
@@ -127,6 +134,7 @@ function HeroVisual() {
         label="IA Insights"
         value="24"
         sub="Recomendações"
+        icon="brain"
         color="#c084fc"
       />
       <FloatingCard
@@ -134,6 +142,7 @@ function HeroVisual() {
         label="Inventário"
         value="1.284"
         sub="Itens"
+        icon="inventory"
         color="#fb923c"
       />
       <FloatingCard
@@ -141,6 +150,7 @@ function HeroVisual() {
         label="Economia"
         value="23%"
         sub="Redução de custos"
+        icon="money"
         color="#38bdf8"
       />
 
@@ -157,12 +167,12 @@ function HeroVisual() {
           </linearGradient>
         </defs>
         {/* Lines from robot center to each card, matching the tightened cluster */}
-        <path d="M300 310 Q220 190 148 108" stroke="url(#lineGrad1)" strokeWidth="1.4" strokeDasharray="4 6" opacity="0.35" />
-        <path d="M300 310 Q380 190 452 108" stroke="url(#lineGrad2)" strokeWidth="1.4" strokeDasharray="4 6" opacity="0.35" />
-        <path d="M300 310 Q190 280 100 258" stroke="url(#lineGrad1)" strokeWidth="1.2" strokeDasharray="3 7" opacity="0.3" />
-        <path d="M300 310 Q410 280 500 258" stroke="url(#lineGrad2)" strokeWidth="1.2" strokeDasharray="3 7" opacity="0.3" />
-        <path d="M300 310 Q220 370 158 418" stroke="url(#lineGrad1)" strokeWidth="1.2" strokeDasharray="4 6" opacity="0.28" />
-        <path d="M300 310 Q380 370 442 418" stroke="url(#lineGrad2)" strokeWidth="1.2" strokeDasharray="4 6" opacity="0.28" />
+        <path d="M300 298 Q214 188 126 94" stroke="url(#lineGrad1)" strokeWidth="1.5" strokeDasharray="4 7" opacity="0.42" />
+        <path d="M300 298 Q395 188 505 94" stroke="url(#lineGrad2)" strokeWidth="1.5" strokeDasharray="4 7" opacity="0.42" />
+        <path d="M300 298 Q178 266 82 248" stroke="url(#lineGrad1)" strokeWidth="1.35" strokeDasharray="4 7" opacity="0.36" />
+        <path d="M300 298 Q425 266 518 248" stroke="url(#lineGrad2)" strokeWidth="1.35" strokeDasharray="4 7" opacity="0.36" />
+        <path d="M300 298 Q204 372 112 418" stroke="url(#lineGrad1)" strokeWidth="1.35" strokeDasharray="4 7" opacity="0.34" />
+        <path d="M300 298 Q392 372 510 418" stroke="url(#lineGrad2)" strokeWidth="1.35" strokeDasharray="4 7" opacity="0.34" />
       </svg>
     </div>
   )
@@ -170,33 +180,61 @@ function HeroVisual() {
 
 /* ── Floating Card ── */
 type CardPos = 'top-left' | 'top-right' | 'mid-left' | 'mid-right' | 'bottom-left' | 'bottom-right'
+type CardIcon = 'check' | 'tool' | 'box' | 'brain' | 'inventory' | 'money'
 
-const CARD_POSITIONS: Record<CardPos, { top: string; left?: string; right?: string }> = {
-  'top-left':     { top: '4%',  left: '4%' },
-  'top-right':    { top: '4%',  right: '4%' },
-  'mid-left':     { top: '30%', left: '-2%' },
-  'mid-right':    { top: '30%', right: '-2%' },
-  'bottom-left':  { top: '62%', left: '6%' },
-  'bottom-right': { top: '62%', right: '6%' },
+const CARD_POSITIONS: Record<CardPos, { top: string; left?: string; right?: string; rotate: string }> = {
+  'top-left':     { top: '4%',  left: '12%', rotate: '5deg' },
+  'top-right':    { top: '4%',  right: '2%', rotate: '-4deg' },
+  'mid-left':     { top: '29%', left: '5%', rotate: '1deg' },
+  'mid-right':    { top: '29%', right: '1%', rotate: '-1deg' },
+  'bottom-left':  { top: '55%', left: '7%', rotate: '-4deg' },
+  'bottom-right': { top: '55%', right: '2%', rotate: '5deg' },
 }
 
-function FloatingCard({ pos, label, value, sub, color }: {
-  pos: CardPos; label: string; value: string; sub: string; color: string
+function FloatingCard({ pos, label, value, sub, icon, color }: {
+  pos: CardPos; label: string; value: string; sub: string; icon: CardIcon; color: string
 }) {
-  const style = CARD_POSITIONS[pos]
+  const { rotate, ...position } = CARD_POSITIONS[pos]
 
   return (
     <div
       className="l-float-card"
       style={{
         position: 'absolute',
-        ...style,
+        ...position,
+        '--card-rotate': rotate,
+        '--card-color': color,
         animationDelay: `${Object.keys(CARD_POSITIONS).indexOf(pos) * 0.15}s`,
-      }}
+      } as CSSProperties}
     >
-      <span className="l-float-card-label">{label}</span>
-      <div className="l-float-card-value" style={{ color }}>{value}</div>
-      <span className="l-float-card-sub">{sub}</span>
+      <span className="l-float-card-icon" aria-hidden="true">
+        <CardIconSvg icon={icon} />
+      </span>
+      <span className="l-float-card-copy">
+        <span className="l-float-card-label">{label}</span>
+        <span className="l-float-card-value">{value}</span>
+        <span className="l-float-card-sub">{sub}</span>
+      </span>
     </div>
   )
+}
+
+function CardIconSvg({ icon }: { icon: CardIcon }) {
+  const common = {
+    width: 31,
+    height: 31,
+    viewBox: '0 0 32 32',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 2.2,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+  }
+
+  if (icon === 'check') return <svg {...common}><rect x="7" y="7" width="18" height="21" rx="3" /><path d="M11 5h10" /><path d="M12 18l3 3 6-8" /></svg>
+  if (icon === 'tool') return <svg {...common}><path d="M21 5a7 7 0 0 0-8.5 8.5L5 21l6 6 7.5-7.5A7 7 0 0 0 27 11l-5 5-6-6 5-5z" /></svg>
+  if (icon === 'box') return <svg {...common}><path d="M16 4l10 5.5v13L16 28 6 22.5v-13L16 4z" /><path d="M6 9.5l10 5.5 10-5.5" /><path d="M16 15v13" /></svg>
+  if (icon === 'brain') return <svg {...common}><path d="M12 6a5 5 0 0 0-5 5v10a5 5 0 0 0 5 5" /><path d="M20 6a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5" /><path d="M12 6v20M20 6v20M8 14h8M16 18h8" /></svg>
+  if (icon === 'inventory') return <svg {...common}><path d="M5 12l11 5 11-5" /><path d="M5 12l11-5 11 5v12l-11 5-11-5V12z" /><path d="M16 17v12" /></svg>
+  return <svg {...common}><circle cx="16" cy="16" r="12" /><path d="M19 11.5a4 4 0 0 0-3-1.5c-2 0-3.5 1.1-3.5 2.7 0 4 7 2.1 7 6.1 0 1.7-1.5 3-3.6 3a5 5 0 0 1-3.9-1.9" /><path d="M16 7.5v17" /></svg>
 }

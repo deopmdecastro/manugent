@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 
 const STATS = [
-  { value: 2500, suffix: '', label: 'Utilizadores ativos' },
-  { value: 15000, suffix: '', label: 'Ordens de serviço' },
-  { value: 98, suffix: '%', label: 'Satisfação dos clientes' },
-  { value: 23, suffix: '%', label: 'Redução de custos' },
+  { value: 2500, prefix: '+', suffix: '', label: 'Utilizadores ativos' },
+  { value: 15000, prefix: '+', suffix: '', label: 'Ordens de serviço' },
+  { value: 98, prefix: '+', suffix: '%', label: 'Satisfação dos clientes' },
+  { value: 23, prefix: '-', suffix: '%', label: 'Redução de custos' },
 ]
 
 // Portuguese thousands grouping: 2500 -> "2.500", 15000 -> "15.000"
@@ -12,7 +12,7 @@ function formatPt(n: number): string {
   return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
 
-function AnimatedCounter({ value, suffix, label }: { value: number; suffix: string; label: string }) {
+function AnimatedCounter({ value, prefix, suffix, label }: { value: number; prefix: string; suffix: string; label: string }) {
   const [count, setCount] = useState(0)
   const ref = useRef<HTMLSpanElement>(null)
   const [visible, setVisible] = useState(false)
@@ -47,7 +47,7 @@ function AnimatedCounter({ value, suffix, label }: { value: number; suffix: stri
   return (
     <div className="l-stat">
       <span className="l-stat-value" ref={ref}>
-        <span className="l-stat-plus">+</span>
+        <span className="l-stat-prefix">{prefix}</span>
         {formatted}
         <span className="l-stat-suffix">{suffix}</span>
       </span>
@@ -62,11 +62,14 @@ export function StatsBar() {
       <div className="l-stats-inner l-reveal">
         <div className="l-stats-trust">
           <img src="/app/assets/icon_manugent.png" alt="" className="l-stats-trust-icon" />
-          <span className="l-stats-trust-label">Confiado por equipas em todo o mundo</span>
+          <span className="l-stats-trust-copy">
+            <strong>Confiado por equipas</strong>
+            <span>em todo o mundo</span>
+          </span>
         </div>
         <div className="l-stats-grid">
           {STATS.map(s => (
-            <AnimatedCounter key={s.label} value={s.value} suffix={s.suffix} label={s.label} />
+            <AnimatedCounter key={s.label} value={s.value} prefix={s.prefix} suffix={s.suffix} label={s.label} />
           ))}
         </div>
       </div>
