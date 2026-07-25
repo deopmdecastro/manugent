@@ -612,10 +612,19 @@
 }
 .l-footer-column a:hover { color: var(--l-text); }
 .l-footer-bottom {
-  display: flex; justify-content: space-between;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
   padding-top: 24px; border-top: 1px solid rgba(255,255,255,.04);
   font-size: 13px; color: var(--l-text-muted);
 }
+.l-footer-copyright { flex: 1; text-align: center; }
+.l-footer-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 6px 12px; border-radius: 999px;
+  background: rgba(255,255,255,.04); border: 1px solid var(--l-border);
+  font-weight: 600; white-space: nowrap;
+}
+.l-footer-version i { font-size: 6px; color: #34d399; }
+.l-footer-secure i { color: var(--l-accent-light); }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    RESPONSIVE

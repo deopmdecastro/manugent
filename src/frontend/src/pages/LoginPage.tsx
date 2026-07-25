@@ -56,11 +56,7 @@ export function LoginPage() {
     <div className="auth-page" data-theme={lightPreview ? 'light' : 'dark'}>
       <header className="auth-topbar">
         <Link to="/landing" className="auth-brand">
-          <img src="/app/assets/icon_manugent_white.png" alt="" className="auth-brand-mark" />
-          <span className="auth-brand-text">
-            <strong>ManuGent</strong>
-            <small>Plataforma de Manutenção Inteligente</small>
-          </span>
+          <img src="/app/assets/ManuGent_logo.png" alt="ManuGent" className="auth-brand-logo" />
         </Link>
         <div className="auth-topbar-actions">
           <button

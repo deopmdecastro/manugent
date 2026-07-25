@@ -78,8 +78,9 @@ export function Footer() {
       </div>
 
       <div className="l-footer-bottom">
-        <span>© 2026 ManuGent. Todos os direitos reservados.</span>
-        <span>Feito com 💜 em Portugal</span>
+        <span className="l-footer-badge l-footer-version"><i className="fas fa-circle" /> v2.0.0</span>
+        <span className="l-footer-copyright">© {new Date().getFullYear()} ManuGent. Todos os direitos reservados.</span>
+        <span className="l-footer-badge l-footer-secure"><i className="fas fa-circle-check" /> Seguro e protegido</span>
       </div>
     </footer>
   )
