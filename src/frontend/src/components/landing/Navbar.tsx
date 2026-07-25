@@ -5,7 +5,13 @@ const NAV_LINKS = [
   { label: 'Módulos', href: '#modules' },
   { label: 'IA', href: '#ai' },
   { label: 'Preços', href: '#pricing' },
-  { label: 'Recursos', href: '#resources' },
+]
+
+const RESOURCES_DROPDOWN = [
+  { label: 'Documentação', desc: 'Guias e referência da API', href: '#' },
+  { label: 'Blog', desc: 'Novidades e boas práticas', href: '#' },
+  { label: 'Casos de sucesso', desc: 'Histórias de clientes', href: '#' },
+  { label: 'Central de ajuda', desc: 'Suporte e FAQs', href: '#' },
 ]
 
 export function Navbar() {
@@ -33,6 +39,23 @@ export function Navbar() {
               {link.label}
             </a>
           ))}
+
+          <div className="l-nav-dropdown">
+            <button type="button" className="l-nav-link l-nav-link-dropdown">
+              Recursos
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.6">
+                <path d="M2 3.5L5 6.5L8 3.5" />
+              </svg>
+            </button>
+            <div className="l-nav-dropdown-panel">
+              {RESOURCES_DROPDOWN.map(item => (
+                <a key={item.label} href={item.href} className="l-nav-dropdown-item" onClick={() => setMobileOpen(false)}>
+                  <strong>{item.label}</strong>
+                  <span>{item.desc}</span>
+                </a>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="l-nav-actions">

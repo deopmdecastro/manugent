@@ -11,7 +11,7 @@ export function Footer() {
           <div className="l-footer-socials">
             <a href="#" aria-label="LinkedIn"><i className="fab fa-linkedin-in" /></a>
             <a href="#" aria-label="GitHub"><i className="fab fa-github" /></a>
-            <a href="#" aria-label="Twitter"><i className="fab fa-x-twitter" /></a>
+            <a href="#" aria-label="Twitter"><i className="fab fa-twitter" /></a>
           </div>
         </div>
         <div>

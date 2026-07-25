@@ -7,7 +7,12 @@ const STATS = [
   { value: 23, suffix: '%', label: 'Redução de custos' },
 ]
 
-function AnimatedCounter({ value, suffix }: { value: number; suffix: string }) {
+// Portuguese thousands grouping: 2500 -> "2.500", 15000 -> "15.000"
+function formatPt(n: number): string {
+  return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+}
+
+function AnimatedCounter({ value, suffix, label }: { value: number; suffix: string; label: string }) {
   const [count, setCount] = useState(0)
   const ref = useRef<HTMLSpanElement>(null)
   const [visible, setVisible] = useState(false)
@@ -37,7 +42,7 @@ function AnimatedCounter({ value, suffix }: { value: number; suffix: string }) {
     return () => clearInterval(timer)
   }, [visible, value])
 
-  const formatted = suffix === '%' ? count : count >= 1000 ? `${Math.floor(count / 1000)}.${Math.floor((count % 1000) / 100)}` : count
+  const formatted = suffix === '%' ? count : formatPt(count)
 
   return (
     <div className="l-stat">
@@ -46,7 +51,7 @@ function AnimatedCounter({ value, suffix }: { value: number; suffix: string }) {
         {formatted}
         <span className="l-stat-suffix">{suffix}</span>
       </span>
-      <span className="l-stat-label">{STATS.find(s => s.value === value && s.suffix === suffix)?.label}</span>
+      <span className="l-stat-label">{label}</span>
     </div>
   )
 }
@@ -60,7 +65,7 @@ export function StatsBar() {
         </div>
         <div className="l-stats-grid">
           {STATS.map(s => (
-            <AnimatedCounter key={s.label} value={s.value} suffix={s.suffix} />
+            <AnimatedCounter key={s.label} value={s.value} suffix={s.suffix} label={s.label} />
           ))}
         </div>
       </div>
