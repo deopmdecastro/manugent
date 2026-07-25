@@ -5,10 +5,8 @@ import { CompanyLogos } from '../components/landing/CompanyLogos'
 import { FeaturesGrid } from '../components/landing/FeaturesGrid'
 import { CTASection } from '../components/landing/CTASection'
 import { Footer } from '../components/landing/Footer'
-import { useScrollReveal } from '../hooks/useScrollReveal'
 
 export function LandingPage() {
-  useScrollReveal()
 
   return (
     <div className="l-page">

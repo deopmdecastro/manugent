@@ -1,17 +1,10 @@
 import { createContext, useContext } from 'react'
-import type { User, Role, Permission } from '../hooks/useAuth'
 
-export type AppContextValue = {
-  user: User | null
-  userRole: Role | 'admin'
-  hasPermission: (p: Permission) => boolean
+type AppContextValue = {
+  userRole: 'admin' | 'gestor' | 'tecnico' | 'cliente'
 }
 
-const AppContext = createContext<AppContextValue>({
-  user: null,
-  userRole: 'admin',
-  hasPermission: () => false,
-})
+const AppContext = createContext<AppContextValue>({ userRole: 'admin' })
 
 export const AppProvider = AppContext.Provider
 
