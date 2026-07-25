@@ -210,12 +210,14 @@ Confirme em: `GET /api/ai/status`
 
 ## 👤 Perfis e Permissões
 
-| Perfil | Acesso |
-|---|---|
-| 🔑 **Admin** | Tudo + configuração IA + utilizadores |
-| 📊 **Gestor** | Operacional + relatórios + orçamentos |
-| 🔧 **Técnico** | OTs atribuídas + equipamentos + checklist |
-| 🏢 **Cliente** | Portal cliente + pedidos + consulta |
+| Perfil | Acesso | Email de demo |
+|---|---|---|
+| 🔑 **Admin** | Tudo + configuração IA + utilizadores | `admin@manugent.pt` |
+| 📊 **Gestor** | Operacional + relatórios + orçamentos | `gestor@manugent.pt` |
+| 🔧 **Técnico** | OTs atribuídas + equipamentos + checklist | `tecnico@manugent.pt` |
+| 🏢 **Cliente** | Portal cliente + pedidos + consulta | `cliente@demo.pt` |
+
+O login é validado no backend (`POST /api/auth/login`, hash com `pgcrypto`/bcrypt — ver `docker/postgres/init/003_auth_and_schema_fixes.sql`). As contas de demo acima são criadas com a password **`Demo@2026`**. Roda esta password (ou apaga as contas de demo) antes de expor a aplicação fora de um ambiente de desenvolvimento.
 
 ---
 

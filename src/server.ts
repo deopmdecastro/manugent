@@ -567,6 +567,41 @@ app.get('/api/db/health', async (c) => {
   }
 })
 
+// ── Routes: Auth ─────────────────────────────────────────────────────────────
+
+app.post('/api/auth/login', async (c) => {
+  try {
+    const db = requirePool()
+    const body = await c.req.json().catch(() => ({})) as { email?: string; password?: string }
+    const email = (body.email ?? '').trim().toLowerCase()
+    const password = body.password ?? ''
+
+    if (!email || !password) {
+      return c.json({ error: 'Email e password são obrigatórios.' }, 400)
+    }
+
+    const result = await db.query(
+      `select id, name, email, role, team_id,
+              (password_hash is not null and password_hash = crypt($2, password_hash)) as password_matches
+       from users
+       where lower(email) = $1`,
+      [email, password]
+    )
+
+    const row = result.rows[0]
+    // Same generic error whether the email doesn't exist or the password is
+    // wrong, so this endpoint doesn't leak which emails are registered.
+    if (!row || !row.password_matches) {
+      return c.json({ error: 'Credenciais inválidas.' }, 401)
+    }
+
+    const { password_matches, ...user } = row
+    return c.json({ user })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Não foi possível iniciar sessão')
+  }
+})
+
 // ── Routes: AI Chat ───────────────────────────────────────────────────────────
 
 app.post('/api/ai/chat', async (c) => {
@@ -866,7 +901,7 @@ app.get('/api/teams', async (c) => {
 app.get('/api/users', async (c) => {
   const db = requirePool()
   const result = await db.query(
-    `select u.*, t.name as team_name
+    `select u.id, u.team_id, u.name, u.email, u.role, u.created_at, t.name as team_name
      from users u
      left join teams t on t.id = u.team_id
      order by u.name asc`

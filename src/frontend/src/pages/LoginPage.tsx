@@ -17,10 +17,10 @@ export function LoginPage() {
       return
     }
     try {
-      await login(email)
+      await login(email, password)
       window.location.href = '/app/'
-    } catch {
-      setError('Erro ao iniciar sessão. Tenta novamente.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao iniciar sessão. Tenta novamente.')
     }
   }
 
