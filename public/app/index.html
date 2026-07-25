@@ -11987,13 +11987,106 @@ function updateSettingsAIStatus() {
 }
 
 // ======================== INTERNAL MANUGENT IA ========================
+
+// -- Tolerância a erros ortográficos no motor offline (fallback quando a IA online não responde) --
+var AI_KEYWORD_DICTIONARY = [
+  { word: 'ot', module: 'ots', label: 'Criar OT (Ordem de Trabalho)' },
+  { word: 'ordem', module: 'ots', label: 'Criar OT (Ordem de Trabalho)' },
+  { word: 'trabalho', module: 'ots', label: 'Criar OT (Ordem de Trabalho)' },
+  { word: 'preventiva', module: 'ots', label: 'Criar manutenção preventiva' },
+  { word: 'equipamento', module: 'equipment', label: 'Criar equipamento' },
+  { word: 'maquina', module: 'equipment', label: 'Criar equipamento' },
+  { word: 'cliente', module: 'clients', label: 'Criar cliente' },
+  { word: 'edificio', module: 'buildings', label: 'Criar edifício' },
+  { word: 'tecnico', module: 'technicians', label: 'Criar técnico' },
+  { word: 'utilizador', module: 'users', label: 'Criar utilizador' },
+  { word: 'checklist', module: 'checklists', label: 'Criar checklist' },
+  { word: 'incidente', module: 'incidents', label: 'Registar incidente' },
+  { word: 'material', module: 'materials', label: 'Adicionar material' },
+  { word: 'compra', module: 'purchases', label: 'Criar requisição de compra' },
+  { word: 'orcamento', module: 'quotes', label: 'Gerar orçamento' },
+  { word: 'artigo', module: 'knowledge', label: 'Criar artigo de conhecimento' }
+];
+var AI_AFFIRMATIVE_WORDS = ['sim', 's', 'confirmo', 'confirmar', 'pode avancar', 'ok', 'okay', 'yes', 'vai'];
+var AI_NEGATIVE_WORDS = ['nao', 'n', 'cancelar', 'cancela', 'no'];
+
+function levenshteinDistance(a, b) {
+  a = String(a || ''); b = String(b || '');
+  var m = a.length, n = b.length;
+  if (!m) return n;
+  if (!n) return m;
+  var prev = [], curr = [];
+  for (var j = 0; j <= n; j++) prev[j] = j;
+  for (var i = 1; i <= m; i++) {
+    curr[0] = i;
+    for (var j = 1; j <= n; j++) {
+      var cost = a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1;
+      curr[j] = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost);
+    }
+    prev = curr.slice();
+  }
+  return prev[n];
+}
+function maxAllowedTypoDistance(len) {
+  if (len <= 3) return 1;
+  if (len <= 6) return 2;
+  return 3;
+}
+function findClosestAIKeyword(token) {
+  if (!token || token.length < 2) return null;
+  var best = null;
+  AI_KEYWORD_DICTIONARY.forEach(function(entry) {
+    if (entry.word === token) return; // já é exato, não é um erro ortográfico
+    var dist = levenshteinDistance(token, entry.word);
+    var limit = maxAllowedTypoDistance(Math.max(token.length, entry.word.length));
+    if (dist <= limit && (!best || dist < best.dist)) best = { dist: dist, entry: entry };
+  });
+  return best;
+}
+function detectAICreateTypo(normalized) {
+  var verbRegex = /^(criar|registar|adicionar|abrir|gerar pedido|nova|novo|gerar)\s+/;
+  var verbMatch = normalized.match(verbRegex);
+  var verb = verbMatch ? verbMatch[1] : 'criar';
+  var remaining = normalized.replace(verbRegex, '').trim();
+  if (!remaining) return null;
+  var tokens = remaining.split(/\s+/).filter(Boolean);
+  if (tokens.length !== 1) return null; // só corrige quando é um único token curto (ex.: "OY"), não uma descrição real
+  var match = findClosestAIKeyword(tokens[0]);
+  if (!match) return null;
+  return {
+    question: 'Não encontrei o comando "' + tokens[0].toUpperCase() + '". Quis dizer **' + match.entry.label + '**?',
+    correctedText: verb + ' ' + match.entry.word
+  };
+}
+
 function runInternalAICommand(msg, page) {
   var text = String(msg || '').trim();
   var m = normalizeText(text);
+
+  // Resolve uma pergunta de confirmação ("Quis dizer...?") deixada pela mensagem anterior
+  if (APP.pendingAIClarification) {
+    var pending = APP.pendingAIClarification;
+    APP.pendingAIClarification = null;
+    if (AI_AFFIRMATIVE_WORDS.indexOf(m) !== -1) {
+      return runInternalAICommand(pending.correctedText, page);
+    }
+    if (AI_NEGATIVE_WORDS.indexOf(m) !== -1) {
+      return { text: 'Sem problema. O que pretende fazer?' };
+    }
+    // Qualquer outra coisa: ignora a pergunta pendente e processa a nova mensagem normalmente
+  }
+
   var target = detectAICommandTarget(m, page || 'dashboard');
   var intent = detectAIIntent(m);
   if (target !== 'dashboard' && !canAIReadModule(target)) return { text: getAIAccessDeniedText(target) };
-  if (intent === 'create') return buildAICreatePlan(text, m, target);
+  if (intent === 'create') {
+    var typoCheck = detectAICreateTypo(m);
+    if (typoCheck) {
+      APP.pendingAIClarification = { correctedText: typoCheck.correctedText };
+      return { text: typoCheck.question };
+    }
+    return buildAICreatePlan(text, m, target);
+  }
   if (intent === 'list') return { text: buildAIListResponse(target) };
   if (intent === 'report') return { text: buildAIReport(target) };
   if (intent === 'analyze') return { text: buildAIAnalysis(target) };
