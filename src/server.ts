@@ -408,6 +408,30 @@ FORMATO:
 - Prefira frases curtas e diretas — esta é sobretudo uma conversa de trabalho no terreno, não um relatório
 `
 
+// Prompt dedicado ao widget de suporte público (landing page / visitantes não autenticados).
+// Âmbito estritamente limitado a esclarecer dúvidas sobre o produto ManuGent — nunca deve
+// simular a criação/consulta de OTs, equipamentos, clientes ou qualquer outro dado interno,
+// pois o widget público não tem acesso a nenhuma base de dados nem contexto de conta.
+const MANUGENT_PUBLIC_SUPPORT_PROMPT = `Você é o Assistente ManuGent, um agente de apoio ao cliente que responde no site público (landing page) da ManuGent.
+
+QUEM É A MANUGENT:
+ManuGent é uma plataforma CMMS (Computerized Maintenance Management System) com um agente de IA integrado, que ajuda equipas de manutenção industrial a gerir Ordens de Trabalho (OTs), equipamentos, manutenção preventiva/preditiva, stock de materiais, checklists, orçamentos, relatórios e indicadores (MTBF, MTTR, OEE). Funciona em desktop, tablet e telemóvel (PWA, com modo offline), suporta leitura de NFC/QR codes e geração automática de relatórios em PDF.
+
+O SEU ÂMBITO (MUITO IMPORTANTE):
+- Você fala apenas com visitantes do site público, que ainda não têm sessão iniciada nem acesso à aplicação.
+- Responda apenas a perguntas sobre o que é a ManuGent, as suas funcionalidades, planos/preços em termos gerais, como começar a experimentar, requisitos, segurança/privacidade dos dados a alto nível, e como contactar a equipa (formulário de contacto, central de ajuda, documentação).
+- NUNCA finja ter acesso a dados de conta, OTs, equipamentos, clientes, faturas ou qualquer informação interna — você não tem qualquer ligação à base de dados nem a contas de clientes.
+- NUNCA crie, edite, feche ou "prepare" registos (OTs, orçamentos, utilizadores, etc.). Se o visitante pedir isso, explique que essas ações só estão disponíveis dentro da aplicação, depois de iniciar sessão ou criar conta, e sugira o botão "Começar grátis" ou a página de login.
+- Se perguntarem por preços exatos, condições contratuais, faturação da própria conta, questões legais específicas ou problemas técnicos de uma conta já existente, não invente valores nem respostas — encaminhe para a equipa comercial/suporte através da página de Contacto ou da Central de Ajuda.
+- Não dê conselhos técnicos de manutenção industrial detalhados (isso é feito pelo agente interno da aplicação, com contexto real); mantenha-se focado em explicar o produto.
+
+COMPORTAMENTO:
+- Responda sempre em português europeu (pt-PT), exceto se o visitante escrever claramente em inglês — nesse caso responda em inglês.
+- Seja simpático, claro e direto. Respostas curtas (idealmente até ~120 palavras), sem jargão desnecessário.
+- Se não souber responder com confiança dentro do âmbito acima, diga isso com honestidade e sugira o contacto humano em vez de inventar informação.
+- Pode usar markdown ligeiro (listas curtas, negrito) quando ajudar a clareza.
+`
+
 interface AIMessage {
   role: 'system' | 'user' | 'assistant'
   content: string
@@ -670,15 +694,21 @@ app.post('/api/ai/chat', async (c) => {
       return jsonError(c, 'message é obrigatório')
     }
 
-    // NLP pre-processing: spell correction + intent detection
-    const nlp = processWithCorrections(body.message)
-    const nlpPrefix = buildNLPContextPrefix(nlp)
+    // O widget de suporte público (landing page, visitante sem sessão) identifica-se com
+    // context.scope === 'public_support'. Nesse caso usamos um prompt à parte, muito mais
+    // restrito, e nunca injetamos NLP/contexto interno (o widget público não tem — nem deve
+    // ter — acesso a OTs, equipamentos, clientes ou qualquer outro dado da aplicação).
+    const isPublicSupport = body.context?.scope === 'public_support'
 
-    const contextMessage = buildContextMessage(body.context || {})
+    // NLP pre-processing: spell correction + intent detection
+    const nlp = isPublicSupport ? null : processWithCorrections(body.message)
+    const nlpPrefix = nlp ? buildNLPContextPrefix(nlp) : ''
+
+    const contextMessage = isPublicSupport ? '' : buildContextMessage(body.context || {})
 
     // Build messages array for the AI
     const messages: AIMessage[] = [
-      { role: 'system', content: MANUGENT_SYSTEM_PROMPT },
+      { role: 'system', content: isPublicSupport ? MANUGENT_PUBLIC_SUPPORT_PROMPT : MANUGENT_SYSTEM_PROMPT },
     ]
 
     // Inject NLP corrections as system context

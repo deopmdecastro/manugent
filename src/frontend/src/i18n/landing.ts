@@ -45,6 +45,32 @@ export interface LandingTranslations {
     desc: string
     items: { title: string; desc: string }[]
   }
+  testimonials: {
+    badge: string
+    titleLine1: string
+    titleGradient: string
+    desc: string
+    items: { quote: string; name: string; role: string }[]
+  }
+  support: {
+    buttonLabel: string
+    panelTitle: string
+    panelSubtitle: string
+    welcomeMessage: string
+    inputPlaceholder: string
+    send: string
+    thinking: string
+    errorMessage: string
+    disclaimer: string
+    close: string
+  }
+  cookies: {
+    title: string
+    message: string
+    accept: string
+    reject: string
+    policyLinkText: string
+  }
   cta: {
     titleLine1: string
     titleGradient: string
@@ -131,6 +157,53 @@ export const landingTranslations: Record<Language, LandingTranslations> = {
         { title: 'Relatórios Automáticos', desc: 'Geração de PDFs profissionais com um clique. Relatórios de intervenção prontos para cliente e auditoria.' },
         { title: 'Mobile & Offline', desc: 'PWA completa. Funciona sem rede — sincroniza automaticamente quando voltas online. Tablet e smartphone.' },
       ],
+    },
+    testimonials: {
+      badge: 'Testemunhos',
+      titleLine1: 'O que dizem',
+      titleGradient: 'sobre nós',
+      desc: 'Equipas de manutenção de várias indústrias já confiam na ManuGent no dia a dia.',
+      items: [
+        {
+          quote: 'Reduzimos o tempo de resposta a avarias em mais de 30% desde que passámos a usar a ManuGent. O agente de IA ajuda mesmo os técnicos mais novos a diagnosticar problemas rapidamente.',
+          name: 'Carlos Mendes',
+          role: 'Diretor de Manutenção, Grupo Industrial',
+        },
+        {
+          quote: 'A gestão de OTs deixou de ser um pesadelo em Excel. Agora temos tudo centralizado, com histórico completo de cada equipamento e relatórios prontos em segundos.',
+          name: 'Sofia Ribeiro',
+          role: 'Responsável de Operações, Setor Alimentar',
+        },
+        {
+          quote: 'A app funciona mesmo sem rede na fábrica, o que era essencial para nós. Os técnicos registam tudo no telemóvel e sincroniza automaticamente.',
+          name: 'Miguel Costa',
+          role: 'Técnico Sénior, Setor Automóvel',
+        },
+        {
+          quote: 'A implementação foi rápida e o suporte esteve sempre presente. Em poucos dias já tínhamos a equipa toda a usar a plataforma sem grande curva de aprendizagem.',
+          name: 'Ana Torres',
+          role: 'Gestora de Facilities',
+        },
+      ],
+    },
+    support: {
+      buttonLabel: 'Suporte',
+      panelTitle: 'Assistente ManuGent',
+      panelSubtitle: 'Tira as tuas dúvidas sobre o produto',
+      welcomeMessage: 'Olá! 👋 Sou o assistente de IA da ManuGent. Posso ajudar-te a perceber como a plataforma funciona, que funcionalidades tem ou como começar. Em que posso ajudar?',
+      inputPlaceholder: 'Escreve a tua pergunta...',
+      send: 'Enviar',
+      thinking: 'A escrever...',
+      errorMessage: 'Não foi possível obter resposta agora. Tenta novamente ou contacta-nos através da página de Contacto.',
+      disclaimer: 'Assistente de IA para dúvidas sobre o produto ManuGent.',
+      close: 'Fechar',
+    },
+    cookies: {
+      title: 'A tua privacidade',
+      message: 'Usamos cookies para melhorar a tua experiência, analisar o tráfego do site e personalizar conteúdo. Ao continuar, aceitas a nossa utilização de cookies.',
+      accept: 'Aceitar todos',
+      reject: 'Rejeitar não essenciais',
+      policyLinkText: 'Política de Cookies',
     },
     cta: {
       titleLine1: 'Pronto para transformar',
@@ -220,6 +293,53 @@ export const landingTranslations: Record<Language, LandingTranslations> = {
         { title: 'Automatic Reports', desc: 'Professional PDF generation with one click. Intervention reports ready for clients and audits.' },
         { title: 'Mobile & Offline', desc: 'Full PWA. Works without a network — syncs automatically when you\u2019re back online. Tablet and smartphone.' },
       ],
+    },
+    testimonials: {
+      badge: 'Testimonials',
+      titleLine1: 'What people',
+      titleGradient: 'say about us',
+      desc: 'Maintenance teams across several industries already rely on ManuGent every day.',
+      items: [
+        {
+          quote: 'We cut our breakdown response time by over 30% since switching to ManuGent. The AI agent helps even junior technicians diagnose issues quickly.',
+          name: 'Carlos Mendes',
+          role: 'Maintenance Director, Industrial Group',
+        },
+        {
+          quote: 'Managing work orders in spreadsheets used to be a nightmare. Now everything is centralized, with full equipment history and reports ready in seconds.',
+          name: 'Sofia Ribeiro',
+          role: 'Operations Manager, Food Industry',
+        },
+        {
+          quote: 'The app keeps working even without network on the factory floor, which was essential for us. Technicians log everything on their phone and it syncs automatically.',
+          name: 'Miguel Costa',
+          role: 'Senior Technician, Automotive Sector',
+        },
+        {
+          quote: 'Rollout was fast and support was there whenever we needed it. Within days the whole team was using the platform without a steep learning curve.',
+          name: 'Ana Torres',
+          role: 'Facilities Manager',
+        },
+      ],
+    },
+    support: {
+      buttonLabel: 'Support',
+      panelTitle: 'ManuGent Assistant',
+      panelSubtitle: 'Get your product questions answered',
+      welcomeMessage: 'Hi! 👋 I\u2019m the ManuGent AI assistant. I can help you understand how the platform works, what features it has, or how to get started. How can I help?',
+      inputPlaceholder: 'Type your question...',
+      send: 'Send',
+      thinking: 'Typing...',
+      errorMessage: 'Couldn\u2019t get a reply right now. Please try again or reach us through the Contact page.',
+      disclaimer: 'AI assistant for questions about the ManuGent product.',
+      close: 'Close',
+    },
+    cookies: {
+      title: 'Your privacy',
+      message: 'We use cookies to improve your experience, analyze site traffic and personalize content. By continuing, you agree to our use of cookies.',
+      accept: 'Accept all',
+      reject: 'Reject non-essential',
+      policyLinkText: 'Cookie Policy',
     },
     cta: {
       titleLine1: 'Ready to transform',

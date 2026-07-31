@@ -21,6 +21,7 @@ import { GdprPage } from './pages/static/GdprPage'
 import { CookiesPage } from './pages/static/CookiesPage'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { LanguageProvider } from './contexts/LanguageContext'
+import { CookieConsent } from './components/landing/CookieConsent'
 
 export function App() {
   return (
@@ -52,6 +53,7 @@ export function App() {
             <Route path="/react/index.html" element={<Navigate to="/landing" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          <CookieConsent />
         </BrowserRouter>
       </LanguageProvider>
     </ThemeProvider>

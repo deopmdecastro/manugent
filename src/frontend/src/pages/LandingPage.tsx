@@ -5,8 +5,10 @@ import { Hero } from '../components/landing/Hero'
 import { StatsBar } from '../components/landing/StatsBar'
 import { CompanyLogos } from '../components/landing/CompanyLogos'
 import { FeaturesGrid } from '../components/landing/FeaturesGrid'
+import { Testimonials } from '../components/landing/Testimonials'
 import { CTASection } from '../components/landing/CTASection'
 import { Footer } from '../components/landing/Footer'
+import { SupportWidget } from '../components/landing/SupportWidget'
 
 export function LandingPage() {
   const pageRef = useRef<HTMLDivElement>(null)
@@ -61,8 +63,10 @@ export function LandingPage() {
       <StatsBar />
       <CompanyLogos />
       <FeaturesGrid />
+      <Testimonials />
       <CTASection />
       <Footer />
+      <SupportWidget />
     </div>
   )
 }
