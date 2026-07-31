@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useLanguage } from '../../contexts/LanguageContext'
 
 const FOOTER_HREFS = [
-  ['/landing#features', '/landing#pricing', '/documentacao', '/api', '/changelog'],
+  ['/landing#features', '/landing#pricing', '/documentacao', '/api-docs', '/changelog'],
   ['/sobre', '/blog', '/carreiras', '/contacto', '/parceiros'],
   ['/privacidade', '/termos', '/gdpr', '/cookies'],
 ]

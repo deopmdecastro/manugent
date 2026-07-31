@@ -61,7 +61,7 @@ export function DocumentationPage() {
       </p>
       <p>
         Se procuras informação sobre integrações programáticas e endpoints, consulta a{' '}
-        <Link to="/api" className="static-inline-link">referência da API</Link>. Para acompanhar novidades
+        <Link to="/api-docs" className="static-inline-link">referência da API</Link>. Para acompanhar novidades
         e alterações recentes à plataforma, visita o{' '}
         <Link to="/changelog" className="static-inline-link">changelog</Link>.
       </p>

@@ -8,6 +8,7 @@ import { ApiPage } from './pages/static/ApiPage'
 import { ChangelogPage } from './pages/static/ChangelogPage'
 import { AboutPage } from './pages/static/AboutPage'
 import { BlogPage } from './pages/static/BlogPage'
+import { BlogPostPage } from './pages/static/BlogPostPage'
 import { CareersPage } from './pages/static/CareersPage'
 import { ContactPage } from './pages/static/ContactPage'
 import { PartnersPage } from './pages/static/PartnersPage'
@@ -32,10 +33,11 @@ export function App() {
             <Route path="/esqueci-password" element={<ForgotPasswordPage />} />
             <Route path="/contactar-administrador" element={<ContactAdminPage />} />
             <Route path="/documentacao" element={<DocumentationPage />} />
-            <Route path="/api" element={<ApiPage />} />
+            <Route path="/api-docs" element={<ApiPage />} />
             <Route path="/changelog" element={<ChangelogPage />} />
             <Route path="/sobre" element={<AboutPage />} />
             <Route path="/blog" element={<BlogPage />} />
+            <Route path="/blog/:slug" element={<BlogPostPage />} />
             <Route path="/carreiras" element={<CareersPage />} />
             <Route path="/contacto" element={<ContactPage />} />
             <Route path="/parceiros" element={<PartnersPage />} />
