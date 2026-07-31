@@ -1,38 +1,6 @@
 import { Link } from 'react-router-dom'
 import { StaticPageLayout } from '../../components/static/StaticPageLayout'
-
-const CATEGORIES = [
-  {
-    icon: 'fa-rocket',
-    title: 'Primeiros passos',
-    desc: 'Cria a tua conta, configura a organização e convida a equipa em poucos minutos.',
-  },
-  {
-    icon: 'fa-boxes-stacked',
-    title: 'Gestão de ativos',
-    desc: 'Regista equipamentos, hierarquias e histórico completo de manutenção.',
-  },
-  {
-    icon: 'fa-screwdriver-wrench',
-    title: 'Ordens de serviço',
-    desc: 'Cria, atribui e acompanha ordens corretivas e preventivas em tempo real.',
-  },
-  {
-    icon: 'fa-robot',
-    title: 'Agente de IA',
-    desc: 'Como o técnico digital sugere diagnósticos e planos de intervenção.',
-  },
-  {
-    icon: 'fa-qrcode',
-    title: 'NFC & QR Codes',
-    desc: 'Associa etiquetas físicas aos ativos para leitura instantânea no terreno.',
-  },
-  {
-    icon: 'fa-plug',
-    title: 'Integrações & API',
-    desc: 'Liga o ManuGent a ERPs, sensores IoT e outras ferramentas da tua stack.',
-  },
-]
+import { DOC_GUIDES } from '../../data/docGuides'
 
 export function DocumentationPage() {
   return (
@@ -43,12 +11,12 @@ export function DocumentationPage() {
       narrow={false}
     >
       <div className="static-card-grid">
-        {CATEGORIES.map(c => (
-          <div className="static-card" key={c.title}>
-            <div className="static-card-icon"><i className={`fas ${c.icon}`} /></div>
-            <h3>{c.title}</h3>
-            <p>{c.desc}</p>
-            <a href="#" className="static-card-link">Ler guia <i className="fas fa-arrow-right" /></a>
+        {DOC_GUIDES.map(guide => (
+          <div className="static-card" key={guide.slug}>
+            <div className="static-card-icon"><i className={`fas ${guide.icon}`} /></div>
+            <h3>{guide.title}</h3>
+            <p>{guide.desc}</p>
+            <Link to={`/documentacao/${guide.slug}`} className="static-card-link">Ler guia <i className="fas fa-arrow-right" /></Link>
           </div>
         ))}
       </div>

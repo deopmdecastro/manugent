@@ -4,6 +4,7 @@ import { LoginPage } from './pages/LoginPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { ContactAdminPage } from './pages/ContactAdminPage'
 import { DocumentationPage } from './pages/static/DocumentationPage'
+import { DocGuidePage } from './pages/static/DocGuidePage'
 import { ApiPage } from './pages/static/ApiPage'
 import { ChangelogPage } from './pages/static/ChangelogPage'
 import { AboutPage } from './pages/static/AboutPage'
@@ -33,6 +34,7 @@ export function App() {
             <Route path="/esqueci-password" element={<ForgotPasswordPage />} />
             <Route path="/contactar-administrador" element={<ContactAdminPage />} />
             <Route path="/documentacao" element={<DocumentationPage />} />
+            <Route path="/documentacao/:slug" element={<DocGuidePage />} />
             <Route path="/api-docs" element={<ApiPage />} />
             <Route path="/changelog" element={<ChangelogPage />} />
             <Route path="/sobre" element={<AboutPage />} />

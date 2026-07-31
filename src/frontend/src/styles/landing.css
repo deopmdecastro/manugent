@@ -1390,6 +1390,36 @@
 /* Related posts */
 .static-blog-related { margin-top: 8px; }
 
+/* Documentation guide page */
+.static-doc-breadcrumb { font-size: 13px; color: var(--l-text-muted); margin-bottom: 8px; }
+.static-doc-toc {
+  background: var(--l-surface-b); border: 1px solid var(--l-hairline-a); border-radius: var(--l-radius-lg);
+  padding: 20px 26px; margin: 28px 0 40px;
+}
+.static-doc-toc-label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--l-text-muted); margin-bottom: 10px; }
+.static-doc-toc ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px 22px; }
+.static-doc-toc a { font-size: 14px; font-weight: 600; color: var(--l-accent-light); text-decoration: none; }
+.static-doc-toc a:hover { text-decoration: underline; }
+.static-doc-steps { counter-reset: doc-step; list-style: none; padding-left: 0; margin: 0 0 20px; }
+.static-doc-steps li {
+  counter-increment: doc-step; position: relative; padding-left: 38px; margin-bottom: 12px;
+}
+.static-doc-steps li::before {
+  content: counter(doc-step); position: absolute; left: 0; top: 0;
+  width: 24px; height: 24px; border-radius: 50%; background: var(--l-accent);
+  color: #fff; font-size: 12.5px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+}
+.static-doc-next {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  background: var(--l-surface-b); border: 1px solid var(--l-hairline-a); border-radius: var(--l-radius-lg);
+  padding: 20px 26px; margin: 48px 0 40px;
+}
+.static-doc-next > span { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--l-text-muted); }
+.static-doc-next-link { display: inline-flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: var(--l-text); text-decoration: none; }
+.static-doc-next-link i:first-child { color: var(--l-accent-light); }
+.static-doc-next-link i:last-child { font-size: 12px; color: var(--l-accent-light); transition: transform .2s; }
+.static-doc-next-link:hover i:last-child { transform: translateX(3px); }
+
 /* Careers openings */
 .static-job-row {
   display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
