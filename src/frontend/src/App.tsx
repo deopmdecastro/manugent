@@ -11,6 +11,8 @@ import { BlogPage } from './pages/static/BlogPage'
 import { CareersPage } from './pages/static/CareersPage'
 import { ContactPage } from './pages/static/ContactPage'
 import { PartnersPage } from './pages/static/PartnersPage'
+import { SuccessStoriesPage } from './pages/static/SuccessStoriesPage'
+import { HelpCenterPage } from './pages/static/HelpCenterPage'
 import { PrivacyPage } from './pages/static/PrivacyPage'
 import { TermsPage } from './pages/static/TermsPage'
 import { GdprPage } from './pages/static/GdprPage'
@@ -37,6 +39,8 @@ export function App() {
             <Route path="/carreiras" element={<CareersPage />} />
             <Route path="/contacto" element={<ContactPage />} />
             <Route path="/parceiros" element={<PartnersPage />} />
+            <Route path="/casos-de-sucesso" element={<SuccessStoriesPage />} />
+            <Route path="/central-de-ajuda" element={<HelpCenterPage />} />
             <Route path="/privacidade" element={<PrivacyPage />} />
             <Route path="/termos" element={<TermsPage />} />
             <Route path="/gdpr" element={<GdprPage />} />

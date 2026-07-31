@@ -42,10 +42,17 @@ export function Navbar() {
             </button>
             <div className="l-nav-dropdown-panel">
               {RESOURCES_DROPDOWN.map(item => (
-                <a key={item.label} href={item.href} className="l-nav-dropdown-item" onClick={() => setMobileOpen(false)}>
-                  <strong>{item.label}</strong>
-                  <span>{item.desc}</span>
-                </a>
+                item.href.startsWith('/') ? (
+                  <Link key={item.label} to={item.href} className="l-nav-dropdown-item" onClick={() => setMobileOpen(false)}>
+                    <strong>{item.label}</strong>
+                    <span>{item.desc}</span>
+                  </Link>
+                ) : (
+                  <a key={item.label} href={item.href} className="l-nav-dropdown-item" onClick={() => setMobileOpen(false)}>
+                    <strong>{item.label}</strong>
+                    <span>{item.desc}</span>
+                  </a>
+                )
               ))}
             </div>
           </div>
