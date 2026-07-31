@@ -191,8 +191,8 @@ export function LoginPage() {
             <div className="auth-divider"><span>ou</span></div>
 
             <div className="auth-card-links">
-              <a href="#"><i className="fas fa-lock" /> Esqueci a password</a>
-              <p>Não tens uma conta? <a href="#">Contacta o administrador.</a></p>
+              <Link to="/esqueci-password"><i className="fas fa-lock" /> Esqueci a password</Link>
+              <p>Não tens uma conta? <Link to="/contactar-administrador">Contacta o administrador.</Link></p>
             </div>
           </div>
         </section>

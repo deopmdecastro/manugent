@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom'
 import { useLanguage } from '../../contexts/LanguageContext'
 
 const FOOTER_HREFS = [
-  ['#features', '#pricing', '#', '#', '#'],
-  ['#', '#', '#', '#', '#'],
-  ['#', '#', '#', '#'],
+  ['/landing#features', '/landing#pricing', '/documentacao', '/api', '/changelog'],
+  ['/sobre', '/blog', '/carreiras', '/contacto', '/parceiros'],
+  ['/privacidade', '/termos', '/gdpr', '/cookies'],
 ]
 
 const SOCIAL_LINKS = [
@@ -50,7 +50,9 @@ export function Footer() {
             <div className="l-footer-column" key={group.title}>
               <h4>{group.title}</h4>
               {group.links.map(link => (
-                <a href={link.href} key={link.label}>{link.label}</a>
+                link.href.startsWith('/') && !link.href.includes('#')
+                  ? <Link to={link.href} key={link.label}>{link.label}</Link>
+                  : <a href={link.href} key={link.label}>{link.label}</a>
               ))}
             </div>
           ))}
