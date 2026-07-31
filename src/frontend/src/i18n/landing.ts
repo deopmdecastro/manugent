@@ -43,7 +43,12 @@ export interface LandingTranslations {
     titleLine1: string
     titleGradient: string
     desc: string
-    items: { title: string; desc: string }[]
+    items: { title: string; desc: string; highlights?: string[] }[]
+  }
+  featuresPage: {
+    ctaTitle: string
+    ctaDesc: string
+    ctaButton: string
   }
   testimonials: {
     badge: string
@@ -150,13 +155,42 @@ export const landingTranslations: Record<Language, LandingTranslations> = {
       titleGradient: 'gerir manutenção industrial',
       desc: 'Do diagnóstico à execução, uma plataforma que cobre o ciclo completo de manutenção — com IA integrada em cada passo.',
       items: [
-        { title: 'Agente IA Inteligente', desc: 'Diagnóstico e recomendações em tempo real com GPT-4o e Llama 3. O teu especialista de manutenção sempre disponível, 24/7.' },
-        { title: 'Ordens de Serviço Inteligentes', desc: 'Criação automática de OTs corretivas com base em medições. Tracking de tempo, notificações e mudanças de estado em tempo real.' },
-        { title: 'KPIs em Tempo Real', desc: 'MTBF, MTTR, OEE e compliance num dashboard vivo. Toma decisões com dados, não com feeling.' },
-        { title: 'NFC & QR Codes', desc: 'Scan instantâneo de equipamentos com o telemóvel. Histórico completo, manuais e checklists em segundos.' },
-        { title: 'Relatórios Automáticos', desc: 'Geração de PDFs profissionais com um clique. Relatórios de intervenção prontos para cliente e auditoria.' },
-        { title: 'Mobile & Offline', desc: 'PWA completa. Funciona sem rede — sincroniza automaticamente quando voltas online. Tablet e smartphone.' },
+        {
+          title: 'Agente IA Inteligente',
+          desc: 'Diagnóstico e recomendações em tempo real com GPT-4o e Llama 3. O teu especialista de manutenção sempre disponível, 24/7.',
+          highlights: ['Diagnóstico assistido por IA em segundos', 'Aprende com o histórico de cada equipamento', 'Disponível a qualquer hora, em qualquer dispositivo'],
+        },
+        {
+          title: 'Ordens de Serviço Inteligentes',
+          desc: 'Criação automática de OTs corretivas com base em medições. Tracking de tempo, notificações e mudanças de estado em tempo real.',
+          highlights: ['Criação automática a partir de leituras e alarmes', 'Notificações em tempo real para a equipa', 'Histórico completo de cada intervenção'],
+        },
+        {
+          title: 'KPIs em Tempo Real',
+          desc: 'MTBF, MTTR, OEE e compliance num dashboard vivo. Toma decisões com dados, não com feeling.',
+          highlights: ['Dashboards atualizados ao minuto', 'Indicadores MTBF, MTTR e OEE prontos a usar', 'Alertas de desvio face às metas definidas'],
+        },
+        {
+          title: 'NFC & QR Codes',
+          desc: 'Scan instantâneo de equipamentos com o telemóvel. Histórico completo, manuais e checklists em segundos.',
+          highlights: ['Identificação instantânea de qualquer ativo', 'Acesso a manuais e checklists no local', 'Sem necessidade de hardware adicional'],
+        },
+        {
+          title: 'Relatórios Automáticos',
+          desc: 'Geração de PDFs profissionais com um clique. Relatórios de intervenção prontos para cliente e auditoria.',
+          highlights: ['PDFs profissionais gerados num clique', 'Prontos para cliente, auditoria ou arquivo', 'Modelos personalizáveis à imagem da empresa'],
+        },
+        {
+          title: 'Mobile & Offline',
+          desc: 'PWA completa. Funciona sem rede — sincroniza automaticamente quando voltas online. Tablet e smartphone.',
+          highlights: ['Funciona sem ligação à internet', 'Sincronização automática ao reconectar', 'Otimizado para tablet e smartphone'],
+        },
       ],
+    },
+    featuresPage: {
+      ctaTitle: 'Pronto para experimentar?',
+      ctaDesc: 'Cria a tua conta grátis e vê estas funcionalidades a funcionar com os dados da tua equipa.',
+      ctaButton: 'Começar grátis',
     },
     testimonials: {
       badge: 'Testemunhos',
@@ -286,13 +320,42 @@ export const landingTranslations: Record<Language, LandingTranslations> = {
       titleGradient: 'manage industrial maintenance',
       desc: 'From diagnosis to execution, a platform that covers the full maintenance cycle — with AI built into every step.',
       items: [
-        { title: 'Smart AI Agent', desc: 'Real-time diagnosis and recommendations with GPT-4o and Llama 3. Your maintenance expert, always available, 24/7.' },
-        { title: 'Smart Work Orders', desc: 'Automatic creation of corrective work orders based on measurements. Time tracking, notifications and real-time status changes.' },
-        { title: 'Real-Time KPIs', desc: 'MTBF, MTTR, OEE and compliance in a live dashboard. Make decisions with data, not gut feeling.' },
-        { title: 'NFC & QR Codes', desc: 'Instant equipment scanning with your phone. Full history, manuals and checklists in seconds.' },
-        { title: 'Automatic Reports', desc: 'Professional PDF generation with one click. Intervention reports ready for clients and audits.' },
-        { title: 'Mobile & Offline', desc: 'Full PWA. Works without a network — syncs automatically when you\u2019re back online. Tablet and smartphone.' },
+        {
+          title: 'Smart AI Agent',
+          desc: 'Real-time diagnosis and recommendations with GPT-4o and Llama 3. Your maintenance expert, always available, 24/7.',
+          highlights: ['AI-assisted diagnosis in seconds', 'Learns from every equipment\u2019s history', 'Available any time, on any device'],
+        },
+        {
+          title: 'Smart Work Orders',
+          desc: 'Automatic creation of corrective work orders based on measurements. Time tracking, notifications and real-time status changes.',
+          highlights: ['Automatic creation from readings and alarms', 'Real-time notifications for the team', 'Full history of every intervention'],
+        },
+        {
+          title: 'Real-Time KPIs',
+          desc: 'MTBF, MTTR, OEE and compliance in a live dashboard. Make decisions with data, not gut feeling.',
+          highlights: ['Dashboards updated by the minute', 'MTBF, MTTR and OEE ready out of the box', 'Alerts when targets are missed'],
+        },
+        {
+          title: 'NFC & QR Codes',
+          desc: 'Instant equipment scanning with your phone. Full history, manuals and checklists in seconds.',
+          highlights: ['Instant identification of any asset', 'Manuals and checklists available on-site', 'No extra hardware required'],
+        },
+        {
+          title: 'Automatic Reports',
+          desc: 'Professional PDF generation with one click. Intervention reports ready for clients and audits.',
+          highlights: ['Professional PDFs generated in one click', 'Ready for clients, audits or archiving', 'Templates customizable to your brand'],
+        },
+        {
+          title: 'Mobile & Offline',
+          desc: 'Full PWA. Works without a network — syncs automatically when you\u2019re back online. Tablet and smartphone.',
+          highlights: ['Works without an internet connection', 'Automatic sync when back online', 'Optimized for tablet and smartphone'],
+        },
       ],
+    },
+    featuresPage: {
+      ctaTitle: 'Ready to try it out?',
+      ctaDesc: 'Create your free account and see these features work with your own team\u2019s data.',
+      ctaButton: 'Start for free',
     },
     testimonials: {
       badge: 'Testimonials',
