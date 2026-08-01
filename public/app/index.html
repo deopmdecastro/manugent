@@ -318,6 +318,17 @@
       vertical-align: middle;
     }
     .btn-secondary:hover { border-color: var(--hairline-e); color: var(--text-primary); background: var(--surface-hover); transform: translateY(-1px); }
+    .btn-danger {
+      background: #ef4444;
+      color: white; border: none; padding: 10px 20px;
+      border-radius: 8px; cursor: pointer; font-weight: 500;
+      transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      font-family: 'Inter', sans-serif;
+      line-height: 1.2;
+      min-height: 42px;
+      vertical-align: middle;
+    }
+    .btn-danger:hover { background: #dc2626; transform: translateY(-1px); box-shadow: 0 6px 24px rgba(239,68,68,0.35); }
     .btn-ghost {
       background: transparent; color: var(--text-secondary);
       border: none; padding: 8px 12px; border-radius: 6px;
@@ -3094,6 +3105,18 @@
     .sa-tab-panel { animation: fadeIn 0.2s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
     #nav-superadmin { border-top: 1px solid rgba(124,58,237,0.2); margin-top: 4px; padding-top: 8px; }
+    .sa-user-stat-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; flex-shrink: 0;
+    }
+    .sa-user-row-actions { display: flex; gap: 4px; justify-content: flex-end; flex-wrap: nowrap; }
+    .sa-user-row-actions .btn-action { width: 28px; height: 28px; padding: 0; font-size: 12px; border-radius: 8px; }
+    .sa-user-row-actions .btn-action.warn { background: rgba(245,158,11,0.12); border-color: rgba(251,191,36,0.35); color: #fbbf24; }
+    .sa-user-row-actions .btn-action.warn:hover { background: rgba(245,158,11,0.22); color: #fff; }
+    .sa-user-row-actions .btn-action.danger { background: rgba(239,68,68,0.12); border-color: rgba(248,113,113,0.35); color: #f87171; }
+    .sa-user-row-actions .btn-action.danger:hover { background: rgba(239,68,68,0.22); color: #fff; }
+    .sa-status-reason { font-size: 11px; color: var(--text-muted); margin-top: 2px; max-width: 220px; }
   </style>
 </head>
 <body>
@@ -4190,13 +4213,33 @@
           <div class="flex items-center justify-between mb-5">
             <div>
               <h3 class="font-semibold">Gestão Global de Utilizadores</h3>
-              <p class="text-xs text-slate-500 mt-1">Todos os utilizadores da plataforma (base de dados + local)</p>
+              <p class="text-xs text-slate-500 mt-1">Todos os utilizadores da plataforma — bloquear, banir e recuperar acesso</p>
             </div>
             <button class="btn-primary" onclick="openSuperAdminNewUserModal()"><i class="fas fa-user-plus"></i> Novo Utilizador</button>
           </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+            <div class="card p-4 flex items-center gap-3">
+              <div class="sa-user-stat-icon" style="background:rgba(16,185,129,0.15);color:#34d399"><i class="fas fa-user-check"></i></div>
+              <div><div class="text-xl font-bold mono" id="sa-users-stat-active">—</div><div class="text-xs text-slate-500">Ativos</div></div>
+            </div>
+            <div class="card p-4 flex items-center gap-3">
+              <div class="sa-user-stat-icon" style="background:rgba(245,158,11,0.15);color:#fbbf24"><i class="fas fa-user-lock"></i></div>
+              <div><div class="text-xl font-bold mono" id="sa-users-stat-blocked">—</div><div class="text-xs text-slate-500">Bloqueados</div></div>
+            </div>
+            <div class="card p-4 flex items-center gap-3">
+              <div class="sa-user-stat-icon" style="background:rgba(239,68,68,0.15);color:#f87171"><i class="fas fa-user-slash"></i></div>
+              <div><div class="text-xl font-bold mono" id="sa-users-stat-banned">—</div><div class="text-xs text-slate-500">Banidos</div></div>
+            </div>
+            <div class="card p-4 flex items-center gap-3">
+              <div class="sa-user-stat-icon" style="background:rgba(99,102,241,0.15);color:var(--accent-purple-light)"><i class="fas fa-users"></i></div>
+              <div><div class="text-xl font-bold mono" id="sa-users-stat-total">—</div><div class="text-xs text-slate-500">Total</div></div>
+            </div>
+          </div>
+
           <div class="card p-4 mb-4">
-            <div class="flex gap-3">
-              <input type="text" id="sa-users-search" class="input-field flex-1" placeholder="Pesquisar por nome, email ou perfil..." oninput="renderSuperAdminUsers()">
+            <div class="flex gap-3 flex-wrap">
+              <input type="text" id="sa-users-search" class="input-field flex-1" style="min-width:200px" placeholder="Pesquisar por nome, email ou perfil..." oninput="renderSuperAdminUsers()">
               <select id="sa-users-role-filter" class="input-field" style="max-width:160px" onchange="renderSuperAdminUsers()">
                 <option value="">Todos os perfis</option>
                 <option value="superadmin">SuperAdmin</option>
@@ -4205,11 +4248,17 @@
                 <option value="tecnico">Técnico</option>
                 <option value="cliente">Cliente</option>
               </select>
+              <select id="sa-users-status-filter" class="input-field" style="max-width:160px" onchange="renderSuperAdminUsers()">
+                <option value="">Todos os estados</option>
+                <option value="active">Ativos</option>
+                <option value="blocked">Bloqueados</option>
+                <option value="banned">Banidos</option>
+              </select>
             </div>
           </div>
           <div class="card overflow-x-auto">
             <table class="data-table w-full text-sm">
-              <thead><tr><th>Utilizador</th><th>Email</th><th>Perfil</th><th>Equipa</th><th>Origem</th><th>Criado em</th><th></th></tr></thead>
+              <thead><tr><th>Utilizador</th><th>Email</th><th>Perfil</th><th>Equipa</th><th>Estado</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
               <tbody id="sa-users-table-body"></tbody>
             </table>
           </div>
@@ -4714,6 +4763,63 @@
     <div class="flex gap-3 pt-4 border-t border-white/8 mt-4">
       <button class="btn-secondary flex-1" onclick="closeModal('modal-sa-testimonial')">Cancelar</button>
       <button class="btn-primary flex-1" onclick="saveSATestimonial()"><i class="fas fa-save"></i> Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- SuperAdmin: Change account status (block / ban / reactivate) -->
+<div id="modal-sa-user-status" class="modal-overlay" style="display:none">
+  <div class="modal-content" style="max-width:460px">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-semibold modal-title" id="sa-status-modal-title">Alterar estado da conta</h2>
+      <button class="btn-ghost" onclick="closeModal('modal-sa-user-status')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div class="p-3 rounded-lg border border-white/8 text-sm" style="background:var(--surface-a)">
+        <div class="font-semibold" id="sa-status-modal-user-name">—</div>
+        <div class="text-slate-500 text-xs" id="sa-status-modal-user-email">—</div>
+      </div>
+      <div id="sa-status-modal-reason-wrap">
+        <label class="block text-xs text-slate-400 mb-2">Motivo (opcional, visível para outros SuperAdmins)</label>
+        <textarea id="sa-status-modal-reason" class="input-field" rows="3" placeholder="Ex.: Comportamento abusivo reportado por cliente..."></textarea>
+      </div>
+      <p class="text-xs text-slate-500" id="sa-status-modal-hint">—</p>
+    </div>
+    <div class="flex gap-3 pt-4 border-t border-white/8 mt-4">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-sa-user-status')">Cancelar</button>
+      <button class="btn-primary flex-1" id="sa-status-modal-confirm" onclick="submitSAUserStatusChange()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- SuperAdmin: Reset user password -->
+<div id="modal-sa-reset-password" class="modal-overlay" style="display:none">
+  <div class="modal-content" style="max-width:460px">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-semibold modal-title">Repor password</h2>
+      <button class="btn-ghost" onclick="closeModal('modal-sa-reset-password')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4" id="sa-reset-password-form">
+      <div class="p-3 rounded-lg border border-white/8 text-sm" style="background:var(--surface-a)">
+        <div class="font-semibold" id="sa-reset-modal-user-name">—</div>
+        <div class="text-slate-500 text-xs" id="sa-reset-modal-user-email">—</div>
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-2">Nova password (deixe em branco para gerar uma automaticamente)</label>
+        <input type="text" id="sa-reset-password-input" class="input-field" placeholder="Mínimo 8 caracteres" autocomplete="off">
+      </div>
+      <p class="text-xs text-slate-500"><i class="fas fa-info-circle mr-1"></i> A password é definida diretamente na base de dados. Informe o utilizador por um canal seguro.</p>
+    </div>
+    <div id="sa-reset-password-result" style="display:none">
+      <div class="p-4 rounded-lg border border-white/10 text-center" style="background:var(--surface-a)">
+        <div class="text-xs text-slate-500 mb-2">Password temporária gerada — copie agora, não voltará a ser mostrada</div>
+        <div class="mono text-lg font-bold tracking-wide" id="sa-reset-password-generated" style="color:var(--accent-purple-light)">—</div>
+        <button class="btn-secondary mt-3 text-xs" onclick="copySAGeneratedPassword()"><i class="fas fa-copy"></i> Copiar</button>
+      </div>
+    </div>
+    <div class="flex gap-3 pt-4 border-t border-white/8 mt-4">
+      <button class="btn-secondary flex-1" id="sa-reset-password-cancel" onclick="closeModal('modal-sa-reset-password')">Cancelar</button>
+      <button class="btn-primary flex-1" id="sa-reset-password-confirm" onclick="submitSAResetPassword()"><i class="fas fa-key"></i> Repor password</button>
     </div>
   </div>
 </div>
@@ -14122,10 +14228,57 @@ function formatDate(iso) {
 
 // ── Users ──
 
+function getSAStatusBadge(u) {
+  var status = u.status || 'active';
+  var reasonAttr = u.status_reason ? ' title="' + escapeHtml(u.status_reason) + '"' : '';
+  if (status === 'blocked') return '<span class="badge badge-yellow"' + reasonAttr + '><i class="fas fa-lock"></i> Bloqueado</span>';
+  if (status === 'banned') return '<span class="badge badge-red"' + reasonAttr + '><i class="fas fa-ban"></i> Banido</span>';
+  return '<span class="badge badge-green"><i class="fas fa-check"></i> Ativo</span>';
+}
+
+function saUserActionButtons(u) {
+  var isSelf = APP.user && APP.user.id && u.id === APP.user.id;
+  var status = u.status || 'active';
+  var btns = [];
+  if (isSelf) {
+    return '<div class="sa-user-row-actions"><span class="text-xs text-slate-600" title="Não pode alterar a sua própria conta">a sua conta</span></div>';
+  }
+  if (status === 'active') {
+    btns.push('<button class="btn-ghost btn-action warn" onclick="openSAStatusModal(\'' + u.id + '\',\'blocked\')" title="Bloquear conta"><i class="fas fa-lock"></i></button>');
+    btns.push('<button class="btn-ghost btn-action danger" onclick="openSAStatusModal(\'' + u.id + '\',\'banned\')" title="Banir conta"><i class="fas fa-ban"></i></button>');
+  } else if (status === 'blocked') {
+    btns.push('<button class="btn-ghost btn-action" onclick="openSAStatusModal(\'' + u.id + '\',\'active\')" title="Desbloquear conta"><i class="fas fa-lock-open"></i></button>');
+    btns.push('<button class="btn-ghost btn-action danger" onclick="openSAStatusModal(\'' + u.id + '\',\'banned\')" title="Banir conta"><i class="fas fa-ban"></i></button>');
+  } else if (status === 'banned') {
+    btns.push('<button class="btn-ghost btn-action" onclick="openSAStatusModal(\'' + u.id + '\',\'active\')" title="Reativar conta"><i class="fas fa-rotate-left"></i></button>');
+  }
+  btns.push('<button class="btn-ghost btn-action" onclick="openSAResetPasswordModal(\'' + u.id + '\')" title="Repor password"><i class="fas fa-key"></i></button>');
+  btns.push('<button class="btn-ghost btn-action danger" onclick="deleteSAUser(\'' + escapeHtml(u.id) + '\',\'backend\')" title="Remover"><i class="fas fa-trash"></i></button>');
+  return '<div class="sa-user-row-actions">' + btns.join('') + '</div>';
+}
+
+function updateSAUserStats() {
+  var users = SA_STATE.users || [];
+  var active = 0, blocked = 0, banned = 0;
+  users.forEach(function(u) {
+    var s = u.status || 'active';
+    if (s === 'blocked') blocked++;
+    else if (s === 'banned') banned++;
+    else active++;
+  });
+  setInnerText('sa-users-stat-active', active);
+  setInnerText('sa-users-stat-blocked', blocked);
+  setInnerText('sa-users-stat-banned', banned);
+  setInnerText('sa-users-stat-total', users.length);
+}
+
 function renderSuperAdminUsers() {
   var search = (document.getElementById('sa-users-search') || {}).value || '';
   var roleFilter = (document.getElementById('sa-users-role-filter') || {}).value || '';
+  var statusFilter = (document.getElementById('sa-users-status-filter') || {}).value || '';
   search = search.toLowerCase();
+
+  updateSAUserStats();
 
   // Backend users
   var tbody = document.getElementById('sa-users-table-body');
@@ -14137,7 +14290,8 @@ function renderSuperAdminUsers() {
       var filtered = users.filter(function(u) {
         var matchSearch = !search || (u.name || '').toLowerCase().includes(search) || (u.email || '').toLowerCase().includes(search) || (u.role || '').toLowerCase().includes(search);
         var matchRole = !roleFilter || (u.role || '') === roleFilter;
-        return matchSearch && matchRole;
+        var matchStatus = !statusFilter || (u.status || 'active') === statusFilter;
+        return matchSearch && matchRole && matchStatus;
       });
       tbody.innerHTML = filtered.map(function(u) {
         return '<tr>' +
@@ -14145,9 +14299,9 @@ function renderSuperAdminUsers() {
           '<td class="text-slate-400">' + escapeHtml(u.email || '—') + '</td>' +
           '<td><span class="badge ' + getRoleBadgeClass(u.role) + '">' + getRoleLabel(u.role) + '</span></td>' +
           '<td class="text-slate-400">' + escapeHtml(u.team_name || '—') + '</td>' +
-          '<td><span class="badge badge-blue text-xs">Backend</span></td>' +
+          '<td>' + getSAStatusBadge(u) + '</td>' +
           '<td class="text-slate-500 text-xs mono">' + formatDate(u.created_at) + '</td>' +
-          '<td><button class="btn-ghost btn-action text-xs" onclick="deleteSAUser(\'' + escapeHtml(u.id) + '\',\'backend\')" title="Remover"><i class="fas fa-trash text-red-400"></i></button></td>' +
+          '<td>' + saUserActionButtons(u) + '</td>' +
           '</tr>';
       }).join('') || '<tr><td colspan="7" class="text-center text-slate-500 py-4">Sem resultados para o filtro aplicado.</td></tr>';
     }
@@ -14193,6 +14347,126 @@ function deleteSAUser(id, source) {
     saveData(); renderSuperAdminUsers(); showToast('Utilizador local removido.');
   } else {
     showToast('Remoção de utilizadores backend requer acesso direto à base de dados.', 'warn');
+  }
+}
+
+// ── User status (block / ban / reactivate) ──
+
+function openSAStatusModal(id, targetStatus) {
+  var u = (SA_STATE.users || []).find(function(x) { return x.id === id; });
+  if (!u) return;
+  SA_STATE.pendingStatusChange = { id: id, target: targetStatus };
+
+  setInnerText('sa-status-modal-user-name', u.name || '—');
+  setInnerText('sa-status-modal-user-email', u.email || '—');
+
+  var titles = { blocked: 'Bloquear conta', banned: 'Banir conta', active: 'Reativar conta' };
+  var hints = {
+    blocked: 'O utilizador deixa de conseguir iniciar sessão até ser desbloqueado manualmente.',
+    banned: 'O utilizador é banido da plataforma. Esta ação pode ser revertida mais tarde por um SuperAdmin.',
+    active: 'A conta volta a poder iniciar sessão normalmente.'
+  };
+  var confirmLabels = { blocked: 'Bloquear', banned: 'Banir', active: 'Reativar' };
+
+  setInnerText('sa-status-modal-title', titles[targetStatus] || 'Alterar estado');
+  setInnerText('sa-status-modal-hint', hints[targetStatus] || '');
+  setValue('sa-status-modal-reason', '');
+
+  var reasonWrap = document.getElementById('sa-status-modal-reason-wrap');
+  if (reasonWrap) reasonWrap.style.display = targetStatus === 'active' ? 'none' : '';
+
+  var confirmBtn = document.getElementById('sa-status-modal-confirm');
+  if (confirmBtn) {
+    confirmBtn.innerHTML = confirmLabels[targetStatus] || 'Confirmar';
+    confirmBtn.className = 'flex-1 ' + (targetStatus === 'active' ? 'btn-primary' : 'btn-danger');
+  }
+
+  showModal('modal-sa-user-status');
+}
+
+function submitSAUserStatusChange() {
+  var pending = SA_STATE.pendingStatusChange;
+  if (!pending) return;
+  var reason = getValue('sa-status-modal-reason');
+  var confirmBtn = document.getElementById('sa-status-modal-confirm');
+  if (confirmBtn) confirmBtn.disabled = true;
+
+  apiRequest('/api/superadmin/users/' + encodeURIComponent(pending.id) + '/status', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (APP.authToken || '') },
+    body: JSON.stringify({ status: pending.target, reason: reason || undefined })
+  }).then(function(data) {
+    if (data && data.user) {
+      SA_STATE.users = SA_STATE.users.map(function(u) { return u.id === data.user.id ? Object.assign({}, u, data.user) : u; });
+    }
+    closeModal('modal-sa-user-status');
+    renderSuperAdminUsers();
+    var labels = { blocked: 'bloqueada', banned: 'banida', active: 'reativada' };
+    showToast('Conta ' + (labels[pending.target] || 'atualizada') + ' com sucesso.');
+  }).catch(function(e) {
+    showToast('Erro: ' + e.message, 'error');
+  }).finally(function() {
+    if (confirmBtn) confirmBtn.disabled = false;
+  });
+}
+
+// ── Password recovery ──
+
+function openSAResetPasswordModal(id) {
+  var u = (SA_STATE.users || []).find(function(x) { return x.id === id; });
+  if (!u) return;
+  SA_STATE.pendingResetUserId = id;
+  setInnerText('sa-reset-modal-user-name', u.name || '—');
+  setInnerText('sa-reset-modal-user-email', u.email || '—');
+  setValue('sa-reset-password-input', '');
+  document.getElementById('sa-reset-password-form').style.display = '';
+  document.getElementById('sa-reset-password-result').style.display = 'none';
+  document.getElementById('sa-reset-password-confirm').style.display = '';
+  document.getElementById('sa-reset-password-cancel').textContent = 'Cancelar';
+  showModal('modal-sa-reset-password');
+}
+
+function submitSAResetPassword() {
+  var id = SA_STATE.pendingResetUserId;
+  if (!id) return;
+  var newPassword = getValue('sa-reset-password-input').trim();
+  if (newPassword && newPassword.length < 8) {
+    showToast('A password deve ter pelo menos 8 caracteres.', 'warn');
+    return;
+  }
+  var confirmBtn = document.getElementById('sa-reset-password-confirm');
+  if (confirmBtn) confirmBtn.disabled = true;
+
+  apiRequest('/api/superadmin/users/' + encodeURIComponent(id) + '/reset-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (APP.authToken || '') },
+    body: JSON.stringify(newPassword ? { newPassword: newPassword } : {})
+  }).then(function(data) {
+    if (data && data.temporaryPassword) {
+      document.getElementById('sa-reset-password-form').style.display = 'none';
+      var result = document.getElementById('sa-reset-password-result');
+      result.style.display = '';
+      setInnerText('sa-reset-password-generated', data.temporaryPassword);
+      SA_STATE.lastGeneratedPassword = data.temporaryPassword;
+      document.getElementById('sa-reset-password-confirm').style.display = 'none';
+      document.getElementById('sa-reset-password-cancel').textContent = 'Fechar';
+      showToast('Password reposta com sucesso.');
+    } else {
+      closeModal('modal-sa-reset-password');
+      showToast('Password reposta com sucesso.');
+    }
+  }).catch(function(e) {
+    showToast('Erro: ' + e.message, 'error');
+  }).finally(function() {
+    if (confirmBtn) confirmBtn.disabled = false;
+  });
+}
+
+function copySAGeneratedPassword() {
+  var pwd = SA_STATE.lastGeneratedPassword;
+  if (!pwd) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(pwd).then(function() { showToast('Password copiada.'); }).catch(function() {});
   }
 }
 

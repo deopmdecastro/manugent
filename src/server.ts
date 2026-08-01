@@ -2,7 +2,7 @@ import 'dotenv/config'
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync, createReadStream, statSync, unlinkSync } from 'node:fs'
 import { join, resolve, extname, basename } from 'node:path'
-import { randomUUID } from 'node:crypto'
+import { randomUUID, randomBytes } from 'node:crypto'
 
 import { serve } from '@hono/node-server'
 import { serveStatic } from '@hono/node-server/serve-static'
@@ -570,6 +570,14 @@ app.post('/api/auth/login', async (c) => {
     }
 
     const userData = user[0]
+
+    if (userData.status === 'blocked') {
+      return c.json({ error: 'Esta conta está bloqueada. Contacte o administrador da plataforma.', status: 'blocked' }, 403)
+    }
+    if (userData.status === 'banned') {
+      return c.json({ error: 'Esta conta foi banida da plataforma.', status: 'banned' }, 403)
+    }
+
     loginAttempts.delete(rateLimitKey)
 
     const token = jwt.sign(
@@ -977,6 +985,85 @@ app.get('/api/users', async (c) => {
     return c.json({ users: data || [] })
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not fetch users')
+  }
+})
+
+// ── Routes: SuperAdmin — account status & password recovery ────────────────
+// Only a SuperAdmin can block, ban, reactivate, or force-reset another
+// account's password. All routes require requireSuperAdminUser.
+
+function generateTemporaryPassword(): string {
+  // Unambiguous alphabet (no 0/O/1/l/I) so a support agent can read it aloud.
+  const alphabet = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
+  const bytes = randomBytes(14)
+  let pwd = ''
+  for (let i = 0; i < bytes.length; i++) {
+    pwd += alphabet[bytes[i] % alphabet.length]
+  }
+  return pwd + '!' // guarantee a symbol so it always meets typical policies
+}
+
+app.post('/api/superadmin/users/:id/status', async (c) => {
+  const auth = requireSuperAdminUser(c)
+  if (!auth.ok) return c.json({ error: auth.message }, auth.status)
+
+  const userId = c.req.param('id')
+  const body = await c.req.json().catch(() => ({})) as { status?: string; reason?: string }
+  const status = body.status
+
+  if (status !== 'active' && status !== 'blocked' && status !== 'banned') {
+    return jsonError(c, "status deve ser 'active', 'blocked' ou 'banned'.")
+  }
+  if (userId === auth.user.id) {
+    return c.json({ error: 'Não pode alterar o estado da sua própria conta.' }, 400)
+  }
+
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('admin_set_user_status', {
+      p_actor_id: auth.user.id,
+      p_user_id: userId,
+      p_status: status,
+      p_reason: body.reason || null,
+    })
+    if (error) throw error
+    const updated = Array.isArray(data) ? data[0] : data
+    if (!updated) return c.json({ error: 'Utilizador não encontrado.' }, 404)
+    return c.json({ user: updated })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Não foi possível atualizar o estado da conta.')
+  }
+})
+
+app.post('/api/superadmin/users/:id/reset-password', async (c) => {
+  const auth = requireSuperAdminUser(c)
+  if (!auth.ok) return c.json({ error: auth.message }, auth.status)
+
+  const userId = c.req.param('id')
+  const body = await c.req.json().catch(() => ({})) as { newPassword?: string }
+
+  const providedPassword = (body.newPassword || '').trim()
+  if (providedPassword && providedPassword.length < 8) {
+    return jsonError(c, 'A nova password deve ter pelo menos 8 caracteres.')
+  }
+  const generated = !providedPassword
+  const newPassword = providedPassword || generateTemporaryPassword()
+
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('admin_reset_user_password', {
+      p_actor_id: auth.user.id,
+      p_user_id: userId,
+      p_new_password: newPassword,
+    })
+    if (error) throw error
+    const updated = Array.isArray(data) ? data[0] : data
+    if (!updated) return c.json({ error: 'Utilizador não encontrado.' }, 404)
+    // The plaintext password is only ever returned once, right here, to the
+    // SuperAdmin who requested the reset — it is never stored or logged.
+    return c.json({ user: updated, temporaryPassword: generated ? newPassword : undefined })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Não foi possível repor a password.')
   }
 })
 
