@@ -3071,6 +3071,17 @@
     #app-sidebar::-webkit-scrollbar-track { background: transparent; }
 
     /* SuperAdmin tabs */
+    /* SuperAdmin scrollable tab bar */
+    #page-superadmin .flex.gap-1.mb-6.p-1 {
+      overflow-x: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(124,58,237,0.3) transparent;
+      -webkit-overflow-scrolling: touch;
+      max-width: 100%;
+      width: 100%;
+    }
+    #page-superadmin .flex.gap-1.mb-6.p-1::-webkit-scrollbar { height: 4px; }
+    #page-superadmin .flex.gap-1.mb-6.p-1::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.4); border-radius:4px; }
     .superadmin-tab {
       padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
       color: var(--text-secondary); cursor: pointer; border: none; background: transparent;
@@ -4112,12 +4123,16 @@
         </div>
 
         <!-- Sub-tabs -->
-        <div class="flex gap-1 mb-6 p-1 rounded-xl border border-white/8" style="background:var(--surface-a);width:fit-content;flex-wrap:wrap">
+        <div class="flex gap-1 mb-6 p-1 rounded-xl border border-white/8" style="background:var(--surface-a);flex-wrap:nowrap;min-width:0;">
           <button class="superadmin-tab active" data-tab="sa-overview" onclick="showSuperAdminTab('sa-overview')"><i class="fas fa-chart-line"></i> Visão Geral</button>
           <button class="superadmin-tab" data-tab="sa-users" onclick="showSuperAdminTab('sa-users')"><i class="fas fa-users"></i> Utilizadores</button>
-          <button class="superadmin-tab" data-tab="sa-ai" onclick="showSuperAdminTab('sa-ai')"><i class="fas fa-robot"></i> Configuração IA</button>
-          <button class="superadmin-tab" data-tab="sa-landing" onclick="showSuperAdminTab('sa-landing')"><i class="fas fa-globe"></i> Landing Manager</button>
+          <button class="superadmin-tab" data-tab="sa-ai" onclick="showSuperAdminTab('sa-ai')"><i class="fas fa-robot"></i> IA</button>
+          <button class="superadmin-tab" data-tab="sa-blog" onclick="showSuperAdminTab('sa-blog')"><i class="fas fa-newspaper"></i> Blog</button>
+          <button class="superadmin-tab" data-tab="sa-testimonials" onclick="showSuperAdminTab('sa-testimonials')"><i class="fas fa-star"></i> Testemunhos</button>
+          <button class="superadmin-tab" data-tab="sa-landing" onclick="showSuperAdminTab('sa-landing')"><i class="fas fa-globe"></i> Landing</button>
           <button class="superadmin-tab" data-tab="sa-support" onclick="showSuperAdminTab('sa-support')"><i class="fas fa-headset"></i> Suporte</button>
+          <button class="superadmin-tab" data-tab="sa-logs" onclick="showSuperAdminTab('sa-logs')"><i class="fas fa-terminal"></i> Logs</button>
+          <button class="superadmin-tab" data-tab="sa-backup" onclick="showSuperAdminTab('sa-backup')"><i class="fas fa-database"></i> Backup</button>
           <button class="superadmin-tab" data-tab="sa-system" onclick="showSuperAdminTab('sa-system')"><i class="fas fa-server"></i> Sistema</button>
         </div>
 
@@ -4380,50 +4395,327 @@
 
         <!-- TAB: Sistema -->
         <div id="sa-system" class="sa-tab-panel" style="display:none">
-          <div class="grid md:grid-cols-2 gap-6 mb-6">
-            <div class="card p-6">
-              <h3 class="font-semibold mb-4 flex items-center gap-2"><i class="fas fa-heartbeat" style="color:var(--accent-green)"></i> Estado do Servidor</h3>
-              <div class="space-y-3 text-sm" id="sa-system-health">
-                <div class="text-slate-500 text-xs">A verificar...</div>
+          <!-- Status row -->
+          <div class="grid md:grid-cols-3 gap-4 mb-6">
+            <div class="card p-5">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold flex items-center gap-2"><i class="fas fa-server text-emerald-400"></i> Servidor</h3>
+                <button class="btn-ghost text-xs" onclick="loadSASystemHealth()" title="Atualizar"><i class="fas fa-sync"></i></button>
               </div>
-              <button class="btn-secondary mt-4" onclick="loadSASystemHealth()"><i class="fas fa-sync"></i> Verificar</button>
+              <div id="sa-system-health"><div class="text-slate-500 text-xs">A verificar...</div></div>
             </div>
-            <div class="card p-6">
-              <h3 class="font-semibold mb-4 flex items-center gap-2"><i class="fas fa-database" style="color:var(--accent-blue)"></i> Estado da Base de Dados</h3>
-              <div class="space-y-3 text-sm" id="sa-system-db">
-                <div class="text-slate-500 text-xs">A verificar...</div>
+            <div class="card p-5">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold flex items-center gap-2"><i class="fas fa-database text-blue-400"></i> Base de Dados</h3>
+                <button class="btn-ghost text-xs" onclick="loadSASystemDB()" title="Atualizar"><i class="fas fa-sync"></i></button>
               </div>
-              <button class="btn-secondary mt-4" onclick="loadSASystemDB()"><i class="fas fa-sync"></i> Verificar</button>
+              <div id="sa-system-db"><div class="text-slate-500 text-xs">A verificar...</div></div>
+            </div>
+            <div class="card p-5">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold flex items-center gap-2"><i class="fas fa-robot text-purple-400"></i> IA</h3>
+                <button class="btn-ghost text-xs" onclick="loadSASystemAI()" title="Atualizar"><i class="fas fa-sync"></i></button>
+              </div>
+              <div id="sa-system-ai"><div class="text-slate-500 text-xs">A verificar...</div></div>
             </div>
           </div>
-          <div class="card p-6">
-            <h3 class="font-semibold mb-4 flex items-center gap-2"><i class="fas fa-circle-info" style="color:var(--accent-cyan)"></i> Informações da Plataforma</h3>
-            <div class="grid md:grid-cols-3 gap-4 text-sm">
-              <div class="p-4 rounded-lg border border-white/8" style="background:var(--surface-a)">
-                <div class="text-xs text-slate-500 uppercase mb-2">Versão</div>
-                <div class="mono font-semibold text-slate-200">ManuGent v2.0.0</div>
-                <div class="text-xs text-slate-500 mt-1">Dashboard operacional</div>
+
+          <!-- AI Key Quick Tester -->
+          <div class="card p-6 mb-6">
+            <h3 class="font-semibold mb-4 flex items-center gap-2"><i class="fas fa-vial" style="color:var(--accent-purple-light)"></i> Teste Rápido de API Key de IA</h3>
+            <div class="grid md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label class="block text-xs text-slate-400 mb-2">Provider</label>
+                <select id="sa-test-ai-provider" class="input-field text-sm" onchange="updateTestAIModel()">
+                  <option value="groq">Groq (Llama3)</option>
+                  <option value="openai">OpenAI (GPT)</option>
+                </select>
               </div>
-              <div class="p-4 rounded-lg border border-white/8" style="background:var(--surface-a)">
-                <div class="text-xs text-slate-500 uppercase mb-2">Stack</div>
-                <div class="mono font-semibold text-slate-200">Hono + Node.js 24</div>
-                <div class="text-xs text-slate-500 mt-1">PostgreSQL + Drizzle ORM</div>
+              <div>
+                <label class="block text-xs text-slate-400 mb-2">Modelo</label>
+                <input type="text" id="sa-test-ai-model" class="input-field text-sm" value="llama3-8b-8192" placeholder="llama3-8b-8192">
               </div>
-              <div class="p-4 rounded-lg border border-white/8" style="background:var(--surface-a)">
-                <div class="text-xs text-slate-500 uppercase mb-2">Frontend</div>
-                <div class="mono font-semibold text-slate-200">Vanilla JS + Tailwind</div>
-                <div class="text-xs text-slate-500 mt-1">Single-file SPA</div>
+              <div>
+                <label class="block text-xs text-slate-400 mb-2">API Key</label>
+                <div style="position:relative">
+                  <input type="password" id="sa-test-ai-key" class="input-field text-sm pr-10" placeholder="gsk_... ou sk-...">
+                  <button type="button" onclick="toggleField('sa-test-ai-key')" class="btn-ghost" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:0;width:28px;height:28px;justify-content:center"><i class="fas fa-eye text-xs"></i></button>
+                </div>
               </div>
             </div>
-            <div class="mt-5 p-4 rounded-lg border border-purple-500/20" style="background:rgba(124,58,237,0.08)">
-              <div class="text-xs text-slate-400"><i class="fas fa-shield-halved mr-1 text-purple-400"></i> <strong>Segurança:</strong> JWT sessions, rate limiting no login, headers OWASP (X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, HSTS em produção).</div>
+            <div class="flex items-center gap-3">
+              <button class="btn-primary" onclick="runTestAI()"><i class="fas fa-play"></i> Testar Agora</button>
+              <div id="sa-test-ai-result" class="text-sm text-slate-400"></div>
+            </div>
+          </div>
+
+          <!-- Tools Grid -->
+          <div class="grid md:grid-cols-2 gap-6 mb-6">
+            <div class="card p-6">
+              <h3 class="font-semibold mb-4 flex items-center gap-2"><i class="fas fa-wrench" style="color:var(--accent-cyan)"></i> Ferramentas Rápidas</h3>
+              <div class="space-y-2">
+                <button class="btn-secondary w-full text-left flex items-center gap-2 text-sm" onclick="saToolVerifyServer()"><i class="fas fa-heartbeat text-emerald-400 w-4"></i> Verificar servidor e uptime</button>
+                <button class="btn-secondary w-full text-left flex items-center gap-2 text-sm" onclick="saToolTestDB()"><i class="fas fa-plug text-blue-400 w-4"></i> Testar ligação à base de dados</button>
+                <button class="btn-secondary w-full text-left flex items-center gap-2 text-sm" onclick="saToolTestAIStatus()"><i class="fas fa-robot text-purple-400 w-4"></i> Verificar estado da IA</button>
+                <button class="btn-secondary w-full text-left flex items-center gap-2 text-sm" onclick="showSuperAdminTab('sa-logs')"><i class="fas fa-terminal text-yellow-400 w-4"></i> Ver logs do sistema</button>
+                <button class="btn-secondary w-full text-left flex items-center gap-2 text-sm" onclick="showSuperAdminTab('sa-backup')"><i class="fas fa-database text-orange-400 w-4"></i> Criar backup agora</button>
+              </div>
+              <div id="sa-tools-result" class="mt-4 text-xs text-slate-400"></div>
+            </div>
+            <div class="card p-6">
+              <h3 class="font-semibold mb-4 flex items-center gap-2"><i class="fas fa-circle-info" style="color:var(--accent-cyan)"></i> Informações da Plataforma</h3>
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between py-2 border-b border-white/5"><span class="text-slate-400">Versão</span><span class="mono text-slate-200 font-semibold">ManuGent v2.2.0</span></div>
+                <div class="flex justify-between py-2 border-b border-white/5"><span class="text-slate-400">Backend</span><span class="mono text-slate-200">Hono + Node.js 24</span></div>
+                <div class="flex justify-between py-2 border-b border-white/5"><span class="text-slate-400">Base de Dados</span><span class="mono text-slate-200">PostgreSQL + Drizzle</span></div>
+                <div class="flex justify-between py-2 border-b border-white/5"><span class="text-slate-400">Frontend</span><span class="mono text-slate-200">Vanilla JS + Tailwind</span></div>
+                <div class="flex justify-between py-2"><span class="text-slate-400">Auth</span><span class="mono text-slate-200">JWT + Rate Limiting</span></div>
+              </div>
+              <div class="mt-4 p-3 rounded-lg border border-purple-500/20 text-xs text-slate-400" style="background:rgba(124,58,237,0.06)">
+                <i class="fas fa-shield-halved mr-1 text-purple-400"></i> <strong>Segurança:</strong> JWT sessions · Rate limiting · Headers OWASP · HSTS em produção
+              </div>
             </div>
           </div>
         </div>
       </div>
 
+        <!-- TAB: Blog -->
+        <div id="sa-blog" class="sa-tab-panel" style="display:none">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex gap-2 flex-wrap">
+              <select id="sa-blog-filter" class="input-field text-sm" style="max-width:140px" onchange="renderSABlog()">
+                <option value="">Todos</option>
+                <option value="published">Publicados</option>
+                <option value="draft">Rascunhos</option>
+              </select>
+              <input type="text" id="sa-blog-search" class="input-field text-sm" style="max-width:220px" placeholder="Pesquisar artigos..." oninput="renderSABlog()">
+            </div>
+            <button class="btn-primary text-sm" onclick="openSABlogModal()"><i class="fas fa-plus"></i> Novo Artigo</button>
+          </div>
+          <!-- Stats -->
+          <div class="grid grid-cols-3 gap-4 mb-6">
+            <div class="card p-4 text-center"><div class="text-xs text-slate-500 uppercase mb-1">Total</div><div class="text-2xl font-bold mono" id="sa-blog-count-total">0</div></div>
+            <div class="card p-4 text-center"><div class="text-xs text-emerald-500 uppercase mb-1">Publicados</div><div class="text-2xl font-bold mono text-emerald-400" id="sa-blog-count-pub">0</div></div>
+            <div class="card p-4 text-center"><div class="text-xs text-yellow-500 uppercase mb-1">Rascunhos</div><div class="text-2xl font-bold mono text-yellow-400" id="sa-blog-count-draft">0</div></div>
+          </div>
+          <!-- Posts list -->
+          <div id="sa-blog-list" class="space-y-3">
+            <div class="text-slate-500 text-sm text-center py-8">A carregar artigos...</div>
+          </div>
+        </div>
+
+        <!-- TAB: Testemunhos -->
+        <div id="sa-testimonials" class="sa-tab-panel" style="display:none">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex gap-2">
+              <select id="sa-test-filter" class="input-field text-sm" style="max-width:140px" onchange="renderSATestimonials()">
+                <option value="">Todos</option>
+                <option value="approved">Aprovados</option>
+                <option value="pending">Pendentes</option>
+                <option value="featured">Destaque</option>
+              </select>
+            </div>
+            <button class="btn-primary text-sm" onclick="openSATestimonialModal()"><i class="fas fa-plus"></i> Novo Testemunho</button>
+          </div>
+          <div class="grid grid-cols-3 gap-4 mb-6">
+            <div class="card p-4 text-center"><div class="text-xs text-slate-500 uppercase mb-1">Total</div><div class="text-2xl font-bold mono" id="sa-test-count-total">0</div></div>
+            <div class="card p-4 text-center"><div class="text-xs text-emerald-500 uppercase mb-1">Aprovados</div><div class="text-2xl font-bold mono text-emerald-400" id="sa-test-count-approved">0</div></div>
+            <div class="card p-4 text-center"><div class="text-xs text-yellow-500 uppercase mb-1">Pendentes</div><div class="text-2xl font-bold mono text-yellow-400" id="sa-test-count-pending">0</div></div>
+          </div>
+          <div id="sa-testimonials-list" class="space-y-3">
+            <div class="text-slate-500 text-sm text-center py-8">A carregar testemunhos...</div>
+          </div>
+        </div>
+
+        <!-- TAB: Logs -->
+        <div id="sa-logs" class="sa-tab-panel" style="display:none">
+          <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+            <div class="flex gap-2 flex-wrap">
+              <select id="sa-logs-level" class="input-field text-sm" style="max-width:120px" onchange="loadSALogs()">
+                <option value="">Todos os níveis</option>
+                <option value="info">Info</option>
+                <option value="warn">Aviso</option>
+                <option value="error">Erro</option>
+              </select>
+              <select id="sa-logs-source" class="input-field text-sm" style="max-width:130px" onchange="loadSALogs()">
+                <option value="">Todas as fontes</option>
+                <option value="system">Sistema</option>
+                <option value="db">Base de Dados</option>
+                <option value="ai">IA</option>
+                <option value="auth">Autenticação</option>
+                <option value="storage">Armazenamento</option>
+              </select>
+            </div>
+            <button class="btn-secondary text-sm" onclick="loadSALogs()"><i class="fas fa-sync"></i> Atualizar</button>
+          </div>
+          <div class="card" style="font-family:monospace;font-size:12px;background:#0a0a0f;border:1px solid rgba(255,255,255,0.06)">
+            <div id="sa-logs-output" class="p-4 space-y-1 max-h-96 overflow-y-auto">
+              <div class="text-slate-500">A carregar logs...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: Backup -->
+        <div id="sa-backup" class="sa-tab-panel" style="display:none">
+          <div class="grid md:grid-cols-2 gap-6">
+            <!-- Create Backup -->
+            <div class="card p-6">
+              <h3 class="font-semibold mb-2 flex items-center gap-2"><i class="fas fa-cloud-arrow-up" style="color:var(--accent-green)"></i> Criar Backup</h3>
+              <p class="text-sm text-slate-400 mb-5">Gera um ficheiro JSON com toda a configuração da plataforma: IA, landing, suporte, blog, testemunhos e estatísticas da base de dados.</p>
+              <button class="btn-primary w-full mb-3" onclick="createSABackup()"><i class="fas fa-download"></i> Criar e Descarregar Backup</button>
+              <div id="sa-backup-create-result" class="text-xs text-slate-400 mt-2"></div>
+              <div class="mt-4 p-3 rounded-lg border border-white/8 text-xs text-slate-400" style="background:var(--surface-a)">
+                <strong class="text-slate-300">Inclui:</strong> Configuração IA · Landing page · Suporte · Blog · Testemunhos · Estatísticas BD
+              </div>
+            </div>
+            <!-- Restore Backup -->
+            <div class="card p-6">
+              <h3 class="font-semibold mb-2 flex items-center gap-2"><i class="fas fa-cloud-arrow-down" style="color:var(--accent-blue)"></i> Restaurar Backup</h3>
+              <p class="text-sm text-slate-400 mb-5">Restaura a configuração a partir de um ficheiro de backup. Apenas os dados de configuração são restaurados — os dados da base de dados não são afetados.</p>
+              <div class="mb-3">
+                <label class="block text-xs text-slate-400 mb-2">Ficheiro de backup (.json)</label>
+                <input type="file" id="sa-backup-file" accept=".json" class="input-field text-sm" onchange="previewSABackup()">
+              </div>
+              <div id="sa-backup-preview" class="hidden mb-3 p-3 rounded-lg border border-white/8 text-xs" style="background:var(--surface-a)"></div>
+              <button class="btn-secondary w-full" id="sa-backup-restore-btn" onclick="restoreSABackup()" disabled><i class="fas fa-upload"></i> Restaurar</button>
+              <div id="sa-backup-restore-result" class="text-xs text-slate-400 mt-2"></div>
+            </div>
+          </div>
+          <!-- Backup history placeholder -->
+          <div class="card p-6 mt-6">
+            <h3 class="font-semibold mb-4 flex items-center gap-2"><i class="fas fa-clock-rotate-left" style="color:var(--accent-cyan)"></i> Informação do Sistema</h3>
+            <div id="sa-backup-info" class="text-sm text-slate-400">A carregar...</div>
+          </div>
+        </div>
+
     </div>
   </main>
+</div>
+
+
+<!-- ===== Modal: Blog Editor ===== -->
+<div id="modal-sa-blog" class="modal-overlay" style="display:none">
+  <div class="modal-content" style="max-width:720px">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-semibold modal-title">Artigo</h2>
+      <button class="btn-ghost" onclick="closeModal('modal-sa-blog')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs text-slate-400 mb-2">Título *</label>
+          <input type="text" id="sa-blog-title" class="input-field" placeholder="Título do artigo">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-2">Categoria</label>
+          <input type="text" id="sa-blog-category" class="input-field" placeholder="Novidades, Tutorial, ...">
+        </div>
+      </div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs text-slate-400 mb-2">Autor</label>
+          <input type="text" id="sa-blog-author" class="input-field" placeholder="Nome do autor">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-2">Tags (separadas por vírgula)</label>
+          <input type="text" id="sa-blog-tags" class="input-field" placeholder="manutenção, IA, novidades">
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-2">Resumo / Excerpt</label>
+        <textarea id="sa-blog-excerpt" class="input-field" rows="2" placeholder="Breve descrição do artigo..."></textarea>
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-2">Conteúdo (Markdown suportado)</label>
+        <textarea id="sa-blog-content" class="input-field" rows="10" placeholder="# Título&#10;&#10;Conteúdo do artigo em Markdown..."></textarea>
+      </div>
+      <div class="flex items-center gap-6">
+        <div class="flex-1">
+          <label class="block text-xs text-slate-400 mb-2">Estado</label>
+          <select id="sa-blog-status" class="input-field">
+            <option value="draft">Rascunho</option>
+            <option value="published">Publicado</option>
+          </select>
+        </div>
+        <label class="flex items-center gap-2 cursor-pointer mt-5">
+          <input type="checkbox" id="sa-blog-featured" class="rounded">
+          <span class="text-sm text-slate-300">Artigo em Destaque</span>
+        </label>
+      </div>
+    </div>
+    <div class="flex gap-3 pt-4 border-t border-white/8 mt-4">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-sa-blog')">Cancelar</button>
+      <button class="btn-primary flex-1" onclick="saveSABlog()"><i class="fas fa-save"></i> Guardar Artigo</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: Blog Comments ===== -->
+<div id="modal-sa-blog-comments" class="modal-overlay" style="display:none">
+  <div class="modal-content" style="max-width:600px">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-semibold modal-title">Comentários</h2>
+      <button class="btn-ghost" onclick="closeModal('modal-sa-blog-comments')"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="modal-sa-blog-comments-body" class="space-y-3 max-h-[60vh] overflow-y-auto"></div>
+    <div class="pt-4 border-t border-white/8 mt-4">
+      <button class="btn-secondary w-full" onclick="closeModal('modal-sa-blog-comments')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: Testimonial Editor ===== -->
+<div id="modal-sa-testimonial" class="modal-overlay" style="display:none">
+  <div class="modal-content" style="max-width:560px">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-semibold modal-title">Testemunho</h2>
+      <button class="btn-ghost" onclick="closeModal('modal-sa-testimonial')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs text-slate-400 mb-2">Nome *</label>
+          <input type="text" id="sa-test-name" class="input-field" placeholder="João Silva">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-2">Cargo</label>
+          <input type="text" id="sa-test-role" class="input-field" placeholder="Diretor de Manutenção">
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-2">Empresa</label>
+        <input type="text" id="sa-test-company" class="input-field" placeholder="Indústrias SA">
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-2">Texto do testemunho *</label>
+        <textarea id="sa-test-text" class="input-field" rows="4" placeholder="Descreva a experiência..."></textarea>
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-2">Classificação</label>
+        <select id="sa-test-rating" class="input-field">
+          <option value="5">★★★★★ 5 estrelas</option>
+          <option value="4">★★★★☆ 4 estrelas</option>
+          <option value="3">★★★☆☆ 3 estrelas</option>
+          <option value="2">★★☆☆☆ 2 estrelas</option>
+          <option value="1">★☆☆☆☆ 1 estrela</option>
+        </select>
+      </div>
+      <div class="flex gap-6">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" id="sa-test-approved" class="rounded">
+          <span class="text-sm text-slate-300">Aprovado (visível no site)</span>
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" id="sa-test-featured" class="rounded">
+          <span class="text-sm text-slate-300">Destaque</span>
+        </label>
+      </div>
+    </div>
+    <div class="flex gap-3 pt-4 border-t border-white/8 mt-4">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-sa-testimonial')">Cancelar</button>
+      <button class="btn-primary flex-1" onclick="saveSATestimonial()"><i class="fas fa-save"></i> Guardar</button>
+    </div>
+  </div>
 </div>
 
 <!-- ======================== MODALS ======================== -->
@@ -13177,6 +13469,16 @@ function isPageActive(id) {
   var el = document.getElementById(id);
   return !!(el && el.classList.contains('active'));
 }
+
+function showModal(id, titleText) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = 'flex';
+  if (titleText) {
+    var titleEl = el.querySelector('.modal-title');
+    if (titleEl) titleEl.textContent = titleText;
+  }
+}
 function closeModal(id) {
   if (id === 'modal-new-ot') { showPage('ots'); return; }
   if (id === 'modal-ot-detail') { showPage('ots'); return; }
@@ -13694,7 +13996,11 @@ function showSuperAdminTab(tab) {
     if (tab === 'sa-ai') loadSAIAIConfig();
     if (tab === 'sa-landing') loadSALandingConfig();
     if (tab === 'sa-support') loadSASupportData();
-    if (tab === 'sa-system') { loadSASystemHealth(); loadSASystemDB(); }
+    if (tab === 'sa-system') { loadSASystemHealth(); loadSASystemDB(); loadSASystemAI(); }
+    if (tab === 'sa-blog') loadSABlog();
+    if (tab === 'sa-testimonials') loadSATestimonials();
+    if (tab === 'sa-logs') loadSALogs();
+    if (tab === 'sa-backup') loadSABackupInfo();
   }
 }
 
@@ -14143,6 +14449,549 @@ function loadSASystemDB() {
       '<div class="mt-3 p-3 rounded-lg border border-white/8 text-xs text-slate-500" style="background:var(--surface-a)">Configure <code class="mono">DATABASE_URL</code> no ficheiro .env para ativar PostgreSQL.</div>';
   });
 }
+
+// ═══════════════════════════════════════════════════════
+// SUPERADMIN: SISTEMA — AI STATUS + TOOLS
+// ═══════════════════════════════════════════════════════
+
+function loadSASystemAI() {
+  var el = document.getElementById('sa-system-ai');
+  if (el) el.innerHTML = '<div class="text-slate-500 text-xs">A verificar...</div>';
+  apiRequest('/api/ai/status').then(function(data) {
+    if (!el) return;
+    var ok = data && data.configured;
+    el.innerHTML =
+      '<div class="flex items-center gap-2 mb-2"><span class="status-dot ' + (ok ? 'dot-green' : 'dot-yellow') + '"></span><span class="text-sm font-semibold">' + (ok ? data.provider.toUpperCase() + ' Online' : 'IA não configurada') + '</span></div>' +
+      (ok ? '<div class="text-xs text-slate-400">Modelo: <span class="mono text-slate-200">' + escapeHtml(data.model || '—') + '</span></div>' : '<div class="text-xs text-slate-400">Configure OPENAI_API_KEY ou GROQ_API_KEY</div>');
+  }).catch(function() {
+    if (el) el.innerHTML = '<div class="flex items-center gap-2"><span class="status-dot dot-red"></span><span class="text-xs text-red-400">Inacessível</span></div>';
+  });
+}
+
+function updateTestAIModel() {
+  var provider = getValue('sa-test-ai-provider');
+  var modelInput = document.getElementById('sa-test-ai-model');
+  if (modelInput) modelInput.value = provider === 'openai' ? 'gpt-4o-mini' : 'llama3-8b-8192';
+}
+
+function runTestAI() {
+  var provider = getValue('sa-test-ai-provider');
+  var model = getValue('sa-test-ai-model');
+  var key = getValue('sa-test-ai-key');
+  var resultEl = document.getElementById('sa-test-ai-result');
+  if (!key) { showToast('Insira uma API Key para testar.'); return; }
+  if (resultEl) resultEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A testar...';
+  fetch('/api/admin/test-ai', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (APP.authToken || '') },
+    body: JSON.stringify({ provider: provider, model: model, apiKey: key })
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    if (!resultEl) return;
+    if (data.ok) {
+      resultEl.innerHTML = '<span class="text-emerald-400"><i class="fas fa-check-circle"></i> API Key válida! Latência: ' + data.latencyMs + 'ms · Modelo: ' + escapeHtml(data.model) + '</span>';
+      showToast('✅ API Key testada com sucesso (' + data.latencyMs + 'ms)');
+    } else {
+      resultEl.innerHTML = '<span class="text-red-400"><i class="fas fa-times-circle"></i> Falhou: ' + escapeHtml(data.error || 'Erro desconhecido') + '</span>';
+      showToast('❌ Falhou: ' + (data.error || 'Erro'));
+    }
+  }).catch(function() {
+    if (resultEl) resultEl.innerHTML = '<span class="text-red-400"><i class="fas fa-times-circle"></i> Erro de rede</span>';
+  });
+}
+
+function saToolVerifyServer() {
+  var el = document.getElementById('sa-tools-result');
+  if (el) el.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A verificar...';
+  fetch('/api/health').then(function(r) { return r.json(); }).then(function(data) {
+    var upMins = data.uptime ? Math.floor(data.uptime / 60) : 0;
+    if (el) el.innerHTML = '<span class="text-emerald-400"><i class="fas fa-check-circle"></i> Servidor v' + (data.version || '?') + ' · Uptime: ' + upMins + 'min · ' + (data.environment || 'dev') + '</span>';
+    loadSASystemHealth();
+  }).catch(function() {
+    if (el) el.innerHTML = '<span class="text-red-400"><i class="fas fa-times-circle"></i> Servidor inacessível</span>';
+  });
+}
+
+function saToolTestDB() {
+  var el = document.getElementById('sa-tools-result');
+  if (el) el.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A testar base de dados...';
+  fetch('/api/db/health').then(function(r) { return r.json(); }).then(function(data) {
+    if (el) {
+      if (data.connected) {
+        el.innerHTML = '<span class="text-emerald-400"><i class="fas fa-check-circle"></i> BD conectada · ' + (data.tables || '—') + ' tabelas · ' + (data.latencyMs || 0) + 'ms</span>';
+      } else {
+        el.innerHTML = '<span class="text-red-400"><i class="fas fa-times-circle"></i> BD offline: ' + escapeHtml(data.error || 'sem detalhe') + '</span>';
+      }
+    }
+    loadSASystemDB();
+  }).catch(function() {
+    if (el) el.innerHTML = '<span class="text-red-400"><i class="fas fa-times-circle"></i> Sem DATABASE_URL configurado</span>';
+  });
+}
+
+function saToolTestAIStatus() {
+  var el = document.getElementById('sa-tools-result');
+  if (el) el.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A verificar IA...';
+  apiRequest('/api/ai/status').then(function(data) {
+    if (el) {
+      if (data && data.configured) {
+        el.innerHTML = '<span class="text-emerald-400"><i class="fas fa-check-circle"></i> IA ativa: ' + escapeHtml(data.provider) + ' (' + escapeHtml(data.model) + ')</span>';
+      } else {
+        el.innerHTML = '<span class="text-yellow-400"><i class="fas fa-exclamation-circle"></i> IA não configurada — defina OPENAI_API_KEY ou GROQ_API_KEY</span>';
+      }
+    }
+    loadSASystemAI();
+  }).catch(function() {
+    if (el) el.innerHTML = '<span class="text-red-400"><i class="fas fa-times-circle"></i> Erro ao verificar IA</span>';
+  });
+}
+
+function toggleField(id) {
+  var el = document.getElementById(id);
+  if (el) el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+// ═══════════════════════════════════════════════════════
+// SUPERADMIN: BLOG
+// ═══════════════════════════════════════════════════════
+
+var SA_BLOG_DATA = { posts: [] };
+
+function loadSABlog() {
+  fetch('/api/admin/blog', { headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      SA_BLOG_DATA = data || { posts: [] };
+      renderSABlog();
+    })
+    .catch(function() { SA_BLOG_DATA = { posts: [] }; renderSABlog(); });
+}
+
+function renderSABlog() {
+  var posts = SA_BLOG_DATA.posts || [];
+  var filter = getValue('sa-blog-filter');
+  var search = (getValue('sa-blog-search') || '').toLowerCase();
+  if (filter) posts = posts.filter(function(p) { return p.status === filter; });
+  if (search) posts = posts.filter(function(p) { return (p.title + ' ' + p.category + ' ' + (p.tags || []).join(' ')).toLowerCase().includes(search); });
+
+  var all = SA_BLOG_DATA.posts || [];
+  setInnerText('sa-blog-count-total', all.length);
+  setInnerText('sa-blog-count-pub', all.filter(function(p) { return p.status === 'published'; }).length);
+  setInnerText('sa-blog-count-draft', all.filter(function(p) { return p.status === 'draft'; }).length);
+
+  var el = document.getElementById('sa-blog-list');
+  if (!el) return;
+  if (!posts.length) { el.innerHTML = '<div class="card p-8 text-center text-slate-400 text-sm">Nenhum artigo encontrado. <button class="btn-primary ml-2" onclick="openSABlogModal()"><i class="fas fa-plus"></i> Criar artigo</button></div>'; return; }
+  el.innerHTML = posts.map(function(p) {
+    var isPub = p.status === 'published';
+    var commentsCount = (p.comments || []).length;
+    var pendingComments = (p.comments || []).filter(function(c) { return c.status === 'pending'; }).length;
+    return '<div class="card p-5 flex flex-col gap-3">' +
+      '<div class="flex items-start justify-between gap-3">' +
+        '<div class="flex-1 min-w-0">' +
+          '<div class="flex items-center gap-2 mb-1">' +
+            '<span class="badge ' + (isPub ? 'badge-green' : 'badge-yellow') + ' text-xs">' + (isPub ? 'Publicado' : 'Rascunho') + '</span>' +
+            (p.featured ? '<span class="badge badge-purple text-xs"><i class="fas fa-star mr-1"></i>Destaque</span>' : '') +
+            '<span class="text-xs text-slate-500">' + escapeHtml(p.category || '') + '</span>' +
+          '</div>' +
+          '<h4 class="font-semibold text-slate-100 truncate">' + escapeHtml(p.title) + '</h4>' +
+          '<p class="text-xs text-slate-400 mt-1 line-clamp-1">' + escapeHtml(p.excerpt || '') + '</p>' +
+        '</div>' +
+        '<div class="flex gap-2 flex-shrink-0">' +
+          '<button class="btn-ghost text-xs" onclick="openSABlogModal(' + JSON.stringify(JSON.stringify(p)) + ')" title="Editar"><i class="fas fa-pen"></i></button>' +
+          '<button class="btn-ghost text-xs" onclick="toggleSABlogStatus(' + JSON.stringify(p.id) + ',' + JSON.stringify(p.status) + ')" title="' + (isPub ? 'Despublicar' : 'Publicar') + '"><i class="fas ' + (isPub ? 'fa-eye-slash' : 'fa-eye') + '"></i></button>' +
+          '<button class="btn-ghost text-xs text-red-400" onclick="deleteSABlog(' + JSON.stringify(p.id) + ')" title="Eliminar"><i class="fas fa-trash"></i></button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="flex items-center gap-4 text-xs text-slate-500">' +
+        '<span><i class="fas fa-user mr-1"></i>' + escapeHtml(p.author || '') + '</span>' +
+        '<span><i class="fas fa-eye mr-1"></i>' + (p.views || 0) + ' views</span>' +
+        (commentsCount ? '<button class="text-xs ' + (pendingComments ? 'text-yellow-400' : 'text-slate-500') + '" onclick="openSABlogComments(' + JSON.stringify(p.id) + ')"><i class="fas fa-comment mr-1"></i>' + commentsCount + ' comentário' + (commentsCount !== 1 ? 's' : '') + (pendingComments ? ' · <span class=\"text-yellow-400\">' + pendingComments + ' pendente' + (pendingComments !== 1 ? 's' : '') + '</span>' : '') + '</button>' : '') +
+        '<span class="ml-auto">' + (p.publishedAt ? new Date(p.publishedAt).toLocaleDateString('pt-PT') : new Date(p.createdAt).toLocaleDateString('pt-PT')) + '</span>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function openSABlogModal(jsonStr) {
+  var post = jsonStr ? JSON.parse(jsonStr) : null;
+  var title = post ? 'Editar Artigo' : 'Novo Artigo';
+  showModal('modal-sa-blog', title);
+  setValue('sa-blog-title', post ? post.title : '');
+  setValue('sa-blog-category', post ? post.category : 'Geral');
+  setValue('sa-blog-author', post ? post.author : 'SuperAdmin');
+  setValue('sa-blog-excerpt', post ? post.excerpt : '');
+  setValue('sa-blog-content', post ? post.content : '');
+  setValue('sa-blog-status', post ? post.status : 'draft');
+  setValue('sa-blog-tags', post ? (post.tags || []).join(', ') : '');
+  var featuredEl = document.getElementById('sa-blog-featured');
+  if (featuredEl) featuredEl.checked = post ? !!post.featured : false;
+  document.getElementById('modal-sa-blog').dataset.postId = post ? post.id : '';
+}
+
+function saveSABlog() {
+  var modal = document.getElementById('modal-sa-blog');
+  var postId = modal ? modal.dataset.postId : '';
+  var tags = getValue('sa-blog-tags').split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+  var featured = document.getElementById('sa-blog-featured');
+  var body = {
+    title: getValue('sa-blog-title'),
+    category: getValue('sa-blog-category'),
+    author: getValue('sa-blog-author'),
+    excerpt: getValue('sa-blog-excerpt'),
+    content: getValue('sa-blog-content'),
+    status: getValue('sa-blog-status'),
+    tags: tags,
+    featured: featured ? featured.checked : false,
+  };
+  if (!body.title) { showToast('O título é obrigatório.'); return; }
+  var url = postId ? '/api/admin/blog/' + postId : '/api/admin/blog';
+  var method = postId ? 'PUT' : 'POST';
+  fetch(url, { method: method, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (APP.authToken || '') }, body: JSON.stringify(body) })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok || data.post) {
+        showToast(postId ? 'Artigo atualizado.' : 'Artigo criado.');
+        closeModal('modal-sa-blog');
+        SA_BLOG_DATA.loadedTabs = {};
+        loadSABlog();
+      } else { showToast('Erro: ' + (data.error || 'desconhecido')); }
+    }).catch(function() { showToast('Erro de rede.'); });
+}
+
+function toggleSABlogStatus(id, currentStatus) {
+  var newStatus = currentStatus === 'published' ? 'draft' : 'published';
+  fetch('/api/admin/blog/' + id, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (APP.authToken || '') },
+    body: JSON.stringify({ status: newStatus })
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    if (data.ok || data.post) {
+      showToast(newStatus === 'published' ? 'Artigo publicado.' : 'Artigo despublicado.');
+      loadSABlog();
+    }
+  }).catch(function() { showToast('Erro de rede.'); });
+}
+
+function deleteSABlog(id) {
+  if (!confirm('Eliminar este artigo? Esta ação não pode ser revertida.')) return;
+  fetch('/api/admin/blog/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok) { showToast('Artigo eliminado.'); loadSABlog(); }
+      else showToast('Erro: ' + (data.error || 'desconhecido'));
+    }).catch(function() { showToast('Erro de rede.'); });
+}
+
+function openSABlogComments(postId) {
+  var post = (SA_BLOG_DATA.posts || []).find(function(p) { return p.id === postId; });
+  if (!post) return;
+  var comments = post.comments || [];
+  var html2 = '<div class="space-y-3 max-h-80 overflow-y-auto">' +
+    (comments.length === 0 ? '<div class="text-slate-400 text-sm text-center py-4">Sem comentários</div>' :
+    comments.map(function(c) {
+      return '<div class="p-3 rounded-lg border border-white/8" style="background:var(--surface-a)">' +
+        '<div class="flex items-center justify-between mb-1">' +
+          '<span class="font-semibold text-sm">' + escapeHtml(c.author || 'Anónimo') + '</span>' +
+          '<div class="flex gap-1">' +
+            '<span class="badge ' + (c.status === 'approved' ? 'badge-green' : 'badge-yellow') + ' text-xs">' + (c.status || 'pending') + '</span>' +
+            (c.status !== 'approved' ? '<button class="btn-ghost text-xs text-emerald-400" onclick="approveSAComment(' + JSON.stringify(postId) + ',' + JSON.stringify(c.id) + ')"><i class="fas fa-check"></i></button>' : '') +
+            '<button class="btn-ghost text-xs text-red-400" onclick="deleteSAComment(' + JSON.stringify(postId) + ',' + JSON.stringify(c.id) + ')"><i class="fas fa-trash"></i></button>' +
+          '</div>' +
+        '</div>' +
+        '<p class="text-sm text-slate-300">' + escapeHtml(c.text || '') + '</p>' +
+        '<div class="text-xs text-slate-500 mt-1">' + new Date(c.createdAt).toLocaleString('pt-PT') + '</div>' +
+      '</div>';
+    }).join('')) +
+    '</div>';
+  showModal('modal-sa-blog-comments', 'Comentários: ' + escapeHtml(post.title));
+  var body = document.getElementById('modal-sa-blog-comments-body');
+  if (body) body.innerHTML = html2;
+  document.getElementById('modal-sa-blog-comments').dataset.postId = postId;
+}
+
+function approveSAComment(postId, commentId) {
+  fetch('/api/admin/blog/' + postId + '/comments/' + commentId, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (APP.authToken || '') },
+    body: JSON.stringify({ status: 'approved' })
+  }).then(function() { showToast('Comentário aprovado.'); loadSABlog(); closeModal('modal-sa-blog-comments'); }).catch(function() { showToast('Erro.'); });
+}
+
+function deleteSAComment(postId, commentId) {
+  if (!confirm('Eliminar comentário?')) return;
+  fetch('/api/admin/blog/' + postId + '/comments/' + commentId, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (APP.authToken || '') },
+    body: JSON.stringify({ deleted: true, status: 'deleted' })
+  }).then(function() { showToast('Comentário eliminado.'); loadSABlog(); closeModal('modal-sa-blog-comments'); }).catch(function() { showToast('Erro.'); });
+}
+
+// ═══════════════════════════════════════════════════════
+// SUPERADMIN: TESTEMUNHOS
+// ═══════════════════════════════════════════════════════
+
+var SA_TESTIMONIALS_DATA = { items: [] };
+
+function loadSATestimonials() {
+  fetch('/api/admin/testimonials', { headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } })
+    .then(function(r) { return r.json(); })
+    .then(function(data) { SA_TESTIMONIALS_DATA = data || { items: [] }; renderSATestimonials(); })
+    .catch(function() { SA_TESTIMONIALS_DATA = { items: [] }; renderSATestimonials(); });
+}
+
+function renderSATestimonials() {
+  var items = SA_TESTIMONIALS_DATA.items || [];
+  var filter = getValue('sa-test-filter');
+  var all = items;
+  if (filter === 'approved') items = items.filter(function(i) { return i.approved; });
+  else if (filter === 'pending') items = items.filter(function(i) { return !i.approved; });
+  else if (filter === 'featured') items = items.filter(function(i) { return i.featured; });
+
+  setInnerText('sa-test-count-total', all.length);
+  setInnerText('sa-test-count-approved', all.filter(function(i) { return i.approved; }).length);
+  setInnerText('sa-test-count-pending', all.filter(function(i) { return !i.approved; }).length);
+
+  var el = document.getElementById('sa-testimonials-list');
+  if (!el) return;
+  if (!items.length) { el.innerHTML = '<div class="card p-8 text-center text-slate-400 text-sm">Nenhum testemunho. <button class="btn-primary ml-2" onclick="openSATestimonialModal()"><i class="fas fa-plus"></i> Adicionar</button></div>'; return; }
+  el.innerHTML = items.map(function(t) {
+    var stars = Array(5).fill(0).map(function(_, i) { return '<i class="fas fa-star text-xs ' + (i < (t.rating || 5) ? 'text-yellow-400' : 'text-slate-600') + '"></i>'; }).join('');
+    return '<div class="card p-5">' +
+      '<div class="flex items-start justify-between gap-3">' +
+        '<div class="flex items-center gap-3">' +
+          '<div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm" style="background:var(--accent-purple)">' + escapeHtml((t.name || '?').charAt(0).toUpperCase()) + '</div>' +
+          '<div>' +
+            '<div class="flex items-center gap-2"><span class="font-semibold text-sm">' + escapeHtml(t.name) + '</span>' +
+              (t.approved ? '<span class="badge badge-green text-xs">Aprovado</span>' : '<span class="badge badge-yellow text-xs">Pendente</span>') +
+              (t.featured ? '<span class="badge badge-purple text-xs"><i class="fas fa-star mr-1"></i>Destaque</span>' : '') +
+            '</div>' +
+            '<div class="text-xs text-slate-400">' + escapeHtml(t.role || '') + (t.company ? ' · ' + escapeHtml(t.company) : '') + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="flex gap-1">' +
+          (!t.approved ? '<button class="btn-ghost text-xs text-emerald-400" onclick="approveSATestimonial(' + JSON.stringify(t.id) + ')" title="Aprovar"><i class="fas fa-check"></i></button>' : '') +
+          '<button class="btn-ghost text-xs" onclick="toggleSATestimonialFeatured(' + JSON.stringify(t.id) + ',' + JSON.stringify(!!t.featured) + ')" title="' + (t.featured ? 'Remover destaque' : 'Adicionar destaque') + '"><i class="fas fa-star ' + (t.featured ? 'text-yellow-400' : 'text-slate-600') + '"></i></button>' +
+          '<button class="btn-ghost text-xs" onclick="openSATestimonialModal(' + JSON.stringify(JSON.stringify(t)) + ')" title="Editar"><i class="fas fa-pen"></i></button>' +
+          '<button class="btn-ghost text-xs text-red-400" onclick="deleteSATestimonial(' + JSON.stringify(t.id) + ')" title="Eliminar"><i class="fas fa-trash"></i></button>' +
+        '</div>' +
+      '</div>' +
+      '<p class="text-sm text-slate-300 mt-3 italic">"' + escapeHtml(t.text || '') + '"</p>' +
+      '<div class="flex items-center justify-between mt-3">' +
+        '<div class="flex gap-0.5">' + stars + '</div>' +
+        '<span class="text-xs text-slate-500">' + new Date(t.createdAt).toLocaleDateString('pt-PT') + '</span>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function openSATestimonialModal(jsonStr) {
+  var t = jsonStr ? JSON.parse(jsonStr) : null;
+  showModal('modal-sa-testimonial', t ? 'Editar Testemunho' : 'Novo Testemunho');
+  setValue('sa-test-name', t ? t.name : '');
+  setValue('sa-test-role', t ? t.role : '');
+  setValue('sa-test-company', t ? t.company : '');
+  setValue('sa-test-text', t ? t.text : '');
+  setValue('sa-test-rating', t ? t.rating : 5);
+  var approved = document.getElementById('sa-test-approved');
+  var featured = document.getElementById('sa-test-featured');
+  if (approved) approved.checked = t ? !!t.approved : false;
+  if (featured) featured.checked = t ? !!t.featured : false;
+  document.getElementById('modal-sa-testimonial').dataset.id = t ? t.id : '';
+}
+
+function saveSATestimonial() {
+  var modal = document.getElementById('modal-sa-testimonial');
+  var id = modal ? modal.dataset.id : '';
+  var body = {
+    name: getValue('sa-test-name'), role: getValue('sa-test-role'),
+    company: getValue('sa-test-company'), text: getValue('sa-test-text'),
+    rating: Number(getValue('sa-test-rating')) || 5,
+    approved: document.getElementById('sa-test-approved') ? document.getElementById('sa-test-approved').checked : false,
+    featured: document.getElementById('sa-test-featured') ? document.getElementById('sa-test-featured').checked : false,
+  };
+  if (!body.name || !body.text) { showToast('Nome e texto são obrigatórios.'); return; }
+  var url = id ? '/api/admin/testimonials/' + id : '/api/admin/testimonials';
+  var method = id ? 'PUT' : 'POST';
+  fetch(url, { method: method, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (APP.authToken || '') }, body: JSON.stringify(body) })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok || data.item) { showToast(id ? 'Testemunho atualizado.' : 'Testemunho criado.'); closeModal('modal-sa-testimonial'); loadSATestimonials(); }
+      else showToast('Erro: ' + (data.error || 'desconhecido'));
+    }).catch(function() { showToast('Erro de rede.'); });
+}
+
+function approveSATestimonial(id) {
+  fetch('/api/admin/testimonials/' + id, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (APP.authToken || '') },
+    body: JSON.stringify({ approved: true })
+  }).then(function() { showToast('Testemunho aprovado.'); loadSATestimonials(); }).catch(function() { showToast('Erro.'); });
+}
+
+function toggleSATestimonialFeatured(id, current) {
+  fetch('/api/admin/testimonials/' + id, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (APP.authToken || '') },
+    body: JSON.stringify({ featured: !current })
+  }).then(function() { showToast(!current ? 'Adicionado ao destaque.' : 'Removido do destaque.'); loadSATestimonials(); }).catch(function() { showToast('Erro.'); });
+}
+
+function deleteSATestimonial(id) {
+  if (!confirm('Eliminar este testemunho?')) return;
+  fetch('/api/admin/testimonials/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok) { showToast('Testemunho eliminado.'); loadSATestimonials(); }
+    }).catch(function() { showToast('Erro.'); });
+}
+
+// ═══════════════════════════════════════════════════════
+// SUPERADMIN: LOGS
+// ═══════════════════════════════════════════════════════
+
+function loadSALogs() {
+  var level = getValue('sa-logs-level');
+  var source = getValue('sa-logs-source');
+  var el = document.getElementById('sa-logs-output');
+  if (el) el.innerHTML = '<div class="text-slate-500"><i class="fas fa-spinner fa-spin mr-1"></i> A carregar logs...</div>';
+  var params = [];
+  if (level) params.push('level=' + level);
+  if (source) params.push('source=' + source);
+  params.push('limit=100');
+  fetch('/api/admin/logs?' + params.join('&'), { headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!el) return;
+      var logs = data.logs || [];
+      if (!logs.length) { el.innerHTML = '<div class="text-slate-500">Nenhum log encontrado.</div>'; return; }
+      var levelColors = { info: '#4ade80', warn: '#facc15', error: '#f87171', debug: '#818cf8' };
+      el.innerHTML = logs.map(function(log) {
+        var color = levelColors[log.level] || '#94a3b8';
+        var ts = new Date(log.ts).toLocaleTimeString('pt-PT');
+        return '<div class="flex gap-2 py-0.5 hover:bg-white/2 rounded px-1">' +
+          '<span style="color:#475569;min-width:70px">' + ts + '</span>' +
+          '<span style="color:' + color + ';min-width:40px;font-weight:bold">' + (log.level || 'info').toUpperCase() + '</span>' +
+          '<span style="color:#7c3aed;min-width:65px">[' + escapeHtml(log.source || '') + ']</span>' +
+          '<span style="color:#e2e8f0">' + escapeHtml(log.msg || '') + '</span>' +
+        '</div>';
+      }).join('');
+      el.scrollTop = 0;
+    })
+    .catch(function() {
+      if (el) el.innerHTML = '<div class="text-red-400">Erro ao carregar logs. Verifique a autenticação.</div>';
+    });
+}
+
+// ═══════════════════════════════════════════════════════
+// SUPERADMIN: BACKUP & RESTORE
+// ═══════════════════════════════════════════════════════
+
+var SA_BACKUP_DATA = null;
+
+function loadSABackupInfo() {
+  var el = document.getElementById('sa-backup-info');
+  if (!el) return;
+  el.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> A verificar...';
+  Promise.all([
+    fetch('/api/health').then(function(r) { return r.json(); }).catch(function() { return {}; }),
+    fetch('/api/db/health', { headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } }).then(function(r) { return r.json(); }).catch(function() { return {}; })
+  ]).then(function(results) {
+    var health = results[0]; var db = results[1];
+    el.innerHTML =
+      '<div class="grid md:grid-cols-3 gap-4 text-sm">' +
+        '<div class="p-3 rounded-lg border border-white/8" style="background:var(--surface-a)">' +
+          '<div class="text-xs text-slate-500 mb-1">Versão do Servidor</div>' +
+          '<div class="mono font-semibold">v' + (health.version || '?') + '</div>' +
+          '<div class="text-xs text-slate-500 mt-1">Uptime: ' + Math.floor((health.uptime || 0) / 60) + 'min</div>' +
+        '</div>' +
+        '<div class="p-3 rounded-lg border border-white/8" style="background:var(--surface-a)">' +
+          '<div class="text-xs text-slate-500 mb-1">Base de Dados</div>' +
+          '<div class="mono font-semibold ' + (db.connected ? 'text-emerald-400' : 'text-red-400') + '">' + (db.connected ? 'Conectada' : 'Offline') + '</div>' +
+          '<div class="text-xs text-slate-500 mt-1">' + (db.tables || '—') + ' tabelas</div>' +
+        '</div>' +
+        '<div class="p-3 rounded-lg border border-white/8" style="background:var(--surface-a)">' +
+          '<div class="text-xs text-slate-500 mb-1">Último Backup</div>' +
+          '<div class="mono font-semibold text-slate-400">Manual</div>' +
+          '<div class="text-xs text-slate-500 mt-1">Descarregue para guardar</div>' +
+        '</div>' +
+      '</div>';
+  });
+}
+
+function createSABackup() {
+  var resultEl = document.getElementById('sa-backup-create-result');
+  if (resultEl) resultEl.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> A criar backup...';
+  fetch('/api/admin/backup', { headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var filename = 'manugent-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+      var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = filename; a.click();
+      URL.revokeObjectURL(url);
+      if (resultEl) resultEl.innerHTML = '<span class="text-emerald-400"><i class="fas fa-check-circle"></i> Backup criado: ' + filename + '</span>';
+      showToast('✅ Backup descarregado: ' + filename);
+    })
+    .catch(function() {
+      if (resultEl) resultEl.innerHTML = '<span class="text-red-400"><i class="fas fa-times-circle"></i> Erro ao criar backup.</span>';
+      showToast('Erro ao criar backup.');
+    });
+}
+
+function previewSABackup() {
+  var input = document.getElementById('sa-backup-file');
+  var preview = document.getElementById('sa-backup-preview');
+  var btn = document.getElementById('sa-backup-restore-btn');
+  SA_BACKUP_DATA = null;
+  if (!input || !input.files || !input.files[0]) { if (btn) btn.disabled = true; return; }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      SA_BACKUP_DATA = JSON.parse(e.target.result);
+      var sections = Object.keys(SA_BACKUP_DATA.data || {});
+      if (preview) {
+        preview.classList.remove('hidden');
+        preview.innerHTML =
+          '<div class="text-emerald-400 font-semibold mb-2"><i class="fas fa-check-circle mr-1"></i> Backup válido</div>' +
+          '<div class="text-slate-400">Versão: <span class="mono">' + (SA_BACKUP_DATA.version || '?') + '</span></div>' +
+          '<div class="text-slate-400">Data: <span class="mono">' + (SA_BACKUP_DATA.createdAt ? new Date(SA_BACKUP_DATA.createdAt).toLocaleString('pt-PT') : '?') + '</span></div>' +
+          '<div class="text-slate-400">Secções: <span class="mono">' + sections.join(', ') + '</span></div>';
+      }
+      if (btn) btn.disabled = false;
+    } catch(err) {
+      if (preview) { preview.classList.remove('hidden'); preview.innerHTML = '<div class="text-red-400"><i class="fas fa-times-circle mr-1"></i> Ficheiro inválido. Selecione um backup ManuGent válido.</div>'; }
+      if (btn) btn.disabled = true;
+    }
+  };
+  reader.readAsText(input.files[0]);
+}
+
+function restoreSABackup() {
+  if (!SA_BACKUP_DATA) { showToast('Selecione um ficheiro de backup válido.'); return; }
+  if (!confirm('Restaurar backup? Os dados de configuração atuais serão substituídos.')) return;
+  var resultEl = document.getElementById('sa-backup-restore-result');
+  if (resultEl) resultEl.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> A restaurar...';
+  fetch('/api/admin/backup/restore', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (APP.authToken || '') },
+    body: JSON.stringify(SA_BACKUP_DATA)
+  }).then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok) {
+        if (resultEl) resultEl.innerHTML = '<span class="text-emerald-400"><i class="fas fa-check-circle"></i> Restauro completo: ' + (data.restored || []).join(', ') + '</span>';
+        showToast('✅ Backup restaurado com sucesso!');
+        // Reload affected tabs
+        if (SA_STATE) SA_STATE.loadedTabs = {};
+      } else {
+        var errMsg = (data.errors || []).join(', ') || data.error || 'Erro desconhecido';
+        if (resultEl) resultEl.innerHTML = '<span class="text-red-400"><i class="fas fa-times-circle"></i> Erro: ' + escapeHtml(errMsg) + '</span>';
+        showToast('Erro no restauro: ' + errMsg);
+      }
+    })
+    .catch(function() {
+      if (resultEl) resultEl.innerHTML = '<span class="text-red-400"><i class="fas fa-times-circle"></i> Erro de rede.</span>';
+    });
+}
+
 </script>
 </body>
 </html>

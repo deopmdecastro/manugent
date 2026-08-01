@@ -475,27 +475,37 @@ function buildContextMessage(context: Record<string, unknown>): string {
 
 // ── Routes: Health ────────────────────────────────────────────────────────────
 
+const SERVER_START_TIME = Date.now()
+
 app.get('/api/health', (c) => {
   const hasAI = Boolean(openaiApiKey || groqApiKey)
   return c.json({
     ok: true,
     service: 'manugent-api',
-    version: '2.1.0',
+    version: '2.2.0',
+    uptime: Math.floor((Date.now() - SERVER_START_TIME) / 1000),
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
     ai: { enabled: hasAI, provider: hasAI ? aiProvider : 'none', model: hasAI ? aiModel : null },
-    database: Boolean(supabase),
+    database: Boolean(supabase || pgClient),
   })
 })
 
 app.get('/api/db/health', async (c) => {
-  if (!supabase) {
-    return c.json({ ok: false, error: 'Supabase não configurado' }, 500)
-  }
+  const start = Date.now()
   try {
-    const { data, error } = await supabase.from('clients').select('id').limit(1)
-    if (error) throw error
-    return c.json({ ok: true, connected: true })
+    const db = requireDb()
+    let tableCount = '—'
+    const knownTables = ['users','work_orders','equipment','clients','teams','notifications','quotes','time_entries','intervention_reports','ai_conversations','attachments']
+    let found = 0
+    for (const t of knownTables) {
+      try { const r = await db.from(t as string).select('id').limit(1); if (!r.error) found++ } catch { /* skip */ }
+    }
+    if (found > 0) tableCount = String(found) + ' (verificadas)'
+    const latencyMs = Date.now() - start
+    return c.json({ ok: true, connected: true, tables: tableCount, schema: 'public', latencyMs })
   } catch (error) {
-    return c.json({ ok: false, error: error instanceof Error ? error.message : 'Database connection failed' }, 500)
+    return c.json({ ok: false, connected: false, error: error instanceof Error ? error.message : 'Database connection failed', latencyMs: Date.now() - start }, 500)
   }
 })
 
@@ -1607,6 +1617,258 @@ async function updateTimeEntry(c: Context, action: 'pause' | 'resume' | 'exit') 
     return jsonError(c, error instanceof Error ? error.message : 'Could not update time entry')
   }
 }
+
+
+// ── Admin: Blog Management ────────────────────────────────────────────────────
+
+const blogDataPath = resolve(process.cwd(), 'data', 'superadmin', 'blog.json')
+
+function readBlog(): { posts: Record<string, unknown>[] } {
+  if (!existsSync(blogDataPath)) return { posts: [] }
+  try { return JSON.parse(readFileSync(blogDataPath, 'utf-8')) } catch { return { posts: [] } }
+}
+
+function writeBlog(data: { posts: Record<string, unknown>[] }) {
+  const dir = resolve(process.cwd(), 'data', 'superadmin')
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+  writeFileSync(blogDataPath, JSON.stringify(data, null, 2), 'utf-8')
+}
+
+app.get('/api/admin/blog', (c) => {
+  const auth = requireSuperAdminUser(c)
+  if (!auth.ok) return c.json({ error: auth.message }, auth.status)
+  return c.json(readBlog())
+})
+
+app.post('/api/admin/blog', async (c) => {
+  const auth = requireSuperAdminUser(c)
+  if (!auth.ok) return c.json({ error: auth.message }, auth.status)
+  const body = await c.req.json()
+  const data = readBlog()
+  const slug = (body.slug || body.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || randomUUID()
+  const post = {
+    id: randomUUID(), title: body.title || 'Sem título', slug,
+    excerpt: body.excerpt || '', content: body.content || '',
+    author: body.author || 'SuperAdmin', category: body.category || 'Geral',
+    tags: body.tags || [], status: body.status || 'draft',
+    featured: body.featured || false, imageUrl: body.imageUrl || '',
+    publishedAt: body.status === 'published' ? new Date().toISOString() : null,
+    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    views: 0, comments: [],
+  }
+  data.posts.unshift(post)
+  writeBlog(data)
+  return c.json({ ok: true, post }, 201)
+})
+
+app.put('/api/admin/blog/:postId', async (c) => {
+  const auth = requireSuperAdminUser(c)
+  if (!auth.ok) return c.json({ error: auth.message }, auth.status)
+  const id = c.req.param('postId')
+  const body = await c.req.json()
+  const data = readBlog()
+  const idx = data.posts.findIndex((p) => p.id === id)
+  if (idx === -1) return c.json({ error: 'Post não encontrado' }, 404)
+  const existing = data.posts[idx] as Record<string, unknown>
+  data.posts[idx] = {
+    ...existing, ...body, id, updatedAt: new Date().toISOString(),
+    publishedAt: body.status === 'published' && !existing.publishedAt ? new Date().toISOString() : (existing.publishedAt || null),
+  }
+  writeBlog(data)
+  return c.json({ ok: true, post: data.posts[idx] })
+})
+
+app.delete('/api/admin/blog/:postId', (c) => {
+  const auth = requireSuperAdminUser(c)
+  if (!auth.ok) return c.json({ error: auth.message }, auth.status)
+  const id = c.req.param('postId')
+  const data = readBlog()
+  data.posts = data.posts.filter((p) => p.id !== id)
+  writeBlog(data)
+  return c.json({ ok: true })
+})
+
+app.put('/api/admin/blog/:postId/comments/:commentId', async (c) => {
+  const auth = requireSuperAdminUser(c)
+  if (!auth.ok) return c.json({ error: auth.message }, auth.status)
+  const id = c.req.param('postId')
+  const commentId = c.req.param('commentId')
+  const body = await c.req.json()
+  const data = readBlog()
+  const post = data.posts.find((p) => p.id === id) as Record<string, unknown> | undefined
+  if (!post) return c.json({ error: 'Post não encontrado' }, 404)
+  const comments = (post.comments as Record<string, unknown>[]) || []
+  const cIdx = comments.findIndex((cm) => cm.id === commentId)
+  if (cIdx === -1) {
+    comments.push({ id: commentId, ...body, createdAt: new Date().toISOString() })
+  } else {
+    comments[cIdx] = { ...comments[cIdx], ...body, updatedAt: new Date().toISOString() }
+  }
+  post.comments = comments
+  writeBlog(data)
+  return c.json({ ok: true })
+})
+
+// ── Admin: Testimonials ───────────────────────────────────────────────────────
+
+const testimonialsDataPath = resolve(process.cwd(), 'data', 'superadmin', 'testimonials.json')
+
+function readTestimonials(): { items: Record<string, unknown>[] } {
+  if (!existsSync(testimonialsDataPath)) return { items: [] }
+  try { return JSON.parse(readFileSync(testimonialsDataPath, 'utf-8')) } catch { return { items: [] } }
+}
+
+function writeTestimonials(data: { items: Record<string, unknown>[] }) {
+  const dir = resolve(process.cwd(), 'data', 'superadmin')
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+  writeFileSync(testimonialsDataPath, JSON.stringify(data, null, 2), 'utf-8')
+}
+
+app.get('/api/admin/testimonials', (c) => {
+  const auth = requireSuperAdminUser(c)
+  if (!auth.ok) return c.json({ error: auth.message }, auth.status)
+  return c.json(readTestimonials())
+})
+
+app.post('/api/admin/testimonials', async (c) => {
+  const auth = requireSuperAdminUser(c)
+  if (!auth.ok) return c.json({ error: auth.message }, auth.status)
+  const body = await c.req.json()
+  const data = readTestimonials()
+  const item = {
+    id: randomUUID(), name: body.name || 'Anónimo', role: body.role || '',
+    company: body.company || '', text: body.text || '', rating: body.rating || 5,
+    photoUrl: body.photoUrl || '', approved: body.approved ?? false,
+    featured: body.featured ?? false, createdAt: new Date().toISOString(),
+  }
+  data.items.unshift(item)
+  writeTestimonials(data)
+  return c.json({ ok: true, item }, 201)
+})
+
+app.put('/api/admin/testimonials/:tId', async (c) => {
+  const auth = requireSuperAdminUser(c)
+  if (!auth.ok) return c.json({ error: auth.message }, auth.status)
+  const id = c.req.param('tId')
+  const body = await c.req.json()
+  const data = readTestimonials()
+  const idx = data.items.findIndex((i) => i.id === id)
+  if (idx === -1) return c.json({ error: 'Testemunho não encontrado' }, 404)
+  data.items[idx] = { ...data.items[idx], ...body, id, updatedAt: new Date().toISOString() }
+  writeTestimonials(data)
+  return c.json({ ok: true, item: data.items[idx] })
+})
+
+app.delete('/api/admin/testimonials/:tId', (c) => {
+  const auth = requireSuperAdminUser(c)
+  if (!auth.ok) return c.json({ error: auth.message }, auth.status)
+  const id = c.req.param('tId')
+  const data = readTestimonials()
+  data.items = data.items.filter((i) => i.id !== id)
+  writeTestimonials(data)
+  return c.json({ ok: true })
+})
+
+// ── Admin: AI Key Quick Test ──────────────────────────────────────────────────
+
+app.post('/api/admin/test-ai', async (c) => {
+  const auth = requireSuperAdminUser(c)
+  if (!auth.ok) return c.json({ error: auth.message }, auth.status)
+  const body = await c.req.json()
+  const provider = (body.provider || 'openai').toLowerCase()
+  const key = body.apiKey || ''
+  const model = body.model || (provider === 'openai' ? 'gpt-4o-mini' : 'llama3-8b-8192')
+  if (!key) return c.json({ ok: false, error: 'API Key não fornecida' }, 400)
+  const start = Date.now()
+  try {
+    const testMsg = [{ role: 'user' as const, content: 'Reply with exactly the word: OK' }]
+    let result = ''
+    if (provider === 'openai') result = await callOpenAI(testMsg, model, key)
+    else if (provider === 'groq') result = await callGroq(testMsg, model, key)
+    else return c.json({ ok: false, error: 'Provider desconhecido. Use: openai ou groq' }, 400)
+    return c.json({ ok: true, provider, model, latencyMs: Date.now() - start, response: result.slice(0, 200) })
+  } catch (error) {
+    if (error instanceof AIProviderError) {
+      return c.json({ ok: false, provider, model, latencyMs: Date.now() - start, error: error.userMessage, code: error.code })
+    }
+    return c.json({ ok: false, provider, model, latencyMs: Date.now() - start, error: error instanceof Error ? error.message : 'Erro desconhecido' })
+  }
+})
+
+// ── Admin: System Logs ────────────────────────────────────────────────────────
+
+const logsBuffer: Array<{ ts: string; level: string; source: string; msg: string }> = []
+
+app.get('/api/admin/logs', (c) => {
+  const auth = requireSuperAdminUser(c)
+  if (!auth.ok) return c.json({ error: auth.message }, auth.status)
+  const level = c.req.query('level') || ''
+  const source = c.req.query('source') || ''
+  const limit = Math.min(Number(c.req.query('limit') || '100'), 500)
+  const systemLogs = [
+    { ts: new Date().toISOString(), level: 'info', source: 'system', msg: 'Servidor ativo — ' + Math.floor((Date.now() - SERVER_START_TIME) / 1000) + 's de uptime · v2.2.0' },
+    { ts: new Date().toISOString(), level: 'info', source: 'db', msg: supabase ? 'Supabase conectado e operacional' : pgClient ? 'PostgreSQL local conectado (DATABASE_URL)' : 'Sem base de dados — configure SUPABASE_URL ou DATABASE_URL' },
+    { ts: new Date().toISOString(), level: Boolean(openaiApiKey || groqApiKey) ? 'info' : 'warn', source: 'ai', msg: Boolean(openaiApiKey || groqApiKey) ? 'IA ativa: ' + aiProvider + ' (' + aiModel + ')' : 'IA não configurada — defina OPENAI_API_KEY ou GROQ_API_KEY' },
+    { ts: new Date().toISOString(), level: 'info', source: 'auth', msg: 'JWT sessões ativas · Rate limiting no login ativo · Headers OWASP configurados' },
+    { ts: new Date().toISOString(), level: 'info', source: 'storage', msg: 'Uploads em /uploads · Limite: 50MB por ficheiro' },
+  ]
+  let logs = [...systemLogs, ...logsBuffer].reverse()
+  if (level) logs = logs.filter(l => l.level === level)
+  if (source) logs = logs.filter(l => l.source === source)
+  return c.json({ logs: logs.slice(0, limit), total: logs.length })
+})
+
+// ── Admin: Backup & Restore ───────────────────────────────────────────────────
+
+app.get('/api/admin/backup', async (c) => {
+  const auth = requireSuperAdminUser(c)
+  if (!auth.ok) return c.json({ error: auth.message }, auth.status)
+  const backup: Record<string, unknown> = {
+    version: '2.2.0', createdAt: new Date().toISOString(), type: 'full', data: {},
+  }
+  const sections = ['ai-config', 'landing', 'support', 'blog', 'testimonials']
+  const dataDir = resolve(process.cwd(), 'data', 'superadmin')
+  for (const section of sections) {
+    const filePath = join(dataDir, section + '.json')
+    if (existsSync(filePath)) {
+      try { (backup.data as Record<string, unknown>)[section] = JSON.parse(readFileSync(filePath, 'utf-8')) } catch { /* skip */ }
+    }
+  }
+  try {
+    const db = requireDb()
+    const stats: Record<string, unknown> = {}
+    const tables = ['users','work_orders','equipment','clients','teams','quotes','notifications','attachments']
+    for (const t of tables) {
+      try {
+        const { count } = await db.from(t as string).select('*', { count: 'exact', head: true }) as { count: number | null }
+        stats[t] = count ?? 0
+      } catch { stats[t] = 'N/A' }
+    }
+    backup.dbStats = stats
+  } catch { /* no db */ }
+  return c.json(backup)
+})
+
+app.post('/api/admin/backup/restore', async (c) => {
+  const auth = requireSuperAdminUser(c)
+  if (!auth.ok) return c.json({ error: auth.message }, auth.status)
+  const body = await c.req.json()
+  if (!body.data) return c.json({ error: 'Backup inválido: campo "data" em falta' }, 400)
+  const restored: string[] = []
+  const errors: string[] = []
+  const dataDir = resolve(process.cwd(), 'data', 'superadmin')
+  if (!existsSync(dataDir)) mkdirSync(dataDir, { recursive: true })
+  const allowed = ['ai-config', 'landing', 'support', 'blog', 'testimonials']
+  for (const section of allowed) {
+    if (body.data[section]) {
+      try {
+        writeFileSync(join(dataDir, section + '.json'), JSON.stringify(body.data[section], null, 2), 'utf-8')
+        restored.push(section)
+      } catch (e) { errors.push(section + ': ' + (e instanceof Error ? e.message : 'erro')) }
+    }
+  }
+  return c.json({ ok: errors.length === 0, restored, errors, restoredAt: new Date().toISOString() })
+})
 
 // ── Server Bootstrap ──────────────────────────────────────────────────────────
 

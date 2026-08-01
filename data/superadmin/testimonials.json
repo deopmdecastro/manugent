@@ -1,0 +1,40 @@
+{
+  "items": [
+    {
+      "id": "t1",
+      "name": "António Ferreira",
+      "role": "Diretor de Manutenção",
+      "company": "Indústrias Ferreira SA",
+      "text": "O ManuGent transformou completamente a forma como gerimos as nossas OTs. A IA é incrivelmente útil no diagnóstico de avarias.",
+      "rating": 5,
+      "photoUrl": "",
+      "approved": true,
+      "featured": true,
+      "createdAt": "2026-07-15T10:00:00.000Z"
+    },
+    {
+      "id": "t2",
+      "name": "Carla Rodrigues",
+      "role": "Técnica de Manutenção",
+      "company": "AutoPeças Norte",
+      "text": "Interface muito intuitiva. Conseguimos reduzir o tempo de resposta a avarias em 40%.",
+      "rating": 5,
+      "photoUrl": "",
+      "approved": true,
+      "featured": false,
+      "createdAt": "2026-07-20T14:00:00.000Z"
+    },
+    {
+      "id": "t3",
+      "name": "Pedro Oliveira",
+      "role": "Gestor Operacional",
+      "company": "TechManuf Lda",
+      "text": "Plataforma sólida mas ainda tem alguns bugs na versão mobile.",
+      "rating": 3,
+      "photoUrl": "",
+      "approved": false,
+      "featured": false,
+      "createdAt": "2026-08-01T08:00:00.000Z"
+    }
+  ]
+}

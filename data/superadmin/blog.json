@@ -1,0 +1,43 @@
+{
+  "posts": [
+    {
+      "id": "demo-post-1",
+      "title": "Bem-vindo ao ManuGent Blog",
+      "slug": "bem-vindo-manugent",
+      "excerpt": "O ManuGent é a plataforma de manutenção industrial que centraliza toda a gestão operacional.",
+      "content": "# Bem-vindo ao ManuGent\n\nO ManuGent é a plataforma de manutenção industrial mais completa do mercado português.\n\n## Funcionalidades principais\n\n- Ordens de Trabalho (OTs)\n- Gestão de Equipamentos\n- Agente IA integrado\n- Dashboard em tempo real\n\nComece a usar hoje mesmo!",
+      "author": "Equipa ManuGent",
+      "category": "Novidades",
+      "tags": ["manutenção", "plataforma", "IA"],
+      "status": "published",
+      "featured": true,
+      "imageUrl": "",
+      "publishedAt": "2026-08-01T10:00:00.000Z",
+      "createdAt": "2026-08-01T10:00:00.000Z",
+      "updatedAt": "2026-08-01T10:00:00.000Z",
+      "views": 142,
+      "comments": [
+        {"id": "c1", "author": "João Silva", "email": "joao@empresa.pt", "text": "Excelente plataforma!", "status": "approved", "createdAt": "2026-08-01T12:00:00.000Z"},
+        {"id": "c2", "author": "Maria Santos", "email": "maria@manutencao.pt", "text": "Quando há versão mobile?", "status": "pending", "createdAt": "2026-08-02T09:30:00.000Z"}
+      ]
+    },
+    {
+      "id": "demo-post-2",
+      "title": "Novidades v2.2: IA melhorada e Super Admin",
+      "slug": "novidades-v2-2",
+      "excerpt": "A versão 2.2 traz um Super Admin completo com gestão de blog, testemunhos, logs e backup.",
+      "content": "# Novidades v2.2\n\n## Super Admin\n\nO painel Super Admin foi completamente redesenhado com:\n\n- Gestão de Blog\n- Gestão de Testemunhos\n- Sistema de Logs\n- Backup & Restore\n- Teste rápido de API Keys de IA",
+      "author": "Equipa ManuGent",
+      "category": "Lançamentos",
+      "tags": ["v2.2", "superadmin", "novidades"],
+      "status": "draft",
+      "featured": false,
+      "imageUrl": "",
+      "publishedAt": null,
+      "createdAt": "2026-08-01T11:00:00.000Z",
+      "updatedAt": "2026-08-01T11:00:00.000Z",
+      "views": 0,
+      "comments": []
+    }
+  ]
+}
