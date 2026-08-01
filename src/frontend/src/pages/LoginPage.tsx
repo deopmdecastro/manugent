@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 const ROLES = [
-  { key: 'admin', label: 'admin', email: 'admin@manugent.pt' },
-  { key: 'gestor', label: 'gestor', email: 'gestor@manugent.pt' },
-  { key: 'tecnico', label: 'técnico', email: 'tecnico@manugent.pt' },
-  { key: 'cliente', label: 'cliente', email: 'cliente@demo.pt' },
+  { key: 'superadmin', label: 'superadmin', email: 'admin@manugent.pt', icon: 'fa-crown', redirectTo: '/superadmin' },
+  { key: 'admin', label: 'admin', email: 'admin@manugent.pt', icon: 'fa-user-shield' },
+  { key: 'gestor', label: 'gestor', email: 'gestor@manugent.pt', icon: 'fa-user-tie' },
+  { key: 'tecnico', label: 'técnico', email: 'tecnico@manugent.pt', icon: 'fa-hard-hat' },
+  { key: 'cliente', label: 'cliente', email: 'cliente@demo.pt', icon: 'fa-building' },
 ] as const
 
 const FEATURES = [
@@ -34,6 +35,7 @@ export function LoginPage() {
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [lightPreview, setLightPreview] = useState(false)
+  const [redirectTo, setRedirectTo] = useState('/app/')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -44,7 +46,7 @@ export function LoginPage() {
     }
     try {
       await login(email, password)
-      window.location.href = '/app/'
+      window.location.href = redirectTo
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao iniciar sessão. Tenta novamente.')
     }
@@ -126,9 +128,9 @@ export function LoginPage() {
                   role="tab"
                   aria-selected={activeRole === r.key}
                   className={`auth-role-pill ${activeRole === r.key ? 'is-active' : ''}`}
-                  onClick={() => setEmail(r.email)}
+                  onClick={() => { setEmail(r.email); setRedirectTo((r as any).redirectTo || '/app/') }}
                 >
-                  <i className="fas fa-user" /> {r.label}
+                  <i className={`fas ${r.icon}`} /> {r.label}
                 </button>
               ))}
             </div>
