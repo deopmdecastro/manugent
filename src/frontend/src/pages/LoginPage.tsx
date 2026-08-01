@@ -128,7 +128,7 @@ export function LoginPage() {
                   role="tab"
                   aria-selected={activeRole === r.key}
                   className={`auth-role-pill ${activeRole === r.key ? 'is-active' : ''}`}
-                  onClick={() => { setEmail(r.email); setRedirectTo((r as any).redirectTo || '/app/') }}
+                  onClick={() => { setEmail(r.email); setPassword('Demo@2026'); setRedirectTo(r.key === 'superadmin' ? '/superadmin' : '/app/') }}
                 >
                   <i className={`fas ${r.icon}`} /> {r.label}
                 </button>
