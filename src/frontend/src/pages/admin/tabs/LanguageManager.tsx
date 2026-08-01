@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { authHeaders } from '../../../hooks/useAuth'
 
 type LR = { code: string; label: string; flag: string; active: boolean; translatedPages: number; totalPages: number }
 
@@ -9,10 +10,10 @@ export function LanguageManager() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/admin/languages').then(r => r.json()).then(d => { setLangs(d.languages || []); setLoading(false) }).catch(() => setLoading(false))
+    fetch('/api/admin/languages', { headers: authHeaders() }).then(r => r.json()).then(d => { setLangs(d.languages || []); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
-  const save = async (u: LR[]) => { await fetch('/api/admin/languages', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ languages: u }) }) }
+  const save = async (u: LR[]) => { await fetch('/api/admin/languages', { method: 'PUT', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ languages: u }) }) }
 
   const toggle = (code: string) => { const u = langs.map(l => l.code === code ? { ...l, active: !l.active } : l); setLangs(u); save(u) }
   const add = () => { if (!nl.code || !nl.label) return; const u = [...langs, { ...nl, active: true, translatedPages: 0, totalPages: 18 }]; setLangs(u); save(u); setAdding(false); setNl({ code: '', label: '', flag: '' }) }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { authHeaders } from '../../../hooks/useAuth'
 
 type LS = { id: string; label: string; status: 'published' | 'draft'; lastModified: string; fields: number }
 
@@ -8,13 +9,13 @@ export function LandingManager() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/admin/landing').then(r => r.json()).then(d => { setSections(d.sections || []); setLoading(false) }).catch(() => setLoading(false))
+    fetch('/api/admin/landing', { headers: authHeaders() }).then(r => r.json()).then(d => { setSections(d.sections || []); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
   const toggle = async (id: string) => {
     const u = sections.map(s => s.id === id ? { ...s, status: s.status === 'published' ? 'draft' as const : 'published' as const, lastModified: new Date().toISOString().slice(0, 10) } : s)
     setSections(u)
-    await fetch('/api/admin/landing', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sections: u }) })
+    await fetch('/api/admin/landing', { method: 'PUT', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ sections: u }) })
   }
 
   if (loading) return <div className="admin-section"><p>A carregar...</p></div>

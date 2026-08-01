@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { authHeaders } from '../../../hooks/useAuth'
 
 type Ticket = { id: string; user: string; subject: string; status: 'open' | 'in_progress' | 'resolved'; priority: 'high' | 'medium' | 'low'; createdAt: string }
 const SC = { open: '#f59e0b', in_progress: '#6366f1', resolved: '#10b981' }
@@ -10,7 +11,7 @@ export function SupportManager() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/admin/support').then(r => r.json()).then(d => {
+    fetch('/api/admin/support', { headers: authHeaders() }).then(r => r.json()).then(d => {
       setTickets(d.tickets || d || [])
       setLoading(false)
     }).catch(() => {
