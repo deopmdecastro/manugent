@@ -1544,8 +1544,12 @@ app.get('/privacidade', serveReactShell)
 app.get('/termos', serveReactShell)
 app.get('/gdpr', serveReactShell)
 app.get('/cookies', serveReactShell)
-app.get('/superadmin', serveReactShell)
-app.get('/superadmin/*', serveReactShell)
+
+// /superadmin é um atalho: o painel SuperAdmin vive no dashboard legado
+// (public/app), não na SPA React nova — por isso redireciona em vez de
+// servir a shell React (que não tem esta rota e faz bounce para a landing)
+app.get('/superadmin', (c) => c.redirect('/app/?page=superadmin'))
+app.get('/superadmin/*', (c) => c.redirect('/app/?page=superadmin'))
 
 // Legacy dashboard shell aliases
 app.get('/dashboard', serveLegacyShell)
