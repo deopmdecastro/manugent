@@ -30,21 +30,8 @@
   --shadow-lg: 0 12px 48px rgba(0,0,0,0.45);
   --shadow-glow: 0 0 30px var(--accent-glow);
   --bg-desktop: linear-gradient(180deg, #07081d 0%, #080923 48%, #090a24 100%);
-  /* Extra tokens mirrored from the operational dashboard (public/app), so the
-     SuperAdmin panel can reuse the exact same look & feel. */
-  --bg-card-hover: rgba(18,18,36,0.85);
-  --surface-a: rgba(18,18,36,0.4);
-  --surface-hover: rgba(255,255,255,0.04);
-  --surface-hover-strong: rgba(255,255,255,0.1);
-  --hairline-a: rgba(255,255,255,0.06);
-  --hairline-b: rgba(255,255,255,0.08);
-  --hairline-c: rgba(255,255,255,0.13);
-  --hairline-d: rgba(255,255,255,0.15);
-  --hairline-e: rgba(255,255,255,0.2);
-  --accent-blue: #6366F1;
   --accent-green: #10b981;
   --accent-red: #ef4444;
-  --accent-yellow: #f59e0b;
 }
 *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
