@@ -3,13 +3,13 @@ import type { User, Role, Permission } from '../hooks/useAuth'
 
 export type AppContextValue = {
   user: User | null
-  userRole: Role | 'admin'
+  userRole: Role | 'superadmin'
   hasPermission: (p: Permission) => boolean
 }
 
 const AppContext = createContext<AppContextValue>({
   user: null,
-  userRole: 'admin',
+  userRole: 'superadmin',
   hasPermission: () => false,
 })
 

@@ -98,7 +98,7 @@ const triggeringFindingTypes = ['nok', 'defect', 'measurement_out_of_limits', 'f
 const superadminDataDir = resolve(process.cwd(), 'data', 'superadmin')
 
 app.get('/api/admin/:section', (c) => {
-  const auth = requireAdminUser(c)
+  const auth = requireSuperAdminUser(c)
   if (!auth.ok) return c.json({ error: auth.message }, auth.status)
 
   const section = c.req.param('section')
@@ -113,7 +113,7 @@ app.get('/api/admin/:section', (c) => {
 })
 
 app.put('/api/admin/:section', async (c) => {
-  const auth = requireAdminUser(c)
+  const auth = requireSuperAdminUser(c)
   if (!auth.ok) return c.json({ error: auth.message }, auth.status)
 
   const section = c.req.param('section')
@@ -132,7 +132,7 @@ app.put('/api/admin/:section', async (c) => {
 // blog posts (slug), team members (id), docs/FAQ (id), etc. without needing
 // per-section routes.
 app.delete('/api/admin/:section/:itemId', (c) => {
-  const auth = requireAdminUser(c)
+  const auth = requireSuperAdminUser(c)
   if (!auth.ok) return c.json({ error: auth.message }, auth.status)
 
   const section = c.req.param('section')
@@ -851,14 +851,14 @@ function requireAuth(c: Context): AuthUser | null {
 // (401) from "logged in but not an admin" (403) so the frontend can react
 // appropriately, without leaking which case applies to an anonymous caller
 // beyond the standard 401/403 semantics.
-type AdminAuthResult =
+type SuperAdminAuthResult =
   | { ok: true; user: AuthUser }
   | { ok: false; status: 401 | 403; message: string }
 
-function requireAdminUser(c: Context): AdminAuthResult {
+function requireSuperAdminUser(c: Context): SuperAdminAuthResult {
   const user = requireAuth(c)
   if (!user) return { ok: false, status: 401, message: 'Autenticação necessária.' }
-  if (user.role !== 'admin') return { ok: false, status: 403, message: 'Acesso restrito a administradores.' }
+  if (user.role !== 'superadmin') return { ok: false, status: 403, message: 'Acesso restrito a SuperAdmin.' }
   return { ok: true, user }
 }
 
@@ -992,7 +992,7 @@ app.get('/api/fuzzy/:entity', async (c) => {
         const result = await db.query(
           `select u.id, u.name, u.email, u.role, t.name as team_name
            from users u left join teams t on t.id = u.team_id
-           where u.role in ('technician', 'admin', 'supervisor')
+           where u.role in ('technician', 'admin', 'superadmin', 'supervisor')
            order by u.name asc`
         )
         rows = result.rows.map(r => ({

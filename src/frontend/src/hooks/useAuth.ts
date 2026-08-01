@@ -1,6 +1,6 @@
 import { useState, useCallback, useSyncExternalStore } from 'react'
 
-export type Role = 'admin' | 'gestor' | 'tecnico' | 'cliente'
+export type Role = 'superadmin' | 'admin' | 'gestor' | 'tecnico' | 'cliente'
 export type Permission = 
   | 'dashboard:view' | 'ots:view' | 'ots:create' | 'ots:edit' | 'ots:delete'
   | 'equipment:view' | 'equipment:create' | 'equipment:edit' | 'equipment:delete'
@@ -106,6 +106,15 @@ function persist(user: User | null, token?: string) {
 }
 
 const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
+  superadmin: [
+    'dashboard:view', 'ots:view', 'ots:create', 'ots:edit', 'ots:delete',
+    'equipment:view', 'equipment:create', 'equipment:edit', 'equipment:delete',
+    'clients:view', 'clients:create', 'clients:edit', 'clients:delete',
+    'technicians:view', 'projects:view', 'presets:view',
+    'editor:view', 'files:view', 'ai:use', 'calendar:view',
+    'settings:view', 'settings:edit', 'reports:view', 'quotes:approve',
+    'time:track',
+  ],
   admin: [
     'dashboard:view', 'ots:view', 'ots:create', 'ots:edit', 'ots:delete',
     'equipment:view', 'equipment:create', 'equipment:edit', 'equipment:delete',
