@@ -1,0 +1,348 @@
+# Melhoria Completa do Painel Super Admin (Backoffice)
+
+Transforma o painel **Super Admin** num **backoffice completo**, moderno, profissional e escalável, semelhante aos painéis administrativos de plataformas SaaS (Vercel, Supabase, Firebase, Strapi, Directus, Cloudflare, etc.).
+
+## UI/UX
+
+* Redesenhar completamente a interface.
+* Utilizar um design moderno, limpo e consistente.
+* Melhorar tipografia, espaçamentos, cores e contraste.
+* Criar uma navegação intuitiva.
+* Tornar totalmente responsivo (Desktop, Tablet e Mobile).
+* Adicionar animações e microinterações.
+* Criar dashboard com widgets configuráveis.
+* Criar pesquisa global.
+* Adicionar breadcrumbs.
+* Implementar atalhos rápidos.
+* Implementar modo escuro e claro.
+* Sistema de notificações em tempo real.
+* Sistema de filtros avançados.
+* Tabelas modernas com ordenação, pesquisa, paginação e exportação.
+
+---
+
+# Dashboard
+
+Criar um dashboard completo contendo:
+
+* Número total de utilizadores
+* Utilizadores online
+* Número de projetos
+* Número de blogs
+* Número de documentos
+* Número de FAQs
+* Número de idiomas
+* Número de comentários pendentes
+* Tickets de suporte
+* Estado dos servidores
+* Estado da base de dados
+* Estado das APIs
+* Espaço utilizado
+* Consumo de armazenamento
+* Estatísticas em tempo real
+* Gráficos de utilização
+* Logs recentes
+* Alertas importantes
+
+---
+
+# Gestão de Utilizadores
+
+Permitir:
+
+* Criar utilizadores
+* Editar utilizadores
+* Remover utilizadores
+* Bloquear/desbloquear contas
+* Alterar permissões
+* Gestão de Roles
+* Gestão de Grupos
+* Gestão de Equipas
+* Histórico de ações
+* Sessões ativas
+* Forçar logout
+* Reset de password
+* Ver atividade do utilizador
+
+---
+
+# Gestão de Conteúdo (CMS)
+
+Implementar um CMS completo para gerir:
+
+* Landing Pages
+* Páginas
+* Documentação
+* FAQ
+* Tutoriais
+* Guias
+* Banner principal
+* Hero Sections
+* Cards
+* Serviços
+* Funcionalidades
+* Preços
+* Rodapé
+* Cabeçalho
+* Menus
+* SEO
+* Meta Tags
+* Open Graph
+* Sitemap
+
+Editor Rich Text moderno.
+
+---
+
+# Gestão de Blog
+
+Permitir:
+
+* Criar artigos
+* Editar artigos
+* Eliminar artigos
+* Publicar
+* Agendar publicação
+* Guardar rascunhos
+* Categorias
+* Tags
+* Imagens
+* SEO
+* Comentários
+* Aprovar comentários
+* Responder comentários
+* Moderação automática
+* Destaques
+* Artigos relacionados
+* Estatísticas de leitura
+
+---
+
+# Gestão de Testemunhos
+
+* Criar
+* Editar
+* Remover
+* Aprovar
+* Rejeitar
+* Destacar testemunhos
+* Gestão de avaliações
+* Fotos dos clientes
+
+---
+
+# Gestão de Suporte
+
+Criar um sistema completo de Help Desk:
+
+* Tickets
+* Prioridades
+* Categorias
+* Estados
+* Respostas
+* Histórico
+* Chat interno
+* Notas privadas
+* Atribuição automática
+* SLA
+* Estatísticas
+
+---
+
+# Gestão de Ficheiros
+
+* Upload
+* Drag and Drop
+* Pastas
+* Pesquisa
+* Compressão
+* Preview
+* Imagens
+* PDFs
+* Vídeos
+* Documentos
+* Limpeza automática
+* Gestão do armazenamento
+
+---
+
+# Gestão de Idiomas
+
+* Traduções
+* Idiomas ativos
+* Idiomas inativos
+* Importar
+* Exportar
+* Tradução automática
+* Gestão de chaves
+
+---
+
+# Gestão de IA
+
+Criar uma área dedicada às integrações de IA:
+
+* Gestão das API Keys
+* Testar API Key instantaneamente
+* Ver saldo (quando disponível)
+* Ver limites
+* Latência
+* Estado da API
+* Histórico de chamadas
+* Logs
+* Seleção do modelo
+* Gestão de prompts
+* Gestão de agentes
+* Configuração de providers (OpenAI, Anthropic, Google, Azure, OpenRouter, Ollama, etc.)
+
+---
+
+# Monitorização
+
+Adicionar monitorização em tempo real:
+
+## Servidores
+
+* Estado
+* CPU
+* RAM
+* Disco
+* Rede
+* Uptime
+* Latência
+
+## Base de Dados
+
+* Ligação
+* Estado
+* Tempo de resposta
+* Número real de tabelas
+* Número de registos
+* Espaço ocupado
+* Índices
+* Queries lentas
+
+## APIs
+
+* Estado
+* Latência
+* Disponibilidade
+* Tempo médio
+* Histórico de falhas
+
+---
+
+# Logs
+
+Sistema completo de logs:
+
+* Logs da aplicação
+* Logs do servidor
+* Logs da API
+* Logs da autenticação
+* Logs de segurança
+* Logs das IA
+* Auditoria
+* Pesquisa
+* Filtros
+* Exportação
+
+---
+
+# Backups
+
+Implementar:
+
+* Backup manual
+* Backup automático
+* Agendamento
+* Download
+* Upload
+* Restauro completo
+* Restauro parcial
+* Histórico
+* Compressão
+* Validação da integridade
+
+---
+
+# Segurança
+
+* Autenticação de dois fatores (2FA)
+* Gestão de sessões
+* Lista de dispositivos
+* Histórico de login
+* Deteção de atividade suspeita
+* Rate Limiting
+* Gestão de IPs
+* Lista negra
+* Lista branca
+* Permissões granulares
+* Auditoria completa
+
+---
+
+# Configurações
+
+Permitir configurar:
+
+* Branding
+* Nome da aplicação
+* Logótipo
+* Favicon
+* SMTP
+* OAuth
+* APIs externas
+* Chaves de ambiente
+* Integrações
+* Armazenamento
+* Cache
+* CDN
+* Segurança
+* Notificações
+* Email
+* SMS
+* Webhooks
+
+---
+
+# Ferramentas Administrativas
+
+Adicionar utilitários avançados:
+
+* Limpar cache
+* Reiniciar serviços
+* Verificar integridade do sistema
+* Testar ligação à base de dados
+* Testar servidores rapidamente
+* Testar APIs
+* Testar API Keys de IA
+* Executar tarefas agendadas
+* Gestão de filas (Queues)
+* Gestão de Jobs
+* Gestão de Cron Jobs
+* Gestão de Cache
+* Limpeza de ficheiros temporários
+* Modo de manutenção
+* Atualizações da plataforma
+
+---
+
+# Funcionalidades Gerais
+
+* Sistema de pesquisa global.
+* Histórico completo de alterações.
+* Auditoria de todas as ações.
+* Exportação para CSV, Excel e PDF.
+* Importação de dados.
+* Ações em massa.
+* Dashboard personalizável.
+* Widgets arrastáveis.
+* Atualização em tempo real.
+* Permissões por módulo.
+* Componentes reutilizáveis.
+* Arquitetura modular.
+* Código limpo, desacoplado e escalável.
+* Integração completa com os dados reais existentes, evitando qualquer informação simulada ou hardcoded.
+
+O objetivo é transformar o Super Admin numa verdadeira consola de administração empresarial, centralizando toda a gestão operacional, técnica e de conteúdo da plataforma num único backoffice moderno, intuitivo, seguro e altamente eficiente.
