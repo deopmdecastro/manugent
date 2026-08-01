@@ -84,7 +84,15 @@ begin
 end;
 $$;
 
-grant execute on function get_users_with_teams() to anon, authenticated;
+-- Grant only when Supabase roles exist (standalone Docker Postgres has no
+-- anon/authenticated roles — skipping the grant there avoids init failure).
+do $$
+begin
+  if exists (select 1 from pg_roles where rolname = 'anon')
+     and exists (select 1 from pg_roles where rolname = 'authenticated') then
+    execute 'grant execute on function get_users_with_teams() to anon, authenticated';
+  end if;
+end $$;
 
 -- ── RPC: admin_set_user_status ───────────────────────────────────────────────
 -- Blocks, bans, or reactivates an account. Called only from the SuperAdmin
