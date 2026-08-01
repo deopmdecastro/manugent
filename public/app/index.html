@@ -464,6 +464,15 @@
       border-color: rgba(129,140,248,0.42);
       color: #fff;
     }
+    .select-option.highlighted {
+      background: rgba(99,102,241,0.16);
+      border-color: rgba(129,140,248,0.55);
+      color: var(--text-primary);
+    }
+    .select-enhanced.select-flip-up .select-menu {
+      top: auto;
+      bottom: calc(100% + 6px);
+    }
     .select-option.selected::after {
       color: var(--accent-green);
       content: '\f00c';
@@ -13763,6 +13772,7 @@ function toggleNotifications() {
   showPage('notifications');
 }
 function closeNotifications() { showPage(APP.previousPage || 'dashboard'); }
+var ENHANCED_SELECT_UID = 0;
 function enhanceSelects() {
   document.querySelectorAll('select.input-field:not([multiple])').forEach(function(select) {
     if (select.dataset.enhancedSelect !== 'true') {
@@ -13770,21 +13780,32 @@ function enhanceSelects() {
       select.classList.add('native-select-hidden');
       var wrap = document.createElement('div');
       wrap.className = 'select-enhanced';
+      wrap.dataset.esId = 'es-' + (++ENHANCED_SELECT_UID);
       if (select.style.width) wrap.style.width = select.style.width;
       var trigger = document.createElement('button');
       trigger.type = 'button';
       trigger.className = 'select-trigger';
+      trigger.setAttribute('aria-haspopup', 'listbox');
+      trigger.setAttribute('aria-expanded', 'false');
       trigger.innerHTML = '<span class="select-trigger-value"></span><i class="fas fa-chevron-down"></i>';
       var menu = document.createElement('div');
       menu.className = 'select-menu';
+      menu.setAttribute('role', 'listbox');
+      menu.id = wrap.dataset.esId + '-menu';
+      trigger.setAttribute('aria-controls', menu.id);
       select.insertAdjacentElement('afterend', wrap);
       wrap.appendChild(select);
       wrap.appendChild(trigger);
       wrap.appendChild(menu);
       trigger.addEventListener('click', function(event) {
         event.stopPropagation();
-        closeEnhancedSelects(wrap);
-        wrap.classList.toggle('open');
+        if (trigger.disabled) return;
+        var willOpen = !wrap.classList.contains('open');
+        closeEnhancedSelects();
+        if (willOpen) openEnhancedSelect(wrap);
+      });
+      trigger.addEventListener('keydown', function(event) {
+        handleEnhancedSelectKeydown(event, wrap, select);
       });
       select.addEventListener('change', function() { syncEnhancedSelect(select); });
     }
@@ -13796,26 +13817,140 @@ function syncEnhancedSelect(select) {
   if (!wrap) return;
   var valueEl = wrap.querySelector('.select-trigger-value');
   var menu = wrap.querySelector('.select-menu');
+  var trigger = wrap.querySelector('.select-trigger');
+  var esId = wrap.dataset.esId || 'es';
   var selected = select.options[select.selectedIndex];
   if (valueEl) valueEl.textContent = selected ? selected.textContent : '';
+  if (trigger) trigger.disabled = !!select.disabled;
   if (!menu) return;
-  menu.innerHTML = Array.prototype.slice.call(select.options).map(function(option) {
-    return '<div class="select-option ' + (option.selected ? 'selected' : '') + '" data-value="' + escapeHtml(option.value) + '">' + escapeHtml(option.textContent) + '</div>';
+  menu.innerHTML = Array.prototype.slice.call(select.options).map(function(option, index) {
+    return '<div class="select-option' + (option.selected ? ' selected' : '') + '" role="option" id="' + esId + '-opt-' + index + '" aria-selected="' + (option.selected ? 'true' : 'false') + '" data-value="' + escapeHtml(option.value) + '">' + escapeHtml(option.textContent) + '</div>';
   }).join('');
   menu.querySelectorAll('.select-option').forEach(function(optionEl) {
+    optionEl.addEventListener('mouseenter', function() { highlightEnhancedOption(wrap, optionEl); });
     optionEl.addEventListener('click', function(event) {
       event.stopPropagation();
-      select.value = optionEl.dataset.value;
-      select.dispatchEvent(new Event('change', { bubbles: true }));
-      wrap.classList.remove('open');
-      syncEnhancedSelect(select);
+      chooseEnhancedOption(wrap, select, optionEl);
     });
   });
 }
+function openEnhancedSelect(wrap) {
+  if (!wrap || wrap.classList.contains('open')) return;
+  wrap.classList.add('open');
+  var trigger = wrap.querySelector('.select-trigger');
+  if (trigger) trigger.setAttribute('aria-expanded', 'true');
+  positionEnhancedMenu(wrap);
+  var menu = wrap.querySelector('.select-menu');
+  var current = menu && (menu.querySelector('.select-option.selected') || menu.querySelector('.select-option'));
+  highlightEnhancedOption(wrap, current);
+}
+function closeEnhancedSelect(wrap) {
+  if (!wrap) return;
+  wrap.classList.remove('open');
+  wrap.classList.remove('select-flip-up');
+  var trigger = wrap.querySelector('.select-trigger');
+  if (trigger) {
+    trigger.setAttribute('aria-expanded', 'false');
+    trigger.removeAttribute('aria-activedescendant');
+  }
+  var menu = wrap.querySelector('.select-menu');
+  if (menu) menu.querySelectorAll('.select-option.highlighted').forEach(function(el) { el.classList.remove('highlighted'); });
+}
 function closeEnhancedSelects(except) {
   document.querySelectorAll('.select-enhanced.open').forEach(function(wrap) {
-    if (wrap !== except) wrap.classList.remove('open');
+    if (wrap !== except) closeEnhancedSelect(wrap);
   });
+}
+function positionEnhancedMenu(wrap) {
+  var menu = wrap.querySelector('.select-menu');
+  if (!menu) return;
+  wrap.classList.remove('select-flip-up');
+  var rect = wrap.getBoundingClientRect();
+  var menuHeight = Math.min(240, menu.scrollHeight || 240);
+  var spaceBelow = window.innerHeight - rect.bottom;
+  var spaceAbove = rect.top;
+  if (spaceBelow < menuHeight + 12 && spaceAbove > spaceBelow) {
+    wrap.classList.add('select-flip-up');
+  }
+}
+function highlightEnhancedOption(wrap, optionEl) {
+  var menu = wrap.querySelector('.select-menu');
+  var trigger = wrap.querySelector('.select-trigger');
+  if (!menu) return;
+  menu.querySelectorAll('.select-option.highlighted').forEach(function(el) { el.classList.remove('highlighted'); });
+  if (!optionEl) { if (trigger) trigger.removeAttribute('aria-activedescendant'); return; }
+  optionEl.classList.add('highlighted');
+  if (trigger) trigger.setAttribute('aria-activedescendant', optionEl.id);
+  if (optionEl.scrollIntoView) optionEl.scrollIntoView({ block: 'nearest' });
+}
+function moveEnhancedHighlight(wrap, delta) {
+  var menu = wrap.querySelector('.select-menu');
+  if (!menu) return;
+  var options = Array.prototype.slice.call(menu.querySelectorAll('.select-option'));
+  if (!options.length) return;
+  var current = menu.querySelector('.select-option.highlighted') || menu.querySelector('.select-option.selected');
+  var idx = current ? options.indexOf(current) : -1;
+  idx = (idx + delta + options.length) % options.length;
+  highlightEnhancedOption(wrap, options[idx]);
+}
+function chooseEnhancedOption(wrap, select, optionEl) {
+  if (!optionEl) return;
+  var value = optionEl.dataset.value;
+  if (select.value !== value) {
+    select.value = value;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  } else {
+    syncEnhancedSelect(select);
+  }
+  closeEnhancedSelect(wrap);
+  var trigger = wrap.querySelector('.select-trigger');
+  if (trigger) trigger.focus();
+}
+function handleEnhancedSelectKeydown(event, wrap, select) {
+  var key = event.key;
+  var isOpen = wrap.classList.contains('open');
+  var menu = wrap.querySelector('.select-menu');
+  if (key === 'ArrowDown' || key === 'ArrowUp') {
+    event.preventDefault();
+    if (!isOpen) { openEnhancedSelect(wrap); return; }
+    moveEnhancedHighlight(wrap, key === 'ArrowDown' ? 1 : -1);
+    return;
+  }
+  if (key === 'Enter' || key === ' ' || key === 'Spacebar') {
+    event.preventDefault();
+    if (!isOpen) { openEnhancedSelect(wrap); return; }
+    var highlighted = menu && (menu.querySelector('.select-option.highlighted') || menu.querySelector('.select-option.selected'));
+    chooseEnhancedOption(wrap, select, highlighted);
+    return;
+  }
+  if (key === 'Escape') {
+    if (!isOpen) return;
+    event.preventDefault();
+    event.stopPropagation();
+    closeEnhancedSelect(wrap);
+    return;
+  }
+  if (key === 'Home' || key === 'End') {
+    if (!isOpen || !menu) return;
+    event.preventDefault();
+    var edgeOptions = Array.prototype.slice.call(menu.querySelectorAll('.select-option'));
+    if (edgeOptions.length) highlightEnhancedOption(wrap, key === 'Home' ? edgeOptions[0] : edgeOptions[edgeOptions.length - 1]);
+    return;
+  }
+  if (key === 'Tab' && isOpen) {
+    closeEnhancedSelect(wrap);
+    return;
+  }
+  if (isOpen && menu && key && key.length === 1 && /[a-z0-9À-ÿ]/i.test(key)) {
+    clearTimeout(wrap._typeaheadTimer);
+    wrap._typeahead = (wrap._typeahead || '') + key.toLowerCase();
+    wrap._typeaheadTimer = setTimeout(function() { wrap._typeahead = ''; }, 600);
+    var query = wrap._typeahead;
+    var match = Array.prototype.slice.call(menu.querySelectorAll('.select-option')).find(function(opt) {
+      return opt.textContent.trim().toLowerCase().indexOf(query) === 0;
+    });
+    if (match) highlightEnhancedOption(wrap, match);
+  }
 }
 document.addEventListener('click', function(event) {
   closeEnhancedSelects();
@@ -13829,6 +13964,12 @@ document.addEventListener('click', function(event) {
 });
 document.addEventListener('keydown', function(event) {
   if (event.defaultPrevented) return;
+  if (event.key === 'Escape') {
+    if (document.querySelector('.select-enhanced.open')) return;
+    var openModal = getTopOpenModal();
+    if (openModal) { event.preventDefault(); closeModal(openModal.id); }
+    return;
+  }
   if (event.key !== 'Enter' || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return;
   var target = event.target;
   var tag = target && target.tagName ? target.tagName.toLowerCase() : '';
@@ -13838,6 +13979,8 @@ document.addEventListener('keydown', function(event) {
   event.preventDefault();
   clickPrimaryModalAction(modal);
 });
+window.addEventListener('resize', function() { closeEnhancedSelects(); });
+document.addEventListener('scroll', function() { closeEnhancedSelects(); }, true);
 function enhanceFileInputs() {
   document.querySelectorAll('input[type="file"].input-field').forEach(function(input) {
     input.classList.add('upload-hidden');
