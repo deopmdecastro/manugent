@@ -5444,7 +5444,10 @@
             <h3 class="font-semibold text-sm">Ficheiros da OT</h3>
             <p class="text-xs text-slate-500 mt-1">Anexe documentos, fotos, vídeos, PDFs ou esquemas associados a esta OT.</p>
           </div>
-          <button type="button" class="btn-secondary text-sm" onclick="openOTFormFileModal()"><i class="fas fa-upload"></i> Anexar ficheiro</button>
+          <label class="btn-secondary text-sm cursor-pointer" title="Selecione um ficheiro — associado automaticamente à OT">
+            <i class="fas fa-upload"></i> Anexar ficheiro
+            <input type="file" multiple class="hidden" onchange="smartUploadOTFormFiles(event)">
+          </label>
         </div>
         <div id="ot-form-files-list" class="text-sm text-slate-400">Nenhum ficheiro preparado.</div>
       </div>
@@ -5675,7 +5678,10 @@
       <div>
         <label class="block text-sm mb-2 text-slate-300">Ficheiro de apoio</label>
         <div>
-          <button type="button" class="file-picker" onclick="openTaskHelpFileModal()"><i class="fas fa-cloud-arrow-up"></i><span>Anexar ficheiro</span></button>
+          <label class="file-picker cursor-pointer" title="Selecione um ficheiro — associado automaticamente à OT">
+            <i class="fas fa-cloud-arrow-up"></i><span>Anexar ficheiro</span>
+            <input type="file" multiple class="hidden" onchange="smartUploadTaskHelpFile(event)">
+          </label>
           <div id="task-file-selected" class="upload-preview"></div>
         </div>
       </div>
@@ -5907,8 +5913,10 @@
               <p class="text-xs text-slate-500 mt-1">Anexe manuais, fotos, PDFs, vídeos ou esquemas deste equipamento.</p>
             </div>
           </div>
-          <input type="file" id="equip-doc-upload" class="ai-hidden-upload" multiple accept="image/*,video/*,application/pdf,.pdf,.doc,.docx,.xls,.xlsx,.dwg,.dxf">
-          <button class="btn-secondary btn-action w-full text-sm" onclick="openEquipmentFileModalFromForm()"><i class="fas fa-upload"></i> Anexar documento</button>
+          <label class="btn-secondary btn-action w-full text-sm cursor-pointer" title="Selecione um ficheiro — associado automaticamente ao equipamento">
+            <i class="fas fa-upload"></i> Anexar documento
+            <input type="file" id="equip-doc-upload" class="hidden" multiple accept="image/*,video/*,application/pdf,.pdf,.doc,.docx,.xls,.xlsx,.dwg,.dxf" onchange="smartUploadEquipFormFiles(event)">
+          </label>
           <div id="equip-form-files-list" class="text-sm text-slate-400">Nenhum documento associado.</div>
         </div>
         <div class="equipment-form-card space-y-3">
@@ -6036,7 +6044,10 @@
         <div class="card p-4">
           <h4 class="font-medium mb-3 text-sm">Documentação</h4>
           <div class="text-sm text-slate-400 mb-3">Nenhum documento associado.</div>
-          <button class="btn-secondary btn-action w-full text-sm" onclick="openEquipmentFileModal()"><i class="fas fa-upload"></i> Anexar documento</button>
+          <label class="btn-secondary btn-action w-full text-sm cursor-pointer" title="Selecione um ficheiro — associado automaticamente ao equipamento">
+            <i class="fas fa-upload"></i> Anexar documento
+            <input type="file" multiple class="hidden" accept="image/*,video/*,application/pdf,.pdf,.doc,.docx,.xls,.xlsx,.dwg,.dxf" onchange="smartUploadFiles(event,'equipment','equip')">
+          </label>
         </div>
       </div>
     </div>
@@ -12467,6 +12478,80 @@ function smartUploadFiles(event, entityType, entityContext) {
   var files = event.target ? event.target.files : event;
   smartUploadFilesCore(files, entityType, entityContext);
   if (event.target) event.target.value = '';
+}
+
+/**
+ * Upload automático a partir do formulário de OT (sem modal).
+ * Se a OT já existe (editando), faz upload direto via API.
+ * Se é uma OT nova, enfileira os ficheiros como pendentes.
+ */
+function smartUploadOTFormFiles(event) {
+  var files = event.target ? event.target.files : event;
+  if (event.target) event.target.value = '';
+  if (!files || !files.length) return;
+
+  if (APP.editingOTId) {
+    // OT já existe — upload direto para a API
+    var ot = (APP.ots || []).find(function(o) { return o.id === APP.editingOTId; });
+    var prevOT = APP.currentOT;
+    APP.currentOT = ot || { id: APP.editingOTId, backendId: APP.editingOTId };
+    smartUploadFilesCore(files, 'work_order', 'ot').then(function() {
+      APP.currentOT = prevOT;
+    });
+  } else {
+    // Nova OT — enfileira como pendentes
+    APP.pendingOTFiles = APP.pendingOTFiles || [];
+    Array.prototype.slice.call(files).forEach(function(file) {
+      APP.pendingOTFiles.push({ id: generateId('F'), name: file.name, type: 'Ficheiro', _rawFile: file });
+    });
+    renderOTFormFiles();
+    showToast(files.length + ' ficheiro(s) preparado(s) para associar à OT');
+  }
+}
+
+/**
+ * Upload automático a partir do formulário de equipamento (sem modal).
+ * Se o equipamento já existe (editando), faz upload direto via API.
+ */
+function smartUploadEquipFormFiles(event) {
+  var files = event.target ? event.target.files : event;
+  if (event.target) event.target.value = '';
+  if (!files || !files.length) return;
+
+  if (APP.editingEquipId) {
+    var equip = (APP.equipment || []).find(function(e) { return e.id === APP.editingEquipId; });
+    var prevEquip = APP.currentEquip;
+    APP.currentEquip = equip || { id: APP.editingEquipId };
+    smartUploadFilesCore(files, 'equipment', 'equip').then(function() {
+      APP.currentEquip = prevEquip;
+    });
+  } else {
+    showToast('Guarde primeiro o equipamento para poder anexar ficheiros.');
+  }
+}
+
+/**
+ * Upload automático de ficheiro de apoio a tarefa (sem modal).
+ * Associa diretamente à OT atual via API e regista referência local na tarefa.
+ */
+function smartUploadTaskHelpFile(event) {
+  var files = event.target ? event.target.files : event;
+  if (event.target) event.target.value = '';
+  if (!files || !files.length) return;
+
+  if (!APP.currentOT) {
+    showToast('Abra uma OT antes de anexar ficheiro à tarefa.');
+    return;
+  }
+
+  smartUploadFilesCore(files, 'work_order', 'ot').then(function() {
+    // Regista referência no ficheiro de apoio da tarefa (compatibilidade local)
+    var file = files[0];
+    if (file) {
+      APP.pendingTaskHelpFile = { id: generateId('F'), name: file.name, type: 'Ficheiro', ref: '', fileName: file.name };
+      renderTaskHelpSelectedFile();
+    }
+  });
 }
 
 function smartDropFiles(event, entityType, entityContext) {
