@@ -3081,9 +3081,8 @@
     #app-sidebar::-webkit-scrollbar-thumb { background: rgba(129,140,248,0.22); border-radius: 3px; }
     #app-sidebar::-webkit-scrollbar-track { background: transparent; }
 
-    /* SuperAdmin tabs */
-    /* SuperAdmin scrollable tab bar */
-    #page-superadmin .flex.gap-1.mb-6.p-1 {
+    /* SuperAdmin tabs — same segmented pill style as Ordens de Trabalho */
+    .superadmin-tabs-bar {
       overflow-x: auto;
       scrollbar-width: thin;
       scrollbar-color: rgba(124,58,237,0.3) transparent;
@@ -3091,16 +3090,17 @@
       max-width: 100%;
       width: 100%;
     }
-    #page-superadmin .flex.gap-1.mb-6.p-1::-webkit-scrollbar { height: 4px; }
-    #page-superadmin .flex.gap-1.mb-6.p-1::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.4); border-radius:4px; }
+    .superadmin-tabs-bar::-webkit-scrollbar { height: 4px; }
+    .superadmin-tabs-bar::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.4); border-radius:4px; }
     .superadmin-tab {
-      padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
-      color: var(--text-secondary); cursor: pointer; border: none; background: transparent;
-      display: inline-flex; align-items: center; gap: 6px; transition: all 0.18s;
-      white-space: nowrap;
+      padding: 8px 18px; border-radius: 8px; cursor: pointer;
+      font-size: 14px; font-weight: 500; transition: all 0.2s;
+      color: var(--text-secondary); background: transparent; border: none;
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: 'Inter', sans-serif; white-space: nowrap;
     }
-    .superadmin-tab:hover { background: var(--surface-hover); color: var(--text-primary); }
-    .superadmin-tab.active { background: var(--surface-hover-strong); color: var(--accent-light); }
+    .superadmin-tab.active { background: linear-gradient(135deg, #7C3AED, #6366F1); color: white; box-shadow: 0 2px 12px rgba(124,58,237,0.3); }
+    .superadmin-tab:hover:not(.active) { color: var(--text-primary); background: var(--surface-hover); }
     .superadmin-tab i { font-size: 12px; }
     .sa-tab-panel { animation: fadeIn 0.2s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
@@ -4146,7 +4146,7 @@
         </div>
 
         <!-- Sub-tabs -->
-        <div class="flex gap-1 mb-6 p-1 rounded-xl border border-white/8" style="background:var(--surface-a);flex-wrap:nowrap;min-width:0;">
+        <div class="superadmin-tabs-bar flex items-center gap-1 bg-white/5 rounded-lg p-1 mb-6">
           <button class="superadmin-tab active" data-tab="sa-overview" onclick="showSuperAdminTab('sa-overview')"><i class="fas fa-chart-line"></i> Visão Geral</button>
           <button class="superadmin-tab" data-tab="sa-users" onclick="showSuperAdminTab('sa-users')"><i class="fas fa-users"></i> Utilizadores</button>
           <button class="superadmin-tab" data-tab="sa-ai" onclick="showSuperAdminTab('sa-ai')"><i class="fas fa-robot"></i> IA</button>
