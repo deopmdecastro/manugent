@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { authHeaders } from '../../../hooks/useAuth'
 
 type BP = { slug: string; title: { pt: string; en: string }; excerpt: { pt: string; en: string }; category: string; status: 'published' | 'draft'; date: string; readTime: string }
 
@@ -8,10 +9,10 @@ export function BlogManager() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/admin/blog').then(r => r.json()).then(d => { setPosts(d.posts || []); setLoading(false) }).catch(() => setLoading(false))
+    fetch('/api/admin/blog', { headers: authHeaders() }).then(r => r.json()).then(d => { setPosts(d.posts || []); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
-  const save = async (u: BP[]) => { await fetch('/api/admin/blog', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ posts: u }) }) }
+  const save = async (u: BP[]) => { await fetch('/api/admin/blog', { method: 'PUT', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ posts: u }) }) }
 
   const handleSave = () => {
     if (!editing) return

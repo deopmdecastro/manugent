@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { authHeaders } from '../../../hooks/useAuth'
 
 type TM = { id: string; name: string; role: string; bio: string; image: string; order: number }
 
@@ -8,11 +9,11 @@ export function TeamManager() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/admin/team').then(r => r.json()).then(d => { setMembers(d.members || []); setLoading(false) }).catch(() => setLoading(false))
+    fetch('/api/admin/team', { headers: authHeaders() }).then(r => r.json()).then(d => { setMembers(d.members || []); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
   const save = async (updated: TM[]) => {
-    await fetch('/api/admin/team', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ members: updated }) })
+    await fetch('/api/admin/team', { method: 'PUT', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ members: updated }) })
   }
 
   const handleSave = () => {

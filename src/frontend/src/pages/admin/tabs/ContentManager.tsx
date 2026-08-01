@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { authHeaders } from '../../../hooks/useAuth'
 
 type DI = { id: string; type: 'doc' | 'faq'; title: { pt: string; en: string }; content: { pt: string; en: string }; order: number }
 
@@ -9,10 +10,10 @@ export function ContentManager() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/admin/content').then(r => r.json()).then(d => { setItems(d.items || []); setLoading(false) }).catch(() => setLoading(false))
+    fetch('/api/admin/content', { headers: authHeaders() }).then(r => r.json()).then(d => { setItems(d.items || []); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
-  const save = async (u: DI[]) => { await fetch('/api/admin/content', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: u }) }) }
+  const save = async (u: DI[]) => { await fetch('/api/admin/content', { method: 'PUT', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ items: u }) }) }
 
   const handleSave = () => {
     if (!editing) return

@@ -21,7 +21,23 @@ export interface User {
 }
 
 const AUTH_KEY = 'manugent.user'
+const TOKEN_KEY = 'manugent.token'
 let currentUser: User | null = null
+
+/** The JWT issued by POST /api/auth/login, for calling authenticated APIs. */
+export function getAuthToken(): string | null {
+  try {
+    return sessionStorage.getItem(TOKEN_KEY)
+  } catch {
+    return null
+  }
+}
+
+/** Spread into a fetch() `headers` object to attach the current session's JWT. */
+export function authHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  const token = getAuthToken()
+  return token ? { ...extra, Authorization: `Bearer ${token}` } : extra
+}
 
 function getSnapshot(): User | null {
   if (currentUser) return currentUser
@@ -45,12 +61,17 @@ function subscribe(cb: () => void) {
   }
 }
 
-function persist(user: User | null) {
+function persist(user: User | null, token?: string) {
   currentUser = user
 
   // React app auth (sessionStorage)
-  if (user) sessionStorage.setItem(AUTH_KEY, JSON.stringify(user))
-  else sessionStorage.removeItem(AUTH_KEY)
+  if (user) {
+    sessionStorage.setItem(AUTH_KEY, JSON.stringify(user))
+    if (token) sessionStorage.setItem(TOKEN_KEY, token)
+  } else {
+    sessionStorage.removeItem(AUTH_KEY)
+    sessionStorage.removeItem(TOKEN_KEY)
+  }
 
   // Legacy dashboard auth bridge (localStorage)
   if (user) {
@@ -142,7 +163,7 @@ export function useAuth() {
         teamId: raw.team_id,
         teamName: raw.team_name,
       }
-      persist(loggedUser)
+      persist(loggedUser, data.token as string | undefined)
       return loggedUser
     } finally {
       setLoading(false)

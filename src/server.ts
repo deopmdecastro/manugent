@@ -14,6 +14,13 @@ import { fuzzySearch, disambiguate, processWithCorrections, buildNLPContextPrefi
 
 // ── Configuration ───────────────────────────────────────────────────────────
 
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+  // In production a predictable/default secret would let anyone forge valid
+  // session tokens, so refuse to boot instead of silently using a weak one.
+  console.error('FATAL: JWT_SECRET must be set via environment variable in production.')
+  process.exit(1)
+}
+
 const JWT_SECRET = process.env.JWT_SECRET || 'manugent-dev-secret-change-me-in-production'
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h'
 
@@ -36,6 +43,21 @@ const app = new Hono()
 const publicDir = resolve(process.cwd(), 'public')
 
 app.use('*', logger())
+
+// OWASP-recommended baseline headers. These don't replace a full audit but
+// close common gaps: MIME sniffing, clickjacking, referrer leakage, and
+// forcing HTTPS once behind a real domain in production.
+app.use('*', async (c, next) => {
+  await next()
+  c.header('X-Content-Type-Options', 'nosniff')
+  c.header('X-Frame-Options', 'DENY')
+  c.header('Referrer-Policy', 'strict-origin-when-cross-origin')
+  c.header('Permissions-Policy', 'geolocation=(), microphone=(), camera=()')
+  if (process.env.NODE_ENV === 'production') {
+    c.header('Strict-Transport-Security', 'max-age=63072000; includeSubDomains')
+  }
+})
+
 app.use('/api/*', cors({
   origin: '*',
   allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -76,6 +98,9 @@ const triggeringFindingTypes = ['nok', 'defect', 'measurement_out_of_limits', 'f
 const superadminDataDir = resolve(process.cwd(), 'data', 'superadmin')
 
 app.get('/api/admin/:section', (c) => {
+  const auth = requireAdminUser(c)
+  if (!auth.ok) return c.json({ error: auth.message }, auth.status)
+
   const section = c.req.param('section')
   const path = join(superadminDataDir, section + '.json')
   if (!existsSync(path)) return c.json({ error: 'Section not found' }, 404)
@@ -88,6 +113,9 @@ app.get('/api/admin/:section', (c) => {
 })
 
 app.put('/api/admin/:section', async (c) => {
+  const auth = requireAdminUser(c)
+  if (!auth.ok) return c.json({ error: auth.message }, auth.status)
+
   const section = c.req.param('section')
   const path = join(superadminDataDir, section + '.json')
   try {
@@ -96,6 +124,43 @@ app.put('/api/admin/:section', async (c) => {
     return c.json({ ok: true })
   } catch {
     return c.json({ error: 'Invalid data' }, 400)
+  }
+})
+
+// Generic item removal: looks across every array field in the section's
+// JSON for an entry whose `id` or `slug` matches :itemId, so it works for
+// blog posts (slug), team members (id), docs/FAQ (id), etc. without needing
+// per-section routes.
+app.delete('/api/admin/:section/:itemId', (c) => {
+  const auth = requireAdminUser(c)
+  if (!auth.ok) return c.json({ error: auth.message }, auth.status)
+
+  const section = c.req.param('section')
+  const itemId = c.req.param('itemId')
+  const path = join(superadminDataDir, section + '.json')
+  if (!existsSync(path)) return c.json({ error: 'Section not found' }, 404)
+
+  try {
+    const data = JSON.parse(readFileSync(path, 'utf-8'))
+    let removed = false
+
+    for (const key of Object.keys(data)) {
+      if (Array.isArray(data[key])) {
+        data[key] = data[key].filter((item: unknown) => {
+          const isMatch = !!item && typeof item === 'object' &&
+            ((item as Record<string, unknown>).id === itemId || (item as Record<string, unknown>).slug === itemId)
+          if (isMatch) removed = true
+          return !isMatch
+        })
+      }
+    }
+
+    if (!removed) return c.json({ error: 'Item não encontrado.' }, 404)
+
+    writeFileSync(path, JSON.stringify(data, null, 2), 'utf-8')
+    return c.json({ ok: true })
+  } catch {
+    return c.json({ error: 'Não foi possível remover o item.' }, 500)
   }
 })
 
@@ -678,6 +743,43 @@ app.get('/api/db/health', async (c) => {
 
 // ── Routes: Auth ─────────────────────────────────────────────────────────────
 
+// In-memory brute-force guard for /api/auth/login. Keyed by IP+email so one
+// attacker can't lock out a legitimate user, but still gets throttled for
+// hammering a single account. Not a substitute for a shared store (e.g.
+// Redis) behind multiple server instances, but stops naive credential
+// stuffing on a single process.
+const LOGIN_WINDOW_MS = 15 * 60 * 1000
+const LOGIN_MAX_ATTEMPTS = 8
+const loginAttempts = new Map<string, { count: number; resetAt: number }>()
+
+function getClientIp(c: Context): string {
+  return c.req.header('x-forwarded-for')?.split(',')[0]?.trim()
+    || c.req.header('x-real-ip')
+    || 'unknown'
+}
+
+function checkLoginRateLimit(key: string): { allowed: boolean; retryAfterSeconds: number } {
+  const now = Date.now()
+  const entry = loginAttempts.get(key)
+  if (!entry || now > entry.resetAt) {
+    loginAttempts.set(key, { count: 1, resetAt: now + LOGIN_WINDOW_MS })
+    return { allowed: true, retryAfterSeconds: 0 }
+  }
+  if (entry.count >= LOGIN_MAX_ATTEMPTS) {
+    return { allowed: false, retryAfterSeconds: Math.ceil((entry.resetAt - now) / 1000) }
+  }
+  entry.count += 1
+  return { allowed: true, retryAfterSeconds: 0 }
+}
+
+// Periodically drop expired entries so the map doesn't grow unbounded.
+setInterval(() => {
+  const now = Date.now()
+  for (const [key, entry] of loginAttempts) {
+    if (now > entry.resetAt) loginAttempts.delete(key)
+  }
+}, LOGIN_WINDOW_MS)
+
 app.post('/api/auth/login', async (c) => {
   try {
     const db = requirePool()
@@ -687,6 +789,13 @@ app.post('/api/auth/login', async (c) => {
 
     if (!email || !password) {
       return c.json({ error: 'Email e password são obrigatórios.' }, 400)
+    }
+
+    const rateLimitKey = `${getClientIp(c)}:${email}`
+    const rateLimit = checkLoginRateLimit(rateLimitKey)
+    if (!rateLimit.allowed) {
+      c.header('Retry-After', String(rateLimit.retryAfterSeconds))
+      return c.json({ error: 'Demasiadas tentativas. Tente novamente mais tarde.' }, 429)
     }
 
     const result = await db.query(
@@ -705,6 +814,7 @@ app.post('/api/auth/login', async (c) => {
     }
 
     const { password_matches, ...user } = row
+    loginAttempts.delete(rateLimitKey)
 
     // Generate JWT
     const token = jwt.sign(
@@ -735,6 +845,21 @@ function requireAuth(c: Context): AuthUser | null {
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : auth
   if (!token) return null
   return verifyToken(token)
+}
+
+// Gate for the SuperAdmin API (/api/admin/*). Distinguishes "not logged in"
+// (401) from "logged in but not an admin" (403) so the frontend can react
+// appropriately, without leaking which case applies to an anonymous caller
+// beyond the standard 401/403 semantics.
+type AdminAuthResult =
+  | { ok: true; user: AuthUser }
+  | { ok: false; status: 401 | 403; message: string }
+
+function requireAdminUser(c: Context): AdminAuthResult {
+  const user = requireAuth(c)
+  if (!user) return { ok: false, status: 401, message: 'Autenticação necessária.' }
+  if (user.role !== 'admin') return { ok: false, status: 403, message: 'Acesso restrito a administradores.' }
+  return { ok: true, user }
 }
 
 // Validate session token
