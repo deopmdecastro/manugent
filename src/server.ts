@@ -8,15 +8,13 @@ import { serveStatic } from '@hono/node-server/serve-static'
 import { Hono, type Context } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
-import { Pool } from 'pg'
+import { createClient } from '@supabase/supabase-js'
 import jwt from 'jsonwebtoken'
-import { fuzzySearch, disambiguate, processWithCorrections, buildNLPContextPrefix, type FuzzyMatch } from './lib/fuzzy-search.js'
+import { fuzzySearch, disambiguate, processWithCorrections, buildNLPContextPrefix } from './lib/fuzzy-search.js'
 
 // ── Configuration ───────────────────────────────────────────────────────────
 
 if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
-  // In production a predictable/default secret would let anyone forge valid
-  // session tokens, so refuse to boot instead of silently using a weak one.
   console.error('FATAL: JWT_SECRET must be set via environment variable in production.')
   process.exit(1)
 }
@@ -25,16 +23,19 @@ const JWT_SECRET = process.env.JWT_SECRET || 'manugent-dev-secret-change-me-in-p
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h'
 
 const port = Number(process.env.PORT ?? 3000)
-const databaseUrl = process.env.DATABASE_URL
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''
 const openaiApiKey = process.env.OPENAI_API_KEY || ''
 const groqApiKey = process.env.GROQ_API_KEY || ''
-const aiProvider = (process.env.AI_PROVIDER || 'groq').toLowerCase() // 'openai' | 'groq' | 'none'
+const aiProvider = (process.env.AI_PROVIDER || 'groq').toLowerCase()
 const aiModel = process.env.AI_MODEL || (aiProvider === 'openai' ? 'gpt-4o-mini' : 'llama3-8b-8192')
 
-// ── Database ─────────────────────────────────────────────────────────────────
+// ── Database (Supabase) ─────────────────────────────────────────────────────
 
-const pool = databaseUrl
-  ? new Pool({ connectionString: databaseUrl })
+const supabase = supabaseUrl && supabaseAnonKey
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    })
   : undefined
 
 // ── App Setup ─────────────────────────────────────────────────────────────────
@@ -44,9 +45,6 @@ const publicDir = resolve(process.cwd(), 'public')
 
 app.use('*', logger())
 
-// OWASP-recommended baseline headers. These don't replace a full audit but
-// close common gaps: MIME sniffing, clickjacking, referrer leakage, and
-// forcing HTTPS once behind a real domain in production.
 app.use('*', async (c, next) => {
   await next()
   c.header('X-Content-Type-Options', 'nosniff')
@@ -70,11 +68,9 @@ app.use('/react/*', serveStatic({ root: './public' }))
 
 function serveHtmlShell(c: Context, relativePath: string) {
   const filePath = join(publicDir, relativePath)
-
   if (!existsSync(filePath)) {
     return c.text(`Missing static shell: ${relativePath}`, 503)
   }
-
   return c.html(readFileSync(filePath, 'utf8'))
 }
 
@@ -127,10 +123,6 @@ app.put('/api/admin/:section', async (c) => {
   }
 })
 
-// Generic item removal: looks across every array field in the section's
-// JSON for an entry whose `id` or `slug` matches :itemId, so it works for
-// blog posts (slug), team members (id), docs/FAQ (id), etc. without needing
-// per-section routes.
 app.delete('/api/admin/:section/:itemId', (c) => {
   const auth = requireSuperAdminUser(c)
   if (!auth.ok) return c.json({ error: auth.message }, auth.status)
@@ -164,175 +156,15 @@ app.delete('/api/admin/:section/:itemId', (c) => {
   }
 })
 
-// ── Schema Setup ──────────────────────────────────────────────────────────────
-
-async function ensureSchema() {
-  if (!pool) return
-
-  await pool.query(`
-    create extension if not exists pgcrypto;
-
-    create table if not exists clients (
-      id uuid primary key default gen_random_uuid(),
-      name text not null,
-      email text,
-      phone text,
-      created_at timestamptz not null default now()
-    );
-
-    create table if not exists equipment (
-      id uuid primary key default gen_random_uuid(),
-      client_id uuid not null references clients(id),
-      code text not null,
-      name text not null,
-      brand text,
-      model text,
-      serial text,
-      location text,
-      criticality text default 'normal',
-      status text default 'active',
-      created_at timestamptz not null default now()
-    );
-
-    create table if not exists teams (
-      id uuid primary key default gen_random_uuid(),
-      name text not null,
-      created_at timestamptz not null default now()
-    );
-
-    create table if not exists users (
-      id uuid primary key default gen_random_uuid(),
-      team_id uuid references teams(id),
-      name text not null,
-      email text,
-      role text not null default 'technician',
-      created_at timestamptz not null default now()
-    );
-
-    create table if not exists work_orders (
-      id uuid primary key default gen_random_uuid(),
-      parent_work_order_id uuid references work_orders(id),
-      client_id uuid not null references clients(id),
-      equipment_id uuid not null references equipment(id),
-      team_id uuid references teams(id),
-      supervisor_id uuid references users(id),
-      type text not null check (type in ('preventive', 'inspection', 'round', 'checklist', 'corrective', 'breakdown', 'emergency', 'customer_request')),
-      origin text not null check (origin in ('scheduled', 'request')),
-      status text not null default 'open' check (status in ('open', 'scheduled', 'in_progress', 'paused', 'waiting_material', 'waiting_customer', 'completed', 'cancelled')),
-      priority text not null default 'normal',
-      title text not null,
-      description text,
-      scheduled_for timestamptz,
-      started_at timestamptz,
-      completed_at timestamptz,
-      cancelled_at timestamptz,
-      created_at timestamptz not null default now(),
-      updated_at timestamptz not null default now()
-    );
-
-    create table if not exists work_order_findings (
-      id uuid primary key default gen_random_uuid(),
-      work_order_id uuid not null references work_orders(id) on delete cascade,
-      type text not null check (type in ('ok', 'nok', 'defect', 'measurement_out_of_limits', 'failure', 'note')),
-      description text not null,
-      measurement_value numeric,
-      limit_min numeric,
-      limit_max numeric,
-      created_by uuid references users(id),
-      created_at timestamptz not null default now()
-    );
-
-    create table if not exists work_order_links (
-      id uuid primary key default gen_random_uuid(),
-      source_work_order_id uuid not null references work_orders(id) on delete cascade,
-      target_work_order_id uuid not null references work_orders(id) on delete cascade,
-      reason text not null,
-      created_at timestamptz not null default now(),
-      unique (source_work_order_id, target_work_order_id, reason)
-    );
-
-    create table if not exists notifications (
-      id uuid primary key default gen_random_uuid(),
-      work_order_id uuid not null references work_orders(id) on delete cascade,
-      recipient_user_id uuid references users(id),
-      recipient_team_id uuid references teams(id),
-      recipient_role text,
-      channel text not null default 'in_app',
-      title text not null,
-      message text not null,
-      read_at timestamptz,
-      created_at timestamptz not null default now()
-    );
-
-    create table if not exists work_order_time_entries (
-      id uuid primary key default gen_random_uuid(),
-      work_order_id uuid not null references work_orders(id) on delete cascade,
-      technician_id uuid not null references users(id),
-      status text not null default 'joined' check (status in ('joined', 'running', 'paused', 'finished')),
-      started_at timestamptz,
-      paused_at timestamptz,
-      resumed_at timestamptz,
-      ended_at timestamptz,
-      effective_seconds integer not null default 0,
-      created_at timestamptz not null default now(),
-      updated_at timestamptz not null default now()
-    );
-
-    create unique index if not exists active_work_order_technician
-      on work_order_time_entries (work_order_id, technician_id)
-      where status in ('joined', 'running', 'paused');
-
-    create table if not exists intervention_reports (
-      id uuid primary key default gen_random_uuid(),
-      work_order_id uuid not null references work_orders(id) on delete cascade,
-      client_id uuid not null references clients(id),
-      equipment_id uuid not null references equipment(id),
-      title text not null,
-      summary text not null,
-      actions_performed text,
-      recommendations text,
-      created_by uuid references users(id),
-      created_at timestamptz not null default now()
-    );
-
-    create table if not exists quotes (
-      id uuid primary key default gen_random_uuid(),
-      work_order_id uuid not null references work_orders(id) on delete cascade,
-      client_id uuid not null references clients(id),
-      reference text not null,
-      description text not null,
-      amount numeric(12, 2) not null,
-      currency text not null default 'EUR',
-      status text not null default 'pending' check (status in ('pending', 'approved', 'rejected', 'expired')),
-      approved_by text,
-      approved_at timestamptz,
-      created_at timestamptz not null default now(),
-      updated_at timestamptz not null default now()
-    );
-
-    create table if not exists ai_conversations (
-      id uuid primary key default gen_random_uuid(),
-      session_id text not null,
-      user_role text not null default 'admin',
-      messages jsonb not null default '[]',
-      context_data jsonb,
-      created_at timestamptz not null default now(),
-      updated_at timestamptz not null default now()
-    );
-
-    create index if not exists idx_ai_conversations_session on ai_conversations(session_id);
-  `)
-}
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 class DatabaseNotConfiguredError extends Error {
-  constructor() { super('DATABASE_URL is not configured') }
+  constructor() { super('Supabase não está configurado. Verifique SUPABASE_URL e SUPABASE_ANON_KEY no .env') }
 }
 
-function requirePool() {
-  if (!pool) throw new DatabaseNotConfiguredError()
-  return pool
+function requireDb() {
+  if (!supabase) throw new DatabaseNotConfiguredError()
+  return supabase
 }
 
 function jsonError(c: Context, message: string, status = 400) {
@@ -445,88 +277,29 @@ COMPORTAMENTO GERAL:
 - Quando identificar um problema crítico, destaque-o claramente
 - Se o contexto incluir dados de OTs, equipamentos ou clientes, use-os para enriquecer a resposta
 - Sugira ações concretas e mensuráveis
-- Mantenha o histórico da conversa como memória de contexto (ver secção abaixo)
-
-ÂMBITO DE APLICAÇÃO DAS REGRAS DE CONVERSAÇÃO:
-As regras seguintes (tolerância a erros, desambiguação, preenchimento progressivo, memória de contexto,
-confirmação antes de ações críticas e perguntas inteligentes) aplicam-se a QUALQUER entidade ou módulo da
-plataforma com que o utilizador interaja por linguagem natural, não apenas a Ordens de Trabalho. Isto inclui,
-sem se limitar a:
-- Ordens de Trabalho (OTs) e manutenção preventiva/preditiva
-- Equipamentos e Edifícios
-- Clientes e Utilizadores
-- Técnicos e atribuição de trabalhos
-- Checklists e Incidentes
-- Material / stock e Compras
-- Orçamentos e faturação
-- Calendário e agendamento de intervenções
-- Base de Conhecimento e Ficheiros
-- Relatórios e indicadores (MTTR, MTBF, disponibilidade, SLA, custos)
-Trate cada uma destas áreas com a mesma disciplina conversacional usada para OTs: reconhecer a intenção mesmo
-com erros, confirmar entidades ambíguas, pedir só o que falta, lembrar o contexto e confirmar antes de agir.
-
-TOLERÂNCIA A ERROS E LINGUAGEM NATURAL:
-- Assuma que o utilizador escreve rapidamente, muitas vezes em telemóvel, com erros ortográficos, abreviaturas ou termos incompletos, seja a pedir uma OT, um equipamento, um cliente, um técnico, uma peça de material, um orçamento ou qualquer outra entidade (ex.: "OY", "orddem", "compreçor", "manutençao", "joa", "edifcio", "orçam.", "chcklist").
-- Nunca responda "não entendi" sem tentar primeiro interpretar a intenção mais provável, seja ela criar, consultar, editar, fechar ou eliminar algo.
-- Quando reconhecer um comando com erro ortográfico ou abreviado, confirme a interpretação antes de avançar, por exemplo:
-  "Não encontrei o comando 'OY'. Quis dizer 'Criar OT (Ordem de Trabalho)'?"
-  "Não reconheço 'orçam pra cliente X'. Quis dizer 'Criar Orçamento para o cliente X'?"
-- Se o utilizador escrever uma frase em linguagem natural com múltiplas informações (ex.: "abre uma OT urgente para o compressor da linha 3", "regista uma entrada de 20 rolamentos SKF 6205", "marca uma preventiva ao gerador para dia 15"), extraia automaticamente todas as entidades possíveis (equipamento, local, prioridade, quantidade, data, cliente, técnico) e confirme apenas o que faltar.
-
-DESAMBIGUAÇÃO (válido para qualquer entidade: equipamentos, técnicos, clientes, edifícios, materiais, checklists, OTs, orçamentos):
-- Quando um nome corresponder a mais do que um registo real (presente no contexto do sistema), apresente uma lista numerada ou com marcadores das opções encontradas e peça ao utilizador para escolher. Nunca invente ou assuma qual é o correto.
-  Exemplos: vários equipamentos "Compressor Atlas", vários técnicos "João", vários clientes com nome parecido, várias peças com a mesma designação genérica, vários edifícios na mesma zona.
-- Se não houver dados suficientes no contexto para desambiguar, pergunte diretamente pelo código, número, NIF/cliente ou mais detalhe, em vez de adivinhar.
-
-PREENCHIMENTO PROGRESSIVO (uma pergunta de cada vez, para qualquer tipo de registo):
-- Para tarefas com múltiplos passos — criar/fechar OT, criar preventiva, abrir incidente, criar checklist, registar entrada/saída de material, criar orçamento, agendar intervenção, criar utilizador, etc. — peça apenas UM dado em falta por mensagem, na ordem mais natural para essa entidade (ex.: OT: equipamento → problema → prioridade → responsável; Material: item → quantidade → armazém/OT associada; Orçamento: cliente → itens/serviços → validade; Incidente: local/equipamento → descrição → gravidade → envolvidos).
-- Se o utilizador já forneceu vários dados de uma vez, não peça novamente o que já foi dito — avance diretamente para o próximo dado em falta.
-- Quando uma descrição for vaga (ex.: "faz muito barulho", "está avariado", "falta stock"), ofereça opções concretas para precisar em vez de aceitar a resposta vaga.
-
-MEMÓRIA DE CONTEXTO:
-- Utilize o histórico da conversa e o contexto do sistema (equipamento atual, OT atual, OTs recentes, página atual) para resolver referências como "esse equipamento", "a mesma OT", "o técnico anterior", "aquele cliente", "esse orçamento" ou "aquele compressor", sem obrigar o utilizador a repetir informação já dada, independentemente do módulo em causa.
-- Se uma referência não puder ser resolvida com confiança a partir do histórico ou do contexto fornecido, pergunte a que registo o utilizador se refere, em vez de assumir.
-
-CONFIRMAÇÃO ANTES DE AÇÕES CRÍTICAS (qualquer entidade):
-- Antes de finalizar a criação, edição, fecho, cancelamento ou eliminação de qualquer registo — OT, equipamento, cliente, utilizador, checklist, incidente, movimento de stock, compra, orçamento, agendamento, etc. — apresente sempre um resumo estruturado dos dados recolhidos e peça confirmação explícita (ex.: "Posso criar este orçamento?", "Confirma a eliminação deste utilizador?", "Posso registar esta saída de material?").
-- Ações destrutivas ou sensíveis (eliminar, cancelar, remover acesso de um utilizador, dar baixa de stock) merecem uma confirmação ainda mais explícita, relembrando o impacto (ex.: "Esta ação remove o acesso do utilizador imediatamente. Confirma?").
-- Só depois de uma confirmação explícita ("sim", "confirmo", "pode avançar") deve tratar a ação como concluída na conversa.
-- IMPORTANTE: nunca invente números de OT, códigos internos, IDs, referências de orçamento ou quaisquer dados que não lhe tenham sido fornecidos pelo contexto do sistema. Se ainda não existir integração que persista a ação automaticamente, confirme o resumo e informe claramente que os dados ficam preparados para o utilizador finalizar/confirmar na aplicação, em vez de declarar que um registo foi criado, alterado ou eliminado com dados inventados.
-
-PERGUNTAS INTELIGENTES EM SITUAÇÕES AMBÍGUAS (qualquer contexto):
-- Perante relatos vagos ou preocupantes sobre equipamentos (ex.: "o motor parou"), faça as perguntas de diagnóstico mais relevantes antes de avançar (qual equipamento, quando ocorreu, se a produção está parada, se há alarme, cheiro a queimado, disjuntor disparado, etc.), adaptando-as ao tipo de equipamento.
-- Perante situações vagas noutros módulos, faça o mesmo tipo de perguntas de precisão: stock ("falta a peça" → qual peça, para qual equipamento/OT, quantidade necessária), incidentes ("houve um acidente" → local, envolvidos, gravidade, se foi reportado às autoridades), orçamentos ("preciso de orçamentar isto" → cliente, serviços/itens, prazo).
-- Perante pedidos genéricos como "preciso de ajuda", apresente uma lista curta e concreta das ações que pode realizar, cobrindo vários módulos (ex.: criar/consultar/fechar OT, criar preventiva, consultar equipamentos, stock ou técnicos, abrir incidente, criar checklist, agendar no calendário, gerar orçamento, relatórios).
+- Mantenha o histórico da conversa como memória de contexto
 
 FORMATO:
 - Use markdown quando apropriado (listas, negrito, headers)
 - Para procedimentos técnicos, use numeração passo a passo
 - Mantenha respostas concisas mas completas (máx. 500 palavras por resposta por defeito)
-- Prefira frases curtas e diretas — esta é sobretudo uma conversa de trabalho no terreno, não um relatório
+- Prefira frases curtas e diretas
 `
 
-// Prompt dedicado ao widget de suporte público (landing page / visitantes não autenticados).
-// Âmbito estritamente limitado a esclarecer dúvidas sobre o produto ManuGent — nunca deve
-// simular a criação/consulta de OTs, equipamentos, clientes ou qualquer outro dado interno,
-// pois o widget público não tem acesso a nenhuma base de dados nem contexto de conta.
 const MANUGENT_PUBLIC_SUPPORT_PROMPT = `Você é o Assistente ManuGent, um agente de apoio ao cliente que responde no site público (landing page) da ManuGent.
 
 QUEM É A MANUGENT:
-ManuGent é uma plataforma CMMS (Computerized Maintenance Management System) com um agente de IA integrado, que ajuda equipas de manutenção industrial a gerir Ordens de Trabalho (OTs), equipamentos, manutenção preventiva/preditiva, stock de materiais, checklists, orçamentos, relatórios e indicadores (MTBF, MTTR, OEE). Funciona em desktop, tablet e telemóvel (PWA, com modo offline), suporta leitura de NFC/QR codes e geração automática de relatórios em PDF.
+ManuGent é uma plataforma CMMS (Computerized Maintenance Management System) com um agente de IA integrado, que ajuda equipas de manutenção industrial a gerir Ordens de Trabalho (OTs), equipamentos, manutenção preventiva/preditiva, stock de materiais, checklists, orçamentos, relatórios e indicadores (MTBF, MTTR, OEE).
 
 O SEU ÂMBITO (MUITO IMPORTANTE):
 - Você fala apenas com visitantes do site público, que ainda não têm sessão iniciada nem acesso à aplicação.
-- Responda apenas a perguntas sobre o que é a ManuGent, as suas funcionalidades, planos/preços em termos gerais, como começar a experimentar, requisitos, segurança/privacidade dos dados a alto nível, e como contactar a equipa (formulário de contacto, central de ajuda, documentação).
-- NUNCA finja ter acesso a dados de conta, OTs, equipamentos, clientes, faturas ou qualquer informação interna — você não tem qualquer ligação à base de dados nem a contas de clientes.
-- NUNCA crie, edite, feche ou "prepare" registos (OTs, orçamentos, utilizadores, etc.). Se o visitante pedir isso, explique que essas ações só estão disponíveis dentro da aplicação, depois de iniciar sessão ou criar conta, e sugira o botão "Começar grátis" ou a página de login.
-- Se perguntarem por preços exatos, condições contratuais, faturação da própria conta, questões legais específicas ou problemas técnicos de uma conta já existente, não invente valores nem respostas — encaminhe para a equipa comercial/suporte através da página de Contacto ou da Central de Ajuda.
-- Não dê conselhos técnicos de manutenção industrial detalhados (isso é feito pelo agente interno da aplicação, com contexto real); mantenha-se focado em explicar o produto.
+- Responda apenas a perguntas sobre o que é a ManuGent, as suas funcionalidades, planos/preços em termos gerais, como começar a experimentar, requisitos, segurança/privacidade dos dados a alto nível, e como contactar a equipa.
+- NUNCA finja ter acesso a dados de conta, OTs, equipamentos, clientes, faturas ou qualquer informação interna.
 
 COMPORTAMENTO:
-- Responda sempre em português europeu (pt-PT), exceto se o visitante escrever claramente em inglês — nesse caso responda em inglês.
-- Seja simpático, claro e direto. Respostas curtas (idealmente até ~120 palavras), sem jargão desnecessário.
-- Se não souber responder com confiança dentro do âmbito acima, diga isso com honestidade e sugira o contacto humano em vez de inventar informação.
-- Pode usar markdown ligeiro (listas curtas, negrito) quando ajudar a clareza.
+- Responda sempre em português europeu (pt-PT), exceto se o visitante escrever claramente em inglês.
+- Seja simpático, claro e direto. Respostas curtas (idealmente até ~120 palavras).
+- Se não souber responder com confiança, diga isso com honestidade e sugira o contacto humano.
 `
 
 interface AIMessage {
@@ -558,47 +331,21 @@ function classifyAIProviderError(provider: string, status: number, error: Record
   const providerName = provider === 'openai' ? 'OpenAI' : 'Groq'
 
   if (normalized.includes('quota') || normalized.includes('insufficient_quota') || status === 402 || status === 429) {
-    return new AIProviderError(
-      provider,
-      status,
-      'provider_quota',
-      `A quota da ${providerName} está esgotada ou indisponível. O Assistente IA ManuGent continua em modo local.`,
-      message
-    )
+    return new AIProviderError(provider, status, 'provider_quota', `A quota da ${providerName} está esgotada ou indisponível. O Assistente IA ManuGent continua em modo local.`, message)
   }
 
   if (status === 401 || status === 403 || normalized.includes('invalid_api_key') || normalized.includes('unauthorized')) {
-    return new AIProviderError(
-      provider,
-      status,
-      'provider_auth',
-      `A chave da ${providerName} não foi aceite. Confirme a chave nas configurações do servidor.`,
-      message
-    )
+    return new AIProviderError(provider, status, 'provider_auth', `A chave da ${providerName} não foi aceite. Confirme a chave nas configurações do servidor.`, message)
   }
 
-  return new AIProviderError(
-    provider,
-    status,
-    'provider_unavailable',
-    `A API da ${providerName} não respondeu corretamente. O Assistente IA ManuGent continua em modo local.`,
-    message
-  )
+  return new AIProviderError(provider, status, 'provider_unavailable', `A API da ${providerName} não respondeu corretamente. O Assistente IA ManuGent continua em modo local.`, message)
 }
 
 async function callOpenAI(messages: AIMessage[], model: string, apiKey: string): Promise<string> {
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages,
-      temperature: 0.7,
-      max_tokens: 1024,
-    }),
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+    body: JSON.stringify({ model, messages, temperature: 0.7, max_tokens: 1024 }),
   })
 
   if (!response.ok) {
@@ -606,25 +353,15 @@ async function callOpenAI(messages: AIMessage[], model: string, apiKey: string):
     throw classifyAIProviderError('openai', response.status, error, `OpenAI error ${response.status}`)
   }
 
-  const data = await response.json() as {
-    choices: Array<{ message: { content: string } }>
-  }
+  const data = await response.json() as { choices: Array<{ message: { content: string } }> }
   return data.choices[0]?.message?.content || ''
 }
 
 async function callGroq(messages: AIMessage[], model: string, apiKey: string): Promise<string> {
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages,
-      temperature: 0.7,
-      max_tokens: 1024,
-    }),
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+    body: JSON.stringify({ model, messages, temperature: 0.7, max_tokens: 1024 }),
   })
 
   if (!response.ok) {
@@ -632,9 +369,7 @@ async function callGroq(messages: AIMessage[], model: string, apiKey: string): P
     throw classifyAIProviderError('groq', response.status, error, `Groq error ${response.status}`)
   }
 
-  const data = await response.json() as {
-    choices: Array<{ message: { content: string } }>
-  }
+  const data = await response.json() as { choices: Array<{ message: { content: string } }> }
   return data.choices[0]?.message?.content || ''
 }
 
@@ -651,7 +386,6 @@ async function callAI(messages: AIMessage[]): Promise<{ text: string; provider: 
     return { text, provider: 'groq', model: aiModel }
   }
 
-  // Fallback: try any available provider
   if (groqApiKey) {
     const text = await callGroq(messages, 'llama3-8b-8192', groqApiKey)
     return { text, provider: 'groq', model: 'llama3-8b-8192' }
@@ -704,7 +438,7 @@ function buildContextMessage(context: Record<string, unknown>): string {
     })
   }
 
-  lines.push('\nDICA: Use GET /api/fuzzy/:entity?q=QUERY para pesquisar equipamentos, tecnicos, clientes ou OTs com tolerancia a erros ortograficos. Entidades: equipment, technicians, users, clients, work-orders.')
+  lines.push('\nDICA: Use GET /api/fuzzy/:entity?q=QUERY para pesquisar equipamentos, tecnicos, clientes ou OTs com tolerancia a erros ortograficos.')
   return lines.join('\n')
 }
 
@@ -715,39 +449,27 @@ app.get('/api/health', (c) => {
   return c.json({
     ok: true,
     service: 'manugent-api',
-    version: '2.0.0',
-    ai: {
-      enabled: hasAI,
-      provider: hasAI ? aiProvider : 'none',
-      model: hasAI ? aiModel : null,
-    },
-    database: Boolean(pool),
+    version: '2.1.0',
+    ai: { enabled: hasAI, provider: hasAI ? aiProvider : 'none', model: hasAI ? aiModel : null },
+    database: Boolean(supabase),
   })
 })
 
 app.get('/api/db/health', async (c) => {
-  if (!pool) {
-    return c.json({ ok: false, error: 'DATABASE_URL is not configured' }, 500)
+  if (!supabase) {
+    return c.json({ ok: false, error: 'Supabase não configurado' }, 500)
   }
-
   try {
-    const result = await pool.query<{ now: Date }>('select now() as now')
-    return c.json({ ok: true, now: result.rows[0]?.now })
+    const { data, error } = await supabase.from('clients').select('id').limit(1)
+    if (error) throw error
+    return c.json({ ok: true, connected: true })
   } catch (error) {
-    return c.json({
-      ok: false,
-      error: error instanceof Error ? error.message : 'Database connection failed',
-    }, 500)
+    return c.json({ ok: false, error: error instanceof Error ? error.message : 'Database connection failed' }, 500)
   }
 })
 
 // ── Routes: Auth ─────────────────────────────────────────────────────────────
 
-// In-memory brute-force guard for /api/auth/login. Keyed by IP+email so one
-// attacker can't lock out a legitimate user, but still gets throttled for
-// hammering a single account. Not a substitute for a shared store (e.g.
-// Redis) behind multiple server instances, but stops naive credential
-// stuffing on a single process.
 const LOGIN_WINDOW_MS = 15 * 60 * 1000
 const LOGIN_MAX_ATTEMPTS = 8
 const loginAttempts = new Map<string, { count: number; resetAt: number }>()
@@ -772,7 +494,6 @@ function checkLoginRateLimit(key: string): { allowed: boolean; retryAfterSeconds
   return { allowed: true, retryAfterSeconds: 0 }
 }
 
-// Periodically drop expired entries so the map doesn't grow unbounded.
 setInterval(() => {
   const now = Date.now()
   for (const [key, entry] of loginAttempts) {
@@ -782,7 +503,7 @@ setInterval(() => {
 
 app.post('/api/auth/login', async (c) => {
   try {
-    const db = requirePool()
+    const db = requireDb()
     const body = await c.req.json().catch(() => ({})) as { email?: string; password?: string }
     const email = (body.email ?? '').trim().toLowerCase()
     const password = body.password ?? ''
@@ -798,38 +519,30 @@ app.post('/api/auth/login', async (c) => {
       return c.json({ error: 'Demasiadas tentativas. Tente novamente mais tarde.' }, 429)
     }
 
-    const result = await db.query(
-      `select id, name, email, role, team_id,
-              (password_hash is not null and password_hash = crypt($2, password_hash)) as password_matches
-       from users
-       where lower(email) = $1`,
-      [email, password]
-    )
+    const { data: user, error } = await db.rpc('verify_user_password', {
+      p_email: email,
+      p_password: password,
+    })
 
-    const row = result.rows[0]
-    // Same generic error whether the email doesn't exist or the password is
-    // wrong, so this endpoint doesn't leak which emails are registered.
-    if (!row || !row.password_matches) {
+    if (error || !user || (Array.isArray(user) && user.length === 0)) {
       return c.json({ error: 'Credenciais inválidas.' }, 401)
     }
 
-    const { password_matches, ...user } = row
+    const userData = user[0]
     loginAttempts.delete(rateLimitKey)
 
-    // Generate JWT
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
+      { id: userData.id, email: userData.email, role: userData.role },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN } as jwt.SignOptions
     )
 
-    return c.json({ user, token })
+    return c.json({ user: userData, token })
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Não foi possível iniciar sessão')
   }
 })
 
-// Middleware to verify JWT
 type AuthUser = { id: string; email: string; role: string }
 
 function verifyToken(token: string): AuthUser | null {
@@ -847,10 +560,6 @@ function requireAuth(c: Context): AuthUser | null {
   return verifyToken(token)
 }
 
-// Gate for the SuperAdmin API (/api/admin/*). Distinguishes "not logged in"
-// (401) from "logged in but not an admin" (403) so the frontend can react
-// appropriately, without leaking which case applies to an anonymous caller
-// beyond the standard 401/403 semantics.
 type SuperAdminAuthResult =
   | { ok: true; user: AuthUser }
   | { ok: false; status: 401 | 403; message: string }
@@ -862,7 +571,6 @@ function requireSuperAdminUser(c: Context): SuperAdminAuthResult {
   return { ok: true, user }
 }
 
-// Validate session token
 app.post('/api/auth/validate', (c) => {
   const user = requireAuth(c)
   if (!user) return c.json({ valid: false }, 401)
@@ -884,33 +592,19 @@ app.post('/api/ai/chat', async (c) => {
       return jsonError(c, 'message é obrigatório')
     }
 
-    // O widget de suporte público (landing page, visitante sem sessão) identifica-se com
-    // context.scope === 'public_support'. Nesse caso usamos um prompt à parte, muito mais
-    // restrito, e nunca injetamos NLP/contexto interno (o widget público não tem — nem deve
-    // ter — acesso a OTs, equipamentos, clientes ou qualquer outro dado da aplicação).
     const isPublicSupport = body.context?.scope === 'public_support'
 
-    // NLP pre-processing: spell correction + intent detection
     const nlp = isPublicSupport ? null : processWithCorrections(body.message)
     const nlpPrefix = nlp ? buildNLPContextPrefix(nlp) : ''
-
     const contextMessage = isPublicSupport ? '' : buildContextMessage(body.context || {})
 
-    // Build messages array for the AI
     const messages: AIMessage[] = [
       { role: 'system', content: isPublicSupport ? MANUGENT_PUBLIC_SUPPORT_PROMPT : MANUGENT_SYSTEM_PROMPT },
     ]
 
-    // Inject NLP corrections as system context
-    if (nlpPrefix) {
-      messages.push({ role: 'system', content: nlpPrefix })
-    }
-    // Add context as system message if available
-    if (contextMessage) {
-      messages.push({ role: 'system', content: contextMessage })
-    }
+    if (nlpPrefix) messages.push({ role: 'system', content: nlpPrefix })
+    if (contextMessage) messages.push({ role: 'system', content: contextMessage })
 
-    // Add conversation history (last 10 messages)
     const history = Array.isArray(body.history) ? body.history.slice(-10) : []
     for (const msg of history) {
       if (msg.role === 'user' || msg.role === 'assistant') {
@@ -918,24 +612,17 @@ app.post('/api/ai/chat', async (c) => {
       }
     }
 
-    // Add current user message
     messages.push({ role: 'user', content: body.message })
 
     const result = await callAI(messages)
 
-    // Persist conversation to DB if available
-    if (pool && body.sessionId) {
-      await pool.query(
-        `insert into ai_conversations (session_id, user_role, messages, context_data, updated_at)
-         values ($1, $2, $3::jsonb, $4::jsonb, now())
-         on conflict (id) do nothing`,
-        [
-          body.sessionId,
-          body.context?.userRole || 'unknown',
-          JSON.stringify([...history, { role: 'user', content: body.message }, { role: 'assistant', content: result.text }]),
-          JSON.stringify(body.context || {}),
-        ]
-      ).catch(() => {/* ignore DB errors for conversation persistence */})
+    if (supabase && body.sessionId) {
+      await supabase.from('ai_conversations').insert({
+        session_id: body.sessionId,
+        user_role: (body.context?.userRole as string) || 'unknown',
+        messages: JSON.stringify([...history, { role: 'user', content: body.message }, { role: 'assistant', content: result.text }]),
+        context_data: JSON.stringify(body.context || {}),
+      }).then(() => {}, () => {})
     }
 
     return c.json({
@@ -959,12 +646,11 @@ app.post('/api/ai/chat', async (c) => {
   }
 })
 
-
 // ── Routes: Fuzzy Search ────────────────────────────────────────────────────
 
 app.get('/api/fuzzy/:entity', async (c) => {
   try {
-    const db = requirePool()
+    const db = requireDb()
     const entity = c.req.param('entity')
     const query = c.req.query('q') || ''
     const limit = Math.min(Number(c.req.query('limit') || '10'), 20)
@@ -975,55 +661,38 @@ app.get('/api/fuzzy/:entity', async (c) => {
 
     switch (entity) {
       case 'equipment': {
-        const result = await db.query(
-          `select e.id, e.name, e.code, e.location, e.brand, e.model, c.name as client_name
-           from equipment e join clients c on c.id = e.client_id
-           order by e.name asc`
-        )
-        rows = result.rows.map(r => ({
-          id: r.id,
-          name: r.name,
+        const { data } = await db.rpc('search_equipment')
+        rows = (data || []).map((r: Record<string, unknown>) => ({
+          id: r.id as string,
+          name: r.name as string,
           extra: `${r.code || ''} — ${r.brand || ''} ${r.model || ''} — ${r.location || ''} — ${r.client_name}`,
         }))
         break
       }
       case 'technicians':
       case 'users': {
-        const result = await db.query(
-          `select u.id, u.name, u.email, u.role, t.name as team_name
-           from users u left join teams t on t.id = u.team_id
-           where u.role in ('technician', 'admin', 'superadmin', 'supervisor')
-           order by u.name asc`
-        )
-        rows = result.rows.map(r => ({
-          id: r.id,
-          name: r.name,
+        const { data } = await db.rpc('search_users_staff')
+        rows = (data || []).map((r: Record<string, unknown>) => ({
+          id: r.id as string,
+          name: r.name as string,
           extra: `${r.role}${r.team_name ? ' — ' + r.team_name : ''}${r.email ? ' — ' + r.email : ''}`,
         }))
         break
       }
       case 'clients': {
-        const result = await db.query('select id, name, email, phone from clients order by name asc')
-        rows = result.rows.map(r => ({
-          id: r.id,
-          name: r.name,
+        const { data } = await db.from('clients').select('id, name, email, phone').order('name', { ascending: true })
+        rows = (data || []).map((r: Record<string, unknown>) => ({
+          id: r.id as string,
+          name: r.name as string,
           extra: `${r.email || ''}${r.phone ? ' — ' + r.phone : ''}`,
         }))
         break
       }
       case 'work-orders': {
-        const result = await db.query(
-          `select wo.id::text, wo.title as name, wo.status, wo.priority, e.name as equipment_name, c.name as client_name
-           from work_orders wo
-           join equipment e on e.id = wo.equipment_id
-           join clients c on c.id = wo.client_id
-           where wo.status not in ('completed', 'cancelled')
-           order by wo.created_at desc
-           limit 100`
-        )
-        rows = result.rows.map(r => ({
-          id: r.id,
-          name: r.title,
+        const { data } = await db.rpc('search_work_orders_active')
+        rows = (data || []).map((r: Record<string, unknown>) => ({
+          id: r.id as string,
+          name: r.title as string,
           extra: `${r.status} | ${r.priority} | ${r.equipment_name} | ${r.client_name}`,
         }))
         break
@@ -1058,204 +727,189 @@ app.get('/api/ai/status', (c) => {
     configured,
     provider: configured ? aiProvider : 'none',
     model: configured ? aiModel : null,
-    providers: {
-      openai: hasOpenAI,
-      groq: hasGroq,
-    },
-    message: configured
-      ? `IA ativa: ${aiProvider} (${aiModel})`
-      : 'Configure OPENAI_API_KEY ou GROQ_API_KEY para ativar a IA',
+    providers: { openai: hasOpenAI, groq: hasGroq },
+    message: configured ? `IA ativa: ${aiProvider} (${aiModel})` : 'Configure OPENAI_API_KEY ou GROQ_API_KEY para ativar a IA',
   })
 })
 
 // ── Routes: Work Orders ───────────────────────────────────────────────────────
 
 app.get('/api/work-orders', async (c) => {
-  const db = requirePool()
-  const tab = c.req.query('tab')
-  const status = c.req.query('status')
-  const origin = tab === 'agendadas' || tab === 'scheduled'
-    ? 'scheduled'
-    : tab === 'pedidos' || tab === 'requests'
-    ? 'request'
-    : undefined
+  try {
+    const db = requireDb()
+    const tab = c.req.query('tab')
+    const status = c.req.query('status')
+    const origin = tab === 'agendadas' || tab === 'scheduled'
+      ? 'scheduled'
+      : tab === 'pedidos' || tab === 'requests'
+      ? 'request'
+      : undefined
 
-  const result = await db.query(
-    `select
-       wo.*,
-       c.name as client_name,
-       e.name as equipment_name,
-       t.name as team_name
-     from work_orders wo
-     join clients c on c.id = wo.client_id
-     join equipment e on e.id = wo.equipment_id
-     left join teams t on t.id = wo.team_id
-     where ($1::text is null or wo.origin = $1)
-       and ($2::text is null or wo.status = $2)
-     order by wo.created_at desc`,
-    [origin ?? null, status ?? null]
-  )
+    const { data, error } = await db.rpc('get_work_orders_list', {
+      p_origin: origin ?? null,
+      p_status: status ?? null,
+    })
 
-  return c.json({ workOrders: result.rows.map(mapWorkOrder) })
+    if (error) throw error
+    return c.json({ workOrders: (data || []).map(mapWorkOrder) })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch work orders')
+  }
 })
 
 app.get('/api/work-orders/:id', async (c) => {
-  const db = requirePool()
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_work_order_by_id', { p_id: c.req.param('id') })
 
-  const result = await db.query(
-    `select
-       wo.*,
-       c.name as client_name,
-       e.name as equipment_name,
-       t.name as team_name
-     from work_orders wo
-     join clients c on c.id = wo.client_id
-     join equipment e on e.id = wo.equipment_id
-     left join teams t on t.id = wo.team_id
-     where wo.id = $1`,
-    [c.req.param('id')]
-  )
-
-  if (result.rowCount === 0) return jsonError(c, 'Work order not found', 404)
-  return c.json({ workOrder: mapWorkOrder(result.rows[0]) })
+    if (error) throw error
+    if (!data || data.length === 0) return jsonError(c, 'Work order not found', 404)
+    return c.json({ workOrder: mapWorkOrder(data[0]) })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch work order')
+  }
 })
 
 app.get('/api/notifications', async (c) => {
-  const db = requirePool()
-  const workOrderId = c.req.query('workOrderId')
-  const unread = c.req.query('unread') === 'true'
+  try {
+    const db = requireDb()
+    const workOrderId = c.req.query('workOrderId')
+    const unread = c.req.query('unread') === 'true'
 
-  const result = await db.query(
-    `select *
-     from notifications
-     where ($1::uuid is null or work_order_id = $1)
-       and ($2::boolean is false or read_at is null)
-     order by created_at desc
-     limit 50`,
-    [workOrderId ?? null, unread]
-  )
+    let query = db.from('notifications').select('*').order('created_at', { ascending: false }).limit(50)
+    if (workOrderId) query = query.eq('work_order_id', workOrderId)
+    if (unread) query = query.is('read_at', null)
 
-  return c.json({ notifications: result.rows })
+    const { data, error } = await query
+    if (error) throw error
+    return c.json({ notifications: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch notifications')
+  }
 })
 
 app.post('/api/notifications/:id/read', async (c) => {
-  const db = requirePool()
-
-  await db.query(
-    `update notifications set read_at = now() where id = $1`,
-    [c.req.param('id')]
-  )
-
-  return c.json({ ok: true })
+  try {
+    const db = requireDb()
+    const { error } = await db.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', c.req.param('id'))
+    if (error) throw error
+    return c.json({ ok: true })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not mark notification as read')
+  }
 })
 
 app.post('/api/notifications/read-all', async (c) => {
-  const db = requirePool()
-
-  await db.query(`update notifications set read_at = now() where read_at is null`)
-
-  return c.json({ ok: true })
+  try {
+    const db = requireDb()
+    const { error } = await db.from('notifications').update({ read_at: new Date().toISOString() }).is('read_at', null)
+    if (error) throw error
+    return c.json({ ok: true })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not mark all notifications as read')
+  }
 })
 
 // ── Routes: Dashboard Stats ───────────────────────────────────────────────────
 
 app.get('/api/stats', async (c) => {
-  const db = requirePool()
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_dashboard_stats')
+    if (error) throw error
 
-  const [otStats, equipStats, notifStats] = await Promise.all([
-    db.query(`
-      select
-        count(*) filter (where status not in ('completed', 'cancelled')) as open_total,
-        count(*) filter (where status = 'in_progress') as in_progress,
-        count(*) filter (where priority in ('high', 'urgent') and status not in ('completed', 'cancelled')) as urgent,
-        count(*) filter (where status = 'completed') as completed,
-        count(*) as total
-      from work_orders
-    `),
-    db.query(`
-      select
-        count(*) as total,
-        count(*) as active
-      from equipment
-    `),
-    db.query(`
-      select count(*) filter (where read_at is null) as unread from notifications
-    `),
-  ])
-
-  return c.json({
-    workOrders: {
-      open: Number(otStats.rows[0]?.open_total ?? 0),
-      inProgress: Number(otStats.rows[0]?.in_progress ?? 0),
-      urgent: Number(otStats.rows[0]?.urgent ?? 0),
-      completed: Number(otStats.rows[0]?.completed ?? 0),
-      total: Number(otStats.rows[0]?.total ?? 0),
-    },
-    equipment: {
-      total: Number(equipStats.rows[0]?.total ?? 0),
-      active: Number(equipStats.rows[0]?.active ?? 0),
-    },
-    notifications: {
-      unread: Number(notifStats.rows[0]?.unread ?? 0),
-    },
-  })
+    const row = data?.[0] || {}
+    return c.json({
+      workOrders: {
+        open: Number(row.open_total ?? 0),
+        inProgress: Number(row.in_progress ?? 0),
+        urgent: Number(row.urgent ?? 0),
+        completed: Number(row.completed ?? 0),
+        total: Number(row.total ?? 0),
+      },
+      equipment: {
+        total: Number(row.equip_total ?? 0),
+        active: Number(row.equip_active ?? 0),
+      },
+      notifications: {
+        unread: Number(row.unread ?? 0),
+      },
+    })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch stats')
+  }
 })
 
 // ── Routes: Clients & Equipment ───────────────────────────────────────────────
 
 app.get('/api/clients', async (c) => {
-  const db = requirePool()
-  const result = await db.query('select * from clients order by name asc')
-  return c.json({ clients: result.rows })
+  try {
+    const db = requireDb()
+    const { data, error } = await db.from('clients').select('*').order('name', { ascending: true })
+    if (error) throw error
+    return c.json({ clients: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch clients')
+  }
 })
 
 app.post('/api/clients', async (c) => {
   try {
-    const db = requirePool()
+    const db = requireDb()
     const body = await c.req.json()
     if (!body.name) return jsonError(c, 'name é obrigatório')
 
-    const result = await db.query(
-      'insert into clients (name, email, phone) values ($1, $2, $3) returning *',
-      [body.name, body.email ?? null, body.phone ?? null]
-    )
-    return c.json({ client: result.rows[0] }, 201)
+    const { data, error } = await db.from('clients').insert({
+      name: body.name,
+      email: body.email ?? null,
+      phone: body.phone ?? null,
+    }).select().single()
+
+    if (error) throw error
+    return c.json({ client: data }, 201)
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not create client')
   }
 })
 
 app.get('/api/equipment', async (c) => {
-  const db = requirePool()
-  const clientId = c.req.query('clientId')
+  try {
+    const db = requireDb()
+    const clientId = c.req.query('clientId')
 
-  const result = await db.query(
-    `select e.*, c.name as client_name
-     from equipment e
-     join clients c on c.id = e.client_id
-     where ($1::uuid is null or e.client_id = $1)
-     order by e.name asc`,
-    [clientId ?? null]
-  )
-  return c.json({ equipment: result.rows })
+    const { data, error } = await db.rpc('get_equipment_with_clients', {
+      p_client_id: clientId ?? null,
+    })
+
+    if (error) throw error
+    return c.json({ equipment: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch equipment')
+  }
 })
 
 app.post('/api/equipment', async (c) => {
   try {
-    const db = requirePool()
+    const db = requireDb()
     const body = await c.req.json()
     if (!body.clientId) return jsonError(c, 'clientId é obrigatório')
     if (!body.name) return jsonError(c, 'name é obrigatório')
     if (!body.code) return jsonError(c, 'code é obrigatório')
 
-    const result = await db.query(
-      `insert into equipment (client_id, code, name, brand, model, serial, location, criticality, status)
-       values ($1, $2, $3, $4, $5, $6, $7, coalesce($8, 'normal'), coalesce($9, 'active'))
-       returning *`,
-      [body.clientId, body.code, body.name, body.brand ?? null, body.model ?? null,
-       body.serial ?? null, body.location ?? null, body.criticality ?? null, body.status ?? null]
-    )
-    return c.json({ equipment: result.rows[0] }, 201)
+    const { data, error } = await db.from('equipment').insert({
+      client_id: body.clientId,
+      code: body.code,
+      name: body.name,
+      brand: body.brand ?? null,
+      model: body.model ?? null,
+      serial: body.serial ?? null,
+      location: body.location ?? null,
+      criticality: body.criticality ?? 'normal',
+      status: body.status ?? 'active',
+    }).select().single()
+
+    if (error) throw error
+    return c.json({ equipment: data }, 201)
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not create equipment')
   }
@@ -1264,118 +918,84 @@ app.post('/api/equipment', async (c) => {
 // ── Routes: Teams & Users ─────────────────────────────────────────────────────
 
 app.get('/api/teams', async (c) => {
-  const db = requirePool()
-  const result = await db.query('select * from teams order by name asc')
-  return c.json({ teams: result.rows })
+  try {
+    const db = requireDb()
+    const { data, error } = await db.from('teams').select('*').order('name', { ascending: true })
+    if (error) throw error
+    return c.json({ teams: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch teams')
+  }
 })
 
 app.get('/api/users', async (c) => {
-  const db = requirePool()
-  const result = await db.query(
-    `select u.id, u.team_id, u.name, u.email, u.role, u.created_at, t.name as team_name
-     from users u
-     left join teams t on t.id = u.team_id
-     order by u.name asc`
-  )
-  return c.json({ users: result.rows })
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_users_with_teams')
+    if (error) throw error
+    return c.json({ users: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch users')
+  }
 })
 
 // ── Routes: Work Order CRUD ───────────────────────────────────────────────────
 
 app.post('/api/work-orders/demo/bootstrap', async (c) => {
-  const db = requirePool()
-  const tx = await db.connect()
-
   try {
-    await tx.query('begin')
+    const db = requireDb()
 
-    const team = await tx.query(
-      `insert into teams (name) values ('Equipa Manutencao') returning id`
-    )
+    const { data: team } = await db.from('teams').insert({ name: 'Equipa Manutencao' }).select().single()
+    const { data: client } = await db.from('clients').insert({ name: 'Cliente Demo', email: 'demo@manugent.pt' }).select().single()
+    const { data: equipment } = await db.from('equipment').insert({
+      client_id: client.id, code: 'EQ-001', name: 'Bomba Principal',
+      location: 'Linha 1', criticality: 'critical', status: 'active',
+    }).select().single()
+    const { data: supervisor } = await db.from('users').insert({
+      team_id: team.id, name: 'Supervisor Demo', email: 'supervisor@manugent.pt', role: 'supervisor',
+    }).select().single()
+    const { data: technician } = await db.from('users').insert({
+      team_id: team.id, name: 'Tecnico Demo', email: 'tecnico@manugent.pt', role: 'technician',
+    }).select().single()
+    const { data: workOrder } = await db.from('work_orders').insert({
+      client_id: client.id, equipment_id: equipment.id, team_id: team.id, supervisor_id: supervisor.id,
+      type: 'preventive', origin: 'scheduled', status: 'scheduled', priority: 'high',
+      title: 'Preventiva mensal - Bomba Principal',
+      description: 'Inspecao programada com medicao de vibracao no rolamento.',
+      scheduled_for: new Date(Date.now() + 86400000).toISOString(),
+    }).select().single()
 
-    const client = await tx.query(
-      `insert into clients (name, email) values ('Cliente Demo', 'demo@manugent.pt') returning id, name`
-    )
-
-    const equipment = await tx.query(
-      `insert into equipment (client_id, code, name, location, criticality, status)
-       values ($1, 'EQ-001', 'Bomba Principal', 'Linha 1', 'critical', 'active')
-       returning id, code, name, location`,
-      [client.rows[0].id]
-    )
-
-    const supervisor = await tx.query(
-      `insert into users (team_id, name, email, role)
-       values ($1, 'Supervisor Demo', 'supervisor@manugent.pt', 'supervisor')
-       returning id, name, role`,
-      [team.rows[0].id]
-    )
-
-    const technician = await tx.query(
-      `insert into users (team_id, name, email, role)
-       values ($1, 'Tecnico Demo', 'tecnico@manugent.pt', 'technician')
-       returning id, name, role`,
-      [team.rows[0].id]
-    )
-
-    const workOrder = await tx.query(
-      `insert into work_orders (
-         client_id, equipment_id, team_id, supervisor_id, type, origin, status,
-         priority, title, description, scheduled_for
-       )
-       values (
-         $1, $2, $3, $4, 'preventive', 'scheduled', 'scheduled',
-         'high', 'Preventiva mensal - Bomba Principal',
-         'Inspecao programada com medicao de vibracao no rolamento.',
-         now() + interval '1 day'
-       )
-       returning *`,
-      [client.rows[0].id, equipment.rows[0].id, team.rows[0].id, supervisor.rows[0].id]
-    )
-
-    await tx.query('commit')
-
-    return c.json({
-      client: client.rows[0],
-      equipment: equipment.rows[0],
-      team: team.rows[0],
-      supervisor: supervisor.rows[0],
-      technician: technician.rows[0],
-      workOrder: mapWorkOrder(workOrder.rows[0]),
-    }, 201)
+    return c.json({ client, equipment, team, supervisor, technician, workOrder: mapWorkOrder(workOrder) }, 201)
   } catch (error) {
-    await tx.query('rollback')
     return jsonError(c, error instanceof Error ? error.message : 'Could not bootstrap demo flow')
-  } finally {
-    tx.release()
   }
 })
 
 app.post('/api/work-orders', async (c) => {
   try {
-    const db = requirePool()
+    const db = requireDb()
     const body = await c.req.json()
     const type = assertOption(body.type, workOrderTypes, 'type')
     const status = body.status
       ? assertOption(body.status, workOrderStatuses, 'status')
       : originForType(type) === 'scheduled' ? 'scheduled' : 'open'
 
-    const result = await db.query(
-      `insert into work_orders (
-         client_id, equipment_id, team_id, supervisor_id, type, origin, status,
-         priority, title, description, scheduled_for
-       )
-       values ($1, $2, $3, $4, $5, $6, $7, coalesce($8, 'normal'), $9, $10, $11)
-       returning *`,
-      [
-        body.clientId, body.equipmentId, body.teamId ?? null,
-        body.supervisorId ?? null, type, originForType(type), status,
-        body.priority ?? null, body.title, body.description ?? null,
-        body.scheduledFor ?? null,
-      ]
-    )
+    const { data, error } = await db.from('work_orders').insert({
+      client_id: body.clientId,
+      equipment_id: body.equipmentId,
+      team_id: body.teamId ?? null,
+      supervisor_id: body.supervisorId ?? null,
+      type,
+      origin: originForType(type),
+      status,
+      priority: body.priority ?? 'normal',
+      title: body.title,
+      description: body.description ?? null,
+      scheduled_for: body.scheduledFor ?? null,
+    }).select().single()
 
-    return c.json({ workOrder: mapWorkOrder(result.rows[0]) }, 201)
+    if (error) throw error
+    return c.json({ workOrder: mapWorkOrder(data) }, 201)
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not create work order')
   }
@@ -1383,136 +1003,49 @@ app.post('/api/work-orders', async (c) => {
 
 app.post('/api/work-orders/:id/status', async (c) => {
   try {
-    const db = requirePool()
+    const db = requireDb()
     const body = await c.req.json()
     const status = assertOption(body.status, workOrderStatuses, 'status')
 
-    const result = await db.query(
-      `update work_orders
-       set status = $2,
-           started_at = case when $2 = 'in_progress' and started_at is null then now() else started_at end,
-           completed_at = case when $2 = 'completed' then now() else completed_at end,
-           cancelled_at = case when $2 = 'cancelled' then now() else cancelled_at end,
-           updated_at = now()
-       where id = $1
-       returning *`,
-      [c.req.param('id'), status]
-    )
+    const updateData: Record<string, unknown> = {
+      status,
+      updated_at: new Date().toISOString(),
+    }
 
-    if (result.rowCount === 0) return jsonError(c, 'Work order not found', 404)
-    return c.json({ workOrder: mapWorkOrder(result.rows[0]) })
+    if (status === 'in_progress') {
+      updateData.started_at = new Date().toISOString()
+    } else if (status === 'completed') {
+      updateData.completed_at = new Date().toISOString()
+    } else if (status === 'cancelled') {
+      updateData.cancelled_at = new Date().toISOString()
+    }
+
+    const { data, error } = await db.from('work_orders').update(updateData).eq('id', c.req.param('id')).select().single()
+
+    if (error) throw error
+    if (!data) return jsonError(c, 'Work order not found', 404)
+    return c.json({ workOrder: mapWorkOrder(data) })
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not update status')
   }
 })
 
 app.post('/api/work-orders/:id/findings', async (c) => {
-  const db = requirePool()
-  const body = await c.req.json()
-  const findings = Array.isArray(body.findings) ? body.findings : [body]
-  const tx = await db.connect()
-
   try {
-    await tx.query('begin')
+    const db = requireDb()
+    const body = await c.req.json()
+    const findings = Array.isArray(body.findings) ? body.findings : [body]
 
-    const workOrderResult = await tx.query(
-      'select * from work_orders where id = $1 for update',
-      [c.req.param('id')]
-    )
-    const workOrder = workOrderResult.rows[0]
-    if (!workOrder) throw new Error('Work order not found')
+    const { data, error } = await db.rpc('create_work_order_findings', {
+      p_work_order_id: c.req.param('id'),
+      p_findings: findings,
+      p_created_by: body.createdBy ?? null,
+    })
 
-    const createdFindings = []
-    let shouldCreateRequest = false
-
-    for (const finding of findings) {
-      const type = assertOption(
-        finding.type,
-        ['ok', 'nok', 'defect', 'measurement_out_of_limits', 'failure', 'note'],
-        'finding.type'
-      )
-
-      const measurementOutOfLimits =
-        typeof finding.measurementValue === 'number' &&
-        ((typeof finding.limitMin === 'number' && finding.measurementValue < finding.limitMin) ||
-          (typeof finding.limitMax === 'number' && finding.measurementValue > finding.limitMax))
-
-      shouldCreateRequest = shouldCreateRequest || triggeringFindingTypes.includes(type) || measurementOutOfLimits
-
-      const result = await tx.query(
-        `insert into work_order_findings (
-           work_order_id, type, description, measurement_value, limit_min, limit_max, created_by
-         )
-         values ($1, $2, $3, $4, $5, $6, $7)
-         returning *`,
-        [
-          workOrder.id,
-          measurementOutOfLimits ? 'measurement_out_of_limits' : type,
-          finding.description,
-          finding.measurementValue ?? null,
-          finding.limitMin ?? null,
-          finding.limitMax ?? null,
-          finding.createdBy ?? null,
-        ]
-      )
-      createdFindings.push(result.rows[0])
-    }
-
-    let interventionRequest = null
-
-    if (workOrder.origin === 'scheduled' && shouldCreateRequest) {
-      const requestResult = await tx.query(
-        `insert into work_orders (
-           parent_work_order_id, client_id, equipment_id, team_id, supervisor_id,
-           type, origin, status, priority, title, description
-         )
-         values ($1, $2, $3, $4, $5, 'corrective', 'request', 'open', 'high', $6, $7)
-         returning *`,
-        [
-          workOrder.id,
-          workOrder.client_id,
-          workOrder.equipment_id,
-          workOrder.team_id,
-          workOrder.supervisor_id,
-          `Pedido de intervencao - ${workOrder.title}`,
-          'Criado automaticamente por resultado NOK, defeito, medicao fora dos limites ou falha identificada.',
-        ]
-      )
-
-      interventionRequest = requestResult.rows[0]
-
-      await tx.query(
-        `insert into work_order_links (source_work_order_id, target_work_order_id, reason)
-         values ($1, $2, 'scheduled_finding')
-         on conflict do nothing`,
-        [workOrder.id, interventionRequest.id]
-      )
-
-      await tx.query(
-        `insert into notifications (work_order_id, recipient_user_id, recipient_team_id, recipient_role, title, message)
-         values
-           ($1, $2, null, 'supervisor', 'Pedido de intervencao criado', $3),
-           ($1, null, $4, 'team', 'Pedido de intervencao criado', $3)`,
-        [
-          interventionRequest.id,
-          workOrder.supervisor_id,
-          `Criado automaticamente a partir da OT agendada ${workOrder.title}.`,
-          workOrder.team_id,
-        ]
-      )
-    }
-
-    await tx.query('commit')
-
-    return c.json({
-      findings: createdFindings,
-      interventionRequest: interventionRequest ? mapWorkOrder(interventionRequest) : null,
-    }, interventionRequest ? 201 : 200)
+    if (error) throw error
+    return c.json(data, (data as Record<string, unknown>)?.interventionRequest ? 201 : 200)
   } catch (error) {
-    await tx.query('rollback')
     return jsonError(c, error instanceof Error ? error.message : 'Could not register findings')
-  } finally {
-    tx.release()
   }
 })
 
@@ -1525,234 +1058,224 @@ app.post('/api/work-orders/:id/time/resume', (c) => updateTimeEntry(c, 'resume')
 app.post('/api/work-orders/:id/time/exit', (c) => updateTimeEntry(c, 'exit'))
 
 app.get('/api/work-orders/:id/time', async (c) => {
-  const db = requirePool()
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_time_entries', { p_work_order_id: c.req.param('id') })
+    if (error) throw error
 
-  const result = await db.query(
-    `select te.*, u.name as technician_name
-     from work_order_time_entries te
-     join users u on u.id = te.technician_id
-     where te.work_order_id = $1
-     order by te.created_at asc`,
-    [c.req.param('id')]
-  )
+    const totalSeconds = (data || []).reduce((sum: number, row: Record<string, unknown>) => {
+      return sum + (Number(row.effective_seconds) || 0)
+    }, 0)
 
-  const totalSeconds = result.rows.reduce((sum: number, row: Record<string, unknown>) => {
-    return sum + (Number(row.effective_seconds) || 0)
-  }, 0)
-
-  return c.json({ timeEntries: result.rows, totalSeconds })
+    return c.json({ timeEntries: data || [], totalSeconds })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch time entries')
+  }
 })
 
 // ── Routes: Client Portal ─────────────────────────────────────────────────────
 
 app.post('/api/client-portal/requests', async (c) => {
   try {
-    const db = requirePool()
+    const db = requireDb()
     const body = await c.req.json()
 
-    const result = await db.query(
-      `insert into work_orders (
-         client_id, equipment_id, type, origin, status, priority, title, description
-       )
-       values ($1, $2, 'customer_request', 'request', 'open', coalesce($3, 'normal'), $4, $5)
-       returning *`,
-      [body.clientId, body.equipmentId, body.priority ?? null, body.title, body.description ?? null]
-    )
+    const { data, error } = await db.from('work_orders').insert({
+      client_id: body.clientId,
+      equipment_id: body.equipmentId,
+      type: 'customer_request',
+      origin: 'request',
+      status: 'open',
+      priority: body.priority ?? 'normal',
+      title: body.title,
+      description: body.description ?? null,
+    }).select().single()
 
-    await db.query(
-      `insert into notifications (work_order_id, recipient_role, title, message)
-       values ($1, 'supervisor', 'Novo pedido do cliente', $2)`,
-      [result.rows[0].id, `Cliente abriu pedido: ${body.title}`]
-    )
+    if (error) throw error
 
-    return c.json({ request: mapWorkOrder(result.rows[0]) }, 201)
+    await db.from('notifications').insert({
+      work_order_id: data.id,
+      recipient_role: 'supervisor',
+      title: 'Novo pedido do cliente',
+      message: `Cliente abriu pedido: ${body.title}`,
+    })
+
+    return c.json({ request: mapWorkOrder(data) }, 201)
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not create customer request')
   }
 })
 
 app.get('/api/client-portal/clients/:clientId/work-orders', async (c) => {
-  const db = requirePool()
-
-  const result = await db.query(
-    `select wo.*, cl.name as client_name, e.name as equipment_name, t.name as team_name
-     from work_orders wo
-     join clients cl on cl.id = wo.client_id
-     join equipment e on e.id = wo.equipment_id
-     left join teams t on t.id = wo.team_id
-     where wo.client_id = $1
-     order by wo.created_at desc`,
-    [c.req.param('clientId')]
-  )
-
-  return c.json({ workOrders: result.rows.map(mapWorkOrder) })
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_client_work_orders', { p_client_id: c.req.param('clientId') })
+    if (error) throw error
+    return c.json({ workOrders: (data || []).map(mapWorkOrder) })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch client work orders')
+  }
 })
 
 app.get('/api/client-portal/clients/:clientId/equipment/:equipmentId/history', async (c) => {
-  const db = requirePool()
+  try {
+    const db = requireDb()
+    const { data, error } = await db.from('work_orders')
+      .select('*, client:clients(name), equipment:equipment(name), team:teams(name)')
+      .eq('client_id', c.req.param('clientId'))
+      .eq('equipment_id', c.req.param('equipmentId'))
+      .order('created_at', { ascending: false })
 
-  const result = await db.query(
-    `select wo.*, cl.name as client_name, e.name as equipment_name, t.name as team_name
-     from work_orders wo
-     join clients cl on cl.id = wo.client_id
-     join equipment e on e.id = wo.equipment_id
-     left join teams t on t.id = wo.team_id
-     where wo.client_id = $1 and wo.equipment_id = $2
-     order by wo.created_at desc`,
-    [c.req.param('clientId'), c.req.param('equipmentId')]
-  )
+    if (error) throw error
 
-  return c.json({ history: result.rows.map(mapWorkOrder) })
+    const mapped = (data || []).map((row: Record<string, unknown>) => ({
+      ...mapWorkOrder(row),
+      clientName: (row.client as Record<string, unknown>)?.name,
+      equipmentName: (row.equipment as Record<string, unknown>)?.name,
+      teamName: (row.team as Record<string, unknown>)?.name,
+    }))
+
+    return c.json({ history: mapped })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch equipment history')
+  }
 })
 
 app.get('/api/client-portal/clients/:clientId/reports', async (c) => {
-  const db = requirePool()
-
-  const result = await db.query(
-    `select ir.*, wo.status as work_order_status, wo.title as work_order_title, e.name as equipment_name
-     from intervention_reports ir
-     join work_orders wo on wo.id = ir.work_order_id
-     join equipment e on e.id = ir.equipment_id
-     where ir.client_id = $1
-     order by ir.created_at desc`,
-    [c.req.param('clientId')]
-  )
-
-  return c.json({ reports: result.rows })
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_client_reports', { p_client_id: c.req.param('clientId') })
+    if (error) throw error
+    return c.json({ reports: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch client reports')
+  }
 })
 
 // ── Routes: Reports ───────────────────────────────────────────────────────────
 
 app.post('/api/work-orders/:id/reports', async (c) => {
   try {
-    const db = requirePool()
+    const db = requireDb()
     const body = await c.req.json()
 
-    const workOrderResult = await db.query('select * from work_orders where id = $1', [c.req.param('id')])
-    const workOrder = workOrderResult.rows[0]
-    if (!workOrder) return jsonError(c, 'Work order not found', 404)
+    const { data: workOrder, error: woError } = await db.from('work_orders').select('*').eq('id', c.req.param('id')).single()
+    if (woError || !workOrder) return jsonError(c, 'Work order not found', 404)
 
-    const result = await db.query(
-      `insert into intervention_reports (
-         work_order_id, client_id, equipment_id, title, summary,
-         actions_performed, recommendations, created_by
-       )
-       values ($1, $2, $3, $4, $5, $6, $7, $8)
-       returning *`,
-      [
-        workOrder.id, workOrder.client_id, workOrder.equipment_id,
-        body.title ?? `Relatorio - ${workOrder.title}`,
-        body.summary,
-        body.actionsPerformed ?? null,
-        body.recommendations ?? null,
-        body.createdBy ?? null,
-      ]
-    )
+    const { data, error } = await db.from('intervention_reports').insert({
+      work_order_id: workOrder.id,
+      client_id: workOrder.client_id,
+      equipment_id: workOrder.equipment_id,
+      title: body.title ?? `Relatorio - ${workOrder.title}`,
+      summary: body.summary,
+      actions_performed: body.actionsPerformed ?? null,
+      recommendations: body.recommendations ?? null,
+      created_by: body.createdBy ?? null,
+    }).select().single()
 
-    return c.json({ report: result.rows[0] }, 201)
+    if (error) throw error
+    return c.json({ report: data }, 201)
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not create intervention report')
   }
 })
 
 app.get('/api/client-portal/reports/:reportId/pdf', async (c) => {
-  const db = requirePool()
+  try {
+    const db = requireDb()
+    const { data: report, error } = await db.rpc('get_report_for_pdf', { p_report_id: c.req.param('reportId') })
 
-  const result = await db.query(
-    `select ir.*, cl.name as client_name, e.name as equipment_name, e.code as equipment_code,
-            wo.title as work_order_title, wo.status as work_order_status
-     from intervention_reports ir
-     join clients cl on cl.id = ir.client_id
-     join equipment e on e.id = ir.equipment_id
-     join work_orders wo on wo.id = ir.work_order_id
-     where ir.id = $1`,
-    [c.req.param('reportId')]
-  )
+    if (error) throw error
+    if (!report || report.length === 0) return jsonError(c, 'Report not found', 404)
 
-  const report = result.rows[0]
-  if (!report) return jsonError(c, 'Report not found', 404)
+    const r = report[0] as Record<string, unknown>
+    const pdf = buildSimplePdf([
+      'ManuGent - Relatorio de Intervencao',
+      `Cliente: ${r.client_name}`,
+      `Equipamento: ${r.equipment_code} - ${r.equipment_name}`,
+      `OT: ${r.work_order_title}`,
+      `Estado: ${r.work_order_status}`,
+      `Resumo: ${r.summary}`,
+      `Acoes: ${r.actions_performed ?? '-'}`,
+      `Recomendacoes: ${r.recommendations ?? '-'}`,
+      `Data: ${r.created_at}`,
+    ])
 
-  const pdf = buildSimplePdf([
-    'ManuGent - Relatorio de Intervencao',
-    `Cliente: ${report.client_name}`,
-    `Equipamento: ${report.equipment_code} - ${report.equipment_name}`,
-    `OT: ${report.work_order_title}`,
-    `Estado: ${report.work_order_status}`,
-    `Resumo: ${report.summary}`,
-    `Acoes: ${report.actions_performed ?? '-'}`,
-    `Recomendacoes: ${report.recommendations ?? '-'}`,
-    `Data: ${report.created_at}`,
-  ])
-
-  return new Response(pdf, {
-    headers: {
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="relatorio-${report.id}.pdf"`,
-    },
-  })
+    return new Response(pdf, {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="relatorio-${r.id}.pdf"`,
+      },
+    })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not generate PDF')
+  }
 })
 
 // ── Routes: Quotes ────────────────────────────────────────────────────────────
 
 app.post('/api/work-orders/:id/quotes', async (c) => {
   try {
-    const db = requirePool()
+    const db = requireDb()
     const body = await c.req.json()
 
-    const workOrderResult = await db.query('select * from work_orders where id = $1', [c.req.param('id')])
-    const workOrder = workOrderResult.rows[0]
-    if (!workOrder) return jsonError(c, 'Work order not found', 404)
+    const { data: workOrder, error: woError } = await db.from('work_orders').select('*').eq('id', c.req.param('id')).single()
+    if (woError || !workOrder) return jsonError(c, 'Work order not found', 404)
 
-    const result = await db.query(
-      `insert into quotes (work_order_id, client_id, reference, description, amount, currency)
-       values ($1, $2, $3, $4, $5, coalesce($6, 'EUR'))
-       returning *`,
-      [workOrder.id, workOrder.client_id, body.reference, body.description, body.amount, body.currency ?? null]
-    )
+    const { data, error } = await db.from('quotes').insert({
+      work_order_id: workOrder.id,
+      client_id: workOrder.client_id,
+      reference: body.reference,
+      description: body.description,
+      amount: body.amount,
+      currency: body.currency ?? 'EUR',
+    }).select().single()
 
-    return c.json({ quote: result.rows[0] }, 201)
+    if (error) throw error
+    return c.json({ quote: data }, 201)
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not create quote')
   }
 })
 
 app.get('/api/client-portal/clients/:clientId/quotes', async (c) => {
-  const db = requirePool()
-
-  const result = await db.query(
-    `select q.*, wo.title as work_order_title
-     from quotes q
-     join work_orders wo on wo.id = q.work_order_id
-     where q.client_id = $1
-     order by q.created_at desc`,
-    [c.req.param('clientId')]
-  )
-
-  return c.json({ quotes: result.rows })
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_client_quotes', { p_client_id: c.req.param('clientId') })
+    if (error) throw error
+    return c.json({ quotes: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch client quotes')
+  }
 })
 
 app.post('/api/client-portal/quotes/:quoteId/approve', async (c) => {
   try {
-    const db = requirePool()
+    const db = requireDb()
     const body = await c.req.json().catch(() => ({}))
 
-    const result = await db.query(
-      `update quotes
-       set status = 'approved', approved_by = $2, approved_at = now(), updated_at = now()
-       where id = $1 and status = 'pending'
-       returning *`,
-      [c.req.param('quoteId'), (body as Record<string, unknown>).approvedBy ?? 'client']
-    )
+    const { data, error } = await db.from('quotes')
+      .update({
+        status: 'approved',
+        approved_by: (body as Record<string, unknown>).approvedBy ?? 'client',
+        approved_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', c.req.param('quoteId'))
+      .eq('status', 'pending')
+      .select()
+      .single()
 
-    if (result.rowCount === 0) return jsonError(c, 'Pending quote not found', 404)
+    if (error || !data) return jsonError(c, 'Pending quote not found', 404)
 
-    await db.query(
-      `insert into notifications (work_order_id, recipient_role, title, message)
-       values ($1, 'supervisor', 'Orcamento aprovado', $2)`,
-      [result.rows[0].work_order_id, `Orcamento ${result.rows[0].reference} aprovado pelo cliente.`]
-    )
+    await db.from('notifications').insert({
+      work_order_id: data.work_order_id,
+      recipient_role: 'supervisor',
+      title: 'Orcamento aprovado',
+      message: `Orcamento ${data.reference} aprovado pelo cliente.`,
+    })
 
-    return c.json({ quote: result.rows[0] })
+    return c.json({ quote: data })
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not approve quote')
   }
@@ -1761,8 +1284,8 @@ app.post('/api/client-portal/quotes/:quoteId/approve', async (c) => {
 // ── Catch-all ─────────────────────────────────────────────────────────────────
 
 app.notFound((c) => c.json({ error: 'Not found' }, 404))
-// ── React SPA fallback ────────────────────────────────────────────────────
-// Public React shell routes
+
+// React SPA fallback routes
 app.get('/', serveReactShell)
 app.get('/landing', serveReactShell)
 app.get('/login', serveReactShell)
@@ -1792,10 +1315,11 @@ app.get('/dashboard', serveLegacyShell)
 app.get('/dashboard/*', serveLegacyShell)
 app.get('/settings', serveLegacyShell)
 app.get('/settings/*', serveLegacyShell)
+
 app.onError((error, c) => {
   console.error('[Unhandled Error]', error)
   if (error instanceof DatabaseNotConfiguredError) {
-    return c.json({ error: 'Base de dados não configurada. Configure DATABASE_URL no .env.' }, 503)
+    return c.json({ error: 'Base de dados não configurada. Verifique as variáveis Supabase no .env.' }, 503)
   }
   return c.json({ error: error.message }, 500)
 })
@@ -1804,34 +1328,19 @@ app.onError((error, c) => {
 
 async function upsertTimeEntry(c: Context, status: 'joined' | 'running') {
   try {
-    const db = requirePool()
+    const db = requireDb()
     const body = await c.req.json()
     const technicianId = body.technicianId
     if (!technicianId) return jsonError(c, 'technicianId is required')
 
-    const result = await db.query(
-      `insert into work_order_time_entries (work_order_id, technician_id, status, started_at)
-       values ($1, $2, $3, case when $3 = 'running' then now() else null end)
-       on conflict (work_order_id, technician_id) where status in ('joined', 'running', 'paused')
-       do update set
-         status = $3,
-         started_at = coalesce(work_order_time_entries.started_at, case when $3 = 'running' then now() else null end),
-         resumed_at = case when $3 = 'running' then now() else work_order_time_entries.resumed_at end,
-         updated_at = now()
-       returning *`,
-      [c.req.param('id'), technicianId, status]
-    )
+    const { data, error } = await db.rpc('upsert_time_entry', {
+      p_work_order_id: c.req.param('id'),
+      p_technician_id: technicianId,
+      p_status: status,
+    })
 
-    if (status === 'running') {
-      await db.query(
-        `update work_orders
-         set status = 'in_progress', started_at = coalesce(started_at, now()), updated_at = now()
-         where id = $1`,
-        [c.req.param('id')]
-      )
-    }
-
-    return c.json({ timeEntry: result.rows[0] })
+    if (error) throw error
+    return c.json({ timeEntry: data })
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not update time entry')
   }
@@ -1839,41 +1348,20 @@ async function upsertTimeEntry(c: Context, status: 'joined' | 'running') {
 
 async function updateTimeEntry(c: Context, action: 'pause' | 'resume' | 'exit') {
   try {
-    const db = requirePool()
+    const db = requireDb()
     const body = await c.req.json()
     const technicianId = body.technicianId
     if (!technicianId) return jsonError(c, 'technicianId is required')
 
-    const status = action === 'pause' ? 'paused' : action === 'resume' ? 'running' : 'finished'
+    const { data, error } = await db.rpc('update_time_entry', {
+      p_work_order_id: c.req.param('id'),
+      p_technician_id: technicianId,
+      p_action: action,
+    })
 
-    const result = await db.query(
-      `update work_order_time_entries
-       set
-         effective_seconds = effective_seconds + case
-           when status = 'running' and $3 in ('paused', 'finished')
-             then greatest(0, extract(epoch from (now() - coalesce(resumed_at, started_at)))::integer)
-           else 0
-         end,
-         status = $3,
-         paused_at = case when $3 = 'paused' then now() else paused_at end,
-         resumed_at = case when $3 = 'running' then now() when $3 = 'finished' then null else resumed_at end,
-         ended_at = case when $3 = 'finished' then now() else ended_at end,
-         updated_at = now()
-       where work_order_id = $1 and technician_id = $2 and status in ('joined', 'running', 'paused')
-       returning *`,
-      [c.req.param('id'), technicianId, status]
-    )
-
-    if (result.rowCount === 0) return jsonError(c, 'Active time entry not found', 404)
-
-    if (action === 'pause') {
-      await db.query(
-        `update work_orders set status = 'paused', updated_at = now() where id = $1`,
-        [c.req.param('id')]
-      )
-    }
-
-    return c.json({ timeEntry: result.rows[0] })
+    if (error) throw error
+    if (error || !data) return jsonError(c, 'Active time entry not found', 404)
+    return c.json({ timeEntry: data })
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not update time entry')
   }
@@ -1881,25 +1369,18 @@ async function updateTimeEntry(c: Context, action: 'pause' | 'resume' | 'exit') 
 
 // ── Server Bootstrap ──────────────────────────────────────────────────────────
 
-ensureSchema()
-  .then(() => {
-    const hasAI = Boolean(openaiApiKey || groqApiKey)
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('  ManuGent API v2.0.0')
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    if (hasAI) {
-      console.log(`  IA: ✅ ${aiProvider.toUpperCase()} (${aiModel})`)
-    } else {
-      console.log('  IA: ⚠️  Sem configuração (defina OPENAI_API_KEY ou GROQ_API_KEY)')
-    }
-    console.log(`  DB: ${pool ? '✅ PostgreSQL conectado' : '⚠️  Sem base de dados (modo local)'}`)
+const hasAI = Boolean(openaiApiKey || groqApiKey)
+console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+console.log('  ManuGent API v2.1.0')
+console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+if (hasAI) {
+  console.log(`  IA: ✅ ${aiProvider.toUpperCase()} (${aiModel})`)
+} else {
+  console.log('  IA: ⚠️  Sem configuração (defina OPENAI_API_KEY ou GROQ_API_KEY)')
+}
+console.log(`  DB: ${supabase ? '✅ Supabase conectado' : '⚠️  Sem base de dados (configure Supabase no .env)'}`)
 
-    serve({ fetch: app.fetch, port }, (info) => {
-      console.log(`  URL: http://localhost:${info.port}`)
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    })
-  })
-  .catch((error) => {
-    console.error('Falha ao inicializar schema da base de dados:', error)
-    process.exit(1)
-  })
+serve({ fetch: app.fetch, port }, (info) => {
+  console.log(`  URL: http://localhost:${info.port}`)
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+})

@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.19.6",
+    "@supabase/supabase-js": "^2.111.0",
     "@vitejs/plugin-react": "^5.2.0",
     "dotenv": "^16.6.1",
     "hono": "^4.12.23",

@@ -8948,7 +8948,11 @@ function syncBackendWorkOrders() {
     apiRequest('/api/work-orders?tab=agendadas'),
     apiRequest('/api/work-orders?tab=pedidos'),
     apiRequest('/api/notifications?unread=true'),
-    apiRequest('/api/stats').catch(function() { return null; })
+    apiRequest('/api/stats').catch(function() { return null; }),
+    apiRequest('/api/clients').catch(function() { return null; }),
+    apiRequest('/api/equipment').catch(function() { return null; }),
+    apiRequest('/api/users').catch(function() { return null; }),
+    apiRequest('/api/teams').catch(function() { return null; })
   ]).then(function(results) {
     APP.backendOnline = true;
     mergeBackendOTs(results[0].workOrders || []);
@@ -8969,7 +8973,35 @@ function syncBackendWorkOrders() {
     if (unreadNotifs.length > 0) {
       APP.backendNotifications = unreadNotifs;
     }
-    saveData(); updateDashboard(); renderOTs();
+    // Merge backend clients into local state
+    if (results[4] && results[4].clients) {
+      results[4].clients.forEach(function(c) {
+        var existing = APP.clients.find(function(x) { return x.id === c.id; });
+        if (existing) Object.assign(existing, c);
+        else APP.clients.push(c);
+      });
+    }
+    // Merge backend equipment into local state
+    if (results[5] && results[5].equipment) {
+      results[5].equipment.forEach(function(e) {
+        var existing = APP.equipment.find(function(x) { return x.id === e.id; });
+        if (existing) Object.assign(existing, e);
+        else APP.equipment.push(e);
+      });
+    }
+    // Merge backend users into local state
+    if (results[6] && results[6].users) {
+      results[6].users.forEach(function(u) {
+        var existing = APP.users.find(function(x) { return x.email === u.email; });
+        if (existing) Object.assign(existing, u);
+        else APP.users.push(u);
+      });
+    }
+    // Merge backend teams into local state
+    if (results[7] && results[7].teams) {
+      APP.teams = results[7].teams;
+    }
+    saveData(); updateDashboard(); renderOTs(); renderEquipment(); renderClients(); renderManagedUsers();
     renderSystemStatusBar({ backendDetail: 'Online — ' + ((results[0].workOrders || []).length + (results[1].workOrders || []).length) + ' OTs sincronizadas' });
   }).catch(function() {
     APP.backendOnline = false;
