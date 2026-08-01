@@ -37,7 +37,7 @@ export function AIConfigManager() {
         </button>
       </div>
 
-      <div className="glass-card" style={{ padding: 24, marginBottom: 20 }}>
+      <div className="admin-card" style={{ padding: 24, marginBottom: 20 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <i className="fas fa-robot" style={{ color: 'var(--accent-light)', fontSize: 18 }} />
@@ -65,7 +65,7 @@ export function AIConfigManager() {
       </div>
 
       <div className="admin-cards-grid" style={{ marginBottom: 20 }}>
-        <div className="glass-card" style={{ padding: 20 }}>
+        <div className="admin-card" style={{ padding: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
             <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <i className="fas fa-bolt" style={{ color: '#34d399', fontSize: 13 }} />
@@ -84,7 +84,7 @@ export function AIConfigManager() {
             <i className="fas fa-external-link-alt" /> Obter chave gratuita
           </a>
         </div>
-        <div className="glass-card" style={{ padding: 20 }}>
+        <div className="admin-card" style={{ padding: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
             <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <i className="fas fa-brain" style={{ color: '#60a5fa', fontSize: 13 }} />
@@ -105,7 +105,7 @@ export function AIConfigManager() {
         </div>
       </div>
 
-      <div className="glass-card" style={{ padding: 16, fontSize: 12, color: 'var(--text-muted)' }}>
+      <div className="admin-card" style={{ padding: 16, fontSize: 12, color: 'var(--text-muted)' }}>
         <i className="fas fa-info-circle" style={{ color: 'var(--accent-light)', marginRight: 6 }} />
         Para configurar: edita o ficheiro <code>.env</code> na raiz do servidor e reinicia. Variáveis: <code>OPENAI_API_KEY</code>, <code>GROQ_API_KEY</code>, <code>AI_PROVIDER</code> (openai|groq), <code>AI_MODEL</code>.
       </div>

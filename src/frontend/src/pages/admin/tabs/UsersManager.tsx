@@ -29,7 +29,7 @@ export function UsersManager() {
         <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Utilizadores ({users.length})</h2>
         <input className="glass-input" value={search} onChange={e => setSearch(e.target.value)} placeholder="Pesquisar..." style={{ width: 200, fontSize: 13 }} />
       </div>
-      <div className="admin-table-wrap glass-card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="admin-table-wrap admin-card" style={{ padding: 0, overflow: 'hidden' }}>
         <table className="admin-table">
           <thead><tr><th>Nome</th><th>Email</th><th>Role</th><th>Estado</th><th>Registo</th></tr></thead>
           <tbody>

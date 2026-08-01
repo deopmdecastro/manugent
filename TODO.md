@@ -40,6 +40,9 @@
 - [x] Configuração do Agente IA (provedor/chaves) deixou de estar visível a todos os perfis no dashboard antigo (não tinha gating) — agora restrita a Admin nesse painel e passa a viver, de forma completa, apenas no SuperAdmin
 - [x] Corrigidas variáveis CSS por definir (`var(--bg)`, `var(--text)`) no layout do SuperAdmin, alinhando com os tokens reais (`--bg-primary`, `--text-primary`) partilhados com o resto da app
 
+- [x] SuperAdmin: layout reconstruído para reproduzir fielmente a sidebar/topbar/cards do dashboard operacional (public/app) — sidebar-user-card, secções agrupadas (Site/Plataforma), barra de destaque nos links ativos, topbar com pill "SuperAdmin" e cartões flat (`admin-card`) em vez do estilo vidro fosco da landing page; novos tokens (`--hairline-*`, `--surface-hover*`, `--bg-card-hover`, `--accent-green/red/yellow`, `--accent-blue`) adicionados ao design system partilhado
+- [x] Visão Geral do SuperAdmin: cartões de estatística reconstruídos no formato metric-card (label, ícone com badge de cor, valor grande, linha de estado com ponto), igual ao dashboard operacional
+
 ### Seguranca: follow-ups recomendados (nao feitos nesta sessao)
 
 - [ ] Auditoria OWASP completa (input validation em todos os endpoints, SSRF, IDOR em /api/work-orders, /api/clients, etc.)

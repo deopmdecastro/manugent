@@ -25,7 +25,7 @@ export function LandingManager() {
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
         <div><h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Landing Page</h2><p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Toggle estado com clique. Dados persistidos via API.</p></div>
       </div>
-      <div className="admin-table-wrap glass-card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="admin-table-wrap admin-card" style={{ padding: 0, overflow: 'hidden' }}>
         <table className="admin-table">
           <thead><tr><th>Secção</th><th>Estado</th><th>Campos</th><th>Modificado</th><th></th></tr></thead>
           <tbody>
@@ -41,7 +41,7 @@ export function LandingManager() {
           </tbody>
         </table>
       </div>
-      {selected && <div className="glass-card" style={{ marginTop: 16, padding: 24 }}><h3><i className="fas fa-pen" /> {sections.find(s => s.id === selected)?.label}</h3><p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Dados em /data/superadmin/landing.json via API</p></div>}
+      {selected && <div className="admin-card" style={{ marginTop: 16, padding: 24 }}><h3><i className="fas fa-pen" /> {sections.find(s => s.id === selected)?.label}</h3><p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Dados em /data/superadmin/landing.json via API</p></div>}
     </div>
   )
 }
