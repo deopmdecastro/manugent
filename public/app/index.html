@@ -1913,6 +1913,45 @@
       padding: 0;
       width: 42px;
     }
+    .topbar-search {
+      align-items: center;
+      display: flex;
+      flex-shrink: 0;
+    }
+    .topbar-search-input {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 14px;
+      height: 42px;
+      margin-left: 0;
+      opacity: 0;
+      padding: 0;
+      pointer-events: none;
+      transition: width 0.25s ease, opacity 0.2s ease, padding 0.25s ease, margin-left 0.25s ease, background 0.2s ease, border-color 0.2s ease;
+      width: 0;
+    }
+    .topbar-search.expanded .topbar-search-input {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(129,140,248,0.24);
+      margin-left: 8px;
+      opacity: 1;
+      padding: 0 12px;
+      pointer-events: auto;
+      width: 240px;
+    }
+    .topbar-search-input::placeholder { color: var(--text-muted); }
+    .topbar-search-clear {
+      display: none;
+      margin-left: 6px;
+      width: 34px;
+      height: 34px;
+    }
+    .topbar-search.expanded .topbar-search-clear { flex-shrink: 0; }
+    @media (max-width: 640px) {
+      .topbar-search.expanded .topbar-search-input { width: 160px; }
+    }
     .ai-context-panel {
       background: #121224;
       border-left: 1px solid var(--border-light);
@@ -3296,7 +3335,11 @@
       <div class="flex items-center gap-3">
         <button class="mobile-menu-btn" onclick="toggleMobileMenu(true)" aria-label="Abrir menu"><i class="fas fa-bars"></i></button>
         <button class="btn-primary global-ai-button" onclick="openContextAI()"><i class="fas fa-robot"></i> Assistente IA ManuGent</button>
-        <button class="btn-ghost topbar-icon-btn" onclick="openSearchModal()" aria-label="Pesquisar"><i class="fas fa-search"></i></button>
+        <div class="topbar-search" id="topbar-search-wrap">
+          <button class="btn-ghost topbar-icon-btn" onclick="toggleTopbarSearch()" aria-label="Pesquisar"><i class="fas fa-search"></i></button>
+          <input type="text" id="global-search-input" class="topbar-search-input" placeholder="Pesquisar..." onkeyup="globalSearch(this.value); updateTopbarSearchClearBtn();" onkeydown="handleTopbarSearchKeydown(event)" onblur="collapseTopbarSearchIfEmpty()">
+          <button class="btn-ghost topbar-icon-btn topbar-search-clear" onclick="clearTopbarSearch()" aria-label="Limpar pesquisa" style="display:none"><i class="fas fa-times"></i></button>
+        </div>
         <button class="btn-ghost topbar-icon-btn" onclick="openFilterModal()" aria-label="Filtros"><i class="fas fa-filter"></i></button>
       </div>
       <div class="flex items-center gap-3">
@@ -6246,23 +6289,6 @@
   <div id="notifications-popover-list" class="max-h-80 overflow-y-auto"></div>
 </div>
 
-<!-- Global Search Modal -->
-<div id="modal-global-search" class="modal-overlay" style="display:none">
-  <div class="modal-content modal-lg">
-    <div class="flex items-center justify-between mb-5">
-      <div>
-        <h2 class="text-lg font-semibold">Pesquisar</h2>
-        <p class="text-xs text-slate-500 mt-1">Pesquisa contextual na página atual.</p>
-      </div>
-      <button class="btn-ghost" onclick="closeModal('modal-global-search')"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="search-bar mb-4">
-      <i class="fas fa-search text-slate-500 text-sm"></i>
-      <input type="text" id="global-search-input" placeholder="Pesquisar..." onkeyup="globalSearch(this.value)">
-    </div>
-    <div id="global-search-hint" class="text-sm text-slate-400">Digite para filtrar os dados visíveis.</div>
-  </div>
-</div>
 
 <!-- Global Filter Modal -->
 <div id="modal-global-filter" class="modal-overlay" style="display:none">
@@ -7351,7 +7377,12 @@ function renderManagedUsers() {
   if (card) card.style.display = isAdminRole(getUserRole()) ? 'block' : 'none';
   var tbody = document.getElementById('managed-users-table');
   if (!tbody) return;
-  var users = (APP.users || []).filter(function(u) { return matchesSearch(u, ['name','email','role']); });
+  var roleFilter = APP.userRoleFilter || '';
+  var users = (APP.users || []).filter(function(u) {
+    if (!matchesSearch(u, ['name','email','role'])) return false;
+    if (roleFilter && normalizeRole(u.role) !== roleFilter) return false;
+    return true;
+  });
   if (!users.length) {
     tbody.innerHTML = '<tr><td colspan="5" class="text-center text-slate-500 py-6">Nenhum utilizador registado.</td></tr>';
     return;
@@ -8320,7 +8351,12 @@ function renderBuildings() {
   var el = document.getElementById('buildings-grid');
   if (!el) return;
   APP.buildings = APP.buildings || [];
-  var rows = APP.buildings.filter(function(b) { return matchesSearch(b, ['name','clientName','address','zones']); });
+  var clientFilter = APP.buildingClientFilter || '';
+  var rows = APP.buildings.filter(function(b) {
+    if (!matchesSearch(b, ['name','clientName','address','zones'])) return false;
+    if (clientFilter && b.clientId !== clientFilter) return false;
+    return true;
+  });
   if (rows.length === 0) {
     el.innerHTML = emptyGridState('fa-building', 'Nenhum edifício registado.', 'Adicionar edifício', 'openNewBuildingModal()');
     return;
@@ -8429,7 +8465,14 @@ function renderMaterials() {
       rows.push({ name: m.description || m.name || 'Material usado', category: 'Usado em OT', stock: m.qty || 1, cost: m.cost || 0, location: ot.title || ot.id });
     });
   });
-  rows = rows.filter(function(m) { return matchesSearch(m, ['name','category','location','notes']); });
+  var categoryFilter = APP.materialCategoryFilter || '';
+  var quick = APP.materialQuickFilters || {};
+  rows = rows.filter(function(m) {
+    if (!matchesSearch(m, ['name','category','location','notes'])) return false;
+    if (categoryFilter && m.category !== categoryFilter) return false;
+    if (quick.lowStock && !(m.minStock != null && Number(m.stock || 0) <= Number(m.minStock || 0))) return false;
+    return true;
+  });
   if (!rows.length) {
     tbody.innerHTML = emptyTableState(5, 'fa-boxes-stacked', 'Nenhum material registado.', 'Adicionar material', 'createStockMaterial()');
     return;
@@ -8483,7 +8526,12 @@ function renderPurchases() {
   var tbody = document.getElementById('purchases-table-body');
   if (!tbody) return;
   APP.purchases = APP.purchases || [];
-  var rows = APP.purchases.filter(function(p) { return matchesSearch(p, ['id','item','supplier','status','notes']); });
+  var statusFilter = APP.purchaseStatusFilter || '';
+  var rows = APP.purchases.filter(function(p) {
+    if (!matchesSearch(p, ['id','item','supplier','status','notes'])) return false;
+    if (statusFilter && (p.status || 'Aprovação') !== statusFilter) return false;
+    return true;
+  });
   var empty = document.getElementById('purchases-empty-state');
   var table = document.getElementById('purchases-table-wrap');
   if (!rows.length) {
@@ -8501,7 +8549,12 @@ function renderPurchases() {
 function renderQuotes() {
   var tbody = document.getElementById('quotes-table-body');
   if (!tbody) return;
-  var rows = APP.invoices && APP.invoices.length ? APP.invoices.filter(function(d) { return matchesSearch(d, ['id','type','source','clientName','otTitle','notes']); }) : [];
+  var typeFilter = APP.quoteTypeFilter || '';
+  var rows = APP.invoices && APP.invoices.length ? APP.invoices.filter(function(d) {
+    if (!matchesSearch(d, ['id','type','source','clientName','otTitle','notes'])) return false;
+    if (typeFilter && d.type !== typeFilter) return false;
+    return true;
+  }) : [];
   if (!rows.length) {
     tbody.innerHTML = emptyTableState(4, 'fa-file-invoice-dollar', 'Nenhum orçamento ou documento comercial gerado.', 'Gerar orçamento', 'generateBillingDocuments()');
     return;
@@ -11112,7 +11165,17 @@ async function createClient() {
 function renderClients() {
   var el = document.getElementById('clients-grid');
   if (!el) return;
-  var rows = APP.clients.filter(function(c) { return matchesSearch(c, ['name','email','phone','address','contract','notes']); });
+  var contractFilter = APP.clientContractFilter || '';
+  var quick = APP.clientQuickFilters || {};
+  var rows = APP.clients.filter(function(c) {
+    if (!matchesSearch(c, ['name','email','phone','address','contract','notes'])) return false;
+    if (contractFilter && (c.contract || 'Sem contrato') !== contractFilter) return false;
+    if (quick.withBuildings) {
+      var hasBuilding = (APP.buildings || []).some(function(b) { return b.clientId === c.id; });
+      if (!hasBuilding) return false;
+    }
+    return true;
+  });
   if (rows.length === 0) {
     el.innerHTML = emptyGridState('fa-briefcase', 'Nenhum cliente registado.', 'Adicionar cliente', 'openNewClientModal()');
     return;
@@ -11213,7 +11276,14 @@ async function createTechnician() {
 function renderTechnicians() {
   var el = document.getElementById('technicians-grid');
   if (!el) return;
-  var rows = APP.technicians.filter(function(t) { return matchesSearch(t, ['name','email','phone','specialty','availability']); });
+  var specialtyFilter = APP.techSpecialtyFilter || '';
+  var availabilityFilter = APP.techAvailabilityFilter || '';
+  var rows = APP.technicians.filter(function(t) {
+    if (!matchesSearch(t, ['name','email','phone','specialty','availability'])) return false;
+    if (specialtyFilter && t.specialty !== specialtyFilter) return false;
+    if (availabilityFilter && t.availability !== availabilityFilter) return false;
+    return true;
+  });
   if (rows.length === 0) {
     el.innerHTML = emptyGridState('fa-hard-hat', 'Nenhum técnico registado.', 'Adicionar técnico', 'openNewTechModal()');
     return;
@@ -12473,7 +12543,12 @@ async function createIncident() {
 function renderIncidents() {
   var tbody = document.getElementById('incidents-table-body');
   if (!tbody) return;
-  var rows = APP.incidents.filter(function(inc) { return matchesSearch(inc, ['id','description','equipmentName','severity','status','mediaName']); });
+  var severityFilter = APP.incidentSeverityFilter || '';
+  var rows = APP.incidents.filter(function(inc) {
+    if (!matchesSearch(inc, ['id','description','equipmentName','severity','status','mediaName'])) return false;
+    if (severityFilter && inc.severity !== severityFilter) return false;
+    return true;
+  });
   if (rows.length === 0) {
     tbody.innerHTML = emptyTableState(6, 'fa-triangle-exclamation', 'Nenhum incidente registado.', 'Adicionar incidente', 'openNewIncidentModal()');
     return;
@@ -12510,7 +12585,14 @@ function getAllChecklists() {
 function renderChecklists() {
   var grid = document.getElementById('checklists-grid');
   if (!grid) return;
-  var rows = getAllChecklists().filter(function(cl) { return matchesSearch(cl, ['id','title','frequency','category','notes']); });
+  var frequencyFilter = APP.checklistFrequencyFilter || '';
+  var categoryFilter = APP.checklistCategoryFilter || '';
+  var rows = getAllChecklists().filter(function(cl) {
+    if (!matchesSearch(cl, ['id','title','frequency','category','notes'])) return false;
+    if (frequencyFilter && cl.frequency !== frequencyFilter) return false;
+    if (categoryFilter && cl.category !== categoryFilter) return false;
+    return true;
+  });
   grid.innerHTML = rows.map(function(cl) {
     var total = (cl.tasks || []).length;
     var done = (cl.tasks || []).filter(function(t) { return t.done; }).length;
@@ -14085,15 +14167,55 @@ function removeSelectedUploadFile(inputId, index) {
   updateFilePickerLabel(input);
   renderUploadPreview(input);
 }
-function openSearchModal() {
-  var modal = document.getElementById('modal-global-search');
+function toggleTopbarSearch(forceState) {
+  var wrap = document.getElementById('topbar-search-wrap');
   var input = document.getElementById('global-search-input');
-  if (!modal) return;
-  modal.style.display = 'flex';
-  if (input) {
-    input.value = APP.globalSearchQuery || '';
-    setTimeout(function() { input.focus(); input.select(); }, 40);
+  if (!wrap || !input) return;
+  var expand = typeof forceState === 'boolean' ? forceState : !wrap.classList.contains('expanded');
+  wrap.classList.toggle('expanded', expand);
+  if (expand) {
+    setTimeout(function() { input.focus(); input.select(); }, 220);
+  } else {
+    input.value = '';
+    globalSearch('');
+    updateTopbarSearchClearBtn();
   }
+}
+function clearTopbarSearch() {
+  var input = document.getElementById('global-search-input');
+  if (!input) return;
+  input.value = '';
+  globalSearch('');
+  updateTopbarSearchClearBtn();
+  input.focus();
+}
+function updateTopbarSearchClearBtn() {
+  var wrap = document.getElementById('topbar-search-wrap');
+  var input = document.getElementById('global-search-input');
+  var clearBtn = wrap ? wrap.querySelector('.topbar-search-clear') : null;
+  if (!clearBtn || !input) return;
+  clearBtn.style.display = input.value.trim() ? 'inline-flex' : 'none';
+}
+function handleTopbarSearchKeydown(event) {
+  if (event.key === 'Escape') {
+    var input = event.target;
+    input.value = '';
+    globalSearch('');
+    updateTopbarSearchClearBtn();
+    toggleTopbarSearch(false);
+    input.blur();
+  }
+}
+function collapseTopbarSearchIfEmpty() {
+  var input = document.getElementById('global-search-input');
+  if (!input) return;
+  updateTopbarSearchClearBtn();
+  if (input.value.trim()) return;
+  setTimeout(function() {
+    if (document.activeElement === input) return;
+    var wrap = document.getElementById('topbar-search-wrap');
+    if (wrap) wrap.classList.remove('expanded');
+  }, 150);
 }
 
 function openFilterModal() {
@@ -14167,6 +14289,46 @@ function renderGlobalFilterFields(page) {
       '<div><label class="block text-sm mb-2 text-slate-300">Tipo</label><select id="filter-file-type" class="input-field"><option value="">Todos</option><option>Ficheiro</option><option>Link</option><option>Vídeo</option><option>Imagem</option><option>Esquema elétrico</option><option>Credencial</option><option>PDF</option><option>Outro documento</option></select></div>' +
       '<div><label class="block text-sm mb-2 text-slate-300">Partilha</label><select id="filter-file-permission" class="input-field"><option value="">Todas</option><option value="all">Todos</option><option value="users">Utilizadores</option><option value="teams">Equipas</option><option value="restricted">Restrito</option></select></div></div>';
   }
+  if (page === 'clients') {
+    return '<div class="grid md:grid-cols-2 gap-3">' +
+      '<div><label class="block text-sm mb-2 text-slate-300">Contrato</label><select id="filter-client-contract" class="input-field">' + filterOpt('', 'Todos', APP.clientContractFilter) + ['Sem contrato','Básico','Standard','Premium'].map(function(s) { return filterOpt(s, s, APP.clientContractFilter); }).join('') + '</select></div>' +
+      '<div class="filter-toggle-group" style="align-self:flex-end"><label class="block text-sm mb-2 text-slate-300" style="width:100%">Atalhos</label>' +
+        filterToggle('client-with-buildings', 'fa-building', 'Com edifícios associados', (APP.clientQuickFilters || {}).withBuildings) +
+      '</div></div>';
+  }
+  if (page === 'buildings') {
+    var buildingClientOptions = '<option value="">Todos</option>' + (APP.clients || []).map(function(c) { return filterOpt(c.id, c.name, APP.buildingClientFilter); }).join('');
+    return '<div><label class="block text-sm mb-2 text-slate-300">Cliente</label><select id="filter-building-client" class="input-field">' + buildingClientOptions + '</select></div>';
+  }
+  if (page === 'technicians') {
+    return '<div class="grid md:grid-cols-2 gap-3">' +
+      '<div><label class="block text-sm mb-2 text-slate-300">Especialidade</label><select id="filter-tech-specialty" class="input-field">' + filterOpt('', 'Todas', APP.techSpecialtyFilter) + ['Elétrico','Mecânico','AVAC','Automação','Geral'].map(function(s) { return filterOpt(s, s, APP.techSpecialtyFilter); }).join('') + '</select></div>' +
+      '<div><label class="block text-sm mb-2 text-slate-300">Disponibilidade</label><select id="filter-tech-availability" class="input-field">' + filterOpt('', 'Todas', APP.techAvailabilityFilter) + ['Disponível','Em campo','Em férias','Indisponível'].map(function(s) { return filterOpt(s, s, APP.techAvailabilityFilter); }).join('') + '</select></div></div>';
+  }
+  if (page === 'users') {
+    return '<div><label class="block text-sm mb-2 text-slate-300">Perfil</label><select id="filter-user-role" class="input-field">' + filterOpt('', 'Todos', APP.userRoleFilter) + [['superadmin','SuperAdmin'],['admin','Admin'],['gestor','Gestor'],['tecnico','Técnico'],['cliente','Cliente']].map(function(r) { return filterOpt(r[0], r[1], APP.userRoleFilter); }).join('') + '</select></div>';
+  }
+  if (page === 'checklists') {
+    return '<div class="grid md:grid-cols-2 gap-3">' +
+      '<div><label class="block text-sm mb-2 text-slate-300">Frequência</label><select id="filter-checklist-frequency" class="input-field">' + filterOpt('', 'Todas', APP.checklistFrequencyFilter) + ['Diária','Semanal','Mensal','Trimestral','Quando necessário'].map(function(s) { return filterOpt(s, s, APP.checklistFrequencyFilter); }).join('') + '</select></div>' +
+      '<div><label class="block text-sm mb-2 text-slate-300">Categoria</label><select id="filter-checklist-category" class="input-field">' + filterOpt('', 'Todas', APP.checklistCategoryFilter) + ['Operação','Preventiva','Segurança','AVAC','Elétrica','Geral'].map(function(s) { return filterOpt(s, s, APP.checklistCategoryFilter); }).join('') + '</select></div></div>';
+  }
+  if (page === 'incidents') {
+    return '<div><label class="block text-sm mb-2 text-slate-300">Gravidade</label><select id="filter-incident-severity" class="input-field">' + filterOpt('', 'Todas', APP.incidentSeverityFilter) + ['Baixa','Média','Alta','Crítica'].map(function(s) { return filterOpt(s, s, APP.incidentSeverityFilter); }).join('') + '</select></div>';
+  }
+  if (page === 'materials') {
+    return '<div class="grid md:grid-cols-2 gap-3">' +
+      '<div><label class="block text-sm mb-2 text-slate-300">Categoria</label><select id="filter-material-category" class="input-field">' + filterOpt('', 'Todas', APP.materialCategoryFilter) + ['Elétrico','Mecânico','Consumível','Ferramenta','Segurança','Geral'].map(function(s) { return filterOpt(s, s, APP.materialCategoryFilter); }).join('') + '</select></div>' +
+      '<div class="filter-toggle-group" style="align-self:flex-end"><label class="block text-sm mb-2 text-slate-300" style="width:100%">Atalhos</label>' +
+        filterToggle('material-low-stock', 'fa-triangle-exclamation', 'Stock baixo', (APP.materialQuickFilters || {}).lowStock) +
+      '</div></div>';
+  }
+  if (page === 'purchases') {
+    return '<div><label class="block text-sm mb-2 text-slate-300">Estado</label><select id="filter-purchase-status" class="input-field">' + filterOpt('', 'Todos', APP.purchaseStatusFilter) + ['Aprovação','Pedido enviado','Recebido','Cancelado'].map(function(s) { return filterOpt(s, s, APP.purchaseStatusFilter); }).join('') + '</select></div>';
+  }
+  if (page === 'quotes') {
+    return '<div><label class="block text-sm mb-2 text-slate-300">Tipo</label><select id="filter-quote-type" class="input-field">' + filterOpt('', 'Todos', APP.quoteTypeFilter) + ['Orçamento','Fatura'].map(function(s) { return filterOpt(s, s, APP.quoteTypeFilter); }).join('') + '</select></div>';
+  }
   return '<div class="empty-state compact"><i class="fas fa-filter"></i><p>Esta página ainda não tem filtros específicos. Use a pesquisa contextual.</p></div>';
 }
 
@@ -14204,6 +14366,37 @@ function applyGlobalFilters() {
     setValue('files-type-filter', getValue('filter-file-type'));
     setValue('files-permission-filter', getValue('filter-file-permission'));
     renderFiles();
+  } else if (page === 'clients') {
+    APP.clientContractFilter = getValue('filter-client-contract');
+    APP.clientQuickFilters = { withBuildings: isFilterToggleActive('client-with-buildings') };
+    renderClients();
+  } else if (page === 'buildings') {
+    APP.buildingClientFilter = getValue('filter-building-client');
+    renderBuildings();
+  } else if (page === 'technicians') {
+    APP.techSpecialtyFilter = getValue('filter-tech-specialty');
+    APP.techAvailabilityFilter = getValue('filter-tech-availability');
+    renderTechnicians();
+  } else if (page === 'users') {
+    APP.userRoleFilter = getValue('filter-user-role');
+    renderManagedUsers();
+  } else if (page === 'checklists') {
+    APP.checklistFrequencyFilter = getValue('filter-checklist-frequency');
+    APP.checklistCategoryFilter = getValue('filter-checklist-category');
+    renderChecklists();
+  } else if (page === 'incidents') {
+    APP.incidentSeverityFilter = getValue('filter-incident-severity');
+    renderIncidents();
+  } else if (page === 'materials') {
+    APP.materialCategoryFilter = getValue('filter-material-category');
+    APP.materialQuickFilters = { lowStock: isFilterToggleActive('material-low-stock') };
+    renderMaterials();
+  } else if (page === 'purchases') {
+    APP.purchaseStatusFilter = getValue('filter-purchase-status');
+    renderPurchases();
+  } else if (page === 'quotes') {
+    APP.quoteTypeFilter = getValue('filter-quote-type');
+    renderQuotes();
   }
   closeModal('modal-global-filter');
 }
@@ -14217,8 +14410,23 @@ function clearGlobalFilters() {
   APP.otBuildingFilter = '';
   APP.otTechnicianFilter = '';
   APP.otQuickFilters = {};
+  APP.clientContractFilter = '';
+  APP.clientQuickFilters = {};
+  APP.buildingClientFilter = '';
+  APP.techSpecialtyFilter = '';
+  APP.techAvailabilityFilter = '';
+  APP.userRoleFilter = '';
+  APP.checklistFrequencyFilter = '';
+  APP.checklistCategoryFilter = '';
+  APP.incidentSeverityFilter = '';
+  APP.materialCategoryFilter = '';
+  APP.materialQuickFilters = {};
+  APP.purchaseStatusFilter = '';
+  APP.quoteTypeFilter = '';
   ['files-type-filter','files-permission-filter'].forEach(function(id) { setValue(id, ''); });
   updateDashboard(); renderOTs(); renderEquipment(); renderKnowledge(); renderFiles();
+  renderClients(); renderBuildings(); renderTechnicians(); renderManagedUsers();
+  renderChecklists(); renderIncidents(); renderMaterials(); renderPurchases(); renderQuotes();
   closeModal('modal-global-filter');
 }
 
