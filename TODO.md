@@ -36,6 +36,10 @@
 - [x] Rate limiting no login (8 tentativas / 15 min por IP+email, HTTP 429 + Retry-After)
 - [x] Auditoria de seguranca (parcial): rotas /api/admin/* estavam sem autenticação — corrigido, agora exigem JWT + role admin; headers HTTP de segurança adicionados (X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, HSTS em produção); frontend passou a guardar e enviar o JWT (antes era descartado após o login)
 
+- [x] SuperAdmin: novo separador "Configuração IA" (AIConfigManager.tsx), reaproveitando o design (glass-card, badge, admin-section) dos restantes separadores
+- [x] Configuração do Agente IA (provedor/chaves) deixou de estar visível a todos os perfis no dashboard antigo (não tinha gating) — agora restrita a Admin nesse painel e passa a viver, de forma completa, apenas no SuperAdmin
+- [x] Corrigidas variáveis CSS por definir (`var(--bg)`, `var(--text)`) no layout do SuperAdmin, alinhando com os tokens reais (`--bg-primary`, `--text-primary`) partilhados com o resto da app
+
 ### Seguranca: follow-ups recomendados (nao feitos nesta sessao)
 
 - [ ] Auditoria OWASP completa (input validation em todos os endpoints, SSRF, IDOR em /api/work-orders, /api/clients, etc.)
