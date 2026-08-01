@@ -9,9 +9,13 @@ import { Hono, type Context } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { Pool } from 'pg'
+import jwt from 'jsonwebtoken'
 import { fuzzySearch, disambiguate, processWithCorrections, buildNLPContextPrefix, type FuzzyMatch } from './lib/fuzzy-search.js'
 
 // ── Configuration ───────────────────────────────────────────────────────────
+
+const JWT_SECRET = process.env.JWT_SECRET || 'manugent-dev-secret-change-me-in-production'
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h'
 
 const port = Number(process.env.PORT ?? 3000)
 const databaseUrl = process.env.DATABASE_URL
@@ -673,10 +677,43 @@ app.post('/api/auth/login', async (c) => {
     }
 
     const { password_matches, ...user } = row
-    return c.json({ user })
+
+    // Generate JWT
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN } as jwt.SignOptions
+    )
+
+    return c.json({ user, token })
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Não foi possível iniciar sessão')
   }
+})
+
+// Middleware to verify JWT
+type AuthUser = { id: string; email: string; role: string }
+
+function verifyToken(token: string): AuthUser | null {
+  try {
+    return jwt.verify(token, JWT_SECRET) as AuthUser
+  } catch {
+    return null
+  }
+}
+
+function requireAuth(c: Context): AuthUser | null {
+  const auth = c.req.header('Authorization') || ''
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : auth
+  if (!token) return null
+  return verifyToken(token)
+}
+
+// Validate session token
+app.post('/api/auth/validate', (c) => {
+  const user = requireAuth(c)
+  if (!user) return c.json({ valid: false }, 401)
+  return c.json({ valid: true, user })
 })
 
 // ── Routes: AI Chat ───────────────────────────────────────────────────────────

@@ -17,7 +17,7 @@ const MOCK_DOCS: DocItem[] = [
 
 export function ContentManager() {
   const [items, setItems] = useState(MOCK_DOCS)
-  const [tab, setTab] = useState<'docs' | 'faq'>('docs')
+  const [tab, setTab] = useState<'doc' | 'faq'>('doc')
   const [editing, setEditing] = useState<DocItem | null>(null)
   const filtered = items.filter(i => i.type === tab)
 
@@ -36,15 +36,15 @@ export function ContentManager() {
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 8 }}>
         <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Docs & FAQ</h2>
         <button className="btn btn-primary" style={{ fontSize: 13 }} onClick={() => setEditing({ id: '', type: tab, title: { pt: '', en: '' }, content: { pt: '', en: '' }, order: filtered.length + 1 })}>
-          <i className="fas fa-plus" /> Novo {tab === 'docs' ? 'documento' : 'FAQ'}
+          <i className="fas fa-plus" /> Novo {tab === 'doc' ? 'documento' : 'FAQ'}
         </button>
       </div>
 
       <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
-        {(['docs','faq'] as const).map(t => (
+        {(['doc','faq'] as const).map(t => (
           <button key={t} className={`badge ${tab === t ? 'badge-primary' : ''}`} onClick={() => setTab(t)}
             style={{ cursor: 'pointer', padding: '8px 16px', fontSize: 13, border: tab === t ? undefined : '1px solid var(--border)', background: tab === t ? undefined : 'transparent', color: tab === t ? undefined : 'var(--text-muted)', borderRadius: 'var(--radius)' }}>
-            {t === 'docs' ? '📄 Documentação' : '❓ FAQ'}
+            {t === 'doc' ? '📄 Documentacao' : '❓ FAQ'}
           </button>
         ))}
       </div>
@@ -66,7 +66,7 @@ export function ContentManager() {
 
       {editing && (
         <div className="glass-card" style={{ marginTop: 16, padding: 24 }}>
-          <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>{editing.id ? 'Editar' : 'Novo'} {editing.type === 'docs' ? 'documento' : 'FAQ'}</h3>
+          <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>{editing.id ? 'Editar' : 'Novo'} {editing.type === 'doc' ? 'documento' : 'FAQ'}</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={{ fontSize: 12, fontWeight: 500, display: 'block', marginBottom: 4 }}>Tipo</label>
