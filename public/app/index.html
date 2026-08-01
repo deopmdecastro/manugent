@@ -3922,15 +3922,15 @@
       <div id="page-users" class="page fade-in">
         <div class="mb-6 page-header">
           <h1 class="mono">Utilizadores</h1>
-          <p>Contas, senhas iniciais e níveis de permissões da plataforma</p>
+          <p>Contas, níveis de acesso da empresa e separação entre Admin e SuperAdmin</p>
         </div>
         <div class="card p-6" id="admin-users-card">
           <div class="flex items-center justify-between gap-4 mb-5">
             <div>
               <h3 class="font-semibold">Gestão de Utilizadores</h3>
-              <p class="text-xs text-slate-500 mt-1">Apenas Admin pode criar contas para gestores, técnicos e clientes.</p>
+              <p class="text-xs text-slate-500 mt-1">Admin gere utilizadores da empresa. SuperAdmin mantém acesso total da plataforma.</p>
             </div>
-            <span class="badge badge-purple"><i class="fas fa-shield-halved"></i> Admin</span>
+            <span class="badge badge-purple"><i class="fas fa-building-shield"></i> Admin de empresa</span>
           </div>
           <div class="grid md:grid-cols-3 gap-3 mb-4">
             <input type="text" id="managed-user-name" class="input-field" placeholder="Nome">
@@ -3958,8 +3958,8 @@
         </div>
         <div class="card p-6">
           <h3 class="font-semibold mb-4">Níveis de Permissão</h3>
-          <div class="grid md:grid-cols-4 gap-3 text-sm">
-            <div class="p-4 rounded-lg border border-white/10 bg-white/5"><div class="badge badge-purple mb-2">Admin</div><p class="text-slate-400">Acesso total a todas as abas, ações, gestão e eliminação.</p></div>
+          <div class="grid md:grid-cols-5 gap-3 text-sm">
+            <div class="p-4 rounded-lg border border-white/10 bg-white/5"><div class="badge badge-red mb-2">SuperAdmin</div><p class="text-slate-400">Nível plataforma: tudo o que o Admin faz mais IA global, landing, suporte e sistema.</p></div><div class="p-4 rounded-lg border border-white/10 bg-white/5"><div class="badge badge-purple mb-2">Admin</div><p class="text-slate-400">Administrador da empresa: OTs, equipamentos, utilizadores, clientes e operação da sua organização.</p></div>
             <div class="p-4 rounded-lg border border-white/10 bg-white/5"><div class="badge badge-blue mb-2">Gestor</div><p class="text-slate-400">Gestão operacional, equipas, clientes, ficheiros, compras e orçamentos.</p></div>
             <div class="p-4 rounded-lg border border-white/10 bg-white/5"><div class="badge badge-green mb-2">Técnico</div><p class="text-slate-400">Execução técnica: OTs, equipamentos, incidentes, conhecimento, ficheiros e material.</p></div>
             <div class="p-4 rounded-lg border border-white/10 bg-white/5"><div class="badge badge-yellow mb-2">Cliente</div><p class="text-slate-400">Consulta controlada, pedidos/OTs, calendário, ficheiros e orçamentos.</p></div>
@@ -3996,7 +3996,8 @@
               <div id="settings-role-field" style="display:none">
                 <label class="block text-sm mb-2 text-slate-300">Nível de permissões</label>
                 <select id="settings-role-input" class="input-field">
-                  <option value="admin">Admin - acesso total</option>
+                  <option value="superadmin">SuperAdmin - gestão global da plataforma</option>
+                  <option value="admin">Admin - administração da empresa</option>
                   <option value="gestor">Gestor - gestão operacional</option>
                   <option value="tecnico">Técnico - execução técnica</option>
                   <option value="cliente">Cliente - consulta e pedidos</option>
@@ -4135,6 +4136,7 @@
               <input type="text" id="sa-users-search" class="input-field flex-1" placeholder="Pesquisar por nome, email ou perfil..." oninput="renderSuperAdminUsers()">
               <select id="sa-users-role-filter" class="input-field" style="max-width:160px" onchange="renderSuperAdminUsers()">
                 <option value="">Todos os perfis</option>
+                <option value="superadmin">SuperAdmin</option>
                 <option value="admin">Admin</option>
                 <option value="gestor">Gestor</option>
                 <option value="tecnico">Técnico</option>
@@ -5874,6 +5876,13 @@ var APP = {
   backendOnline: false, demoTechnicianId: localStorage.getItem('manugentTechnicianId') || '',
   timeTicker: null,
 };
+var SEEDED_SUPERADMIN = {
+  name: 'SuperAdmin',
+  email: 'superadmin@manugent.local',
+  password: 'superadmin123',
+  role: 'superadmin',
+  seeded: true
+};
 var SEEDED_ADMIN = {
   name: 'Administrador',
   email: 'admin@manugent.local',
@@ -5944,17 +5953,22 @@ function ensureCurrentUserAccount() {
   }
   APP.user.role = role;
 }
-function ensureSeedAdmin() {
+function ensureLocalSeedAccount(seed, insertAtStart) {
   APP.users = APP.users || [];
-  var admin = APP.users.find(function(u) { return u.email === SEEDED_ADMIN.email; });
-  if (!admin) {
-    APP.users.unshift(Object.assign({ createdAt: new Date().toISOString() }, SEEDED_ADMIN));
+  var account = APP.users.find(function(u) { return u.email === seed.email; });
+  if (!account) {
+    if (insertAtStart) APP.users.unshift(Object.assign({ createdAt: new Date().toISOString() }, seed));
+    else APP.users.push(Object.assign({ createdAt: new Date().toISOString() }, seed));
     saveData();
   } else {
-    admin.role = 'admin';
-    admin.name = admin.name || SEEDED_ADMIN.name;
-    admin.password = admin.password || SEEDED_ADMIN.password;
+    account.role = seed.role;
+    account.name = account.name || seed.name;
+    account.password = account.password || seed.password;
   }
+}
+function ensureSeedUsers() {
+  ensureLocalSeedAccount(SEEDED_SUPERADMIN, true);
+  ensureLocalSeedAccount(SEEDED_ADMIN, false);
 }
 function createSessionToken() {
   var seed = Date.now() + '-' + Math.random().toString(36).slice(2);
@@ -5979,7 +5993,7 @@ function redirectToReactRoute(path) {
 }
 
 loadData();
-ensureSeedAdmin();
+ensureSeedUsers();
 window.onload = function() {
   if (APP.user) { showApp(); }
   else { redirectToReactRoute('/login'); return; }
@@ -6745,12 +6759,12 @@ function updateUserUI() {
   document.getElementById('settings-name-input').value = n;
   document.getElementById('settings-email-input').value = APP.user.email;
   document.getElementById('settings-role-input').value = APP.user.role;
-  document.getElementById('settings-role-input').disabled = APP.user.role !== 'admin';
+  document.getElementById('settings-role-input').disabled = !isSuperAdminRole(getUserRole());
   var aiSettingsBtn = document.getElementById('ai-settings-btn');
-  if (aiSettingsBtn) aiSettingsBtn.style.display = getUserRole() === 'admin' ? 'inline-flex' : 'none';
+  if (aiSettingsBtn) aiSettingsBtn.style.display = isSuperAdminRole(getUserRole()) ? 'inline-flex' : 'none';
   var aiConfigCardInit = document.getElementById('admin-ai-config-card');
-  if (aiConfigCardInit) aiConfigCardInit.style.display = getUserRole() === 'admin' ? 'block' : 'none';
-  if (getUserRole() === 'admin') generateManagedUserPassword(false);
+  if (aiConfigCardInit) aiConfigCardInit.style.display = isSuperAdminRole(getUserRole()) ? 'block' : 'none';
+  if (isAdminRole(getUserRole())) generateManagedUserPassword(false);
   renderManagedUsers();
   renderAIScopeSettings();
   // Update AI configuration status in settings page
@@ -6760,7 +6774,7 @@ function saveProfile() {
   var name = document.getElementById('settings-name-input').value;
   if (!name) return;
   APP.user.name = name;
-  if (APP.user.role === 'admin') APP.user.role = document.getElementById('settings-role-input').value || APP.user.role || 'cliente';
+  if (isSuperAdminRole(getUserRole())) APP.user.role = document.getElementById('settings-role-input').value || APP.user.role || 'cliente';
   var account = (APP.users || []).find(function(u) { return u.email === APP.user.email; });
   if (account) {
     account.name = APP.user.name;
@@ -6769,7 +6783,7 @@ function saveProfile() {
   saveData(); updateUserUI(); applyPermissions(); showToast('Perfil e permissões guardados!');
 }
 function createManagedUser() {
-  if (getUserRole() !== 'admin') { showToast('Apenas Admin pode criar contas.'); return; }
+  if (!isAdminRole(getUserRole())) { showToast('Apenas Admin ou SuperAdmin podem criar contas.'); return; }
   var name = document.getElementById('managed-user-name').value.trim();
   var email = document.getElementById('managed-user-email').value.trim().toLowerCase();
   var pass = document.getElementById('managed-user-pass-preview').textContent.trim();
@@ -6784,7 +6798,7 @@ function createManagedUser() {
 }
 function renderManagedUsers() {
   var card = document.getElementById('admin-users-card');
-  if (card) card.style.display = getUserRole() === 'admin' ? 'block' : 'none';
+  if (card) card.style.display = isAdminRole(getUserRole()) ? 'block' : 'none';
   var tbody = document.getElementById('managed-users-table');
   if (!tbody) return;
   var users = (APP.users || []).filter(function(u) { return matchesSearch(u, ['name','email','role']); });
@@ -6815,7 +6829,7 @@ function generateReadablePassword() {
   return prefix + '-' + out;
 }
 function resetManagedUserPassword(email) {
-  if (getUserRole() !== 'admin') { showToast('Apenas Admin pode alterar senhas.'); return; }
+  if (!isAdminRole(getUserRole())) { showToast('Apenas Admin ou SuperAdmin podem alterar senhas.'); return; }
   var user = (APP.users || []).find(function(u) { return u.email === email; });
   if (!user) return;
   var pass = generateReadablePassword();
@@ -6824,30 +6838,47 @@ function resetManagedUserPassword(email) {
   saveData(); renderManagedUsers(); showToast('Senha alterada para ' + user.email + ': ' + pass);
 }
 function getRoleBadgeClass(role) {
-  return { admin:'badge-purple', gestor:'badge-blue', tecnico:'badge-green', cliente:'badge-yellow' }[role] || 'badge-gray';
+  role = normalizeRole(role);
+  return { superadmin:'badge-red', admin:'badge-purple', gestor:'badge-blue', tecnico:'badge-green', cliente:'badge-yellow' }[role] || 'badge-gray';
+}
+function isSuperAdminRole(role) {
+  return normalizeRole(role) === 'superadmin';
+}
+function isAdminRole(role) {
+  role = normalizeRole(role);
+  return role === 'admin' || role === 'superadmin';
 }
 
 // ======================== PERMISSIONS ========================
-var ROLE_LABELS = { admin:'Admin', gestor:'Gestor', tecnico:'Técnico', cliente:'Cliente' };
+var ROLE_LABELS = { superadmin:'SuperAdmin', admin:'Admin', gestor:'Gestor', tecnico:'Técnico', cliente:'Cliente' };
 var PAGE_PERMISSIONS = {
-  admin: ['dashboard','notifications','ots','equipment','clients','buildings','technicians','users','knowledge','files','ai-assistant','calendar','checklists','incidents','materials','purchases','quotes','settings','superadmin'],
+  superadmin: ['dashboard','notifications','ots','equipment','clients','buildings','technicians','users','knowledge','files','ai-assistant','calendar','checklists','incidents','materials','purchases','quotes','settings','superadmin'],
+  admin: ['dashboard','notifications','ots','equipment','clients','buildings','technicians','users','knowledge','files','ai-assistant','calendar','checklists','incidents','materials','purchases','quotes','settings'],
   gestor: ['dashboard','notifications','ots','equipment','clients','buildings','technicians','knowledge','files','ai-assistant','calendar','checklists','incidents','materials','purchases','quotes','settings'],
   tecnico: ['dashboard','notifications','ots','equipment','knowledge','files','ai-assistant','calendar','checklists','incidents','materials','settings'],
   cliente: ['dashboard','notifications','ots','equipment','files','ai-assistant','calendar','quotes','settings']
 };
 var ACTION_PERMISSIONS = {
+  superadmin: ['*'],
   admin: ['*'],
   gestor: ['create:*','edit:*','delete:*','view:*','commercial:*','create:purchases','create:quotes'],
   tecnico: ['view:*','create:ots','edit:ots','delete:ots','create:incidents','create:files','create:knowledge','create:purchases'],
   cliente: ['view:*','create:ots','create:files']
 };
 var AI_DATA_SCOPE = {
+  superadmin: {
+    modules: ['dashboard','ots','equipment','clients','buildings','technicians','users','knowledge','files','incidents','materials','purchases','quotes','calendar','checklists','ai-assistant','settings'],
+    description: 'Vê toda a plataforma e ainda gere configurações globais de IA, landing, suporte e sistema.',
+    includes: ['Toda a base operacional', 'Todos os utilizadores e permissões', 'Dados sensíveis e históricos', 'Configuração global da plataforma'],
+    blocks: ['Nada bloqueado no escopo SuperAdmin'],
+    behavior: 'Pode atuar como Admin da operação e também como gestor global da plataforma.'
+  },
   admin: {
     modules: ['dashboard','ots','equipment','clients','buildings','technicians','users','knowledge','files','incidents','materials','purchases','quotes','calendar','checklists','ai-assistant','settings'],
-    description: 'Vê tudo, incluindo utilizadores, permissões e dados sensíveis.',
-    includes: ['Toda a base da plataforma', 'Operação e comercial', 'Utilizadores e níveis de permissão', 'Histórico, ficheiros e dados sensíveis'],
-    blocks: ['Nada bloqueado no escopo Admin'],
-    behavior: 'Pode listar, analisar e gerar relatórios com visão total.'
+    description: 'Vê a operação da empresa, incluindo utilizadores e dados administrativos da sua organização.',
+    includes: ['OTs, equipamentos e operação', 'Clientes, edifícios e equipas', 'Utilizadores e permissões da empresa', 'Histórico, ficheiros e dados sensíveis da organização'],
+    blocks: ['Configuração global de IA', 'Landing pública', 'Suporte global', 'Sistema e infraestrutura'],
+    behavior: 'Pode listar, analisar e gerar relatórios com visão total da empresa.'
   },
   gestor: {
     modules: ['dashboard','ots','equipment','clients','buildings','technicians','knowledge','files','incidents','materials','purchases','quotes','calendar','checklists','ai-assistant','settings'],
@@ -6880,6 +6911,10 @@ var AI_MODULE_LABELS = {
 function normalizeRole(role) {
   var value = String(role || '').trim().toLowerCase();
   var map = {
+    'super admin': 'superadmin',
+    superadmin: 'superadmin',
+    superadministrador: 'superadmin',
+    superadministradora: 'superadmin',
     administrador: 'admin',
     administradora: 'admin',
     admin: 'admin',
@@ -6894,7 +6929,7 @@ function normalizeRole(role) {
   return map[value] || value || 'cliente';
 }
 function getUserRole() {
-  var role = APP.user && APP.user.email === SEEDED_ADMIN.email ? 'admin' : normalizeRole(APP.user && APP.user.role);
+  var role = APP.user && APP.user.email === SEEDED_SUPERADMIN.email ? 'superadmin' : APP.user && APP.user.email === SEEDED_ADMIN.email ? 'admin' : normalizeRole(APP.user && APP.user.role);
   if (APP.user && APP.user.role !== role) {
     APP.user.role = role;
     var account = (APP.users || []).find(function(u) { return APP.user && u.email === APP.user.email; });
@@ -6908,7 +6943,7 @@ function getRoleLabel(role) {
   return ROLE_LABELS[role] || role || 'Cliente';
 }
 function canAccessPage(page) {
-  if (getUserRole() === 'admin') return true;
+  if (getUserRole() === 'superadmin') return true;
   var pages = PAGE_PERMISSIONS[getUserRole()] || PAGE_PERMISSIONS.cliente;
   return pages.indexOf(page) !== -1;
 }
@@ -6935,11 +6970,11 @@ function applyPermissions() {
   });
   if (!canAccessPage(APP.currentPage || 'dashboard')) showPage(getDefaultPageForRole());
   var aiCard = document.getElementById('admin-ai-scope-card');
-  if (aiCard) aiCard.style.display = getUserRole() === 'admin' ? 'block' : 'none';
+  if (aiCard) aiCard.style.display = isSuperAdminRole(getUserRole()) ? 'block' : 'none';
   var aiConfigCard = document.getElementById('admin-ai-config-card');
-  if (aiConfigCard) aiConfigCard.style.display = getUserRole() === 'admin' ? 'block' : 'none';
+  if (aiConfigCard) aiConfigCard.style.display = isSuperAdminRole(getUserRole()) ? 'block' : 'none';
   var aiSettingsBtn = document.getElementById('ai-settings-btn');
-  if (aiSettingsBtn) aiSettingsBtn.style.display = getUserRole() === 'admin' ? 'inline-flex' : 'none';
+  if (aiSettingsBtn) aiSettingsBtn.style.display = isSuperAdminRole(getUserRole()) ? 'inline-flex' : 'none';
   var materialBtn = document.getElementById('new-material-page-btn');
   if (materialBtn) materialBtn.style.display = canDo('create', 'materials') ? 'inline-flex' : 'none';
 }
@@ -6957,9 +6992,9 @@ function ensureAIModuleAccess(module) {
 function renderAIScopeSettings() {
   var el = document.getElementById('ai-scope-settings');
   var card = document.getElementById('admin-ai-scope-card');
-  if (card) card.style.display = getUserRole() === 'admin' ? 'block' : 'none';
-  if (!el || getUserRole() !== 'admin') return;
-  el.innerHTML = ['admin','gestor','tecnico','cliente'].map(function(role) {
+  if (card) card.style.display = isSuperAdminRole(getUserRole()) ? 'block' : 'none';
+  if (!el || !isSuperAdminRole(getUserRole())) return;
+  el.innerHTML = ['superadmin','admin','gestor','tecnico','cliente'].map(function(role) {
     var scope = getAIScope(role);
     var modules = scope.modules.map(function(m) {
       return '<span class="badge badge-gray">' + escapeHtml(AI_MODULE_LABELS[m] || m) + '</span>';
@@ -7039,7 +7074,7 @@ function getAIVisibleOTs(role) {
   role = role || getUserRole();
   var rows = APP.ots || [];
   if (!canAIReadModule('ots', role)) return [];
-  if (role === 'admin' || role === 'gestor') return rows;
+  if (isAdminRole(role) || role === 'gestor') return rows;
   if (role === 'tecnico') return rows.filter(recordMatchesTechnician);
   if (role === 'cliente') return rows.filter(recordMatchesClient);
   return [];
@@ -7048,33 +7083,33 @@ function getAIVisibleEquipment(role) {
   role = role || getUserRole();
   var rows = APP.equipment || [];
   if (!canAIReadModule('equipment', role)) return [];
-  if (role === 'admin' || role === 'gestor' || role === 'tecnico') return rows;
+  if (isAdminRole(role) || role === 'gestor' || role === 'tecnico') return rows;
   if (role === 'cliente') return rows.filter(recordMatchesClient);
   return [];
 }
 function getAIVisibleClients(role) {
   role = role || getUserRole();
   if (!canAIReadModule('clients', role)) return [];
-  return role === 'admin' || role === 'gestor' ? (APP.clients || []) : [];
+  return isAdminRole(role) || role === 'gestor' ? (APP.clients || []) : [];
 }
 function getAIVisibleBuildings(role) {
   role = role || getUserRole();
   var rows = APP.buildings || [];
   if (!canAIReadModule('buildings', role)) return [];
-  if (role === 'admin' || role === 'gestor') return rows;
+  if (isAdminRole(role) || role === 'gestor') return rows;
   if (role === 'cliente') return rows.filter(recordMatchesClient);
   return [];
 }
 function getAIVisibleTechnicians(role) {
   role = role || getUserRole();
   if (!canAIReadModule('technicians', role)) return [];
-  return role === 'admin' || role === 'gestor' ? (APP.technicians || []) : [];
+  return isAdminRole(role) || role === 'gestor' ? (APP.technicians || []) : [];
 }
 function getAIVisibleFiles(role) {
   role = role || getUserRole();
   var rows = APP.files || [];
   if (!canAIReadModule('files', role)) return [];
-  if (role === 'admin') return rows;
+  if (isAdminRole(role)) return rows;
   if (role === 'gestor') return rows.filter(function(f) {
     return f.permission !== 'restricted' && f.type !== 'Credencial';
   });
@@ -7093,13 +7128,13 @@ function getAIVisibleMaterials(role) {
 }
 function getAIVisiblePurchases(role) {
   role = role || getUserRole();
-  return canAIReadModule('purchases', role) && (role === 'admin' || role === 'gestor') ? (APP.purchases || []) : [];
+  return canAIReadModule('purchases', role) && (isAdminRole(role) || role === 'gestor') ? (APP.purchases || []) : [];
 }
 function getAIVisibleQuotes(role) {
   role = role || getUserRole();
   var rows = APP.invoices || [];
   if (!canAIReadModule('quotes', role)) return [];
-  if (role === 'admin' || role === 'gestor') return rows;
+  if (isAdminRole(role) || role === 'gestor') return rows;
   if (role === 'cliente') return rows.filter(function(q) { return !q.clientId && !q.clientName ? true : recordMatchesClient(q); });
   return [];
 }
@@ -7107,13 +7142,13 @@ function getAIVisibleIncidents(role) {
   role = role || getUserRole();
   var rows = APP.incidents || [];
   if (!canAIReadModule('incidents', role)) return [];
-  if (role === 'admin' || role === 'gestor') return rows;
+  if (isAdminRole(role) || role === 'gestor') return rows;
   if (role === 'tecnico') return rows.filter(function(i) { return recordMatchesTechnician(i) || !i.technicianId; });
   return [];
 }
 function getAIVisibleUsers(role) {
   role = role || getUserRole();
-  return canAIReadModule('users', role) && role === 'admin' ? (APP.users || []) : [];
+  return canAIReadModule('users', role) && isAdminRole(role) ? (APP.users || []) : [];
 }
 function getAIVisibleData(role) {
   return {
@@ -8058,7 +8093,7 @@ function getCurrentUserAccount() {
 }
 function canModifyOTWithPassword(password) {
   var role = getUserRole();
-  if (['admin','gestor','tecnico'].indexOf(role) === -1) return { ok:false, message:'Apenas Admin, Gestor e Técnico podem editar ou apagar OTs.' };
+  if (['superadmin','admin','gestor','tecnico'].indexOf(role) === -1) return { ok:false, message:'Apenas SuperAdmin, Admin, Gestor e Técnico podem editar ou apagar OTs.' };
   if (!canDo('delete', 'ots')) return { ok:false, message:'Sem permissão para apagar OT. Perfil atual: ' + getRoleLabel(role) + '.' };
   var account = getCurrentUserAccount();
   if (!account || !account.password) return { ok:false, message:'Conta atual sem senha local configurada. Entre com uma conta criada pelo Admin.' };
@@ -12261,8 +12296,8 @@ async function readAIAnyNfc(target) {
   }
 }
 function openAISettings() {
-  if (getUserRole() !== 'admin') {
-    showToast('Apenas Admin pode gerir permissões da IA.');
+  if (!isSuperAdminRole(getUserRole())) {
+    showToast('Apenas SuperAdmin pode gerir permissões globais da IA.');
     return;
   }
   showPage('settings');
@@ -12747,7 +12782,7 @@ function getContextSummary(page) {
   if (page === 'clients') return 'Clientes visíveis: ' + data.clients.length;
   if (page === 'buildings') return 'Edifícios visíveis: ' + data.buildings.length;
   if (page === 'technicians') return 'Técnicos visíveis: ' + data.technicians.length + ' · disponíveis: ' + data.technicians.filter(function(t) { return t.availability === 'Disponível'; }).length;
-  if (page === 'users') return 'Utilizadores visíveis: ' + data.users.length + ' · admins: ' + data.users.filter(function(u) { return u.role === 'admin'; }).length;
+  if (page === 'users') return 'Utilizadores visíveis: ' + data.users.length + ' · admins/superadmins: ' + data.users.filter(function(u) { return u.role === 'admin' || u.role === 'superadmin'; }).length;
   if (page === 'knowledge') return 'Artigos visíveis: ' + data.knowledge.length;
   if (page === 'files') return 'Ficheiros visíveis: ' + data.files.length + ' · pastas: ' + (APP.fileFolders || []).length;
   if (page === 'incidents') return 'Incidentes visíveis: ' + data.incidents.length;
@@ -13367,7 +13402,7 @@ function showSuperAdminTab(tab) {
 }
 
 function renderSuperAdmin() {
-  if (getUserRole() !== 'admin') { showPage('dashboard'); return; }
+  if (!isSuperAdminRole(getUserRole())) { showPage('dashboard'); return; }
   SA_STATE.loadedTabs = {};
   SA_STATE.activeTab = 'sa-overview';
   document.querySelectorAll('.superadmin-tab').forEach(function(btn) {
@@ -13708,7 +13743,7 @@ function saveSALandingConfig() {
     showToast('Landing actualizada com sucesso!');
     SA_STATE.landingConfig = payload;
   }).catch(function(e) {
-    showToast('Erro: ' + e.message + ' — Backend exige JWT de admin.', 'warn');
+    showToast('Erro: ' + e.message + ' — Backend exige JWT de SuperAdmin.', 'warn');
   });
 }
 
