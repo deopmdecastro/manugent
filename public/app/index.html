@@ -3021,6 +3021,20 @@
     #app-sidebar::-webkit-scrollbar { width: 5px; }
     #app-sidebar::-webkit-scrollbar-thumb { background: rgba(129,140,248,0.22); border-radius: 3px; }
     #app-sidebar::-webkit-scrollbar-track { background: transparent; }
+
+    /* SuperAdmin tabs */
+    .superadmin-tab {
+      padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
+      color: var(--text-secondary); cursor: pointer; border: none; background: transparent;
+      display: inline-flex; align-items: center; gap: 6px; transition: all 0.18s;
+      white-space: nowrap;
+    }
+    .superadmin-tab:hover { background: var(--surface-hover); color: var(--text-primary); }
+    .superadmin-tab.active { background: var(--surface-hover-strong); color: var(--accent-light); }
+    .superadmin-tab i { font-size: 12px; }
+    .sa-tab-panel { animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    #nav-superadmin { border-top: 1px solid rgba(124,58,237,0.2); margin-top: 4px; padding-top: 8px; }
   </style>
 </head>
 <body>
@@ -3102,10 +3116,13 @@
     </nav>
     <div class="p-3 border-t border-white/5">
       <div class="sidebar-item" onclick="showPage('settings')" id="nav-settings">
-        <i class="fas fa-cog"></i> Definições
+        <i class="fas fa-cog"></i> <span class="sidebar-label">Definições</span>
+      </div>
+      <div class="sidebar-item" onclick="showPage('superadmin')" id="nav-superadmin" style="display:none;color:#c084fc">
+        <i class="fas fa-crown"></i> <span class="sidebar-label">SuperAdmin</span>
       </div>
       <div class="sidebar-item" style="color:#f87171" onclick="doLogout()">
-        <i class="fas fa-sign-out-alt"></i> Sair
+        <i class="fas fa-sign-out-alt"></i> <span class="sidebar-label">Sair</span>
       </div>
     </div>
   </aside>
@@ -4035,6 +4052,323 @@
             <span class="badge badge-purple"><i class="fas fa-robot"></i> IA por perfil</span>
           </div>
           <div id="ai-scope-settings" class="grid md:grid-cols-2 xl:grid-cols-4 gap-3 text-sm"></div>
+        </div>
+      </div>
+
+      <!-- SUPERADMIN -->
+      <div id="page-superadmin" class="page fade-in">
+        <div class="mb-6 page-header">
+          <h1 class="mono">SuperAdmin <span>Painel</span></h1>
+          <p>Gestão global da plataforma — utilizadores, IA, landing, suporte e sistema</p>
+        </div>
+
+        <!-- Sub-tabs -->
+        <div class="flex gap-1 mb-6 p-1 rounded-xl border border-white/8" style="background:var(--surface-a);width:fit-content;flex-wrap:wrap">
+          <button class="superadmin-tab active" data-tab="sa-overview" onclick="showSuperAdminTab('sa-overview')"><i class="fas fa-chart-line"></i> Visão Geral</button>
+          <button class="superadmin-tab" data-tab="sa-users" onclick="showSuperAdminTab('sa-users')"><i class="fas fa-users"></i> Utilizadores</button>
+          <button class="superadmin-tab" data-tab="sa-ai" onclick="showSuperAdminTab('sa-ai')"><i class="fas fa-robot"></i> Configuração IA</button>
+          <button class="superadmin-tab" data-tab="sa-landing" onclick="showSuperAdminTab('sa-landing')"><i class="fas fa-globe"></i> Landing Manager</button>
+          <button class="superadmin-tab" data-tab="sa-support" onclick="showSuperAdminTab('sa-support')"><i class="fas fa-headset"></i> Suporte</button>
+          <button class="superadmin-tab" data-tab="sa-system" onclick="showSuperAdminTab('sa-system')"><i class="fas fa-server"></i> Sistema</button>
+        </div>
+
+        <!-- TAB: Visão Geral -->
+        <div id="sa-overview" class="sa-tab-panel active">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="card p-5 flex flex-col gap-2">
+              <div class="text-xs text-slate-500 uppercase tracking-wider">OTs Abertas</div>
+              <div class="text-3xl font-bold mono" id="sa-stat-ots-open">—</div>
+              <div class="text-xs text-slate-500" id="sa-stat-ots-sub">—</div>
+            </div>
+            <div class="card p-5 flex flex-col gap-2">
+              <div class="text-xs text-slate-500 uppercase tracking-wider">Equipamentos</div>
+              <div class="text-3xl font-bold mono" id="sa-stat-equip">—</div>
+              <div class="text-xs text-slate-500">ativos na plataforma</div>
+            </div>
+            <div class="card p-5 flex flex-col gap-2">
+              <div class="text-xs text-slate-500 uppercase tracking-wider">Utilizadores</div>
+              <div class="text-3xl font-bold mono" id="sa-stat-users">—</div>
+              <div class="text-xs text-slate-500" id="sa-stat-users-sub">contas registadas</div>
+            </div>
+            <div class="card p-5 flex flex-col gap-2">
+              <div class="text-xs text-slate-500 uppercase tracking-wider">Clientes</div>
+              <div class="text-3xl font-bold mono" id="sa-stat-clients">—</div>
+              <div class="text-xs text-slate-500">empresas na base de dados</div>
+            </div>
+          </div>
+          <div class="grid md:grid-cols-2 gap-6 mb-6">
+            <div class="card p-6">
+              <h3 class="font-semibold mb-4 flex items-center gap-2"><i class="fas fa-chart-bar" style="color:var(--accent-purple-light)"></i> Operação em Tempo Real</h3>
+              <div class="space-y-3 text-sm" id="sa-overview-ot-breakdown">
+                <div class="text-slate-500 text-xs">A carregar...</div>
+              </div>
+            </div>
+            <div class="card p-6">
+              <h3 class="font-semibold mb-4 flex items-center gap-2"><i class="fas fa-robot" style="color:var(--accent-purple-light)"></i> Estado do Agente IA</h3>
+              <div id="sa-overview-ai-status" class="space-y-3 text-sm">
+                <div class="text-slate-500 text-xs">A verificar...</div>
+              </div>
+            </div>
+          </div>
+          <div class="card p-6">
+            <h3 class="font-semibold mb-4 flex items-center gap-2"><i class="fas fa-users" style="color:var(--accent-blue)"></i> Utilizadores Recentes</h3>
+            <div class="overflow-x-auto">
+              <table class="data-table w-full text-sm">
+                <thead><tr><th>Nome</th><th>Email</th><th>Perfil</th><th>Equipa</th><th>Criado em</th></tr></thead>
+                <tbody id="sa-overview-users-table"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: Utilizadores -->
+        <div id="sa-users" class="sa-tab-panel" style="display:none">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <h3 class="font-semibold">Gestão Global de Utilizadores</h3>
+              <p class="text-xs text-slate-500 mt-1">Todos os utilizadores da plataforma (base de dados + local)</p>
+            </div>
+            <button class="btn-primary" onclick="openSuperAdminNewUserModal()"><i class="fas fa-user-plus"></i> Novo Utilizador</button>
+          </div>
+          <div class="card p-4 mb-4">
+            <div class="flex gap-3">
+              <input type="text" id="sa-users-search" class="input-field flex-1" placeholder="Pesquisar por nome, email ou perfil..." oninput="renderSuperAdminUsers()">
+              <select id="sa-users-role-filter" class="input-field" style="max-width:160px" onchange="renderSuperAdminUsers()">
+                <option value="">Todos os perfis</option>
+                <option value="admin">Admin</option>
+                <option value="gestor">Gestor</option>
+                <option value="tecnico">Técnico</option>
+                <option value="cliente">Cliente</option>
+              </select>
+            </div>
+          </div>
+          <div class="card overflow-x-auto">
+            <table class="data-table w-full text-sm">
+              <thead><tr><th>Utilizador</th><th>Email</th><th>Perfil</th><th>Equipa</th><th>Origem</th><th>Criado em</th><th></th></tr></thead>
+              <tbody id="sa-users-table-body"></tbody>
+            </table>
+          </div>
+          <div id="sa-users-local" class="mt-6">
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="font-semibold text-sm text-slate-400"><i class="fas fa-database mr-1"></i> Contas locais (localStorage)</h4>
+              <span class="badge badge-gray text-xs" id="sa-users-local-count">0 contas</span>
+            </div>
+            <div class="card overflow-x-auto">
+              <table class="data-table w-full text-sm">
+                <thead><tr><th>Nome</th><th>Email</th><th>Perfil</th><th>Senha</th><th>Criado em</th><th></th></tr></thead>
+                <tbody id="sa-users-local-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: Configuração IA -->
+        <div id="sa-ai" class="sa-tab-panel" style="display:none">
+          <div class="grid md:grid-cols-2 gap-6 mb-6">
+            <div class="card p-6">
+              <h3 class="font-semibold mb-4 flex items-center gap-2"><i class="fas fa-robot" style="color:var(--accent-purple-light)"></i> Provedor de IA Ativo</h3>
+              <div id="sa-ai-status-card" class="mb-4 p-4 rounded-lg border border-white/10" style="background:var(--surface-a)">
+                <div class="flex items-center gap-3 mb-3">
+                  <span class="status-dot dot-yellow" id="sa-ai-dot"></span>
+                  <span class="font-semibold" id="sa-ai-provider-label">A verificar...</span>
+                </div>
+                <div class="text-xs text-slate-400" id="sa-ai-model-label">—</div>
+                <div class="text-xs text-slate-500 mt-1" id="sa-ai-detail">—</div>
+              </div>
+              <div class="space-y-3 text-sm">
+                <div class="flex items-center justify-between py-2 border-b border-white/5">
+                  <span class="text-slate-400">Provider</span>
+                  <span class="mono text-slate-200" id="sa-ai-provider-env">—</span>
+                </div>
+                <div class="flex items-center justify-between py-2 border-b border-white/5">
+                  <span class="text-slate-400">Modelo</span>
+                  <span class="mono text-slate-200" id="sa-ai-model-env">—</span>
+                </div>
+                <div class="flex items-center justify-between py-2">
+                  <span class="text-slate-400">API Key configurada</span>
+                  <span class="mono text-slate-200" id="sa-ai-key-env">—</span>
+                </div>
+              </div>
+            </div>
+            <div class="card p-6">
+              <h3 class="font-semibold mb-4 flex items-center gap-2"><i class="fas fa-shield-halved" style="color:var(--accent-blue)"></i> Escopo de IA por Perfil</h3>
+              <div class="space-y-3 text-sm">
+                <div class="p-3 rounded-lg border border-white/8" style="background:var(--surface-a)">
+                  <div class="flex items-center gap-2 mb-1"><span class="badge badge-purple">Admin</span><span class="text-xs text-slate-400">Acesso total</span></div>
+                  <p class="text-xs text-slate-500">Vê tudo, incluindo utilizadores, permissões e dados sensíveis.</p>
+                </div>
+                <div class="p-3 rounded-lg border border-white/8" style="background:var(--surface-a)">
+                  <div class="flex items-center gap-2 mb-1"><span class="badge badge-blue">Gestor</span><span class="text-xs text-slate-400">Operação + Comercial</span></div>
+                  <p class="text-xs text-slate-500">Dados operacionais e comerciais, sem utilizadores/permissões totais.</p>
+                </div>
+                <div class="p-3 rounded-lg border border-white/8" style="background:var(--surface-a)">
+                  <div class="flex items-center gap-2 mb-1"><span class="badge badge-green">Técnico</span><span class="text-xs text-slate-400">Execução técnica</span></div>
+                  <p class="text-xs text-slate-500">Apenas o necessário para executar trabalho técnico.</p>
+                </div>
+                <div class="p-3 rounded-lg border border-white/8" style="background:var(--surface-a)">
+                  <div class="flex items-center gap-2 mb-1"><span class="badge badge-yellow">Cliente</span><span class="text-xs text-slate-400">Portal cliente</span></div>
+                  <p class="text-xs text-slate-500">Apenas dados ligados ao próprio cliente.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card p-6">
+            <h3 class="font-semibold mb-5 flex items-center gap-2"><i class="fas fa-sliders" style="color:var(--accent-cyan)"></i> Configurar Provedor de IA</h3>
+            <div class="grid md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label class="block text-sm mb-2 text-slate-300">Provedor</label>
+                <select id="sa-ai-provider-select" class="input-field">
+                  <option value="groq">Groq (llama3-8b-8192) — Gratuito</option>
+                  <option value="openai">OpenAI (gpt-4o-mini)</option>
+                  <option value="none">Nenhum (desativado)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm mb-2 text-slate-300">Modelo</label>
+                <input type="text" id="sa-ai-model-input" class="input-field" placeholder="Ex: llama3-8b-8192 ou gpt-4o-mini">
+              </div>
+            </div>
+            <div class="grid md:grid-cols-2 gap-4 mb-5">
+              <div>
+                <label class="block text-sm mb-2 text-slate-300">API Key (Groq / OpenAI)</label>
+                <div class="relative">
+                  <input type="password" id="sa-ai-key-input" class="input-field pr-12" placeholder="gsk_... ou sk-...">
+                  <button type="button" class="btn-ghost" onclick="toggleSAKeyVisibility()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);height:34px;width:34px;padding:0;justify-content:center"><i class="fas fa-eye" id="sa-ai-key-eye"></i></button>
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm mb-2 text-slate-300">Contexto de sistema (override)</label>
+                <input type="text" id="sa-ai-system-input" class="input-field" placeholder="Opcional — prompt de sistema personalizado">
+              </div>
+            </div>
+            <p class="text-xs text-slate-500 mb-4"><i class="fas fa-info-circle mr-1"></i> As chaves são guardadas no servidor como variáveis de ambiente. Esta interface regista a configuração no ficheiro <code class="mono text-xs" style="color:var(--accent-light)">/data/superadmin/ai-config.json</code>.</p>
+            <div class="flex gap-3">
+              <button class="btn-secondary" onclick="loadSAIAIConfig()"><i class="fas fa-sync"></i> Recarregar</button>
+              <button class="btn-primary" onclick="saveSAIAIConfig()"><i class="fas fa-save"></i> Guardar configuração de IA</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: Landing Manager -->
+        <div id="sa-landing" class="sa-tab-panel" style="display:none">
+          <div class="grid md:grid-cols-2 gap-6 mb-6">
+            <div class="card p-6">
+              <h3 class="font-semibold mb-4 flex items-center gap-2"><i class="fas fa-heading" style="color:var(--accent-purple-light)"></i> Hero & CTA</h3>
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-xs mb-1 text-slate-400">Título principal</label>
+                  <input type="text" id="sa-landing-hero-title" class="input-field" placeholder="Ex: O agente IA de manutenção...">
+                </div>
+                <div>
+                  <label class="block text-xs mb-1 text-slate-400">Subtítulo</label>
+                  <textarea id="sa-landing-hero-sub" class="input-field" rows="2" placeholder="Ex: Orquestras todas as OTs..."></textarea>
+                </div>
+                <div>
+                  <label class="block text-xs mb-1 text-slate-400">CTA principal (botão)</label>
+                  <input type="text" id="sa-landing-cta-text" class="input-field" placeholder="Ex: Começar Grátis">
+                </div>
+              </div>
+            </div>
+            <div class="card p-6">
+              <h3 class="font-semibold mb-4 flex items-center gap-2"><i class="fas fa-star-half-stroke" style="color:var(--accent-yellow)"></i> Testemunhos & Stats</h3>
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-xs mb-1 text-slate-400">Stat 1 (ex: 98% uptime)</label>
+                  <input type="text" id="sa-landing-stat1" class="input-field" placeholder="98%">
+                </div>
+                <div>
+                  <label class="block text-xs mb-1 text-slate-400">Stat 2 (ex: Clientes)</label>
+                  <input type="text" id="sa-landing-stat2" class="input-field" placeholder="500+">
+                </div>
+                <div>
+                  <label class="block text-xs mb-1 text-slate-400">Stat 3 (ex: OTs processadas)</label>
+                  <input type="text" id="sa-landing-stat3" class="input-field" placeholder="50k+">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card p-6 mb-4">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold flex items-center gap-2"><i class="fas fa-quote-left" style="color:var(--accent-cyan)"></i> Testemunhos</h3>
+              <button class="btn-secondary btn-action text-xs" onclick="addSALandingTestimonial()"><i class="fas fa-plus"></i> Adicionar</button>
+            </div>
+            <div id="sa-landing-testimonials-list" class="space-y-3"></div>
+          </div>
+          <div class="flex justify-end gap-3">
+            <button class="btn-secondary" onclick="loadSALandingConfig()"><i class="fas fa-sync"></i> Recarregar</button>
+            <button class="btn-primary" onclick="saveSALandingConfig()"><i class="fas fa-save"></i> Guardar Landing</button>
+          </div>
+        </div>
+
+        <!-- TAB: Suporte -->
+        <div id="sa-support" class="sa-tab-panel" style="display:none">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <h3 class="font-semibold">Pedidos de Suporte</h3>
+              <p class="text-xs text-slate-500 mt-1">Mensagens e pedidos de demo recebidos na plataforma</p>
+            </div>
+            <div class="flex gap-2">
+              <select id="sa-support-filter" class="input-field" style="max-width:160px" onchange="renderSASupport()">
+                <option value="">Todos</option>
+                <option value="pending">Pendentes</option>
+                <option value="resolved">Resolvidos</option>
+              </select>
+              <button class="btn-secondary" onclick="loadSASupportData()"><i class="fas fa-sync"></i> Atualizar</button>
+            </div>
+          </div>
+          <div class="grid md:grid-cols-3 gap-4 mb-5">
+            <div class="card p-4"><div class="text-xs text-slate-500 uppercase">Total</div><div class="text-2xl font-bold mono mt-2" id="sa-support-total">0</div></div>
+            <div class="card p-4"><div class="text-xs text-slate-500 uppercase">Pendentes</div><div class="text-2xl font-bold mono mt-2 text-yellow-400" id="sa-support-pending">0</div></div>
+            <div class="card p-4"><div class="text-xs text-slate-500 uppercase">Resolvidos</div><div class="text-2xl font-bold mono mt-2 text-emerald-400" id="sa-support-resolved">0</div></div>
+          </div>
+          <div class="card overflow-hidden">
+            <div id="sa-support-list" class="divide-y divide-white/5">
+              <div class="empty-state compact"><i class="fas fa-headset"></i><p>Sem pedidos de suporte registados.</p></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: Sistema -->
+        <div id="sa-system" class="sa-tab-panel" style="display:none">
+          <div class="grid md:grid-cols-2 gap-6 mb-6">
+            <div class="card p-6">
+              <h3 class="font-semibold mb-4 flex items-center gap-2"><i class="fas fa-heartbeat" style="color:var(--accent-green)"></i> Estado do Servidor</h3>
+              <div class="space-y-3 text-sm" id="sa-system-health">
+                <div class="text-slate-500 text-xs">A verificar...</div>
+              </div>
+              <button class="btn-secondary mt-4" onclick="loadSASystemHealth()"><i class="fas fa-sync"></i> Verificar</button>
+            </div>
+            <div class="card p-6">
+              <h3 class="font-semibold mb-4 flex items-center gap-2"><i class="fas fa-database" style="color:var(--accent-blue)"></i> Estado da Base de Dados</h3>
+              <div class="space-y-3 text-sm" id="sa-system-db">
+                <div class="text-slate-500 text-xs">A verificar...</div>
+              </div>
+              <button class="btn-secondary mt-4" onclick="loadSASystemDB()"><i class="fas fa-sync"></i> Verificar</button>
+            </div>
+          </div>
+          <div class="card p-6">
+            <h3 class="font-semibold mb-4 flex items-center gap-2"><i class="fas fa-circle-info" style="color:var(--accent-cyan)"></i> Informações da Plataforma</h3>
+            <div class="grid md:grid-cols-3 gap-4 text-sm">
+              <div class="p-4 rounded-lg border border-white/8" style="background:var(--surface-a)">
+                <div class="text-xs text-slate-500 uppercase mb-2">Versão</div>
+                <div class="mono font-semibold text-slate-200">ManuGent v2.0.0</div>
+                <div class="text-xs text-slate-500 mt-1">Dashboard operacional</div>
+              </div>
+              <div class="p-4 rounded-lg border border-white/8" style="background:var(--surface-a)">
+                <div class="text-xs text-slate-500 uppercase mb-2">Stack</div>
+                <div class="mono font-semibold text-slate-200">Hono + Node.js 24</div>
+                <div class="text-xs text-slate-500 mt-1">PostgreSQL + Drizzle ORM</div>
+              </div>
+              <div class="p-4 rounded-lg border border-white/8" style="background:var(--surface-a)">
+                <div class="text-xs text-slate-500 uppercase mb-2">Frontend</div>
+                <div class="mono font-semibold text-slate-200">Vanilla JS + Tailwind</div>
+                <div class="text-xs text-slate-500 mt-1">Single-file SPA</div>
+              </div>
+            </div>
+            <div class="mt-5 p-4 rounded-lg border border-purple-500/20" style="background:rgba(124,58,237,0.08)">
+              <div class="text-xs text-slate-400"><i class="fas fa-shield-halved mr-1 text-purple-400"></i> <strong>Segurança:</strong> JWT sessions, rate limiting no login, headers OWASP (X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, HSTS em produção).</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -5826,6 +6160,7 @@ function showPage(page) {
   if (page === 'calendar') renderCalendar();
   if (page === 'ai-assistant') checkAIStatus();
   if (page === 'notifications') renderNotifications();
+  if (page === 'superadmin') renderSuperAdmin();
   updateGlobalSearchPlaceholder();
   ensurePageBackButtons();
   refreshContextAIHeader();
@@ -6495,7 +6830,7 @@ function getRoleBadgeClass(role) {
 // ======================== PERMISSIONS ========================
 var ROLE_LABELS = { admin:'Admin', gestor:'Gestor', tecnico:'Técnico', cliente:'Cliente' };
 var PAGE_PERMISSIONS = {
-  admin: ['dashboard','notifications','ots','equipment','clients','buildings','technicians','users','knowledge','files','ai-assistant','calendar','checklists','incidents','materials','purchases','quotes','settings'],
+  admin: ['dashboard','notifications','ots','equipment','clients','buildings','technicians','users','knowledge','files','ai-assistant','calendar','checklists','incidents','materials','purchases','quotes','settings','superadmin'],
   gestor: ['dashboard','notifications','ots','equipment','clients','buildings','technicians','knowledge','files','ai-assistant','calendar','checklists','incidents','materials','purchases','quotes','settings'],
   tecnico: ['dashboard','notifications','ots','equipment','knowledge','files','ai-assistant','calendar','checklists','incidents','materials','settings'],
   cliente: ['dashboard','notifications','ots','equipment','files','ai-assistant','calendar','quotes','settings']
@@ -6593,7 +6928,7 @@ function getDefaultPageForRole() {
   return pages[0] || 'dashboard';
 }
 function applyPermissions() {
-  var pages = ['dashboard','ots','equipment','clients','buildings','technicians','users','knowledge','files','ai-assistant','calendar','checklists','incidents','materials','purchases','quotes','settings'];
+  var pages = ['dashboard','ots','equipment','clients','buildings','technicians','users','knowledge','files','ai-assistant','calendar','checklists','incidents','materials','purchases','quotes','settings','superadmin'];
   pages.forEach(function(page) {
     var nav = document.getElementById('nav-' + page);
     if (nav) nav.style.display = canAccessPage(page) ? 'flex' : 'none';
@@ -12999,6 +13334,482 @@ function ensureWorkInstallationExamples() {
     });
   });
   saveData();
+}
+
+// ======================== SUPERADMIN ========================
+
+var SA_STATE = {
+  activeTab: 'sa-overview',
+  users: [],
+  aiConfig: {},
+  landingConfig: {},
+  supportData: [],
+  loadedTabs: {}
+};
+
+function showSuperAdminTab(tab) {
+  document.querySelectorAll('.superadmin-tab').forEach(function(btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+  });
+  document.querySelectorAll('.sa-tab-panel').forEach(function(panel) {
+    panel.style.display = panel.id === tab ? '' : 'none';
+  });
+  SA_STATE.activeTab = tab;
+  if (!SA_STATE.loadedTabs[tab]) {
+    SA_STATE.loadedTabs[tab] = true;
+    if (tab === 'sa-overview') renderSuperAdminOverview();
+    if (tab === 'sa-users') renderSuperAdminUsers();
+    if (tab === 'sa-ai') loadSAIAIConfig();
+    if (tab === 'sa-landing') loadSALandingConfig();
+    if (tab === 'sa-support') loadSASupportData();
+    if (tab === 'sa-system') { loadSASystemHealth(); loadSASystemDB(); }
+  }
+}
+
+function renderSuperAdmin() {
+  if (getUserRole() !== 'admin') { showPage('dashboard'); return; }
+  SA_STATE.loadedTabs = {};
+  SA_STATE.activeTab = 'sa-overview';
+  document.querySelectorAll('.superadmin-tab').forEach(function(btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-tab') === 'sa-overview');
+  });
+  document.querySelectorAll('.sa-tab-panel').forEach(function(panel) {
+    panel.style.display = panel.id === 'sa-overview' ? '' : 'none';
+  });
+  renderSuperAdminOverview();
+  SA_STATE.loadedTabs['sa-overview'] = true;
+}
+
+// ── Overview ──
+
+function renderSuperAdminOverview() {
+  // Stats from backend
+  apiRequest('/api/stats').then(function(data) {
+    if (!data) return;
+    var wo = data.workOrders || {};
+    var eq = data.equipment || {};
+    var sub = '';
+    if (wo.inProgress) sub = wo.inProgress + ' em execução';
+    if (wo.urgent) sub += (sub ? ' · ' : '') + wo.urgent + ' urgentes';
+    setInnerText('sa-stat-ots-open', wo.open || 0);
+    setInnerText('sa-stat-ots-sub', sub || 'sem trabalhos urgentes');
+    setInnerText('sa-stat-equip', eq.total || 0);
+    // OT breakdown
+    var bd = document.getElementById('sa-overview-ot-breakdown');
+    if (bd) {
+      bd.innerHTML = [
+        saStatRow('fas fa-check-circle', 'text-emerald-400', 'Concluídas', wo.completed || 0, 'total'),
+        saStatRow('fas fa-play-circle', 'text-blue-400', 'Em execução', wo.inProgress || 0, 'ativas'),
+        saStatRow('fas fa-exclamation-circle', 'text-red-400', 'Urgentes/Alta', wo.urgent || 0, 'prioridade'),
+        saStatRow('fas fa-folder-open', 'text-yellow-400', 'Total abertas', wo.open || 0, 'abertas'),
+        saStatRow('fas fa-list-check', 'text-slate-400', 'Total histórico', wo.total || 0, 'total')
+      ].join('');
+    }
+  }).catch(function() {
+    setInnerText('sa-stat-ots-open', APP.ots ? APP.ots.length : 0);
+    setInnerText('sa-stat-ots-sub', 'modo offline');
+  });
+
+  // Users stats
+  apiRequest('/api/users').then(function(data) {
+    var users = (data && data.users) || [];
+    SA_STATE.users = users;
+    setInnerText('sa-stat-users', users.length + (APP.users ? ' / ' + APP.users.length : ''));
+    setInnerText('sa-stat-users-sub', 'backend / local');
+    // recent 5
+    var tbody = document.getElementById('sa-overview-users-table');
+    if (tbody) {
+      var recent = users.slice(0, 5);
+      if (recent.length === 0) recent = (APP.users || []).slice(0, 5);
+      tbody.innerHTML = recent.map(function(u) {
+        return '<tr onclick="showSuperAdminTab(\'sa-users\')">' +
+          '<td><div class="flex items-center gap-2"><div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold" style="background:var(--accent-purple)">' + escapeHtml((u.name || '?').charAt(0).toUpperCase()) + '</div>' + escapeHtml(u.name || '—') + '</div></td>' +
+          '<td class="text-slate-400">' + escapeHtml(u.email || '—') + '</td>' +
+          '<td><span class="badge ' + getRoleBadgeClass(u.role) + '">' + getRoleLabel(u.role) + '</span></td>' +
+          '<td class="text-slate-400">' + escapeHtml(u.team_name || '—') + '</td>' +
+          '<td class="text-slate-500 text-xs mono">' + formatDate(u.created_at || u.createdAt) + '</td>' +
+          '</tr>';
+      }).join('') || '<tr><td colspan="5" class="text-center text-slate-500 py-4">Sem utilizadores registados no backend.</td></tr>';
+    }
+  }).catch(function() {
+    var localUsers = APP.users || [];
+    setInnerText('sa-stat-users', localUsers.length);
+    setInnerText('sa-stat-users-sub', 'contas locais');
+  });
+
+  // Clients stats
+  apiRequest('/api/clients').then(function(data) {
+    var clients = (data && data.clients) || [];
+    setInnerText('sa-stat-clients', clients.length || (APP.clients ? APP.clients.length : 0));
+  }).catch(function() {
+    setInnerText('sa-stat-clients', APP.clients ? APP.clients.length : 0);
+  });
+
+  // AI status for overview
+  checkAISuperAdminStatus();
+}
+
+function saStatRow(icon, color, label, value, unit) {
+  return '<div class="flex items-center justify-between py-2 border-b border-white/5">' +
+    '<span class="flex items-center gap-2 text-slate-400"><i class="' + icon + ' ' + color + '"></i>' + escapeHtml(label) + '</span>' +
+    '<span class="mono font-semibold">' + value + ' <span class="text-xs text-slate-500">' + unit + '</span></span>' +
+    '</div>';
+}
+
+function checkAISuperAdminStatus() {
+  fetch('/api/ai/status').then(function(r) { return r.json(); }).then(function(data) {
+    var el = document.getElementById('sa-overview-ai-status');
+    if (!el) return;
+    var dot = data.configured ? 'dot-green pulse' : 'dot-yellow';
+    var status = data.configured ? 'Online' : 'Não configurado';
+    el.innerHTML = '<div class="flex items-center gap-2 mb-3"><span class="status-dot ' + dot + '"></span><span class="font-semibold">' + status + '</span></div>' +
+      saStatRow('fas fa-microchip', 'text-purple-400', 'Provedor', data.provider || '—', '') +
+      saStatRow('fas fa-brain', 'text-blue-400', 'Modelo', data.model || '—', '') +
+      '<div class="mt-3"><button class="btn-secondary btn-action text-xs" onclick="showSuperAdminTab(\'sa-ai\')"><i class="fas fa-cog"></i> Configurar IA</button></div>';
+  }).catch(function() {
+    var el = document.getElementById('sa-overview-ai-status');
+    if (el) el.innerHTML = '<div class="text-slate-500 text-xs">Servidor offline ou sem resposta.</div>';
+  });
+}
+
+function setInnerText(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  try { return new Date(iso).toLocaleDateString('pt-PT'); } catch(e) { return iso; }
+}
+
+// ── Users ──
+
+function renderSuperAdminUsers() {
+  var search = (document.getElementById('sa-users-search') || {}).value || '';
+  var roleFilter = (document.getElementById('sa-users-role-filter') || {}).value || '';
+  search = search.toLowerCase();
+
+  // Backend users
+  var tbody = document.getElementById('sa-users-table-body');
+  if (tbody) {
+    var users = SA_STATE.users;
+    if (users.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-slate-500 py-6"><i class="fas fa-database mr-2"></i>Sem utilizadores backend. <a class="text-purple-400 cursor-pointer" onclick="loadSAUsersFromBackend()">Carregar</a></td></tr>';
+    } else {
+      var filtered = users.filter(function(u) {
+        var matchSearch = !search || (u.name || '').toLowerCase().includes(search) || (u.email || '').toLowerCase().includes(search) || (u.role || '').toLowerCase().includes(search);
+        var matchRole = !roleFilter || (u.role || '') === roleFilter;
+        return matchSearch && matchRole;
+      });
+      tbody.innerHTML = filtered.map(function(u) {
+        return '<tr>' +
+          '<td><div class="flex items-center gap-2"><div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold" style="background:var(--accent-purple)">' + escapeHtml((u.name || '?').charAt(0).toUpperCase()) + '</div>' + escapeHtml(u.name || '—') + '</div></td>' +
+          '<td class="text-slate-400">' + escapeHtml(u.email || '—') + '</td>' +
+          '<td><span class="badge ' + getRoleBadgeClass(u.role) + '">' + getRoleLabel(u.role) + '</span></td>' +
+          '<td class="text-slate-400">' + escapeHtml(u.team_name || '—') + '</td>' +
+          '<td><span class="badge badge-blue text-xs">Backend</span></td>' +
+          '<td class="text-slate-500 text-xs mono">' + formatDate(u.created_at) + '</td>' +
+          '<td><button class="btn-ghost btn-action text-xs" onclick="deleteSAUser(\'' + escapeHtml(u.id) + '\',\'backend\')" title="Remover"><i class="fas fa-trash text-red-400"></i></button></td>' +
+          '</tr>';
+      }).join('') || '<tr><td colspan="7" class="text-center text-slate-500 py-4">Sem resultados para o filtro aplicado.</td></tr>';
+    }
+  }
+
+  // Local users
+  var localBody = document.getElementById('sa-users-local-body');
+  var localCount = document.getElementById('sa-users-local-count');
+  if (localBody) {
+    var localUsers = (APP.users || []).filter(function(u) {
+      var matchSearch = !search || (u.name || '').toLowerCase().includes(search) || (u.email || '').toLowerCase().includes(search) || (u.role || '').toLowerCase().includes(search);
+      var matchRole = !roleFilter || (u.role || '') === roleFilter;
+      return matchSearch && matchRole;
+    });
+    if (localCount) localCount.textContent = (APP.users || []).length + ' contas';
+    localBody.innerHTML = localUsers.map(function(u) {
+      return '<tr>' +
+        '<td>' + escapeHtml(u.name || '—') + '</td>' +
+        '<td class="text-slate-400">' + escapeHtml(u.email || '—') + '</td>' +
+        '<td><span class="badge ' + getRoleBadgeClass(u.role) + '">' + getRoleLabel(u.role) + '</span></td>' +
+        '<td class="mono text-xs text-slate-500">' + (u.password ? '••••••' : '<span class="text-slate-600">sem senha</span>') + '</td>' +
+        '<td class="text-slate-500 text-xs mono">' + formatDate(u.createdAt) + '</td>' +
+        '<td><button class="btn-ghost btn-action text-xs" onclick="deleteSAUser(\'' + escapeHtml(u.email) + '\',\'local\')" title="Remover"><i class="fas fa-trash text-red-400"></i></button></td>' +
+        '</tr>';
+    }).join('') || '<tr><td colspan="6" class="text-center text-slate-500 py-4">Sem contas locais.</td></tr>';
+  }
+}
+
+function loadSAUsersFromBackend() {
+  apiRequest('/api/users').then(function(data) {
+    SA_STATE.users = (data && data.users) || [];
+    renderSuperAdminUsers();
+    showToast('Utilizadores carregados: ' + SA_STATE.users.length);
+  }).catch(function(e) {
+    showToast('Erro ao carregar utilizadores: ' + e.message, 'error');
+  });
+}
+
+function deleteSAUser(id, source) {
+  if (!confirm('Tem a certeza que pretende remover este utilizador?')) return;
+  if (source === 'local') {
+    APP.users = (APP.users || []).filter(function(u) { return u.email !== id; });
+    saveData(); renderSuperAdminUsers(); showToast('Utilizador local removido.');
+  } else {
+    showToast('Remoção de utilizadores backend requer acesso direto à base de dados.', 'warn');
+  }
+}
+
+function openSuperAdminNewUserModal() {
+  showToast('Use o painel Utilizadores para criar novas contas.');
+  showPage('users');
+}
+
+// ── AI Config ──
+
+function loadSAIAIConfig() {
+  fetch('/api/ai/status').then(function(r) { return r.json(); }).then(function(data) {
+    var dot = document.getElementById('sa-ai-dot');
+    var provLabel = document.getElementById('sa-ai-provider-label');
+    var modelLabel = document.getElementById('sa-ai-model-label');
+    var detail = document.getElementById('sa-ai-detail');
+    var provEnv = document.getElementById('sa-ai-provider-env');
+    var modelEnv = document.getElementById('sa-ai-model-env');
+    var keyEnv = document.getElementById('sa-ai-key-env');
+
+    if (dot) dot.className = 'status-dot ' + (data.configured ? 'dot-green pulse' : 'dot-yellow');
+    if (provLabel) provLabel.textContent = data.configured ? (data.provider || 'IA').toUpperCase() + ' Online' : 'IA não configurada';
+    if (modelLabel) modelLabel.textContent = data.model ? 'Modelo: ' + data.model : 'Sem modelo definido';
+    if (detail) detail.textContent = data.configured ? 'Agente ManuGent IA em funcionamento.' : (data.reason || 'API Key não configurada no servidor.');
+    if (provEnv) provEnv.textContent = data.provider || '—';
+    if (modelEnv) modelEnv.textContent = data.model || '—';
+    if (keyEnv) keyEnv.textContent = data.configured ? '✓ Configurada' : '✗ Ausente';
+
+    var provSel = document.getElementById('sa-ai-provider-select');
+    var modelInp = document.getElementById('sa-ai-model-input');
+    if (provSel && data.provider) provSel.value = data.provider;
+    if (modelInp && data.model) modelInp.value = data.model;
+
+    SA_STATE.aiConfig = data;
+  }).catch(function() {
+    var el = document.getElementById('sa-ai-provider-label');
+    if (el) el.textContent = 'Servidor offline';
+  });
+}
+
+function saveSAIAIConfig() {
+  var provider = (document.getElementById('sa-ai-provider-select') || {}).value || '';
+  var model = (document.getElementById('sa-ai-model-input') || {}).value || '';
+  var key = (document.getElementById('sa-ai-key-input') || {}).value || '';
+  var systemPrompt = (document.getElementById('sa-ai-system-input') || {}).value || '';
+  if (!provider) { showToast('Selecione um provedor de IA.', 'warn'); return; }
+  var payload = { provider: provider, model: model };
+  if (key) payload.apiKey = key;
+  if (systemPrompt) payload.systemPrompt = systemPrompt;
+  apiRequest('/api/admin/ai-config', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (APP.authToken || '') },
+    body: JSON.stringify(payload)
+  }).then(function() {
+    showToast('Configuração de IA guardada! Reinicie o servidor para aplicar variáveis de ambiente.');
+    loadSAIAIConfig();
+  }).catch(function(e) {
+    showToast('Erro ao guardar: ' + e.message + '. Backend autenticado?', 'warn');
+    // Still save locally
+    SA_STATE.aiConfig = payload;
+    showToast('Guardado localmente (servidor offline/sem auth).');
+  });
+}
+
+function toggleSAKeyVisibility() {
+  var inp = document.getElementById('sa-ai-key-input');
+  var eye = document.getElementById('sa-ai-key-eye');
+  if (!inp) return;
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  if (eye) eye.className = inp.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+}
+
+// ── Landing Manager ──
+
+function loadSALandingConfig() {
+  apiRequest('/api/admin/landing').then(function(data) {
+    SA_STATE.landingConfig = data || {};
+    fillSALandingForm(data || {});
+  }).catch(function() {
+    // Try with auth header
+    fetch('/api/admin/landing', { headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } })
+      .then(function(r) { return r.ok ? r.json() : null; })
+      .then(function(data) { if (data) { SA_STATE.landingConfig = data; fillSALandingForm(data); } })
+      .catch(function() {});
+  });
+}
+
+function fillSALandingForm(data) {
+  var hero = data.hero || {};
+  setValue('sa-landing-hero-title', hero.title || '');
+  setValue('sa-landing-hero-sub', hero.subtitle || '');
+  setValue('sa-landing-cta-text', hero.ctaText || '');
+  var stats = data.stats || [];
+  setValue('sa-landing-stat1', (stats[0] || {}).value || '');
+  setValue('sa-landing-stat2', (stats[1] || {}).value || '');
+  setValue('sa-landing-stat3', (stats[2] || {}).value || '');
+  renderSALandingTestimonials(data.testimonials || []);
+}
+
+function renderSALandingTestimonials(list) {
+  var container = document.getElementById('sa-landing-testimonials-list');
+  if (!container) return;
+  SA_STATE.landingTestimonials = list || [];
+  if (!list.length) {
+    container.innerHTML = '<div class="text-slate-500 text-xs py-3">Sem testemunhos. Adicione o primeiro.</div>';
+    return;
+  }
+  container.innerHTML = list.map(function(t, i) {
+    return '<div class="flex gap-3 items-start p-3 rounded-lg border border-white/8" style="background:var(--surface-a)">' +
+      '<div class="flex-1 space-y-2">' +
+        '<input type="text" class="input-field text-sm" value="' + escapeHtml(t.name || '') + '" oninput="SA_STATE.landingTestimonials[' + i + '].name=this.value" placeholder="Nome">' +
+        '<input type="text" class="input-field text-sm" value="' + escapeHtml(t.company || '') + '" oninput="SA_STATE.landingTestimonials[' + i + '].company=this.value" placeholder="Empresa">' +
+        '<textarea class="input-field text-sm" rows="2" oninput="SA_STATE.landingTestimonials[' + i + '].text=this.value" placeholder="Texto do testemunho">' + escapeHtml(t.text || '') + '</textarea>' +
+      '</div>' +
+      '<button class="btn-ghost btn-action text-xs" onclick="removeSATestimonial(' + i + ')"><i class="fas fa-trash text-red-400"></i></button>' +
+    '</div>';
+  }).join('');
+}
+
+function addSALandingTestimonial() {
+  SA_STATE.landingTestimonials = SA_STATE.landingTestimonials || [];
+  SA_STATE.landingTestimonials.push({ name: '', company: '', text: '' });
+  renderSALandingTestimonials(SA_STATE.landingTestimonials);
+}
+
+function removeSATestimonial(i) {
+  SA_STATE.landingTestimonials = SA_STATE.landingTestimonials || [];
+  SA_STATE.landingTestimonials.splice(i, 1);
+  renderSALandingTestimonials(SA_STATE.landingTestimonials);
+}
+
+function saveSALandingConfig() {
+  var payload = {
+    hero: {
+      title: getValue('sa-landing-hero-title'),
+      subtitle: getValue('sa-landing-hero-sub'),
+      ctaText: getValue('sa-landing-cta-text')
+    },
+    stats: [
+      { value: getValue('sa-landing-stat1') },
+      { value: getValue('sa-landing-stat2') },
+      { value: getValue('sa-landing-stat3') }
+    ],
+    testimonials: SA_STATE.landingTestimonials || []
+  };
+  apiRequest('/api/admin/landing', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (APP.authToken || '') },
+    body: JSON.stringify(payload)
+  }).then(function() {
+    showToast('Landing actualizada com sucesso!');
+    SA_STATE.landingConfig = payload;
+  }).catch(function(e) {
+    showToast('Erro: ' + e.message + ' — Backend exige JWT de admin.', 'warn');
+  });
+}
+
+// ── Support ──
+
+function loadSASupportData() {
+  apiRequest('/api/admin/support', {
+    headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') }
+  }).then(function(data) {
+    SA_STATE.supportData = (data && (data.requests || data.tickets || data.messages || data)) || [];
+    if (!Array.isArray(SA_STATE.supportData)) SA_STATE.supportData = [];
+    renderSASupport();
+  }).catch(function() {
+    SA_STATE.supportData = [];
+    renderSASupport();
+  });
+}
+
+function renderSASupport() {
+  var filter = getValue('sa-support-filter');
+  var list = SA_STATE.supportData || [];
+  var filtered = filter ? list.filter(function(t) { return (t.status || 'pending') === filter; }) : list;
+  var pending = list.filter(function(t) { return (t.status || 'pending') === 'pending'; }).length;
+  var resolved = list.filter(function(t) { return t.status === 'resolved'; }).length;
+  setInnerText('sa-support-total', list.length);
+  setInnerText('sa-support-pending', pending);
+  setInnerText('sa-support-resolved', resolved);
+  var container = document.getElementById('sa-support-list');
+  if (!container) return;
+  if (!filtered.length) {
+    container.innerHTML = '<div class="empty-state compact"><i class="fas fa-headset"></i><p>Sem pedidos de suporte registados.</p></div>';
+    return;
+  }
+  container.innerHTML = filtered.map(function(t, i) {
+    var isPending = (t.status || 'pending') === 'pending';
+    return '<div class="p-4 flex items-start gap-3">' +
+      '<div class="flex-1 min-w-0">' +
+        '<div class="flex items-center gap-2 mb-1">' +
+          '<span class="font-semibold text-sm">' + escapeHtml(t.name || t.from || t.email || 'Anónimo') + '</span>' +
+          '<span class="badge ' + (isPending ? 'badge-yellow' : 'badge-green') + ' text-xs">' + (isPending ? 'Pendente' : 'Resolvido') + '</span>' +
+        '</div>' +
+        '<div class="text-xs text-slate-500 mb-2">' + escapeHtml(t.email || t.subject || '') + (t.createdAt ? ' · ' + formatDate(t.createdAt) : '') + '</div>' +
+        '<p class="text-sm text-slate-300">' + escapeHtml(t.message || t.body || t.text || '—') + '</p>' +
+      '</div>' +
+      (isPending ? '<button class="btn-secondary btn-action text-xs" onclick="markSASupportResolved(' + i + ')"><i class="fas fa-check"></i> Resolver</button>' : '') +
+    '</div>';
+  }).join('');
+}
+
+function markSASupportResolved(index) {
+  if (SA_STATE.supportData[index]) {
+    SA_STATE.supportData[index].status = 'resolved';
+    renderSASupport();
+    // Persist to backend
+    apiRequest('/api/admin/support', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (APP.authToken || '') },
+      body: JSON.stringify({ requests: SA_STATE.supportData })
+    }).catch(function() {});
+    showToast('Pedido marcado como resolvido.');
+  }
+}
+
+// ── System ──
+
+function loadSASystemHealth() {
+  var el = document.getElementById('sa-system-health');
+  if (el) el.innerHTML = '<div class="text-slate-500 text-xs">A verificar...</div>';
+  fetch('/api/health').then(function(r) { return r.json(); }).then(function(data) {
+    if (!el) return;
+    var ok = data.status === 'ok' || data.ok;
+    el.innerHTML =
+      '<div class="flex items-center gap-2 mb-3"><span class="status-dot ' + (ok ? 'dot-green' : 'dot-red') + '"></span><span class="font-semibold">' + (ok ? 'Servidor online' : 'Problema detetado') + '</span></div>' +
+      saStatRow('fas fa-clock', 'text-blue-400', 'Uptime', data.uptime ? Math.floor(data.uptime / 60) + 'm' : '—', '') +
+      saStatRow('fas fa-calendar', 'text-slate-400', 'Timestamp', data.timestamp ? new Date(data.timestamp).toLocaleTimeString('pt-PT') : '—', '') +
+      saStatRow('fas fa-code-branch', 'text-purple-400', 'Versão', data.version || 'v2.0.0', '') +
+      (data.environment ? saStatRow('fas fa-server', 'text-cyan-400', 'Ambiente', data.environment, '') : '');
+  }).catch(function() {
+    if (el) el.innerHTML = '<div class="flex items-center gap-2"><span class="status-dot dot-red"></span><span class="text-red-400 font-semibold">Servidor offline ou inacessível</span></div>';
+  });
+}
+
+function loadSASystemDB() {
+  var el = document.getElementById('sa-system-db');
+  if (el) el.innerHTML = '<div class="text-slate-500 text-xs">A verificar...</div>';
+  fetch('/api/db/health').then(function(r) { return r.json(); }).then(function(data) {
+    if (!el) return;
+    var ok = data.connected || data.ok;
+    el.innerHTML =
+      '<div class="flex items-center gap-2 mb-3"><span class="status-dot ' + (ok ? 'dot-green' : 'dot-red') + '"></span><span class="font-semibold">' + (ok ? 'PostgreSQL conectado' : 'Base de dados offline') + '</span></div>' +
+      saStatRow('fas fa-table', 'text-blue-400', 'Tabelas', data.tables || '—', '') +
+      saStatRow('fas fa-layer-group', 'text-green-400', 'Schema', data.schema || 'public', '') +
+      (data.version ? saStatRow('fas fa-code-branch', 'text-purple-400', 'Versão PG', data.version, '') : '') +
+      (data.error ? '<div class="mt-2 p-2 rounded text-xs text-red-400 border border-red-400/20" style="background:rgba(239,68,68,0.08)">' + escapeHtml(data.error) + '</div>' : '') +
+      '<div class="mt-3 p-3 rounded-lg border border-white/8 text-xs text-slate-400" style="background:var(--surface-a)">' +
+        '<strong>Tabelas principais:</strong> users, work_orders, equipment, clients, teams, notifications, quotes, time_entries, reports' +
+      '</div>';
+  }).catch(function() {
+    if (el) el.innerHTML = '<div class="flex items-center gap-2"><span class="status-dot dot-red"></span><span class="text-red-400">Sem DATABASE_URL configurado ou base offline.</span></div>' +
+      '<div class="mt-3 p-3 rounded-lg border border-white/8 text-xs text-slate-500" style="background:var(--surface-a)">Configure <code class="mono">DATABASE_URL</code> no ficheiro .env para ativar PostgreSQL.</div>';
+  });
 }
 </script>
 </body>
