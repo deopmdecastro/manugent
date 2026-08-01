@@ -89,6 +89,26 @@ export interface LandingTranslations {
     copyright: string
     secure: string
   }
+  blog: {
+    badge: string
+    title: string
+    desc: string
+    readTimeSuffix: string
+    views: string
+    likes: string
+    share: string
+    shareOn: string
+    copyLink: string
+    linkCopied: string
+    comments: string
+    comment: string
+    namePlaceholder: string
+    messagePlaceholder: string
+    submitComment: string
+    noComments: string
+    relatedArticles: string
+    backToBlog: string
+  }
 }
 
 export const landingTranslations: Record<Language, LandingTranslations> = {
@@ -256,6 +276,26 @@ export const landingTranslations: Record<Language, LandingTranslations> = {
       copyright: 'Todos os direitos reservados.',
       secure: 'Seguro e protegido',
     },
+    blog: {
+      badge: 'Blog',
+      title: 'Novidades e boas práticas de manutenção',
+      desc: 'Artigos sobre produto, indústria e boas práticas de gestão de manutenção, escritos pela equipa ManuGent.',
+      readTimeSuffix: 'de leitura',
+      views: 'visualizações',
+      likes: 'gostos',
+      share: 'Partilhar',
+      shareOn: 'Partilhar no',
+      copyLink: 'Copiar link',
+      linkCopied: 'Link copiado!',
+      comments: 'comentários',
+      comment: 'comentário',
+      namePlaceholder: 'O teu nome (opcional)',
+      messagePlaceholder: 'Escreve um comentário...',
+      submitComment: 'Comentar',
+      noComments: 'Sê o primeiro a comentar este artigo.',
+      relatedArticles: 'Artigos relacionados',
+      backToBlog: 'Voltar ao blog',
+    },
   },
   en: {
     nav: {
@@ -420,6 +460,26 @@ export const landingTranslations: Record<Language, LandingTranslations> = {
       ],
       copyright: 'All rights reserved.',
       secure: 'Safe and secure',
+    },
+    blog: {
+      badge: 'Blog',
+      title: 'News and best practices in maintenance',
+      desc: 'Articles about product, industry and maintenance management best practices, written by the ManuGent team.',
+      readTimeSuffix: 'read',
+      views: 'views',
+      likes: 'likes',
+      share: 'Share',
+      shareOn: 'Share on',
+      copyLink: 'Copy link',
+      linkCopied: 'Link copied!',
+      comments: 'comments',
+      comment: 'comment',
+      namePlaceholder: 'Your name (optional)',
+      messagePlaceholder: 'Write a comment...',
+      submitComment: 'Comment',
+      noComments: 'Be the first to comment on this article.',
+      relatedArticles: 'Related articles',
+      backToBlog: 'Back to blog',
     },
   },
 }
