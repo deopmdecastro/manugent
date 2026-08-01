@@ -33,11 +33,13 @@ alter table users alter column email set not null;
 
 create unique index if not exists users_email_unique_idx on users (lower(email));
 
--- Seed/update the 4 demo accounts referenced by the frontend's role-picker
--- (admin / gestor / tecnico / cliente). Default demo password: "Demo@2026"
--- (documented in README.md). Real deployments should rotate this immediately.
+-- Seed/update the 5 demo accounts referenced by the frontend's role-picker
+-- (superadmin / admin / gestor / tecnico / cliente).
+-- Default demo password: "Demo@2026" (documented in README.md).
+-- Real deployments should rotate this immediately.
 insert into users (name, email, role, password_hash)
 values
+  ('SuperAdmin', 'superadmin@manugent.pt', 'superadmin', crypt('Demo@2026', gen_salt('bf', 10))),
   ('Admin ManuGent', 'admin@manugent.pt', 'admin', crypt('Demo@2026', gen_salt('bf', 10))),
   ('Gestor Silva', 'gestor@manugent.pt', 'gestor', crypt('Demo@2026', gen_salt('bf', 10))),
   ('Tecnico Costa', 'tecnico@manugent.pt', 'tecnico', crypt('Demo@2026', gen_salt('bf', 10))),
@@ -45,3 +47,32 @@ values
 on conflict (lower(email)) do update
   set password_hash = excluded.password_hash,
       role = excluded.role;
+
+-- ── RPC: verify_user_password ────────────────────────────────────────────────
+-- Used by POST /api/auth/login to authenticate users against the database.
+-- SECURITY DEFINER + explicit search_path so crypt() from pgcrypto is found.
+
+drop function if exists verify_user_password(text, text);
+
+create or replace function verify_user_password(p_email text, p_password text)
+returns table (
+  id uuid,
+  name text,
+  email text,
+  role text,
+  team_id uuid
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  return query
+  select u.id, u.name, u.email, u.role, u.team_id
+  from users u
+  where lower(u.email) = lower(p_email)
+    and u.password_hash is not null
+    and u.password_hash = crypt(p_password, u.password_hash)
+  limit 1;
+end;
+$$;
