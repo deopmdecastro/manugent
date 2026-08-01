@@ -4307,19 +4307,19 @@
             <div class="card p-6">
               <h3 class="font-semibold mb-4 flex items-center gap-2"><i class="fas fa-shield-halved" style="color:var(--accent-blue)"></i> Escopo de IA por Perfil</h3>
               <div class="space-y-3 text-sm">
-                <div class="p-3 rounded-lg border border-white/8" style="background:var(--surface-a)">
+                <div class="p-3 rounded-lg border border-purple-500/30" style="background:rgba(168,85,247,0.08)">
                   <div class="flex items-center gap-2 mb-1"><span class="badge badge-purple">Admin</span><span class="text-xs text-slate-400">Acesso total</span></div>
                   <p class="text-xs text-slate-500">Vê tudo, incluindo utilizadores, permissões e dados sensíveis.</p>
                 </div>
-                <div class="p-3 rounded-lg border border-white/8" style="background:var(--surface-a)">
+                <div class="p-3 rounded-lg border border-purple-500/30" style="background:rgba(168,85,247,0.08)">
                   <div class="flex items-center gap-2 mb-1"><span class="badge badge-blue">Gestor</span><span class="text-xs text-slate-400">Operação + Comercial</span></div>
                   <p class="text-xs text-slate-500">Dados operacionais e comerciais, sem utilizadores/permissões totais.</p>
                 </div>
-                <div class="p-3 rounded-lg border border-white/8" style="background:var(--surface-a)">
+                <div class="p-3 rounded-lg border border-purple-500/30" style="background:rgba(168,85,247,0.08)">
                   <div class="flex items-center gap-2 mb-1"><span class="badge badge-green">Técnico</span><span class="text-xs text-slate-400">Execução técnica</span></div>
                   <p class="text-xs text-slate-500">Apenas o necessário para executar trabalho técnico.</p>
                 </div>
-                <div class="p-3 rounded-lg border border-white/8" style="background:var(--surface-a)">
+                <div class="p-3 rounded-lg border border-purple-500/30" style="background:rgba(168,85,247,0.08)">
                   <div class="flex items-center gap-2 mb-1"><span class="badge badge-yellow">Cliente</span><span class="text-xs text-slate-400">Portal cliente</span></div>
                   <p class="text-xs text-slate-500">Apenas dados ligados ao próprio cliente.</p>
                 </div>
@@ -4520,7 +4520,7 @@
                 <div class="flex justify-between py-2 border-b border-white/5"><span class="text-slate-400">Frontend</span><span class="mono text-slate-200">Vanilla JS + Tailwind</span></div>
                 <div class="flex justify-between py-2"><span class="text-slate-400">Auth</span><span class="mono text-slate-200">JWT + Rate Limiting</span></div>
               </div>
-              <div class="mt-4 p-3 rounded-lg border border-purple-500/20 text-xs text-slate-400" style="background:rgba(124,58,237,0.06)">
+              <div class="mt-4 p-3 rounded-lg border border-purple-500/30 text-xs text-slate-400" style="background:rgba(168,85,247,0.08)">
                 <i class="fas fa-shield-halved mr-1 text-purple-400"></i> <strong>Segurança:</strong> JWT sessions · Rate limiting · Headers OWASP · HSTS em produção
               </div>
             </div>
@@ -4613,7 +4613,7 @@
               <p class="text-sm text-slate-400 mb-5">Gera um ficheiro JSON com toda a configuração da plataforma: IA, landing, suporte, blog, testemunhos e estatísticas da base de dados.</p>
               <button class="btn-primary w-full mb-3" onclick="createSABackup()"><i class="fas fa-download"></i> Criar e Descarregar Backup</button>
               <div id="sa-backup-create-result" class="text-xs text-slate-400 mt-2"></div>
-              <div class="mt-4 p-3 rounded-lg border border-white/8 text-xs text-slate-400" style="background:var(--surface-a)">
+              <div class="mt-4 p-3 rounded-lg border border-purple-500/30 text-xs text-slate-400" style="background:rgba(168,85,247,0.08)">
                 <strong class="text-slate-300">Inclui:</strong> Configuração IA · Landing page · Suporte · Blog · Testemunhos · Estatísticas BD
               </div>
             </div>
@@ -4625,7 +4625,7 @@
                 <label class="block text-xs text-slate-400 mb-2">Ficheiro de backup (.json)</label>
                 <input type="file" id="sa-backup-file" accept=".json" class="input-field text-sm" onchange="previewSABackup()">
               </div>
-              <div id="sa-backup-preview" class="hidden mb-3 p-3 rounded-lg border border-white/8 text-xs" style="background:var(--surface-a)"></div>
+              <div id="sa-backup-preview" class="hidden mb-3 p-3 rounded-lg border border-purple-500/30 text-xs" style="background:rgba(168,85,247,0.08)"></div>
               <button class="btn-secondary w-full" id="sa-backup-restore-btn" onclick="restoreSABackup()" disabled><i class="fas fa-upload"></i> Restaurar</button>
               <div id="sa-backup-restore-result" class="text-xs text-slate-400 mt-2"></div>
             </div>
@@ -4775,7 +4775,7 @@
       <button class="btn-ghost" onclick="closeModal('modal-sa-user-status')"><i class="fas fa-times"></i></button>
     </div>
     <div class="space-y-4">
-      <div class="p-3 rounded-lg border border-white/8 text-sm" style="background:var(--surface-a)">
+      <div class="p-3 rounded-lg border border-purple-500/30 text-sm" style="background:rgba(168,85,247,0.08)">
         <div class="font-semibold" id="sa-status-modal-user-name">—</div>
         <div class="text-slate-500 text-xs" id="sa-status-modal-user-email">—</div>
       </div>
@@ -4800,7 +4800,7 @@
       <button class="btn-ghost" onclick="closeModal('modal-sa-reset-password')"><i class="fas fa-times"></i></button>
     </div>
     <div class="space-y-4" id="sa-reset-password-form">
-      <div class="p-3 rounded-lg border border-white/8 text-sm" style="background:var(--surface-a)">
+      <div class="p-3 rounded-lg border border-purple-500/30 text-sm" style="background:rgba(168,85,247,0.08)">
         <div class="font-semibold" id="sa-reset-modal-user-name">—</div>
         <div class="text-slate-500 text-xs" id="sa-reset-modal-user-email">—</div>
       </div>
@@ -14576,7 +14576,7 @@ function renderSALandingTestimonials(list) {
     return;
   }
   container.innerHTML = list.map(function(t, i) {
-    return '<div class="flex gap-3 items-start p-3 rounded-lg border border-white/8" style="background:var(--surface-a)">' +
+    return '<div class="flex gap-3 items-start p-3 rounded-lg border border-purple-500/30" style="background:rgba(168,85,247,0.08)">' +
       '<div class="flex-1 space-y-2">' +
         '<input type="text" class="input-field text-sm" value="' + escapeHtml(t.name || '') + '" oninput="SA_STATE.landingTestimonials[' + i + '].name=this.value" placeholder="Nome">' +
         '<input type="text" class="input-field text-sm" value="' + escapeHtml(t.company || '') + '" oninput="SA_STATE.landingTestimonials[' + i + '].company=this.value" placeholder="Empresa">' +
@@ -14716,12 +14716,12 @@ function loadSASystemDB() {
       saStatRow('fas fa-layer-group', 'text-green-400', 'Schema', data.schema || 'public', '') +
       (data.version ? saStatRow('fas fa-code-branch', 'text-purple-400', 'Versão PG', data.version, '') : '') +
       (data.error ? '<div class="mt-2 p-2 rounded text-xs text-red-400 border border-red-400/20" style="background:rgba(239,68,68,0.08)">' + escapeHtml(data.error) + '</div>' : '') +
-      '<div class="mt-3 p-3 rounded-lg border border-white/8 text-xs text-slate-400" style="background:var(--surface-a)">' +
+      '<div class="mt-3 p-3 rounded-lg border border-purple-500/30 text-xs text-slate-400" style="background:rgba(168,85,247,0.08)">' +
         '<strong>Tabelas principais:</strong> users, work_orders, equipment, clients, teams, notifications, quotes, time_entries, reports' +
       '</div>';
   }).catch(function() {
     if (el) el.innerHTML = '<div class="flex items-center gap-2"><span class="status-dot dot-red"></span><span class="text-red-400">Sem DATABASE_URL configurado ou base offline.</span></div>' +
-      '<div class="mt-3 p-3 rounded-lg border border-white/8 text-xs text-slate-500" style="background:var(--surface-a)">Configure <code class="mono">DATABASE_URL</code> no ficheiro .env para ativar PostgreSQL.</div>';
+      '<div class="mt-3 p-3 rounded-lg border border-purple-500/30 text-xs text-slate-500" style="background:rgba(168,85,247,0.08)">Configure <code class="mono">DATABASE_URL</code> no ficheiro .env para ativar PostgreSQL.</div>';
   });
 }
 
@@ -14972,7 +14972,7 @@ function openSABlogComments(postId) {
   var html2 = '<div class="space-y-3 max-h-80 overflow-y-auto">' +
     (comments.length === 0 ? '<div class="text-slate-400 text-sm text-center py-4">Sem comentários</div>' :
     comments.map(function(c) {
-      return '<div class="p-3 rounded-lg border border-white/8" style="background:var(--surface-a)">' +
+      return '<div class="p-3 rounded-lg border border-purple-500/30" style="background:rgba(168,85,247,0.08)">' +
         '<div class="flex items-center justify-between mb-1">' +
           '<span class="font-semibold text-sm">' + escapeHtml(c.author || 'Anónimo') + '</span>' +
           '<div class="flex gap-1">' +
@@ -15180,17 +15180,17 @@ function loadSABackupInfo() {
     var health = results[0]; var db = results[1];
     el.innerHTML =
       '<div class="grid md:grid-cols-3 gap-4 text-sm">' +
-        '<div class="p-3 rounded-lg border border-white/8" style="background:var(--surface-a)">' +
+        '<div class="p-3 rounded-lg border border-purple-500/30" style="background:rgba(168,85,247,0.08)">' +
           '<div class="text-xs text-slate-500 mb-1">Versão do Servidor</div>' +
           '<div class="mono font-semibold">v' + (health.version || '?') + '</div>' +
           '<div class="text-xs text-slate-500 mt-1">Uptime: ' + Math.floor((health.uptime || 0) / 60) + 'min</div>' +
         '</div>' +
-        '<div class="p-3 rounded-lg border border-white/8" style="background:var(--surface-a)">' +
+        '<div class="p-3 rounded-lg border border-purple-500/30" style="background:rgba(168,85,247,0.08)">' +
           '<div class="text-xs text-slate-500 mb-1">Base de Dados</div>' +
           '<div class="mono font-semibold ' + (db.connected ? 'text-emerald-400' : 'text-red-400') + '">' + (db.connected ? 'Conectada' : 'Offline') + '</div>' +
           '<div class="text-xs text-slate-500 mt-1">' + (db.tables || '—') + ' tabelas</div>' +
         '</div>' +
-        '<div class="p-3 rounded-lg border border-white/8" style="background:var(--surface-a)">' +
+        '<div class="p-3 rounded-lg border border-purple-500/30" style="background:rgba(168,85,247,0.08)">' +
           '<div class="text-xs text-slate-500 mb-1">Último Backup</div>' +
           '<div class="mono font-semibold text-slate-400">Manual</div>' +
           '<div class="text-xs text-slate-500 mt-1">Descarregue para guardar</div>' +
