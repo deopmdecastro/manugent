@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 const ROLES = [
-  { key: 'superadmin', label: 'superadmin', email: 'admin@manugent.pt', icon: 'fa-crown', redirectTo: '/superadmin' },
   { key: 'admin', label: 'admin', email: 'admin@manugent.pt', icon: 'fa-user-shield' },
   { key: 'gestor', label: 'gestor', email: 'gestor@manugent.pt', icon: 'fa-user-tie' },
   { key: 'tecnico', label: 'técnico', email: 'tecnico@manugent.pt', icon: 'fa-hard-hat' },
