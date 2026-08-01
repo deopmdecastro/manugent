@@ -539,6 +539,54 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+    /* Smart Auto-Upload Dropzone */
+    .smart-dropzone {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 12px;
+      cursor: default;
+      transition: all 0.2s;
+      margin-bottom: 8px;
+    }
+    .smart-dropzone i { font-size: 14px; color: var(--accent-purple-light); }
+    .smart-dropzone.drag-over {
+      border-color: var(--accent-purple);
+      background: rgba(124,58,237,0.08);
+      color: var(--text-primary);
+    }
+    .smart-dropzone.uploading {
+      border-color: rgba(16,185,129,0.4);
+      background: rgba(16,185,129,0.06);
+    }
+    .smart-attachment-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--hairline-a);
+    }
+    .smart-attachment-item:last-child { border-bottom: none; }
+    .smart-attachment-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .smart-attachment-icon { color: var(--accent-purple-light); font-size: 14px; flex-shrink: 0; }
+    .smart-attachment-name {
+      font-size: 13px;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+    }
+    .smart-attachment-size { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
     .upload-preview {
       display: none;
       gap: 8px;
@@ -4954,7 +5002,17 @@
         <div class="card p-4">
           <div class="flex items-center justify-between mb-3">
             <h4 class="font-medium text-sm">Ficheiros associados</h4>
-            <button class="btn-secondary btn-action text-xs" onclick="openNewFileModal()"><i class="fas fa-upload"></i> Anexar à OT</button>
+            <div class="flex gap-2">
+              <label class="btn-primary btn-action text-xs cursor-pointer" title="Clique ou arraste ficheiros para associar automaticamente à OT">
+                <i class="fas fa-upload"></i> Anexar
+                <input type="file" multiple class="hidden" onchange="smartUploadFiles(event,'work_order','ot')">
+              </label>
+              <button class="btn-ghost btn-action text-xs" onclick="openNewFileModal()" title="Adicionar link, credencial ou tipo especial"><i class="fas fa-plus"></i></button>
+            </div>
+          </div>
+          <div id="ot-files-dropzone" class="smart-dropzone" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="smartDropFiles(event,'work_order','ot')">
+            <i class="fas fa-cloud-arrow-up"></i>
+            <span>Arraste ficheiros aqui</span>
           </div>
           <div id="ot-files-list" class="text-sm text-slate-400">Nenhum ficheiro associado.</div>
         </div>
@@ -5402,7 +5460,17 @@
         <div class="card p-4">
           <div class="flex items-center justify-between mb-3">
             <h4 class="font-medium text-sm">Ficheiros associados</h4>
-            <button class="btn-secondary btn-action text-xs" onclick="openNewFileModal()"><i class="fas fa-plus"></i> Associar</button>
+            <div class="flex gap-2">
+              <label class="btn-primary btn-action text-xs cursor-pointer" title="Clique ou arraste ficheiros para associar automaticamente ao equipamento">
+                <i class="fas fa-upload"></i> Anexar
+                <input type="file" multiple class="hidden" onchange="smartUploadFiles(event,'equipment','equip')">
+              </label>
+              <button class="btn-ghost btn-action text-xs" onclick="openNewFileModal()" title="Adicionar link, credencial ou tipo especial"><i class="fas fa-plus"></i></button>
+            </div>
+          </div>
+          <div id="equip-files-dropzone" class="smart-dropzone" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="smartDropFiles(event,'equipment','equip')">
+            <i class="fas fa-cloud-arrow-up"></i>
+            <span>Arraste ficheiros aqui</span>
           </div>
           <div id="equip-files-list" class="text-sm text-slate-400">Nenhum ficheiro associado.</div>
         </div>
@@ -8731,6 +8799,7 @@ function openOTDetail(id) {
   updateOTMaterialActionUI();
   renderOTTasks(); renderOTActivity(); renderOTComments(); renderOTMaterials();
   renderAssociatedFiles('ot', ot.id, 'ot-files-list');
+  if (ot.backendId) loadApiAttachments('work_order', 'ot', 'ot-files-list');
   renderOTCopilot();
   showDetailPage('modal-ot-detail');
 }
@@ -10229,6 +10298,7 @@ function openEquipDetail(id) {
   renderEquipmentHistory(eq);
   renderEquipmentReadings(eq);
   renderAssociatedFiles('equipment', eq.id, 'equip-files-list');
+  loadApiAttachments('equipment', 'equip', 'equip-files-list');
   showDetailPage('modal-equip-detail');
 }
 function renderEquipmentHistory(eq) {
@@ -11646,6 +11716,201 @@ function renderAssociatedFiles(target, id, elId) {
       '<button class="btn-secondary btn-action text-xs" onclick="openFileDetail(\'' + f.id + '\')"><i class="fas fa-eye"></i></button>' +
       '</div>';
   }).join('');
+}
+
+// ======================== SMART AUTO-UPLOAD (API) ========================
+
+/**
+ * Formata tamanho de ficheiro de forma legível.
+ */
+function formatFileSize(bytes) {
+  if (!bytes) return '0 B';
+  var units = ['B','KB','MB','GB'];
+  var i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + units[i];
+}
+
+/**
+ * Devolve o ícone FontAwesome para um tipo MIME.
+ */
+function getMimeIcon(mime) {
+  if (!mime) return 'fa-file';
+  if (mime.startsWith('image/')) return 'fa-file-image';
+  if (mime === 'application/pdf') return 'fa-file-pdf';
+  if (mime.includes('word')) return 'fa-file-word';
+  if (mime.includes('excel') || mime.includes('spreadsheet')) return 'fa-file-excel';
+  if (mime.includes('powerpoint') || mime.includes('presentation')) return 'fa-file-powerpoint';
+  if (mime.startsWith('video/')) return 'fa-file-video';
+  if (mime.startsWith('audio/')) return 'fa-file-audio';
+  if (mime.includes('zip')) return 'fa-file-zipper';
+  if (mime.startsWith('text/')) return 'fa-file-lines';
+  return 'fa-file';
+}
+
+/**
+ * Determina o entityId correto a partir do contexto atual.
+ * entityContext: 'ot' | 'equip' | 'client'
+ */
+function getSmartEntityId(entityContext) {
+  if (entityContext === 'ot') {
+    return APP.currentOT ? (APP.currentOT.backendId || APP.currentOT.id) : null;
+  }
+  if (entityContext === 'equip') {
+    return APP.currentEquip ? APP.currentEquip.id : null;
+  }
+  if (entityContext === 'client') {
+    return APP.currentClient ? APP.currentClient.id : null;
+  }
+  return null;
+}
+
+/**
+ * Renderiza os anexos da API num elemento da lista.
+ */
+function renderApiAttachments(attachments, listElId, entityType, entityContext) {
+  var el = document.getElementById(listElId);
+  if (!el) return;
+  if (!attachments || attachments.length === 0) return;
+
+  var existing = el.querySelectorAll('.smart-attachment-item');
+  existing.forEach(function(e) { e.remove(); });
+
+  var html = attachments.map(function(att) {
+    return '<div class="smart-attachment-item" data-att-id="' + escapeHtml(att.id) + '">' +
+      '<div class="smart-attachment-info">' +
+        '<i class="fas ' + getMimeIcon(att.mimeType) + ' smart-attachment-icon"></i>' +
+        '<div>' +
+          '<div class="smart-attachment-name" title="' + escapeHtml(att.originalName) + '">' + escapeHtml(att.originalName) + '</div>' +
+          '<div class="text-xs text-slate-500">' + formatFileSize(att.fileSize) + (att.uploaderName ? ' · ' + escapeHtml(att.uploaderName) : '') + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="flex gap-1">' +
+        '<a href="' + escapeHtml(att.downloadUrl) + '" class="btn-secondary btn-action text-xs" download="' + escapeHtml(att.originalName) + '" title="Descarregar"><i class="fas fa-download"></i></a>' +
+        '<button class="btn-ghost btn-action text-xs" onclick="deleteApiAttachment(\'' + escapeHtml(att.id) + '\',\'' + entityType + '\',\'' + escapeHtml(getSmartEntityId(entityContext) || '') + '\',\'' + listElId + '\',\'' + entityContext + '\')" title="Eliminar"><i class="fas fa-trash text-red-400"></i></button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  var placeholder = el.querySelector('.text-slate-500');
+  if (placeholder && placeholder.textContent.includes('Nenhum ficheiro')) {
+    placeholder.remove();
+  }
+  el.insertAdjacentHTML('afterbegin', html);
+}
+
+/**
+ * Carrega os anexos da API para um contexto (ot/equip/client).
+ */
+function loadApiAttachments(entityType, entityContext, listElId) {
+  var entityId = getSmartEntityId(entityContext);
+  if (!entityId || window.location.protocol === 'file:') return;
+
+  apiRequest('/api/attachments/' + entityType + '/' + entityId)
+    .then(function(data) {
+      if (data && data.attachments) {
+        renderApiAttachments(data.attachments, listElId, entityType, entityContext);
+      }
+    })
+    .catch(function() {});
+}
+
+/**
+ * Faz upload automático de ficheiros para a API, sem modal.
+ * entityType: 'work_order' | 'equipment' | 'client'
+ * entityContext: 'ot' | 'equip' | 'client'
+ */
+async function smartUploadFilesCore(files, entityType, entityContext) {
+  var entityId = getSmartEntityId(entityContext);
+  var listElId = entityContext + '-files-list';
+  var dropzoneId = entityContext + '-files-dropzone';
+
+  if (!entityId) {
+    showToast('Abra uma OT, equipamento ou cliente antes de anexar ficheiros.');
+    return;
+  }
+
+  if (!files || files.length === 0) return;
+
+  var dropzone = document.getElementById(dropzoneId);
+  if (dropzone) {
+    dropzone.classList.add('uploading');
+    dropzone.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>A enviar ' + files.length + ' ficheiro(s)…</span>';
+  }
+
+  var formData = new FormData();
+  for (var i = 0; i < files.length; i++) {
+    formData.append('files', files[i]);
+  }
+
+  try {
+    var authToken = sessionStorage.getItem('manugent.token') || localStorage.getItem('mg_auth_token') || '';
+    var headers = {};
+    if (authToken && !authToken.startsWith('mg-session-')) {
+      headers['Authorization'] = 'Bearer ' + authToken;
+    }
+
+    var res = await fetch('/api/attachments/' + entityType + '/' + entityId, {
+      method: 'POST',
+      headers: headers,
+      body: formData,
+    });
+
+    if (!res.ok) {
+      var body = await res.json().catch(function() { return {}; });
+      throw new Error(body.error || 'Erro no upload');
+    }
+
+    var data = await res.json();
+    var uploaded = (data && data.attachments) ? data.attachments : [];
+
+    showToast(uploaded.length + ' ficheiro(s) associado(s) com sucesso!');
+    renderApiAttachments(uploaded, listElId, entityType, entityContext);
+  } catch (err) {
+    showToast('Erro no upload: ' + (err.message || 'Tente novamente'));
+  } finally {
+    if (dropzone) {
+      dropzone.classList.remove('uploading');
+      dropzone.innerHTML = '<i class="fas fa-cloud-arrow-up"></i><span>Arraste ficheiros aqui</span>';
+    }
+  }
+}
+
+function smartUploadFiles(event, entityType, entityContext) {
+  var files = event.target ? event.target.files : event;
+  smartUploadFilesCore(files, entityType, entityContext);
+  if (event.target) event.target.value = '';
+}
+
+function smartDropFiles(event, entityType, entityContext) {
+  event.preventDefault();
+  var dropzone = event.currentTarget;
+  if (dropzone) dropzone.classList.remove('drag-over');
+  var files = event.dataTransfer ? event.dataTransfer.files : null;
+  if (files && files.length > 0) {
+    smartUploadFilesCore(files, entityType, entityContext);
+  }
+}
+
+/**
+ * Elimina um anexo da API.
+ */
+function deleteApiAttachment(attachmentId, entityType, entityId, listElId, entityContext) {
+  if (!confirm('Eliminar este ficheiro permanentemente?')) return;
+
+  var authToken = sessionStorage.getItem('manugent.token') || '';
+  var headers = {};
+  if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
+
+  fetch('/api/attachments/' + attachmentId, { method: 'DELETE', headers: headers })
+    .then(function(res) {
+      if (!res.ok) throw new Error('Erro ao eliminar');
+      var item = document.querySelector('[data-att-id="' + attachmentId + '"]');
+      if (item) item.remove();
+      showToast('Ficheiro eliminado.');
+    })
+    .catch(function(err) {
+      showToast('Erro: ' + err.message);
+    });
 }
 function getPermissionText(permission) {
   return {'all':'Todos','users':'Utilizadores selecionados','teams':'Equipas selecionadas','restricted':'Restrito ao gestor'}[permission] || permission;

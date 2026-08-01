@@ -1,7 +1,8 @@
 import 'dotenv/config'
 
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { existsSync, readFileSync, writeFileSync, mkdirSync, createReadStream, statSync, unlinkSync } from 'node:fs'
+import { join, resolve, extname, basename } from 'node:path'
+import { randomUUID } from 'node:crypto'
 
 import { serve } from '@hono/node-server'
 import { serveStatic } from '@hono/node-server/serve-static'
@@ -11,6 +12,7 @@ import { logger } from 'hono/logger'
 import { createClient } from '@supabase/supabase-js'
 import jwt from 'jsonwebtoken'
 import { fuzzySearch, disambiguate, processWithCorrections, buildNLPContextPrefix } from './lib/fuzzy-search.js'
+import { createPgClient } from './lib/pg-adapter.js'
 
 // ── Configuration ───────────────────────────────────────────────────────────
 
@@ -30,13 +32,38 @@ const groqApiKey = process.env.GROQ_API_KEY || ''
 const aiProvider = (process.env.AI_PROVIDER || 'groq').toLowerCase()
 const aiModel = process.env.AI_MODEL || (aiProvider === 'openai' ? 'gpt-4o-mini' : 'llama3-8b-8192')
 
-// ── Database (Supabase) ─────────────────────────────────────────────────────
+// ── Database ─────────────────────────────────────────────────────────────────
+// Priority: Supabase (cloud) → pg direct (Docker / DATABASE_URL)
 
 const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     })
   : undefined
+
+const pgClient = !supabase ? createPgClient(process.env.DATABASE_URL) : undefined
+
+// Unified DB accessor — returns Supabase client or pg-adapter (same interface)
+type DbClient = NonNullable<typeof supabase> | NonNullable<typeof pgClient>
+
+// ── Upload directory ──────────────────────────────────────────────────────────
+
+const uploadsDir = resolve(process.cwd(), 'uploads')
+if (!existsSync(uploadsDir)) mkdirSync(uploadsDir, { recursive: true })
+
+const allowedMimeTypes = new Set([
+  'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
+  'application/pdf',
+  'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'text/plain', 'text/csv',
+  'application/zip', 'application/x-zip-compressed',
+  'video/mp4', 'video/quicktime', 'video/x-msvideo',
+  'audio/mpeg', 'audio/wav',
+])
+
+const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50 MB
 
 // ── App Setup ─────────────────────────────────────────────────────────────────
 
@@ -159,12 +186,13 @@ app.delete('/api/admin/:section/:itemId', (c) => {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 class DatabaseNotConfiguredError extends Error {
-  constructor() { super('Supabase não está configurado. Verifique SUPABASE_URL e SUPABASE_ANON_KEY no .env') }
+  constructor() { super('Base de dados não configurada. Defina SUPABASE_URL+SUPABASE_ANON_KEY (Supabase) ou DATABASE_URL (Docker/PostgreSQL local) no .env') }
 }
 
-function requireDb() {
-  if (!supabase) throw new DatabaseNotConfiguredError()
-  return supabase
+function requireDb(): DbClient {
+  if (supabase) return supabase
+  if (pgClient) return pgClient
+  throw new DatabaseNotConfiguredError()
 }
 
 function jsonError(c: Context, message: string, status = 400) {
@@ -1281,6 +1309,210 @@ app.post('/api/client-portal/quotes/:quoteId/approve', async (c) => {
   }
 })
 
+// ── Routes: Attachments ───────────────────────────────────────────────────────
+
+const VALID_ENTITY_TYPES = ['work_order', 'equipment', 'client', 'installation'] as const
+type EntityType = typeof VALID_ENTITY_TYPES[number]
+
+function isValidEntityType(v: string): v is EntityType {
+  return VALID_ENTITY_TYPES.includes(v as EntityType)
+}
+
+// GET /api/attachments/:entityType/:entityId — listar anexos
+app.get('/api/attachments/:entityType/:entityId', async (c) => {
+  try {
+    const db = requireDb()
+    const entityType = c.req.param('entityType')
+    const entityId = c.req.param('entityId')
+
+    if (!isValidEntityType(entityType)) {
+      return jsonError(c, `Tipo de entidade inválido. Use: ${VALID_ENTITY_TYPES.join(', ')}`)
+    }
+
+    const { data, error } = await db.rpc('get_attachments', {
+      p_entity_type: entityType,
+      p_entity_id: entityId,
+    })
+
+    if (error) throw error
+
+    return c.json({
+      attachments: (data || []).map((a: Record<string, unknown>) => ({
+        id: a.id,
+        entityType: a.entity_type,
+        entityId: a.entity_id,
+        filename: a.filename,
+        originalName: a.original_name,
+        mimeType: a.mime_type,
+        fileSize: a.file_size,
+        uploadedBy: a.uploaded_by,
+        uploaderName: a.uploader_name,
+        createdAt: a.created_at,
+        downloadUrl: `/api/attachments/${a.id}/download`,
+      })),
+    })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch attachments')
+  }
+})
+
+// POST /api/attachments/:entityType/:entityId — upload automático de ficheiro(s)
+app.post('/api/attachments/:entityType/:entityId', async (c) => {
+  try {
+    const db = requireDb()
+    const entityType = c.req.param('entityType')
+    const entityId = c.req.param('entityId')
+
+    if (!isValidEntityType(entityType)) {
+      return jsonError(c, `Tipo de entidade inválido. Use: ${VALID_ENTITY_TYPES.join(', ')}`)
+    }
+
+    // Obter user autenticado (opcional — uploads sem login são permitidos)
+    const authUser = requireAuth(c)
+
+    const formData = await c.req.formData()
+    const files = formData.getAll('files') as File[]
+    const singleFile = formData.get('file') as File | null
+
+    const allFiles: File[] = singleFile ? [singleFile] : files.filter(Boolean)
+
+    if (allFiles.length === 0) {
+      return jsonError(c, 'Nenhum ficheiro recebido. Envie via multipart/form-data com o campo "file" ou "files".')
+    }
+
+    const saved: Record<string, unknown>[] = []
+
+    for (const file of allFiles) {
+      if (!file || typeof file === 'string') continue
+
+      const fileSize = file.size
+      if (fileSize > MAX_FILE_SIZE) {
+        return jsonError(c, `Ficheiro "${file.name}" excede o tamanho máximo de 50 MB.`)
+      }
+
+      const mimeType = file.type || 'application/octet-stream'
+      if (!allowedMimeTypes.has(mimeType)) {
+        return jsonError(c, `Tipo de ficheiro não permitido: ${mimeType}`)
+      }
+
+      // Gerar nome único para evitar colisões no disco
+      const ext = extname(file.name) || ''
+      const filename = `${randomUUID()}${ext}`
+      const storagePath = join(uploadsDir, filename)
+
+      // Guardar ficheiro em disco
+      const arrayBuffer = await file.arrayBuffer()
+      writeFileSync(storagePath, Buffer.from(arrayBuffer))
+
+      // Guardar metadados na BD
+      const { data, error } = await db.from('attachments').insert({
+        entity_type: entityType,
+        entity_id: entityId,
+        filename,
+        original_name: file.name,
+        mime_type: mimeType,
+        file_size: fileSize,
+        storage_path: storagePath,
+        uploaded_by: authUser?.id ?? null,
+      }).select().single()
+
+      if (error) {
+        // Limpar ficheiro do disco se falhou a BD
+        if (existsSync(storagePath)) unlinkSync(storagePath)
+        throw error
+      }
+
+      const row = data as Record<string, unknown>
+      saved.push({
+        id: row.id,
+        entityType: row.entity_type,
+        entityId: row.entity_id,
+        filename: row.filename,
+        originalName: row.original_name,
+        mimeType: row.mime_type,
+        fileSize: row.file_size,
+        uploadedBy: row.uploaded_by,
+        createdAt: row.created_at,
+        downloadUrl: `/api/attachments/${row.id}/download`,
+      })
+    }
+
+    return c.json({ attachments: saved }, 201)
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not upload attachment')
+  }
+})
+
+// GET /api/attachments/:id/download — download de ficheiro
+app.get('/api/attachments/:id/download', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.from('attachments').select('*').eq('id', c.req.param('id')).single()
+
+    if (error || !data) return jsonError(c, 'Attachment not found', 404)
+
+    const row = data as Record<string, unknown>
+    const storagePath = row.storage_path as string
+
+    if (!existsSync(storagePath)) {
+      return jsonError(c, 'Ficheiro não encontrado em disco', 404)
+    }
+
+    const stat = statSync(storagePath)
+    const mimeType = (row.mime_type as string) || 'application/octet-stream'
+    const originalName = row.original_name as string
+
+    c.header('Content-Type', mimeType)
+    c.header('Content-Length', String(stat.size))
+    c.header('Content-Disposition', `attachment; filename="${encodeURIComponent(originalName)}"`)
+    c.header('Cache-Control', 'private, max-age=3600')
+
+    const stream = createReadStream(storagePath)
+    return new Response(stream as unknown as ReadableStream, {
+      headers: {
+        'Content-Type': mimeType,
+        'Content-Length': String(stat.size),
+        'Content-Disposition': `attachment; filename="${encodeURIComponent(originalName)}"`,
+        'Cache-Control': 'private, max-age=3600',
+      },
+    })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not download attachment')
+  }
+})
+
+// DELETE /api/attachments/:id — eliminar anexo
+app.delete('/api/attachments/:id', async (c) => {
+  try {
+    const db = requireDb()
+
+    const { data, error: fetchErr } = await db.from('attachments').select('*').eq('id', c.req.param('id')).single()
+    if (fetchErr || !data) return jsonError(c, 'Attachment not found', 404)
+
+    const row = data as Record<string, unknown>
+
+    // Eliminar da BD primeiro
+    const { error } = await db.from('attachments').update({
+      storage_path: '__deleted__',
+    }).eq('id', c.req.param('id'))
+
+    if (error) throw error
+
+    // Eliminar ficheiro do disco
+    const storagePath = row.storage_path as string
+    if (storagePath && storagePath !== '__deleted__' && existsSync(storagePath)) {
+      unlinkSync(storagePath)
+    }
+
+    // Remover registo da BD
+    await db.from('attachments').update({ storage_path: '__deleted__' }).eq('id', c.req.param('id'))
+
+    return c.json({ ok: true })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not delete attachment')
+  }
+})
+
 // ── Catch-all ─────────────────────────────────────────────────────────────────
 
 app.notFound((c) => c.json({ error: 'Not found' }, 404))
@@ -1370,15 +1602,22 @@ async function updateTimeEntry(c: Context, action: 'pause' | 'resume' | 'exit') 
 // ── Server Bootstrap ──────────────────────────────────────────────────────────
 
 const hasAI = Boolean(openaiApiKey || groqApiKey)
+const dbStatus = supabase
+  ? '✅ Supabase conectado'
+  : pgClient
+    ? '✅ PostgreSQL local (DATABASE_URL)'
+    : '⚠️  Sem base de dados (configure SUPABASE_URL ou DATABASE_URL no .env)'
+
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-console.log('  ManuGent API v2.1.0')
+console.log('  ManuGent API v2.2.0')
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
 if (hasAI) {
   console.log(`  IA: ✅ ${aiProvider.toUpperCase()} (${aiModel})`)
 } else {
   console.log('  IA: ⚠️  Sem configuração (defina OPENAI_API_KEY ou GROQ_API_KEY)')
 }
-console.log(`  DB: ${supabase ? '✅ Supabase conectado' : '⚠️  Sem base de dados (configure Supabase no .env)'}`)
+console.log(`  DB: ${dbStatus}`)
+console.log(`  Uploads: ${uploadsDir}`)
 
 serve({ fetch: app.fetch, port }, (info) => {
   console.log(`  URL: http://localhost:${info.port}`)

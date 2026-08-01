@@ -6,9 +6,16 @@ services:
       - .env
     environment:
       PORT: 3000
+      NODE_ENV: development
+      # Liga ao PostgreSQL local — Supabase não necessário em dev
       DATABASE_URL: postgres://manugent:manugent_password@db:5432/manugent
+      # Limpa SUPABASE_URL/KEY para forçar o pg-adapter (preenche no .env para usar Supabase)
+      SUPABASE_URL: ""
+      SUPABASE_ANON_KEY: ""
     ports:
       - "3000:3000"
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -34,3 +41,4 @@ services:
 
 volumes:
   postgres_data:
+  uploads_data:
