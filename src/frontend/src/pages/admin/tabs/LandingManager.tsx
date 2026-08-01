@@ -1,63 +1,46 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
-type LandingSection = {
-  id: string
-  label: string
-  status: 'published' | 'draft'
-  lastModified: string
-  fields: number
-}
-
-const MOCK_SECTIONS: LandingSection[] = [
-  { id: 'hero', label: 'Hero Section', status: 'published', lastModified: '2026-08-01', fields: 12 },
-  { id: 'stats', label: 'Stats Bar', status: 'published', lastModified: '2026-07-31', fields: 8 },
-  { id: 'features', label: 'Features Grid', status: 'published', lastModified: '2026-08-01', fields: 6 },
-  { id: 'testimonials', label: 'Testemunhos', status: 'draft', lastModified: '2026-07-30', fields: 5 },
-  { id: 'cta', label: 'CTA Section', status: 'published', lastModified: '2026-07-29', fields: 4 },
-  { id: 'footer', label: 'Footer', status: 'published', lastModified: '2026-08-01', fields: 10 },
-]
+type LS = { id: string; label: string; status: 'published' | 'draft'; lastModified: string; fields: number }
 
 export function LandingManager() {
-  const [sections] = useState(MOCK_SECTIONS)
+  const [sections, setSections] = useState<LS[]>([])
   const [selected, setSelected] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/admin/landing').then(r => r.json()).then(d => { setSections(d.sections || []); setLoading(false) }).catch(() => setLoading(false))
+  }, [])
+
+  const toggle = async (id: string) => {
+    const u = sections.map(s => s.id === id ? { ...s, status: s.status === 'published' ? 'draft' as const : 'published' as const, lastModified: new Date().toISOString().slice(0, 10) } : s)
+    setSections(u)
+    await fetch('/api/admin/landing', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sections: u }) })
+  }
+
+  if (loading) return <div className="admin-section"><p>A carregar...</p></div>
 
   return (
     <div className="admin-section">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-        <div>
-          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Landing Page</h2>
-          <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>Edita cada secao da landing page.</p>
-        </div>
-        <button className="btn btn-primary" style={{ fontSize: 13 }}><i className="fas fa-eye" /> Pre-visualizar</button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
+        <div><h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Landing Page</h2><p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Toggle estado com clique. Dados persistidos via API.</p></div>
       </div>
       <div className="admin-table-wrap glass-card" style={{ padding: 0, overflow: 'hidden' }}>
         <table className="admin-table">
-          <thead><tr><th>Seccao</th><th>Estado</th><th>Campos</th><th>Modificado</th><th></th></tr></thead>
+          <thead><tr><th>Secção</th><th>Estado</th><th>Campos</th><th>Modificado</th><th></th></tr></thead>
           <tbody>
             {sections.map(s => (
-              <tr key={s.id} onClick={() => setSelected(s.id === selected ? null : s.id)} style={{ cursor: 'pointer' }}>
+              <tr key={s.id}>
                 <td><strong>{s.label}</strong></td>
-                <td><span className={`badge badge-${s.status === 'published' ? 'success' : 'warning'}`}>{s.status === 'published' ? 'Publicado' : 'Rascunho'}</span></td>
+                <td><button onClick={() => toggle(s.id)} className={`badge badge-${s.status === 'published' ? 'success' : 'warning'}`} style={{ cursor: 'pointer', border: 'none', fontSize: 12 }}>{s.status === 'published' ? 'Publicado' : 'Rascunho'}</button></td>
                 <td>{s.fields}</td>
                 <td style={{ color: 'var(--text-muted)', fontSize: 13 }}>{s.lastModified}</td>
-                <td><button className="btn btn-ghost" style={{ fontSize: 13, padding: '4px 10px' }}><i className="fas fa-pen" /> Editar</button></td>
+                <td><button className="btn btn-ghost" onClick={() => setSelected(s.id === selected ? null : s.id)} style={{ fontSize: 13 }}><i className="fas fa-pen" /> Editar</button></td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      {selected && (
-        <div className="glass-card" style={{ marginTop: 16, padding: 24 }}>
-          <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>
-            <i className="fas fa-pen" style={{ marginRight: 8 }} /> A editar: {sections.find(s => s.id === selected)?.label}
-          </h3>
-          <div style={{ background: 'rgba(99,102,241,0.04)', padding: 16, borderRadius: 8, border: '1px solid var(--border)' }}>
-            <p style={{ fontSize: 13, margin: 0, color: 'var(--text-muted)' }}>
-              <i className="fas fa-info-circle" /> As traducoes estao em <strong>src/frontend/src/i18n/landing.ts</strong>.
-            </p>
-          </div>
-        </div>
-      )}
+      {selected && <div className="glass-card" style={{ marginTop: 16, padding: 24 }}><h3><i className="fas fa-pen" /> {sections.find(s => s.id === selected)?.label}</h3><p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Dados em /data/superadmin/landing.json via API</p></div>}
     </div>
   )
 }
