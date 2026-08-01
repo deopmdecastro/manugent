@@ -1,6 +1,6 @@
 import 'dotenv/config'
 
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
 import { serve } from '@hono/node-server'
@@ -70,6 +70,34 @@ const workOrderTypes = ['preventive', 'inspection', 'round', 'checklist', 'corre
 const scheduledTypes = ['preventive', 'inspection', 'round', 'checklist']
 const workOrderStatuses = ['open', 'scheduled', 'in_progress', 'paused', 'waiting_material', 'waiting_customer', 'completed', 'cancelled']
 const triggeringFindingTypes = ['nok', 'defect', 'measurement_out_of_limits', 'failure']
+
+// ── SuperAdmin API ─────────────────────────────────────────────────────────
+
+const superadminDataDir = resolve(process.cwd(), 'data', 'superadmin')
+
+app.get('/api/admin/:section', (c) => {
+  const section = c.req.param('section')
+  const path = join(superadminDataDir, section + '.json')
+  if (!existsSync(path)) return c.json({ error: 'Section not found' }, 404)
+  try {
+    const data = JSON.parse(readFileSync(path, 'utf-8'))
+    return c.json(data)
+  } catch {
+    return c.json({ error: 'Invalid data' }, 500)
+  }
+})
+
+app.put('/api/admin/:section', async (c) => {
+  const section = c.req.param('section')
+  const path = join(superadminDataDir, section + '.json')
+  try {
+    const body = await c.req.json()
+    writeFileSync(path, JSON.stringify(body, null, 2), 'utf-8')
+    return c.json({ ok: true })
+  } catch {
+    return c.json({ error: 'Invalid data' }, 400)
+  }
+})
 
 // ── Schema Setup ──────────────────────────────────────────────────────────────
 
