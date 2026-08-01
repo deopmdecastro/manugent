@@ -8,6 +8,7 @@ import { SupportManager } from './tabs/SupportManager'
 import { BlogManager } from './tabs/BlogManager'
 import { ContentManager } from './tabs/ContentManager'
 import { LanguageManager } from './tabs/LanguageManager'
+import { AIConfigManager } from './tabs/AIConfigManager'
 import { SuperAdminOverview } from './tabs/SuperAdminOverview'
 
 const SECTIONS = [
@@ -15,6 +16,7 @@ const SECTIONS = [
   { id: 'landing',      label: 'Landing Page',  icon: 'fas fa-palette',          component: LandingManager },
   { id: 'team',         label: 'CEO / Equipa',  icon: 'fas fa-user-tie',         component: TeamManager },
   { id: 'users',        label: 'Utilizadores',  icon: 'fas fa-users-gear',       component: UsersManager },
+  { id: 'ai',           label: 'Configuração IA', icon: 'fas fa-robot',          component: AIConfigManager },
   { id: 'support',      label: 'Suporte',       icon: 'fas fa-headset',          component: SupportManager },
   { id: 'blog',         label: 'Blog',          icon: 'fas fa-newspaper',        component: BlogManager },
   { id: 'content',      label: 'Docs & FAQ',    icon: 'fas fa-file-lines',       component: ContentManager },
@@ -92,6 +94,7 @@ export function SuperAdminPage() {
             <Route path="landing" element={<LandingManager />} />
             <Route path="team" element={<TeamManager />} />
             <Route path="users" element={<UsersManager />} />
+            <Route path="ai" element={<AIConfigManager />} />
             <Route path="support" element={<SupportManager />} />
             <Route path="blog" element={<BlogManager />} />
             <Route path="content" element={<ContentManager />} />

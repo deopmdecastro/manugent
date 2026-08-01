@@ -4013,39 +4013,17 @@
             </div>
           </div>
         </div>
-        <!-- AI Provider Configuration Card -->
+        <!-- AI Provider Configuration moved to SuperAdmin panel -->
         <div class="card p-6 mt-6" id="admin-ai-config-card">
-          <div class="flex items-center justify-between gap-4 mb-5">
+          <div class="flex items-center justify-between gap-4 mb-2">
             <div>
               <h3 class="font-semibold flex items-center gap-2"><i class="fas fa-robot" style="color:var(--accent-purple-light)"></i> Configuração do Agente IA</h3>
-              <p class="text-xs text-slate-500 mt-1">Configure o provedor de IA real para o ManuGent. As chaves são geridas no servidor (.env).</p>
+              <p class="text-xs text-slate-500 mt-1">O provedor, modelo e chaves de IA da plataforma são geridos exclusivamente no painel SuperAdmin.</p>
             </div>
             <span id="ai-config-status-badge" class="badge badge-gray">A verificar...</span>
           </div>
-          <div id="ai-config-status-detail" class="mb-5 p-4 rounded-lg text-sm" style="background:rgba(0,0,0,0.2);border:1px solid var(--border)">
+          <div id="ai-config-status-detail" class="mt-4 p-4 rounded-lg text-sm" style="background:rgba(0,0,0,0.2);border:1px solid var(--border)">
             <div class="flex items-center gap-2"><span class="status-dot dot-yellow" id="ai-cfg-dot"></span><span id="ai-cfg-msg">A contactar servidor...</span></div>
-          </div>
-          <div class="grid md:grid-cols-2 gap-5">
-            <div class="p-4 rounded-lg border border-white/10 bg-white/5">
-              <div class="flex items-center gap-3 mb-3">
-                <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3)"><i class="fas fa-bolt text-emerald-400 text-sm"></i></div>
-                <div><div class="font-medium text-sm">Groq (Recomendado)</div><div class="text-xs text-slate-500">Llama 3 — Ultra rápido, gratuito</div></div>
-              </div>
-              <p class="text-xs text-slate-400 mb-3">Configure no servidor: <code class="mono text-emerald-300">GROQ_API_KEY=gsk_...</code></p>
-              <a href="https://console.groq.com/keys" target="_blank" class="btn-secondary text-xs" style="padding:6px 12px;display:inline-flex"><i class="fas fa-external-link-alt"></i> Obter chave gratuita</a>
-            </div>
-            <div class="p-4 rounded-lg border border-white/10 bg-white/5">
-              <div class="flex items-center gap-3 mb-3">
-                <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3)"><i class="fas fa-brain text-blue-400 text-sm"></i></div>
-                <div><div class="font-medium text-sm">OpenAI</div><div class="text-xs text-slate-500">GPT-4o-mini — Alta qualidade</div></div>
-              </div>
-              <p class="text-xs text-slate-400 mb-3">Configure no servidor: <code class="mono text-blue-300">OPENAI_API_KEY=sk-...</code></p>
-              <a href="https://platform.openai.com/api-keys" target="_blank" class="btn-secondary text-xs" style="padding:6px 12px;display:inline-flex"><i class="fas fa-external-link-alt"></i> Painel OpenAI</a>
-            </div>
-          </div>
-          <div class="mt-4 p-3 rounded-lg text-xs text-slate-400" style="background:rgba(99,102,241,0.07);border:1px solid rgba(99,102,241,0.15)">
-            <i class="fas fa-info-circle mr-1 text-indigo-400"></i>
-            Para configurar: edite o ficheiro <code class="mono text-indigo-300">.env</code> na raiz do servidor e reinicie. Variáveis: <code class="mono">OPENAI_API_KEY</code>, <code class="mono">GROQ_API_KEY</code>, <code class="mono">AI_PROVIDER</code> (openai|groq), <code class="mono">AI_MODEL</code>.
           </div>
         </div>
         <div class="card p-6 mt-6" id="admin-ai-scope-card">
@@ -6435,6 +6413,8 @@ function updateUserUI() {
   document.getElementById('settings-role-input').disabled = APP.user.role !== 'admin';
   var aiSettingsBtn = document.getElementById('ai-settings-btn');
   if (aiSettingsBtn) aiSettingsBtn.style.display = getUserRole() === 'admin' ? 'inline-flex' : 'none';
+  var aiConfigCardInit = document.getElementById('admin-ai-config-card');
+  if (aiConfigCardInit) aiConfigCardInit.style.display = getUserRole() === 'admin' ? 'block' : 'none';
   if (getUserRole() === 'admin') generateManagedUserPassword(false);
   renderManagedUsers();
   renderAIScopeSettings();
@@ -6621,6 +6601,8 @@ function applyPermissions() {
   if (!canAccessPage(APP.currentPage || 'dashboard')) showPage(getDefaultPageForRole());
   var aiCard = document.getElementById('admin-ai-scope-card');
   if (aiCard) aiCard.style.display = getUserRole() === 'admin' ? 'block' : 'none';
+  var aiConfigCard = document.getElementById('admin-ai-config-card');
+  if (aiConfigCard) aiConfigCard.style.display = getUserRole() === 'admin' ? 'block' : 'none';
   var aiSettingsBtn = document.getElementById('ai-settings-btn');
   if (aiSettingsBtn) aiSettingsBtn.style.display = getUserRole() === 'admin' ? 'inline-flex' : 'none';
   var materialBtn = document.getElementById('new-material-page-btn');
@@ -11950,8 +11932,7 @@ function openAISettings() {
   }
   showPage('settings');
   setTimeout(function() {
-    var card = document.getElementById('admin-ai-config-card');
-    if (!card) card = document.getElementById('admin-ai-scope-card');
+    var card = document.getElementById('admin-ai-scope-card') || document.getElementById('admin-ai-config-card');
     if (!card) return;
     card.scrollIntoView({ behavior: 'smooth', block: 'center' });
     card.style.boxShadow = '0 0 0 1px rgba(99,102,241,.7), 0 0 28px rgba(99,102,241,.28)';

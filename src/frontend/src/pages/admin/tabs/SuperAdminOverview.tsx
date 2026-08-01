@@ -11,6 +11,7 @@ const SECTIONS = [
   { to: '/superadmin/landing', label: 'Landing Page', desc: 'Editar hero, features, stats, CTA, footer', icon: 'fas fa-palette', color: '#6366f1' },
   { to: '/superadmin/team', label: 'CEO / Equipa', desc: 'Gerir membros, bios, fotos, cargos', icon: 'fas fa-user-tie', color: '#06b6d4' },
   { to: '/superadmin/users', label: 'Utilizadores', desc: 'Criar, editar, roles, permissões', icon: 'fas fa-users-gear', color: '#10b981' },
+  { to: '/superadmin/ai', label: 'Configuração IA', desc: 'Provedor, modelo e estado do Agente IA', icon: 'fas fa-robot', color: '#a855f7' },
   { to: '/superadmin/support', label: 'Suporte', desc: 'Tickets, mensagens, chat IA', icon: 'fas fa-headset', color: '#f59e0b' },
   { to: '/superadmin/blog', label: 'Blog', desc: 'Criar/editar artigos, categorias', icon: 'fas fa-newspaper', color: '#8b5cf6' },
   { to: '/superadmin/content', label: 'Docs & FAQ', desc: 'Documentação e perguntas frequentes', icon: 'fas fa-file-lines', color: '#ec4899' },
@@ -42,7 +43,7 @@ export function SuperAdminOverview() {
                 <i className={s.icon} style={{ color: s.color, fontSize: 18 }} />
               </div>
               <div>
-                <p style={{ fontWeight: 600, fontSize: 15, margin: 0, color: 'var(--text)' }}>{s.label}</p>
+                <p style={{ fontWeight: 600, fontSize: 15, margin: 0, color: 'var(--text-primary)' }}>{s.label}</p>
                 <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>{s.desc}</p>
               </div>
             </Link>
