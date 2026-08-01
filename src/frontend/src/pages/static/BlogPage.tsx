@@ -1,24 +1,27 @@
 import { Link } from 'react-router-dom'
 import { StaticPageLayout } from '../../components/static/StaticPageLayout'
 import { BlogCover } from '../../components/static/BlogCover'
-import { BLOG_POSTS, type BlogPost } from '../../data/blogPosts'
+import { BLOG_POSTS, pickLang, type BlogPost } from '../../data/blogPosts'
 import { useBlogStats } from '../../hooks/useBlogEngagement'
+import { useLanguage } from '../../contexts/LanguageContext'
 
 function BlogCard({ post }: { post: BlogPost }) {
   const { likeCount, viewCount } = useBlogStats(post.slug)
+  const { language, t } = useLanguage()
+  const locale = language === 'pt' ? 'pt-PT' : 'en-US'
 
   return (
     <Link to={`/blog/${post.slug}`} className="static-blog-card">
       <BlogCover icon={post.coverIcon} gradient={post.coverGradient} />
       <div className="static-blog-card-body">
-        <span className="static-blog-category">{post.category}</span>
-        <h3>{post.title}</h3>
-        <p>{post.excerpt}</p>
+        <span className="static-blog-category">{pickLang(post.category, language)}</span>
+        <h3>{pickLang(post.title, language)}</h3>
+        <p>{pickLang(post.excerpt, language)}</p>
         <div className="static-blog-meta">
-          <span>{post.date} · {post.readTime} de leitura</span>
+          <span>{post.date} · {pickLang(post.readTime, language)} {t.blog.readTimeSuffix}</span>
           <span className="static-blog-meta-stats">
-            <span><i className="fa-solid fa-eye" /> {viewCount.toLocaleString('pt-PT')}</span>
-            <span><i className="fa-solid fa-heart" /> {likeCount.toLocaleString('pt-PT')}</span>
+            <span><i className="fa-solid fa-eye" /> {viewCount.toLocaleString(locale)}</span>
+            <span><i className="fa-solid fa-heart" /> {likeCount.toLocaleString(locale)}</span>
           </span>
         </div>
       </div>
@@ -27,11 +30,13 @@ function BlogCard({ post }: { post: BlogPost }) {
 }
 
 export function BlogPage() {
+  const { t } = useLanguage()
+
   return (
     <StaticPageLayout
-      badge="Blog"
-      title="Novidades e boas práticas de manutenção"
-      desc="Artigos sobre produto, indústria e boas práticas de gestão de manutenção, escritos pela equipa ManuGent."
+      badge={t.blog.badge}
+      title={t.blog.title}
+      desc={t.blog.desc}
       narrow={false}
     >
       <div className="static-blog-grid">
