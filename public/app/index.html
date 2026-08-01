@@ -4532,11 +4532,11 @@
         <div id="sa-blog" class="sa-tab-panel" style="display:none">
           <div class="flex items-center justify-between mb-4">
             <div class="flex gap-2 flex-wrap">
-              <select id="sa-blog-filter" class="input-field text-sm" style="max-width:140px" onchange="renderSABlog()">
-                <option value="">Todos</option>
-                <option value="published">Publicados</option>
-                <option value="draft">Rascunhos</option>
-              </select>
+              <div class="flex bg-white/5 rounded-lg p-1">
+                <button class="tab-btn active" data-sa-blog-filter="" onclick="setSABlogFilter('')">Todos</button>
+                <button class="tab-btn" data-sa-blog-filter="published" onclick="setSABlogFilter('published')">Publicados</button>
+                <button class="tab-btn" data-sa-blog-filter="draft" onclick="setSABlogFilter('draft')">Rascunhos</button>
+              </div>
               <input type="text" id="sa-blog-search" class="input-field text-sm" style="max-width:220px" placeholder="Pesquisar artigos..." oninput="renderSABlog()">
             </div>
             <button class="btn-primary text-sm" onclick="openSABlogModal()"><i class="fas fa-plus"></i> Novo Artigo</button>
@@ -14084,7 +14084,8 @@ var SA_STATE = {
   aiConfig: {},
   landingConfig: {},
   supportData: [],
-  loadedTabs: {}
+  loadedTabs: {},
+  blogFilter: ''
 };
 
 function showSuperAdminTab(tab) {
@@ -14840,9 +14841,17 @@ function loadSABlog() {
     .catch(function() { SA_BLOG_DATA = { posts: [] }; renderSABlog(); });
 }
 
+function setSABlogFilter(value) {
+  SA_STATE.blogFilter = value;
+  document.querySelectorAll('[data-sa-blog-filter]').forEach(function(btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-sa-blog-filter') === value);
+  });
+  renderSABlog();
+}
+
 function renderSABlog() {
   var posts = SA_BLOG_DATA.posts || [];
-  var filter = getValue('sa-blog-filter');
+  var filter = SA_STATE.blogFilter || '';
   var search = (getValue('sa-blog-search') || '').toLowerCase();
   if (filter) posts = posts.filter(function(p) { return p.status === filter; });
   if (search) posts = posts.filter(function(p) { return (p.title + ' ' + p.category + ' ' + (p.tags || []).join(' ')).toLowerCase().includes(search); });
