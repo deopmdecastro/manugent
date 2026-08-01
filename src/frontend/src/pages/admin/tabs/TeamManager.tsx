@@ -32,7 +32,7 @@ export function TeamManager() {
       </div>
       <div className="admin-cards-grid">
         {members.map(m => (
-          <div key={m.id} className="glass-card" style={{ padding: 20, display: 'flex', gap: 16, alignItems: 'center' }}>
+          <div key={m.id} className="admin-card" style={{ padding: 20, display: 'flex', gap: 16, alignItems: 'center' }}>
             <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'var(--accent)20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 700, color: 'var(--accent)', flexShrink: 0 }}>{m.name.charAt(0)}</div>
             <div style={{ flex: 1 }}><p style={{ fontWeight: 600, fontSize: 15, margin: 0 }}>{m.name}</p><p style={{ fontSize: 13, color: 'var(--accent)', margin: '2px 0' }}>{m.role}</p><p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '2px 0 0' }}>{m.bio}</p></div>
             <button className="btn btn-ghost" style={{ fontSize: 13, padding: '6px 8px' }} onClick={() => setEditing(m)}><i className="fas fa-pen" /></button>
@@ -40,7 +40,7 @@ export function TeamManager() {
           </div>
         ))}
       </div>
-      {editing && <div className="glass-card" style={{ marginTop: 16, padding: 24 }}>
+      {editing && <div className="admin-card" style={{ marginTop: 16, padding: 24 }}>
         <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>{editing.id ? 'Editar' : 'Novo'}</h3>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div><label>Nome</label><input className="glass-input" value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} style={{ width: '100%' }} /></div>

@@ -12,15 +12,15 @@ import { AIConfigManager } from './tabs/AIConfigManager'
 import { SuperAdminOverview } from './tabs/SuperAdminOverview'
 
 const SECTIONS = [
-  { id: '',             label: 'Visão Geral',  icon: 'fas fa-gauge-high',       component: SuperAdminOverview },
-  { id: 'landing',      label: 'Landing Page',  icon: 'fas fa-palette',          component: LandingManager },
-  { id: 'team',         label: 'CEO / Equipa',  icon: 'fas fa-user-tie',         component: TeamManager },
-  { id: 'users',        label: 'Utilizadores',  icon: 'fas fa-users-gear',       component: UsersManager },
-  { id: 'ai',           label: 'Configuração IA', icon: 'fas fa-robot',          component: AIConfigManager },
-  { id: 'support',      label: 'Suporte',       icon: 'fas fa-headset',          component: SupportManager },
-  { id: 'blog',         label: 'Blog',          icon: 'fas fa-newspaper',        component: BlogManager },
-  { id: 'content',      label: 'Docs & FAQ',    icon: 'fas fa-file-lines',       component: ContentManager },
-  { id: 'languages',    label: 'Idiomas',       icon: 'fas fa-language',         component: LanguageManager },
+  { id: '',             label: 'Visão Geral',   icon: 'fas fa-gauge-high',       component: SuperAdminOverview },
+  { id: 'landing',      label: 'Landing Page',  icon: 'fas fa-palette',          component: LandingManager,   group: 'Site' },
+  { id: 'team',         label: 'CEO / Equipa',  icon: 'fas fa-user-tie',         component: TeamManager,      group: 'Site' },
+  { id: 'blog',         label: 'Blog',          icon: 'fas fa-newspaper',        component: BlogManager,      group: 'Site' },
+  { id: 'content',      label: 'Docs & FAQ',    icon: 'fas fa-file-lines',       component: ContentManager,   group: 'Site' },
+  { id: 'languages',    label: 'Idiomas',       icon: 'fas fa-language',         component: LanguageManager,  group: 'Site' },
+  { id: 'users',        label: 'Utilizadores',  icon: 'fas fa-users-gear',       component: UsersManager,     group: 'Plataforma' },
+  { id: 'ai',           label: 'Configuração IA', icon: 'fas fa-robot',          component: AIConfigManager,  group: 'Plataforma' },
+  { id: 'support',      label: 'Suporte',       icon: 'fas fa-headset',          component: SupportManager,   group: 'Plataforma' },
 ]
 
 export function SuperAdminPage() {
@@ -40,6 +40,7 @@ export function SuperAdminPage() {
   }
 
   const currentSection = SECTIONS.find(s => location.pathname === `/superadmin/${s.id}`) || SECTIONS[0]
+  const initial = (user?.name || 'A').charAt(0).toUpperCase()
 
   return (
     <div className="admin-layout">
@@ -48,23 +49,46 @@ export function SuperAdminPage() {
         <div className="admin-sidebar-brand">
           <Link to="/superadmin">
             <img src="/app/assets/icon_manugent.png" alt="ManuGent" style={{ height: 32 }} />
+            {!collapsed && <span className="admin-sidebar-brand-name">SuperAdmin</span>}
           </Link>
-          {!collapsed && <span style={{ fontWeight: 700, fontSize: 14 }}>SuperAdmin</span>}
         </div>
+
+        <div className="admin-sidebar-user-card">
+          <div className="admin-sidebar-user-label">Plataforma</div>
+          <div className="admin-sidebar-user-row">
+            <div className="admin-sidebar-avatar">{initial}</div>
+            <div className="admin-sidebar-user-meta">
+              <div className="admin-sidebar-user-name">{user?.name}</div>
+              <div className="admin-sidebar-user-email">{user?.email}</div>
+            </div>
+          </div>
+        </div>
+
         <nav className="admin-sidebar-nav">
-          {SECTIONS.map(s => (
-            <Link
-              key={s.id}
-              to={`/superadmin/${s.id}`}
-              className={`admin-sidebar-link${location.pathname === `/superadmin/${s.id}` ? ' active' : ''}`}
-              title={collapsed ? s.label : undefined}
-            >
-              <i className={s.icon} />
-              {!collapsed && <span>{s.label}</span>}
-            </Link>
-          ))}
+          {SECTIONS.map((s, i) => {
+            const prevGroup = i > 0 ? SECTIONS[i - 1].group : undefined
+            const showLabel = !collapsed && s.group && s.group !== prevGroup
+            return (
+              <div key={s.id}>
+                {showLabel && <div className="admin-sidebar-section-label">{s.group}</div>}
+                <Link
+                  to={`/superadmin/${s.id}`}
+                  className={`admin-sidebar-link${location.pathname === `/superadmin/${s.id}` ? ' active' : ''}`}
+                  title={collapsed ? s.label : undefined}
+                >
+                  <i className={s.icon} />
+                  <span>{s.label}</span>
+                </Link>
+              </div>
+            )
+          })}
         </nav>
+
         <div className="admin-sidebar-footer">
+          <Link to="/landing" className="admin-sidebar-link" title={collapsed ? 'Voltar ao site' : undefined}>
+            <i className="fas fa-arrow-left" />
+            <span>Voltar ao site</span>
+          </Link>
           <button onClick={() => setCollapsed(!collapsed)} className="admin-sidebar-collapse" aria-label="Toggle sidebar">
             <i className={`fas fa-angles-${collapsed ? 'right' : 'left'}`} />
           </button>
@@ -74,18 +98,18 @@ export function SuperAdminPage() {
       {/* Main */}
       <main className="admin-main">
         <header className="admin-topbar">
-          <div>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>Painel SuperAdmin</p>
-            <h1 style={{ fontSize: 20, fontWeight: 700, margin: '2px 0 0' }}>{currentSection.label}</h1>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Link to="/landing" className="btn btn-ghost" style={{ fontSize: 13 }}>
-              <i className="fas fa-arrow-left" /> Site
-            </Link>
-            <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-              <i className="fas fa-circle" style={{ color: 'var(--accent-green)', fontSize: 8, marginRight: 4 }} />
-              {user?.name}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <span className="admin-topbar-pill">
+              <i className="fas fa-shield-halved" /> SuperAdmin
             </span>
+            <h1 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--text-secondary)' }}>{currentSection.label}</h1>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button className="admin-topbar-icon-btn" aria-label="Pesquisar"><i className="fas fa-search" /></button>
+            <button className="admin-topbar-icon-btn" aria-label="Notificações"><i className="fas fa-bell" /></button>
+            <div className="admin-topbar-user">
+              <div className="admin-topbar-avatar">{initial}</div>
+            </div>
           </div>
         </header>
         <div className="admin-content">

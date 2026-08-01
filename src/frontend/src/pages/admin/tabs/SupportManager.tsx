@@ -42,7 +42,7 @@ export function SupportManager() {
           ))}
         </div>
       </div>
-      <div className="admin-table-wrap glass-card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="admin-table-wrap admin-card" style={{ padding: 0, overflow: 'hidden' }}>
         <table className="admin-table">
           <thead><tr><th>ID</th><th>Utilizador</th><th>Assunto</th><th>Prioridade</th><th>Estado</th><th>Data</th><th></th></tr></thead>
           <tbody>

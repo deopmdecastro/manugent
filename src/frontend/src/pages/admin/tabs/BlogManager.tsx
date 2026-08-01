@@ -30,7 +30,7 @@ export function BlogManager() {
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {posts.map(p => (
-          <div key={p.slug} className="glass-card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div key={p.slug} className="admin-card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}><strong style={{ fontSize: 15 }}>{p.title.pt}</strong><span className={`badge badge-${p.status === 'published' ? 'success' : 'warning'}`}>{p.status === 'published' ? 'Publicado' : 'Rascunho'}</span></div>
               <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>{p.excerpt.pt}</p>
@@ -41,7 +41,7 @@ export function BlogManager() {
           </div>
         ))}
       </div>
-      {editing && <div className="glass-card" style={{ marginTop: 16, padding: 24 }}>
+      {editing && <div className="admin-card" style={{ marginTop: 16, padding: 24 }}>
         <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>{posts.find(p => p.slug === editing.slug) ? 'Editar' : 'Novo artigo'}</h3>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div style={{ gridColumn: '1/-1' }}><label>Slug</label><input className="glass-input" value={editing.slug} onChange={e => setEditing({ ...editing, slug: e.target.value })} style={{ width: '100%' }} /></div>
