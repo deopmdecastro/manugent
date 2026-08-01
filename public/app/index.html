@@ -1066,6 +1066,78 @@
     #modal-pause-ot .select-menu {
       max-height: 320px;
     }
+    #modal-global-filter .modal-content {
+      overflow: visible;
+    }
+    .filter-section-label {
+      align-items: center;
+      color: var(--text-muted);
+      display: flex;
+      font-size: 11px;
+      font-weight: 600;
+      gap: 8px;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    .filter-section-label::after {
+      background: var(--border-light);
+      content: '';
+      flex: 1;
+      height: 1px;
+    }
+    .filter-toggle-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .filter-toggle {
+      align-items: center;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border-light);
+      border-radius: 999px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: inline-flex;
+      font-size: 13px;
+      font-weight: 500;
+      gap: 7px;
+      padding: 8px 14px 8px 12px;
+      transition: all 0.16s;
+      user-select: none;
+    }
+    .filter-toggle i {
+      font-size: 10px;
+      opacity: 0.7;
+    }
+    .filter-toggle:hover {
+      background: rgba(99,102,241,0.08);
+      border-color: rgba(129,140,248,0.45);
+      color: var(--text-primary);
+    }
+    .filter-toggle.active {
+      background: rgba(168,85,247,0.16);
+      border-color: rgba(168,85,247,0.55);
+      color: #fff;
+    }
+    .filter-toggle.active i {
+      color: var(--accent-purple-light);
+      opacity: 1;
+    }
+    .filter-toggle .filter-toggle-dot {
+      background: transparent;
+      border: 1.5px solid rgba(255,255,255,0.35);
+      border-radius: 50%;
+      display: inline-block;
+      flex: 0 0 auto;
+      height: 8px;
+      width: 8px;
+    }
+    .filter-toggle.active .filter-toggle-dot {
+      background: var(--accent-purple-light);
+      border-color: var(--accent-purple-light);
+      box-shadow: 0 0 0 3px rgba(168,85,247,0.22);
+    }
     .detail-page .modal-content {
       background: transparent;
       border: none;
@@ -6187,13 +6259,16 @@
 <div id="modal-global-filter" class="modal-overlay" style="display:none">
   <div class="modal-content modal-lg">
     <div class="flex items-center justify-between mb-5">
-      <div>
-        <h2 class="text-lg font-semibold">Filtros</h2>
-        <p class="text-xs text-slate-500 mt-1">Filtros contextuais para a página atual.</p>
+      <div class="flex items-center gap-3">
+        <span class="metric-card__icon metric-card__icon--purple" style="width:38px;height:38px;border-radius:11px;flex:0 0 auto"><i class="fas fa-filter"></i></span>
+        <div>
+          <h2 class="text-lg font-semibold">Filtros</h2>
+          <p class="text-xs text-slate-500 mt-1">Filtros contextuais para a página atual.</p>
+        </div>
       </div>
       <button class="btn-ghost" onclick="closeModal('modal-global-filter')"><i class="fas fa-times"></i></button>
     </div>
-    <div id="global-filter-fields" class="space-y-4"></div>
+    <div id="global-filter-fields" class="space-y-5"></div>
     <div class="flex gap-3 mt-6">
       <button class="btn-secondary flex-1" onclick="clearGlobalFilters()">Limpar</button>
       <button class="btn-primary flex-1" onclick="applyGlobalFilters()">Aplicar</button>
@@ -9078,6 +9153,15 @@ function formatDate(value) {
   if (isNaN(date.getTime())) return value;
   return date.toLocaleDateString('pt-PT');
 }
+function getOTClientId(o) {
+  if (o.workClientId) return o.workClientId;
+  if (o.clientId) return o.clientId;
+  var equip = (APP.equipment || []).find(function(e) { return e.id === o.equipmentId || e.name === o.equipmentName; });
+  return equip ? (equip.clientId || '') : '';
+}
+function getOTBuildingId(o) {
+  return o.workBuildingId || o.buildingId || '';
+}
 function getFilteredOTs() {
   var list = APP.ots.slice().reverse();
   if (APP.otFilter === 'agendadas') list = list.filter(function(o) { return getOTOrigin(o) === 'scheduled'; });
@@ -9086,6 +9170,17 @@ function getFilteredOTs() {
   if (APP.otStatusFilter) list = list.filter(function(o) { return o.status === APP.otStatusFilter; });
   if (APP.otPriorityFilter) list = list.filter(function(o) { return o.priority === APP.otPriorityFilter; });
   if (APP.otTypeFilter && APP.otFilter !== 'obras') list = list.filter(function(o) { return o.type === APP.otTypeFilter; });
+  if (APP.otClientFilter) list = list.filter(function(o) { return getOTClientId(o) === APP.otClientFilter; });
+  if (APP.otBuildingFilter) list = list.filter(function(o) { return getOTBuildingId(o) === APP.otBuildingFilter; });
+  if (APP.otTechnicianFilter) list = list.filter(function(o) { return o.technicianId === APP.otTechnicianFilter; });
+  var quick = APP.otQuickFilters || {};
+  if (quick.mine) list = list.filter(recordMatchesTechnician);
+  if (quick.unassigned) list = list.filter(function(o) { return !o.technicianId; });
+  if (quick.overdue) list = list.filter(function(o) {
+    if (['Concluída','Cancelada'].includes(o.status)) return false;
+    var due = o.date || o.scheduledFor;
+    return !!due && new Date(due).getTime() < Date.now();
+  });
   return list;
 }
 function renderOTs() {
@@ -13867,19 +13962,54 @@ function openFilterModal() {
   setTimeout(enhanceSelects, 20);
 }
 
+function filterOpt(value, label, current) {
+  return '<option value="' + escapeHtml(value) + '"' + (String(current || '') === String(value) ? ' selected' : '') + '>' + escapeHtml(label) + '</option>';
+}
+function filterToggle(key, icon, label, active) {
+  return '<button type="button" class="filter-toggle' + (active ? ' active' : '') + '" data-toggle="' + key + '" onclick="this.classList.toggle(\'active\')"><span class="filter-toggle-dot"></span>' + (icon ? '<i class="fas ' + icon + '"></i> ' : '') + label + '</button>';
+}
+function isFilterToggleActive(key) {
+  var el = document.querySelector('.filter-toggle[data-toggle="' + key + '"]');
+  return !!(el && el.classList.contains('active'));
+}
 function renderGlobalFilterFields(page) {
   if (page === 'dashboard') {
-    var technicianOptions = (APP.technicians || []).map(function(t) { return '<option value="' + t.id + '">' + escapeHtml(t.name) + '</option>'; }).join('');
+    var df = APP.dashboardFilter || {};
+    var technicianOptions = '<option value="">Todos</option>' + (APP.technicians || []).map(function(t) { return filterOpt(t.id, t.name, df.technicianId); }).join('');
     return '<div class="grid md:grid-cols-3 gap-3">' +
-      '<div><label class="block text-sm mb-2 text-slate-300">Período</label><select id="filter-dash-period" class="input-field"><option value="">Todo o período</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select></div>' +
-      '<div><label class="block text-sm mb-2 text-slate-300">Técnico</label><select id="filter-dash-technician" class="input-field"><option value="">Todos</option>' + technicianOptions + '</select></div>' +
-      '<div><label class="block text-sm mb-2 text-slate-300">Prioridade</label><select id="filter-dash-priority" class="input-field"><option value="">Todas</option><option>Baixa</option><option>Média</option><option>Alta</option><option>Urgente</option></select></div></div>';
+      '<div><label class="block text-sm mb-2 text-slate-300">Período</label><select id="filter-dash-period" class="input-field">' + filterOpt('', 'Todo o período', df.period) + filterOpt('7', 'Últimos 7 dias', df.period) + filterOpt('30', 'Últimos 30 dias', df.period) + filterOpt('90', 'Últimos 90 dias', df.period) + '</select></div>' +
+      '<div><label class="block text-sm mb-2 text-slate-300">Técnico</label><select id="filter-dash-technician" class="input-field">' + technicianOptions + '</select></div>' +
+      '<div><label class="block text-sm mb-2 text-slate-300">Prioridade</label><select id="filter-dash-priority" class="input-field">' + filterOpt('', 'Todas', df.priority) + filterOpt('Baixa', 'Baixa', df.priority) + filterOpt('Média', 'Média', df.priority) + filterOpt('Alta', 'Alta', df.priority) + filterOpt('Urgente', 'Urgente', df.priority) + '</select></div></div>';
   }
   if (page === 'ots') {
-    return '<div class="grid md:grid-cols-3 gap-3">' +
-      '<div><label class="block text-sm mb-2 text-slate-300">Estado</label><select id="filter-ot-status" class="input-field"><option value="">Todos</option><option>Aberta</option><option>Agendada</option><option>Em Curso</option><option>Pausada</option><option>Aguarda Material</option><option>Aguarda Cliente</option><option>Concluída</option><option>Cancelada</option></select></div>' +
-      '<div><label class="block text-sm mb-2 text-slate-300">Prioridade</label><select id="filter-ot-priority" class="input-field"><option value="">Todas</option><option>Baixa</option><option>Média</option><option>Alta</option><option>Urgente</option></select></div>' +
-      '<div><label class="block text-sm mb-2 text-slate-300">Tipo</label><select id="filter-ot-type" class="input-field"><option value="">Todos</option><option>Preventiva</option><option>Corretiva</option><option>Preditiva</option><option>Inspeção</option><option>Obras/Instalações</option></select></div></div>';
+    var clientOptions = '<option value="">Todos</option>' + (APP.clients || []).map(function(c) { return filterOpt(c.id, c.name, APP.otClientFilter); }).join('');
+    var buildingOptions = '<option value="">Todos</option>' + (APP.buildings || []).map(function(b) { return filterOpt(b.id, b.name, APP.otBuildingFilter); }).join('');
+    var technicianOptions2 = '<option value="">Todos</option>' + (APP.technicians || []).map(function(t) { return filterOpt(t.id, t.name, APP.otTechnicianFilter); }).join('');
+    var q = APP.otQuickFilters || {};
+    return '<div>' +
+        '<div class="filter-section-label">Estado</div>' +
+        '<div class="grid md:grid-cols-3 gap-3">' +
+          '<div><label class="block text-sm mb-2 text-slate-300">Estado</label><select id="filter-ot-status" class="input-field">' + filterOpt('', 'Todos', APP.otStatusFilter) + ['Aberta','Agendada','Em Curso','Pausada','Aguarda Material','Aguarda Cliente','Concluída','Cancelada'].map(function(s) { return filterOpt(s, s, APP.otStatusFilter); }).join('') + '</select></div>' +
+          '<div><label class="block text-sm mb-2 text-slate-300">Prioridade</label><select id="filter-ot-priority" class="input-field">' + filterOpt('', 'Todas', APP.otPriorityFilter) + ['Baixa','Média','Alta','Urgente'].map(function(s) { return filterOpt(s, s, APP.otPriorityFilter); }).join('') + '</select></div>' +
+          '<div><label class="block text-sm mb-2 text-slate-300">Tipo</label><select id="filter-ot-type" class="input-field">' + filterOpt('', 'Todos', APP.otTypeFilter) + ['Preventiva','Corretiva','Preditiva','Inspeção','Obras/Instalações'].map(function(s) { return filterOpt(s, s, APP.otTypeFilter); }).join('') + '</select></div>' +
+        '</div>' +
+      '</div>' +
+      '<div>' +
+        '<div class="filter-section-label">Cliente &amp; Localização</div>' +
+        '<div class="grid md:grid-cols-3 gap-3">' +
+          '<div><label class="block text-sm mb-2 text-slate-300">Cliente</label><select id="filter-ot-client" class="input-field">' + clientOptions + '</select></div>' +
+          '<div><label class="block text-sm mb-2 text-slate-300">Edifício / Sucursal</label><select id="filter-ot-building" class="input-field">' + buildingOptions + '</select></div>' +
+          '<div><label class="block text-sm mb-2 text-slate-300">Técnico</label><select id="filter-ot-technician" class="input-field">' + technicianOptions2 + '</select></div>' +
+        '</div>' +
+      '</div>' +
+      '<div>' +
+        '<div class="filter-section-label">Atalhos</div>' +
+        '<div class="filter-toggle-group">' +
+          filterToggle('ot-mine', 'fa-user-check', 'Atribuídas a mim', q.mine) +
+          filterToggle('ot-unassigned', 'fa-user-slash', 'Sem técnico atribuído', q.unassigned) +
+          filterToggle('ot-overdue', 'fa-triangle-exclamation', 'Atrasadas', q.overdue) +
+        '</div>' +
+      '</div>';
   }
   if (page === 'equipment') {
     return '<div class="grid md:grid-cols-2 gap-3">' +
@@ -13910,6 +14040,14 @@ function applyGlobalFilters() {
     APP.otStatusFilter = getValue('filter-ot-status');
     APP.otPriorityFilter = getValue('filter-ot-priority');
     APP.otTypeFilter = getValue('filter-ot-type');
+    APP.otClientFilter = getValue('filter-ot-client');
+    APP.otBuildingFilter = getValue('filter-ot-building');
+    APP.otTechnicianFilter = getValue('filter-ot-technician');
+    APP.otQuickFilters = {
+      mine: isFilterToggleActive('ot-mine'),
+      unassigned: isFilterToggleActive('ot-unassigned'),
+      overdue: isFilterToggleActive('ot-overdue')
+    };
     renderOTs();
   } else if (page === 'equipment') {
     var status = getValue('filter-equip-status');
@@ -13932,6 +14070,10 @@ function clearGlobalFilters() {
   APP.otStatusFilter = '';
   APP.otPriorityFilter = '';
   APP.otTypeFilter = '';
+  APP.otClientFilter = '';
+  APP.otBuildingFilter = '';
+  APP.otTechnicianFilter = '';
+  APP.otQuickFilters = {};
   ['files-type-filter','files-permission-filter'].forEach(function(id) { setValue(id, ''); });
   updateDashboard(); renderOTs(); renderEquipment(); renderKnowledge(); renderFiles();
   closeModal('modal-global-filter');
