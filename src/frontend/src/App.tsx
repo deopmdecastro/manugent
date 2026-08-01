@@ -20,6 +20,7 @@ import { PrivacyPage } from './pages/static/PrivacyPage'
 import { TermsPage } from './pages/static/TermsPage'
 import { GdprPage } from './pages/static/GdprPage'
 import { CookiesPage } from './pages/static/CookiesPage'
+import { SuperAdminPage } from './pages/admin/SuperAdminPage'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { LanguageProvider } from './contexts/LanguageContext'
 import { CookieConsent } from './components/landing/CookieConsent'
@@ -52,6 +53,7 @@ export function App() {
             <Route path="/termos" element={<TermsPage />} />
             <Route path="/gdpr" element={<GdprPage />} />
             <Route path="/cookies" element={<CookiesPage />} />
+            <Route path="/superadmin/*" element={<SuperAdminPage />} />
             <Route path="/react/index.html" element={<Navigate to="/landing" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

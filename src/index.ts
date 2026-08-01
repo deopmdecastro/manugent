@@ -12,6 +12,8 @@ app.get('/react', (c) => c.redirect('/react/index.html'))
 // React SPA routes
 app.get('/landing', (c) => c.redirect('/react/index.html'))
 app.get('/login', (c) => c.redirect('/react/index.html'))
+app.get('/superadmin', (c) => c.redirect('/react/index.html'))
+app.get('/superadmin/*', (c) => c.redirect('/react/index.html'))
 app.get('/dashboard', (c) => c.redirect('/app/index.html'))
 app.get('/dashboard/*', (c) => c.redirect('/app/index.html'))
 app.get('/settings', (c) => c.redirect('/app/index.html'))
