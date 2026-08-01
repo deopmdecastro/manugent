@@ -7637,23 +7637,38 @@ function getAIAccessDeniedText(module) {
 }
 
 // ======================== DASHBOARD ========================
+function getDashboardOTs() {
+  var filter = APP.dashboardFilter || {};
+  return (APP.ots || []).filter(function(o) {
+    if (filter.period) {
+      var days = parseInt(filter.period, 10);
+      var created = new Date(o.createdAt || o.scheduledFor || 0).getTime();
+      var cutoff = Date.now() - days * 86400000;
+      if (!created || created < cutoff) return false;
+    }
+    if (filter.technicianId && o.technicianId !== filter.technicianId) return false;
+    if (filter.priority && o.priority !== filter.priority) return false;
+    return true;
+  });
+}
 function updateDashboard() {
-  var open = APP.ots.filter(function(o) { return ['Aberta','Agendada','Em Curso','Pausada','Aguarda Material','Aguarda Cliente','Em andamento','Em espera'].includes(o.status); }).length;
-  var done = APP.ots.filter(function(o) { return o.status === 'Concluída'; }).length;
-  var critical = APP.ots.filter(function(o) { return ['Alta','Urgente'].includes(o.priority) && o.status !== 'Concluída'; }).length;
+  var dashOts = getDashboardOTs();
+  var open = dashOts.filter(function(o) { return ['Aberta','Agendada','Em Curso','Pausada','Aguarda Material','Aguarda Cliente','Em andamento','Em espera'].includes(o.status); }).length;
+  var done = dashOts.filter(function(o) { return o.status === 'Concluída'; }).length;
+  var critical = dashOts.filter(function(o) { return ['Alta','Urgente'].includes(o.priority) && o.status !== 'Concluída'; }).length;
   setText('metric-ots-open', open);
   setText('metric-ots-done', done);
   setText('metric-critical', critical);
   setText('metric-equip', APP.equipment.length);
-  setText('ot-count-badge', open);
+  setText('ot-count-badge', APP.ots.filter(function(o) { return ['Aberta','Agendada','Em Curso','Pausada','Aguarda Material','Aguarda Cliente','Em andamento','Em espera'].includes(o.status); }).length);
   var role = getRoleLabel(getUserRole());
   var firstName = APP.user && APP.user.name ? String(APP.user.name).trim().split(/\s+/)[0] : role;
   setText('dash-user-name', firstName || role);
   setText('dash-user-email', APP.user && APP.user.email ? APP.user.email + ' · ' + role : 'Resumo da operação em tempo real.');
   setText('dashboard-date-pill', new Intl.DateTimeFormat('pt-PT', { day:'2-digit', month:'long', year:'numeric' }).format(new Date()));
-  var recent = APP.ots.slice(-5).reverse();
+  var recent = dashOts.slice(-5).reverse();
   var actEl = document.getElementById('dash-activity');
-  if (APP.ots.length === 0) {
+  if (dashOts.length === 0) {
     actEl.innerHTML = '<div class="dashboard-empty">Nenhuma atividade recente.</div>';
   } else {
     var tones = ['',' dashboard-activity-row__icon--blue',' dashboard-activity-row__icon--green',' dashboard-activity-row__icon--amber'];
@@ -7674,7 +7689,7 @@ function updateDashboard() {
     }).join('') + '</div>';
   }
   var otListEl = document.getElementById('dash-ots-list');
-  if (APP.ots.length === 0) {
+  if (dashOts.length === 0) {
     otListEl.innerHTML = '<div class="dashboard-empty">Nenhuma OT criada ainda.</div>';
   } else {
     otListEl.innerHTML = recent.map(function(o) {
@@ -7684,7 +7699,7 @@ function updateDashboard() {
         + '</button>';
     }).join('');
   }
-  renderExecutiveDashboard();
+  renderExecutiveDashboard(dashOts);
   renderNotifications();
   renderMobileApp();
 }
@@ -7738,13 +7753,14 @@ function renderMiniBar(label, value, max, hint) {
   return '<div class="dashboard-mini-bar"><div class="dashboard-mini-bar__header"><span>' + label + '</span><span class="mono text-slate-300">' + hint + '</span></div>'
     + '<div class="dashboard-mini-bar__track"><div class="dashboard-mini-bar__fill" style="width:' + pct + '%"></div></div></div>';
 }
-function renderExecutiveDashboard() {
-  var total = APP.ots.length || 1;
-  var done = APP.ots.filter(function(o) { return o.status === 'Concluída'; });
-  var failures = APP.ots.filter(function(o) { return ['Corretiva','Avaria','Emergência'].includes(o.type) || getOTOrigin(o) === 'request'; });
-  var totalHours = APP.ots.reduce(function(sum, o) { return sum + getOTHours(o); }, 0);
-  var totalCost = APP.ots.reduce(function(sum, o) { return sum + getOTCost(o); }, 0);
-  var slaOk = APP.ots.filter(function(o) { return o.priority !== 'Urgente' || o.status === 'Concluída' || o.status === 'Em Curso'; }).length;
+function renderExecutiveDashboard(sourceOts) {
+  var ots = sourceOts || getDashboardOTs();
+  var total = ots.length || 1;
+  var done = ots.filter(function(o) { return o.status === 'Concluída'; });
+  var failures = ots.filter(function(o) { return ['Corretiva','Avaria','Emergência'].includes(o.type) || getOTOrigin(o) === 'request'; });
+  var totalHours = ots.reduce(function(sum, o) { return sum + getOTHours(o); }, 0);
+  var totalCost = ots.reduce(function(sum, o) { return sum + getOTCost(o); }, 0);
+  var slaOk = ots.filter(function(o) { return o.priority !== 'Urgente' || o.status === 'Concluída' || o.status === 'Em Curso'; }).length;
   var mttr = failures.length ? totalHours / failures.length : 0;
   var mtbf = failures.length ? Math.max(1, Math.round(30 / failures.length)) : 30;
   setText('kpi-mttr', mttr.toFixed(1) + 'h');
@@ -13852,6 +13868,13 @@ function openFilterModal() {
 }
 
 function renderGlobalFilterFields(page) {
+  if (page === 'dashboard') {
+    var technicianOptions = (APP.technicians || []).map(function(t) { return '<option value="' + t.id + '">' + escapeHtml(t.name) + '</option>'; }).join('');
+    return '<div class="grid md:grid-cols-3 gap-3">' +
+      '<div><label class="block text-sm mb-2 text-slate-300">Período</label><select id="filter-dash-period" class="input-field"><option value="">Todo o período</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select></div>' +
+      '<div><label class="block text-sm mb-2 text-slate-300">Técnico</label><select id="filter-dash-technician" class="input-field"><option value="">Todos</option>' + technicianOptions + '</select></div>' +
+      '<div><label class="block text-sm mb-2 text-slate-300">Prioridade</label><select id="filter-dash-priority" class="input-field"><option value="">Todas</option><option>Baixa</option><option>Média</option><option>Alta</option><option>Urgente</option></select></div></div>';
+  }
   if (page === 'ots') {
     return '<div class="grid md:grid-cols-3 gap-3">' +
       '<div><label class="block text-sm mb-2 text-slate-300">Estado</label><select id="filter-ot-status" class="input-field"><option value="">Todos</option><option>Aberta</option><option>Agendada</option><option>Em Curso</option><option>Pausada</option><option>Aguarda Material</option><option>Aguarda Cliente</option><option>Concluída</option><option>Cancelada</option></select></div>' +
@@ -13876,7 +13899,14 @@ function renderGlobalFilterFields(page) {
 
 function applyGlobalFilters() {
   var page = APP.currentPage || 'dashboard';
-  if (page === 'ots') {
+  if (page === 'dashboard') {
+    APP.dashboardFilter = {
+      period: getValue('filter-dash-period'),
+      technicianId: getValue('filter-dash-technician'),
+      priority: getValue('filter-dash-priority')
+    };
+    updateDashboard();
+  } else if (page === 'ots') {
     APP.otStatusFilter = getValue('filter-ot-status');
     APP.otPriorityFilter = getValue('filter-ot-priority');
     APP.otTypeFilter = getValue('filter-ot-type');
@@ -13898,11 +13928,12 @@ function applyGlobalFilters() {
 }
 
 function clearGlobalFilters() {
+  APP.dashboardFilter = {};
   APP.otStatusFilter = '';
   APP.otPriorityFilter = '';
   APP.otTypeFilter = '';
   ['files-type-filter','files-permission-filter'].forEach(function(id) { setValue(id, ''); });
-  renderOTs(); renderEquipment(); renderKnowledge(); renderFiles();
+  updateDashboard(); renderOTs(); renderEquipment(); renderKnowledge(); renderFiles();
   closeModal('modal-global-filter');
 }
 
