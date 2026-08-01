@@ -109,6 +109,9 @@ app.get('/app', (c) => c.redirect('/app/'))
 app.get('/app/login', (c) => c.redirect('/login'))
 app.get('/app/landing', (c) => c.redirect('/landing'))
 
+// Favicon (evita 404 no browser; usa o ícone já existente do produto)
+app.get('/favicon.ico', serveStatic({ path: './public/app/assets/icon_manugent.png' }))
+
 // ── Domain Constants ──────────────────────────────────────────────────────────
 
 const workOrderTypes = ['preventive', 'inspection', 'round', 'checklist', 'corrective', 'breakdown', 'emergency', 'customer_request']
@@ -1541,6 +1544,8 @@ app.get('/privacidade', serveReactShell)
 app.get('/termos', serveReactShell)
 app.get('/gdpr', serveReactShell)
 app.get('/cookies', serveReactShell)
+app.get('/superadmin', serveReactShell)
+app.get('/superadmin/*', serveReactShell)
 
 // Legacy dashboard shell aliases
 app.get('/dashboard', serveLegacyShell)
