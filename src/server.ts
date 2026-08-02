@@ -605,7 +605,7 @@ app.post('/api/auth/login', async (c) => {
     loginAttempts.delete(rateLimitKey)
 
     const token = jwt.sign(
-      { id: userData.id, email: userData.email, role: userData.role },
+      { id: userData.id, email: userData.email, role: userData.role, empresa_id: userData.empresa_id || null },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN } as jwt.SignOptions
     )
@@ -616,7 +616,7 @@ app.post('/api/auth/login', async (c) => {
   }
 })
 
-type AuthUser = { id: string; email: string; role: string }
+type AuthUser = { id: string; email: string; role: string; empresa_id?: string | null }
 
 function verifyToken(token: string): AuthUser | null {
   try {
@@ -1388,6 +1388,80 @@ app.get('/api/users', async (c) => {
     return c.json({ users: data || [] })
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not fetch users')
+  }
+})
+
+// ── Routes: Empresas (provider companies) ─────────────────────────────────────
+
+app.get('/api/empresas', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.from('empresas').select('*').order('name', { ascending: true })
+    if (error) throw error
+    return c.json({ empresas: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch empresas')
+  }
+})
+
+app.post('/api/empresas', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json() as { name?: string; tax_id?: string; email?: string; phone?: string; address?: string; city?: string; active?: boolean }
+    if (!body.name || !body.name.trim()) return jsonError(c, 'Nome da empresa é obrigatório.', 400)
+    const { data, error } = await db.from('empresas').insert({
+      name: body.name.trim(),
+      tax_id: body.tax_id || null,
+      email: body.email || null,
+      phone: body.phone || null,
+      address: body.address || null,
+      city: body.city || null,
+      active: body.active !== false,
+    }).select().single()
+    if (error) throw error
+    return c.json({ empresa: data }, 201)
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not create empresa')
+  }
+})
+
+app.put('/api/empresas/:id', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json() as Record<string, unknown>
+    const update: Record<string, unknown> = {}
+    for (const key of ['name','tax_id','email','phone','address','city','active']) {
+      if (key in body) update[key] = body[key]
+    }
+    const { data, error } = await db.from('empresas').update(update).eq('id', c.req.param('id')).select().single()
+    if (error) throw error
+    if (!data) return jsonError(c, 'Empresa não encontrada.', 404)
+    return c.json({ empresa: data })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not update empresa')
+  }
+})
+
+app.delete('/api/empresas/:id', async (c) => {
+  try {
+    const db = requireDb()
+    const { error } = await db.from('empresas').delete().eq('id', c.req.param('id'))
+    if (error) throw error
+    return c.json({ ok: true })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not delete empresa')
+  }
+})
+
+app.get('/api/empresas/:id/collaborators', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_collaborators_with_empresa')
+    if (error) throw error
+    const filtered = (data || []).filter((row: Record<string, unknown>) => row.empresa_id === c.req.param('id'))
+    return c.json({ collaborators: filtered })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch empresa collaborators')
   }
 })
 
