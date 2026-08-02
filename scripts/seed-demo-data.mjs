@@ -1087,9 +1087,9 @@ async function main() {
     console.log(`Total: ${total} registos\n`)
     console.log('Login de demonstração: superadmin@manugent.pt / Demo@2026 (e admin/gestor/tecnico/cliente com o mesmo padrão)')
     console.log('\nCredenciais por empresa (password: Demo@2026):')
-admin@${empresas[0].domain} | gestor@${empresas[0].domain} | supervisor@${empresas[0].domain} | tecnico@${empresas[0].domain} | financeiro@${empresas[0].domain} | engenheiro@${empresas[0].domain}
-admin@${empresas[1].domain} | gestor@${empresas[1].domain} | supervisor@${empresas[1].domain} | tecnico@${empresas[1].domain} | financeiro@${empresas[1].domain} | engenheiro@${empresas[1].domain}
-admin@${empresas[2].domain} | gestor@${empresas[2].domain} | supervisor@${empresas[2].domain} | tecnico@${empresas[2].domain} | financeiro@${empresas[2].domain} | engenheiro@${empresas[2].domain}
+    console.log(`  ${empresas[0].name}: admin@${empresas[0].domain} | gestor@${empresas[0].domain} | supervisor@${empresas[0].domain} | tecnico@${empresas[0].domain} | financeiro@${empresas[0].domain} | engenheiro@${empresas[0].domain}`)
+    console.log(`  ${empresas[1].name}: admin@${empresas[1].domain} | gestor@${empresas[1].domain} | supervisor@${empresas[1].domain} | tecnico@${empresas[1].domain} | financeiro@${empresas[1].domain} | engenheiro@${empresas[1].domain}`)
+    console.log(`  ${empresas[2].name}: admin@${empresas[2].domain} | gestor@${empresas[2].domain} | supervisor@${empresas[2].domain} | tecnico@${empresas[2].domain} | financeiro@${empresas[2].domain} | engenheiro@${empresas[2].domain}`)
   } catch (err) {
     await client.query('ROLLBACK')
     console.error('❌ Erro ao popular a base de dados, revertido (ROLLBACK):', err)

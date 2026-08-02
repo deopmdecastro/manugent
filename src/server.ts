@@ -788,7 +788,7 @@ app.get('/api/fuzzy/:entity', async (c) => {
       }
       case 'clients': {
         const { data } = await db.from('clients').select('id, name, email, phone').order('name', { ascending: true })
-        rows = (data || []).map((r: Record<string, unknown>) => ({
+        rows = ((data ?? []) as Record<string, unknown>[]).map((r: Record<string, unknown>) => ({
           id: r.id as string,
           name: r.name as string,
           extra: `${r.email || ''}${r.phone ? ' — ' + r.phone : ''}`,
@@ -956,7 +956,7 @@ app.get('/api/testimonials', async (c) => {
     if (error) throw error
     // Map DB column names (author_name, author_role, etc.) to the frontend
     // interface expected by RealTestimonial (name, role, company, text, createdAt)
-    const items = (data || []).map((row: Record<string, unknown>) => ({
+    const items = ((data ?? []) as Record<string, unknown>[]).map((row: Record<string, unknown>) => ({
       id: row.id,
       name: row.author_name,
       role: row.author_role,
@@ -1956,7 +1956,7 @@ app.get('/api/client-portal/clients/:clientId/equipment/:equipmentId/history', a
 
     if (error) throw error
 
-    const mapped = (data || []).map((row: Record<string, unknown>) => ({
+    const mapped = ((data ?? []) as Record<string, unknown>[]).map((row: Record<string, unknown>) => ({
       ...mapWorkOrder(row),
       clientName: (row.client as Record<string, unknown>)?.name,
       equipmentName: (row.equipment as Record<string, unknown>)?.name,
