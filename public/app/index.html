@@ -11524,7 +11524,7 @@ function deleteTech(id) {
 function renderEmpresas() {
   var el = document.getElementById('empresas-grid');
   if (!el) return;
-  fetch('/api/empresas', { headers: authHeaders() })
+  fetch('/api/empresas', { headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } })
     .then(function(r) { return r.json(); })
     .then(function(data) {
       var empresas = data.empresas || [];
@@ -11597,7 +11597,7 @@ async function saveEmpresa() {
   var url = APP.editingEmpresaId ? '/api/empresas/' + APP.editingEmpresaId : '/api/empresas';
   var method = APP.editingEmpresaId ? 'PUT' : 'POST';
   try {
-    var res = await fetch(url, { method: method, headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body) });
+    var res = await fetch(url, { method: method, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (APP.authToken || '') }, body: JSON.stringify(body) });
     if (!res.ok) { var err = await res.json().catch(function() { return {}; }); throw new Error(err.error || 'Erro ao guardar empresa.'); }
     closeModal('modal-new-empresa');
     renderEmpresas();
@@ -11611,7 +11611,7 @@ async function saveEmpresa() {
 async function deleteEmpresa(id) {
   if (!confirm('Apagar esta empresa? Os colaboradores associados ficarão sem empresa.')) return;
   try {
-    var res = await fetch('/api/empresas/' + id, { method: 'DELETE', headers: authHeaders() });
+    var res = await fetch('/api/empresas/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } });
     if (!res.ok) throw new Error('Erro ao apagar empresa.');
     renderEmpresas();
     showToast('Empresa apagada.');
@@ -11621,7 +11621,7 @@ async function deleteEmpresa(id) {
 }
 
 function viewEmpresaColaboradores(empresaId, empresaName) {
-  fetch('/api/empresas/' + empresaId + '/collaborators', { headers: authHeaders() })
+  fetch('/api/empresas/' + empresaId + '/collaborators', { headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } })
     .then(function(r) { return r.json(); })
     .then(function(data) {
       var collabs = data.collaborators || [];
