@@ -83,7 +83,47 @@ const N = {
   reports: Number(process.env.SEED_REPORTS || 700),
   quotes: Number(process.env.SEED_QUOTES || 400),
   attachments: Number(process.env.SEED_ATTACHMENTS || 700),
+  suppliers: Number(process.env.SEED_SUPPLIERS || 30),
+  parts: Number(process.env.SEED_PARTS || 80),
+  maintenanceRequests: Number(process.env.SEED_REQUESTS || 700),
+  checklists: Number(process.env.SEED_CHECKLISTS || 15),
+  folders: Number(process.env.SEED_FOLDERS || 25),
+  documents: Number(process.env.SEED_DOCUMENTS || 900),
+  audits: Number(process.env.SEED_AUDITS || 60),
+  genericReports: Number(process.env.SEED_GENERIC_REPORTS || 500),
+  comments: Number(process.env.SEED_COMMENTS || 1600),
+  testimonials: Number(process.env.SEED_TESTIMONIALS || 30),
+  activityLog: Number(process.env.SEED_ACTIVITY_LOG || 3500),
+  calendarEvents: Number(process.env.SEED_CALENDAR_EVENTS || 500),
+  ratings: Number(process.env.SEED_RATINGS || 600),
 }
+
+const SUPPLIER_CATEGORIES = ['AVAC', 'Elétrico', 'Elevadores', 'Segurança', 'Refrigeração', 'Hidráulico', 'Geral']
+const PART_CATALOG = ['Filtro de ar', 'Correia de transmissão', 'Compressor', 'Válvula solenoide', 'Rolamento',
+  'Contactor', 'Sensor de temperatura', 'Motor elétrico', 'Placa de circuito', 'Junta vedante', 'Cabo elétrico',
+  'Lâmpada de emergência', 'Bomba de circulação', 'Termóstato', 'Fusível']
+const BUILDING_TYPES = ['industrial', 'comercial', 'residencial', 'saude', 'escritorio']
+const CHECKLIST_NAMES = ['Checklist AVAC Mensal', 'Checklist Elétrico Trimestral', 'Checklist Elevadores',
+  'Checklist Segurança Contra Incêndio', 'Checklist Refrigeração', 'Checklist Hidráulico', 'Ronda Geral de Instalações']
+const TESTIMONIAL_ROLES = ['Diretor de Manutenção', 'Gestor de Instalações', 'Técnico Responsável', 'Diretor Geral', 'Facility Manager']
+const BLOG_POSTS_SEED = [
+  { slug: 'agente-ia-diagnostico-avarias', title: 'Como o agente de IA do ManuGent diagnostica avarias em segundos', category: 'Produto', gradient: 'from-blue-500 to-cyan-400' },
+  { slug: 'mtbf-mttr-oee-indicadores', title: 'MTBF, MTTR e OEE: os indicadores que todo o gestor de manutenção devia acompanhar', category: 'Indicadores', gradient: 'from-purple-500 to-pink-400' },
+  { slug: 'caso-cliente-reducao-paragem-34', title: 'Caso de cliente: redução de 34% no tempo de paragem em 6 meses', category: 'Casos de Estudo', gradient: 'from-emerald-500 to-teal-400' },
+  { slug: 'manutencao-offline-pwa', title: 'Manutenção sem sinal: como a app offline do ManuGent resolve o problema', category: 'Produto', gradient: 'from-orange-500 to-amber-400' },
+  { slug: 'ia-generativa-manutencao-industrial', title: 'IA generativa aplicada à manutenção industrial: o que já é real em 2026', category: 'Tendências', gradient: 'from-indigo-500 to-blue-400' },
+  { slug: 'nfc-vs-qr-code-ativos', title: 'NFC vs QR Code na identificação de ativos: qual escolher?', category: 'Tecnologia', gradient: 'from-rose-500 to-red-400' },
+  { slug: 'manutencao-preventiva-vs-preditiva', title: 'Manutenção preventiva vs preditiva: guia prático para decidir', category: 'Boas Práticas', gradient: 'from-cyan-500 to-blue-400' },
+  { slug: 'sla-manutencao-como-negociar', title: 'SLAs de manutenção: como negociar prazos realistas com o cliente', category: 'Gestão', gradient: 'from-violet-500 to-purple-400' },
+  { slug: 'checklist-digital-vantagens', title: 'Checklists digitais: 7 vantagens sobre o papel na manutenção industrial', category: 'Boas Práticas', gradient: 'from-teal-500 to-emerald-400' },
+  { slug: 'gestao-inventario-pecas-sobresselentes', title: 'Gestão de inventário de peças sobressalentes sem surpresas', category: 'Gestão', gradient: 'from-amber-500 to-orange-400' },
+  { slug: 'seguranca-industrial-manutencao', title: 'Segurança industrial: o papel da manutenção na prevenção de acidentes', category: 'Segurança', gradient: 'from-red-500 to-rose-400' },
+  { slug: 'roi-software-manutencao', title: 'Qual o ROI real de um software de manutenção? Fizemos as contas', category: 'Negócio', gradient: 'from-blue-500 to-indigo-400' },
+]
+const COMMENT_SNIPPETS = ['Confirmado no local, tudo dentro dos parâmetros.', 'Já agendei a próxima visita.',
+  'Precisamos de peça adicional, a encomendar.', 'Cliente já foi notificado da conclusão.',
+  'Boa intervenção, sem incidências a registar.', 'Vou acompanhar de perto este equipamento.',
+  'Obrigado pela rapidez na resposta!', 'Ficou resolvido, obrigado.']
 
 const WO_TYPES = ['preventive', 'inspection', 'round', 'checklist', 'corrective', 'breakdown', 'emergency', 'customer_request']
 const WO_STATUSES_POOL = ['open', 'scheduled', 'in_progress', 'in_progress', 'completed', 'completed', 'completed', 'cancelled']
@@ -117,7 +157,12 @@ async function main() {
     await client.query(`
       TRUNCATE TABLE
         quotes, intervention_reports, work_order_time_entries, notifications,
-        work_order_links, work_order_findings, attachments, work_orders,
+        work_order_links, work_order_findings, attachments, work_order_parts,
+        ratings, comment_likes, comments, calendar_event_assignees, calendar_events,
+        activity_log, testimonials, reports, audits, documents, folders, contracts,
+        preventive_plans, checklists, maintenance_request_assignees, maintenance_requests,
+        inventory_items, parts, suppliers, technician_profiles, client_contacts,
+        blog_posts, buildings, work_orders,
         equipment, clients, users, teams
       RESTART IDENTITY CASCADE
     `)
@@ -171,13 +216,56 @@ async function main() {
     console.log(`  ✓ ${users.length} utilizadores (5 contas fixas + ${N.users} adicionais)`)
     const staffUsers = users.filter(u => u.role !== 'cliente')
 
-    // ---- Clientes --------------------------------------------------------------
+    // ---- Clientes (empresas) -----------------------------------------------------
     const clients = Array.from({ length: N.clients }, () => {
       const name = COMPANY_NAME()
-      return { id: randomUUID(), name, email: `geral@${slug(name)}.pt`, phone: `+351 2${int(1, 9)} ${int(100, 999)} ${int(1000, 9999)}` }
+      return {
+        id: randomUUID(), name, email: `geral@${slug(name)}.pt`, phone: `+351 2${int(1, 9)} ${int(100, 999)} ${int(1000, 9999)}`,
+        tax_id: `PT${int(100000000, 599999999)}`, sector: pick(SUPPLIER_CATEGORIES),
+        since: daysAgo(int(60, 1800)).slice(0, 10),
+      }
     })
-    await bulkInsert(client, 'clients', ['id', 'name', 'email', 'phone'], clients.map(c => [c.id, c.name, c.email, c.phone]))
-    console.log(`  ✓ ${clients.length} clientes`)
+    await bulkInsert(client, 'clients', ['id', 'name', 'email', 'phone', 'tax_id', 'sector', 'active', 'since'],
+      clients.map(c => [c.id, c.name, c.email, c.phone, c.tax_id, c.sector, true, c.since]))
+    console.log(`  ✓ ${clients.length} clientes (empresas)`)
+
+    // ---- Edifícios -----------------------------------------------------------------
+    const buildings = []
+    const buildingsByClient = {}
+    for (const c of clients) {
+      const n = int(1, 4)
+      buildingsByClient[c.id] = []
+      for (let i = 0; i < n; i++) {
+        const b = {
+          id: randomUUID(), client_id: c.id, name: `${c.name.split(' ')[0]} — Edifício ${String.fromCharCode(65 + i)}`,
+          address: `Rua ${pick(['do Comércio', 'da Indústria', 'das Flores', 'Central'])}, ${int(1, 500)}`,
+          city: pick(CITIES), type: pick(BUILDING_TYPES), area_m2: int(200, 15000),
+        }
+        buildings.push(b)
+        buildingsByClient[c.id].push(b.id)
+      }
+    }
+    await bulkInsert(client, 'buildings', ['id', 'client_id', 'name', 'address', 'city', 'type', 'area_m2'],
+      buildings.map(b => [b.id, b.client_id, b.name, b.address, b.city, b.type, b.area_m2]))
+    console.log(`  ✓ ${buildings.length} edifícios`)
+
+    // ---- Contactos do cliente --------------------------------------------------------
+    const clientContacts = []
+    for (const c of clients) {
+      const n = int(1, 3)
+      for (let i = 0; i < n; i++) {
+        const name = fullName()
+        clientContacts.push({
+          id: randomUUID(), client_id: c.id, name, email: `${slug(name)}@${slug(c.name)}.pt`,
+          phone: `+351 9${int(1, 6)} ${int(100, 999)} ${int(1000, 9999)}`,
+          address: pick(buildings.filter(b => b.client_id === c.id))?.address || null,
+          city: pick(CITIES), since: c.since,
+        })
+      }
+    }
+    await bulkInsert(client, 'client_contacts', ['id', 'client_id', 'name', 'email', 'phone', 'address', 'city', 'active', 'since'],
+      clientContacts.map(cc => [cc.id, cc.client_id, cc.name, cc.email, cc.phone, cc.address, cc.city, true, cc.since]))
+    console.log(`  ✓ ${clientContacts.length} contactos de cliente`)
 
     // ---- Equipamentos ------------------------------------------------------------
     const equipment = []
@@ -188,7 +276,7 @@ async function main() {
         eqCounter++
         const category = pick(Object.keys(EQUIPMENT_CATALOG))
         equipment.push({
-          id: randomUUID(), client_id: c.id, code: `EQ-${String(eqCounter).padStart(4, '0')}`,
+          id: randomUUID(), client_id: c.id, building_id: pick(buildingsByClient[c.id]), code: `EQ-${String(eqCounter).padStart(4, '0')}`,
           name: pick(EQUIPMENT_CATALOG[category]), brand: pick(BRANDS), model: `${pick(['X', 'Z', 'Pro', 'Max'])}${int(100, 999)}`,
           serial: `SN${int(10000000, 99999999)}`, location: `${pick(['Piso 0', 'Piso 1', 'Cave', 'Cobertura', 'Zona Técnica'])} — ${pick(CITIES)}`,
           criticality: pick(['low', 'normal', 'high', 'critical']),
@@ -196,8 +284,8 @@ async function main() {
         })
       }
     }
-    await bulkInsert(client, 'equipment', ['id', 'client_id', 'code', 'name', 'brand', 'model', 'serial', 'location', 'criticality', 'status'],
-      equipment.map(e => [e.id, e.client_id, e.code, e.name, e.brand, e.model, e.serial, e.location, e.criticality, e.status]))
+    await bulkInsert(client, 'equipment', ['id', 'client_id', 'building_id', 'code', 'name', 'brand', 'model', 'serial', 'location', 'criticality', 'status'],
+      equipment.map(e => [e.id, e.client_id, e.building_id, e.code, e.name, e.brand, e.model, e.serial, e.location, e.criticality, e.status]))
     console.log(`  ✓ ${equipment.length} equipamentos`)
 
     // ---- Ordens de Trabalho --------------------------------------------------------
@@ -292,6 +380,247 @@ async function main() {
     await bulkInsert(client, 'attachments', ['id', 'entity_type', 'entity_id', 'filename', 'original_name', 'mime_type', 'file_size', 'storage_path', 'uploaded_by'], attachmentRows)
     console.log(`  ✓ ${attachmentRows.length} anexos`)
 
+    // ---- Fornecedores, peças e inventário ------------------------------------------
+    const suppliers = Array.from({ length: N.suppliers }, () => {
+      const name = `${pick(['Ferramais', 'ElectroPeças', 'HVAC Supply', 'TecnoFornece', 'Industrial Parts', 'MecânicaTotal'])} ${pick(['Norte', 'Sul', 'Centro', 'Ibérica', ''])}`.trim()
+      return {
+        id: randomUUID(), name, tax_id: `PT${int(100000000, 599999999)}`, category: pick(SUPPLIER_CATEGORIES),
+        email: `comercial@${slug(name)}.pt`, phone: `+351 2${int(1, 9)} ${int(100, 999)} ${int(1000, 9999)}`,
+        rating: float(3, 5, 1),
+      }
+    })
+    await bulkInsert(client, 'suppliers', ['id', 'name', 'tax_id', 'category', 'email', 'phone', 'rating', 'active'],
+      suppliers.map(s => [s.id, s.name, s.tax_id, s.category, s.email, s.phone, s.rating, true]))
+    console.log(`  ✓ ${suppliers.length} fornecedores`)
+
+    const parts = Array.from({ length: N.parts }, (_, i) => ({
+      id: randomUUID(), name: pick(PART_CATALOG), sku: `SKU-${String(i + 1).padStart(5, '0')}`,
+      category: pick(SUPPLIER_CATEGORIES), unit_cost: float(4, 850), supplier_id: pick(suppliers).id,
+    }))
+    await bulkInsert(client, 'parts', ['id', 'name', 'sku', 'category', 'unit_cost', 'supplier_id'],
+      parts.map(p => [p.id, p.name, p.sku, p.category, p.unit_cost, p.supplier_id]))
+    console.log(`  ✓ ${parts.length} peças`)
+
+    const inventoryRows = parts.flatMap(p => pickMany(['Armazém Porto', 'Armazém Lisboa', 'Carrinha Equipa'], int(1, 2)).map(w => [
+      randomUUID(), p.id, w, int(0, 200), int(5, 20), int(0, 15), daysAgo(int(0, 90)),
+    ]))
+    await bulkInsert(client, 'inventory_items', ['id', 'part_id', 'warehouse', 'quantity', 'min_quantity', 'reserved', 'last_movement_at'], inventoryRows)
+    console.log(`  ✓ ${inventoryRows.length} registos de inventário`)
+
+    const woPartsRows = pickMany(workOrders, Math.min(1200, workOrders.length)).map(w => [
+      randomUUID(), w.id, pick(parts).id, int(1, 4),
+    ])
+    await bulkInsert(client, 'work_order_parts', ['id', 'work_order_id', 'part_id', 'quantity'], woPartsRows)
+    console.log(`  ✓ ${woPartsRows.length} peças usadas em OTs`)
+
+    // ---- Perfis de técnico -----------------------------------------------------------
+    const specialtyPool = Object.keys(EQUIPMENT_CATALOG)
+    const technicianProfileRows = technicianUsers.map(t => {
+      const completed = workOrders.filter(w => w.status === 'completed').length ? int(5, 220) : 0
+      return [
+        t.id, `{${pickMany(specialtyPool, int(1, 3)).map(s => `"${s}"`).join(',')}}`,
+        pick(['disponivel', 'disponivel', 'em_servico', 'ausente', 'ferias']),
+        float(3.2, 5, 2), completed, int(0, 6),
+      ]
+    })
+    await bulkInsert(client, 'technician_profiles', ['user_id', 'specialties', 'status', 'rating', 'completed_orders', 'active_orders'], technicianProfileRows)
+    console.log(`  ✓ ${technicianProfileRows.length} perfis de técnico`)
+
+    // ---- Pedidos de manutenção --------------------------------------------------------
+    const maintenanceRequests = []
+    for (let i = 0; i < N.maintenanceRequests; i++) {
+      const c = pick(clients)
+      const buildingId = pick(buildingsByClient[c.id])
+      const eqForClient = equipment.filter(e => e.client_id === c.id)
+      const status = pick(['aberto', 'em_analise', 'atribuido', 'em_execucao', 'concluido', 'concluido', 'cancelado'])
+      const createdAt = daysAgo(int(0, 250))
+      const dueAt = hoursAfter(createdAt, int(24, 240))
+      maintenanceRequests.push({
+        id: randomUUID(), client_id: c.id, building_id: buildingId, equipment_id: eqForClient.length ? pick(eqForClient).id : null,
+        requested_by: pick(staffUsers).id,
+        status, priority: pick(PRIORITIES.map(p => ({ low: 'baixa', normal: 'media', high: 'alta', urgent: 'critica' }[p]))),
+        title: pick(['Avaria reportada', 'Pedido de inspeção', 'Ruído anómalo', 'Fuga detetada', 'Pedido de manutenção preventiva']),
+        description: 'Pedido submetido pelo cliente através do portal.',
+        due_at: dueAt, work_order_id: chance(0.4) ? pick(workOrders).id : null,
+        is_late: status !== 'concluido' && new Date(dueAt) < new Date(),
+        created_at: createdAt,
+      })
+    }
+    await bulkInsert(client, 'maintenance_requests',
+      ['id', 'client_id', 'building_id', 'equipment_id', 'requested_by', 'status', 'priority', 'title', 'description', 'due_at', 'work_order_id', 'is_late', 'created_at'],
+      maintenanceRequests.map(r => [r.id, r.client_id, r.building_id, r.equipment_id, r.requested_by, r.status, r.priority, r.title, r.description, r.due_at, r.work_order_id, r.is_late, r.created_at]))
+    console.log(`  ✓ ${maintenanceRequests.length} pedidos de manutenção`)
+
+    const mrAssigneeRows = maintenanceRequests.filter(() => chance(0.7)).map(r => [r.id, pick(staffUsers).id])
+    await bulkInsert(client, 'maintenance_request_assignees', ['request_id', 'user_id'], mrAssigneeRows)
+    console.log(`  ✓ ${mrAssigneeRows.length} atribuições de pedidos`)
+
+    // ---- Checklists e planos preventivos ----------------------------------------------
+    const checklists = CHECKLIST_NAMES.slice(0, N.checklists > CHECKLIST_NAMES.length ? CHECKLIST_NAMES.length : N.checklists).map(name => ({
+      id: randomUUID(), name,
+      items: JSON.stringify(Array.from({ length: int(4, 8) }, (_, i) => ({ id: `it${i}`, label: pick(['Verificar níveis', 'Testar funcionamento', 'Inspecionar visualmente', 'Medir vibração', 'Limpar filtro', 'Verificar fixações']), done: chance(0.5) }))),
+      equipment_category: pick(Object.keys(EQUIPMENT_CATALOG)),
+    }))
+    await bulkInsert(client, 'checklists', ['id', 'name', 'items', 'equipment_category'], checklists.map(c => [c.id, c.name, c.items, c.equipment_category]))
+    console.log(`  ✓ ${checklists.length} checklists`)
+
+    const preventivePlanRows = pickMany(equipment, Math.min(500, equipment.length)).map(eq => {
+      const status = pick(['em_dia', 'atrasado', 'executado'])
+      return [
+        randomUUID(), eq.id, `Plano Preventivo — ${eq.name}`, pick(['semanal', 'mensal', 'trimestral', 'semestral', 'anual']),
+        daysAgo(int(1, 200)), daysAgo(-int(1, 90)), status, pick(checklists).id, pick(teamIds),
+      ]
+    })
+    await bulkInsert(client, 'preventive_plans',
+      ['id', 'equipment_id', 'name', 'frequency', 'last_executed_at', 'next_due_at', 'status', 'checklist_id', 'responsible_team_id'], preventivePlanRows)
+    console.log(`  ✓ ${preventivePlanRows.length} planos preventivos`)
+
+    // ---- Pastas e documentos -----------------------------------------------------------
+    const folders = Array.from({ length: N.folders }, () => ({
+      id: randomUUID(), name: pick(['Manuais', 'Garantias', 'Contratos', 'Relatórios', 'Faturas', 'Certificados']),
+      owner_id: pick(staffUsers).id,
+    }))
+    await bulkInsert(client, 'folders', ['id', 'name', 'parent_id', 'owner_id'], folders.map(f => [f.id, f.name, null, f.owner_id]))
+
+    const docEntities = [
+      ...equipment.map(e => ({ type: 'equipment', id: e.id })),
+      ...clients.map(c => ({ type: 'client', id: c.id })),
+      ...buildings.map(b => ({ type: 'building', id: b.id })),
+      ...workOrders.map(w => ({ type: 'work_order', id: w.id })),
+    ]
+    const docTypes = ['manual', 'garantia', 'relatorio', 'contrato', 'fatura', 'certificado']
+    const documentRows = pickMany(docEntities, Math.min(N.documents, docEntities.length)).map((e, i) => {
+      const type = pick(docTypes)
+      return [randomUUID(), `${type}_${i}.pdf`, type, pick(folders).id, e.type, e.id, pick(staffUsers).id, daysAgo(int(0, 400)), int(50, 5000), `/uploads/documents/${i}.pdf`]
+    })
+    await bulkInsert(client, 'documents', ['id', 'name', 'type', 'folder_id', 'entity_type', 'entity_id', 'uploaded_by', 'uploaded_at', 'size_kb', 'url'], documentRows)
+    console.log(`  ✓ ${folders.length} pastas, ${documentRows.length} documentos`)
+
+    // ---- Contratos ---------------------------------------------------------------------
+    const contracts = clients.map(c => {
+      const start = daysAgo(int(60, 900))
+      return {
+        id: randomUUID(), client_id: c.id, type: pick(['manutencao_preventiva', 'manutencao_completa', 'sob_pedido']),
+        status: pick(['ativo', 'ativo', 'ativo', 'pendente', 'expirado']), start_date: start.slice(0, 10),
+        end_date: chance(0.7) ? daysAgo(-int(30, 700)).slice(0, 10) : null,
+        monthly_value: float(300, 12000), sla_hours: pick([4, 8, 24, 48]),
+      }
+    })
+    await bulkInsert(client, 'contracts', ['id', 'client_id', 'type', 'status', 'start_date', 'end_date', 'monthly_value', 'sla_hours'],
+      contracts.map(c => [c.id, c.client_id, c.type, c.status, c.start_date, c.end_date, c.monthly_value, c.sla_hours]))
+    console.log(`  ✓ ${contracts.length} contratos`)
+
+    // ---- Auditorias e relatórios --------------------------------------------------------
+    const auditRows = pickMany(buildings, Math.min(N.audits, buildings.length)).map(b => {
+      const status = pick(['agendada', 'em_curso', 'concluida'])
+      return [
+        randomUUID(), b.id, pick(staffUsers).id, status, status === 'concluida' ? float(60, 100) : null,
+        daysAgo(int(0, 200)).slice(0, 10),
+        JSON.stringify(status === 'concluida' ? pickMany(['Sinalética em falta', 'Extintor fora de validade', 'Documentação em dia', 'Sem não-conformidades'], int(0, 3)) : []),
+      ]
+    })
+    await bulkInsert(client, 'audits', ['id', 'building_id', 'auditor_id', 'status', 'score', 'date', 'findings'], auditRows)
+    console.log(`  ✓ ${auditRows.length} auditorias`)
+
+    const reportTypes = ['intervencao', 'mensal', 'auditoria', 'custo']
+    const genericReportRows = pickMany(workOrders, Math.min(N.genericReports, workOrders.length)).map((w, i) => [
+      randomUUID(), w.id, w.client_id, pick(reportTypes), `Relatório ${pick(reportTypes)} — ${w.title}`,
+      daysAgo(int(0, 200)), pick(staffUsers).id, `/reports/${i}.pdf`,
+    ])
+    await bulkInsert(client, 'reports', ['id', 'work_order_id', 'client_id', 'type', 'title', 'generated_at', 'generated_by', 'url'], genericReportRows)
+    console.log(`  ✓ ${genericReportRows.length} relatórios`)
+
+    // ---- Comentários e likes ------------------------------------------------------------
+    const commentableWOs = pickMany(workOrders, Math.min(N.comments, workOrders.length))
+    const comments = commentableWOs.map(w => ({
+      id: randomUUID(), entity_type: 'work_order', entity_id: w.id, author_id: pick(staffUsers).id,
+      content: pick(COMMENT_SNIPPETS), parent_id: null, created_at: daysAgo(int(0, 200)),
+    }))
+    // Respostas (10% dos comentários recebem uma resposta)
+    for (const c of comments) {
+      if (chance(0.1)) {
+        comments.push({ id: randomUUID(), entity_type: c.entity_type, entity_id: c.entity_id, author_id: pick(staffUsers).id, content: pick(COMMENT_SNIPPETS), parent_id: c.id, created_at: c.created_at })
+      }
+    }
+    await bulkInsert(client, 'comments', ['id', 'entity_type', 'entity_id', 'author_id', 'content', 'parent_id', 'created_at'],
+      comments.map(c => [c.id, c.entity_type, c.entity_id, c.author_id, c.content, c.parent_id, c.created_at]))
+    const likeRows = comments.filter(() => chance(0.5)).flatMap(c => pickMany(staffUsers, int(1, 5)).map(u => [c.id, u.id]))
+    await bulkInsert(client, 'comment_likes', ['comment_id', 'user_id'], Array.from(new Map(likeRows.map(r => [r.join(':'), r])).values()))
+    console.log(`  ✓ ${comments.length} comentários`)
+
+    // ---- Testemunhos ---------------------------------------------------------------------
+    const testimonialRows = Array.from({ length: N.testimonials }, () => {
+      const c = pick(clients)
+      return [
+        randomUUID(), fullName(), pick(TESTIMONIAL_ROLES), c.name, pick([4, 4.5, 5, 5, 5]),
+        pick(['O ManuGent transformou a gestão da manutenção na nossa empresa.',
+          'Reduzimos significativamente o tempo de resposta a avarias.',
+          'A equipa de suporte é excelente e a plataforma é muito intuitiva.',
+          'Conseguimos ter visibilidade total sobre os nossos ativos pela primeira vez.',
+          'O agente de IA ajuda-nos a diagnosticar problemas mais rapidamente.']),
+        true, chance(0.25), daysAgo(int(10, 400)).slice(0, 10),
+      ]
+    })
+    await bulkInsert(client, 'testimonials', ['id', 'author_name', 'author_role', 'company_name', 'rating', 'content', 'approved', 'featured', 'date'], testimonialRows)
+    console.log(`  ✓ ${testimonialRows.length} testemunhos`)
+
+    // ---- Histórico de atividade -----------------------------------------------------------
+    const actionPool = ['criou', 'atualizou', 'concluiu', 'atribuiu', 'comentou em', 'cancelou']
+    const activityEntities = [...workOrders.map(w => ({ type: 'work_order', id: w.id })), ...maintenanceRequests.map(r => ({ type: 'maintenance_request', id: r.id }))]
+    const activityRows = Array.from({ length: N.activityLog }, () => {
+      const e = pick(activityEntities)
+      return [randomUUID(), pick(staffUsers).id, pick(actionPool), e.type, e.id, daysAgo(int(0, 365))]
+    })
+    await bulkInsert(client, 'activity_log', ['id', 'user_id', 'action', 'entity_type', 'entity_id', 'created_at'], activityRows)
+    console.log(`  ✓ ${activityRows.length} registos de atividade`)
+
+    // ---- Calendário -----------------------------------------------------------------------
+    const calendarEvents = []
+    for (const w of pickMany(activeWOs, Math.min(300, activeWOs.length))) {
+      calendarEvents.push({ id: randomUUID(), title: w.title, type: 'work_order', related_id: w.id, start_at: w.scheduled_for, end_at: hoursAfter(w.scheduled_for, int(1, 4)) })
+    }
+    for (let i = 0; i < N.calendarEvents - calendarEvents.length; i++) {
+      const isMeeting = chance(0.3)
+      const start = daysAgo(-int(0, 45))
+      calendarEvents.push({
+        id: randomUUID(), title: isMeeting ? pick(['Reunião de equipa', 'Reunião com cliente', 'Ponto de situação semanal', 'Planeamento mensal']) : 'Ronda de inspeção',
+        type: isMeeting ? 'meeting' : 'audit', related_id: null, start_at: start, end_at: hoursAfter(start, int(1, 3)),
+      })
+    }
+    await bulkInsert(client, 'calendar_events', ['id', 'title', 'type', 'related_id', 'start_at', 'end_at'],
+      calendarEvents.map(e => [e.id, e.title, e.type, e.related_id, e.start_at, e.end_at]))
+    const ceAssigneeRows = calendarEvents.flatMap(e => pickMany(staffUsers, int(1, 3)).map(u => [e.id, u.id]))
+    await bulkInsert(client, 'calendar_event_assignees', ['event_id', 'user_id'], Array.from(new Map(ceAssigneeRows.map(r => [r.join(':'), r])).values()))
+    console.log(`  ✓ ${calendarEvents.length} eventos de calendário`)
+
+    // ---- Blog -----------------------------------------------------------------------------
+    const blogPostRows = BLOG_POSTS_SEED.map(p => [
+      randomUUID(), p.slug, p.title, p.category, `Um olhar aprofundado sobre ${p.title.toLowerCase()}.`,
+      null, 'Equipa ManuGent', int(4, 9), true, int(400, 2600), p.gradient, daysAgo(int(5, 300)),
+    ])
+    await bulkInsert(client, 'blog_posts',
+      ['id', 'slug', 'title', 'category', 'excerpt', 'content', 'author', 'read_time_min', 'published', 'views', 'cover_gradient', 'published_at'], blogPostRows)
+    const blogPostIds = blogPostRows.map(r => r[0])
+    const blogComments = pickMany(blogPostIds, blogPostIds.length).flatMap(pid =>
+      Array.from({ length: int(0, 6) }, () => ({ id: randomUUID(), entity_type: 'blog', entity_id: pid, author_id: pick(staffUsers).id, content: pick(COMMENT_SNIPPETS), parent_id: null, created_at: daysAgo(int(0, 200)) })))
+    await bulkInsert(client, 'comments', ['id', 'entity_type', 'entity_id', 'author_id', 'content', 'parent_id', 'created_at'],
+      blogComments.map(c => [c.id, c.entity_type, c.entity_id, c.author_id, c.content, c.parent_id, c.created_at]))
+    console.log(`  ✓ ${blogPostRows.length} posts de blog, ${blogComments.length} comentários de blog`)
+
+    // ---- Avaliações explícitas (ratings) --------------------------------------------------
+    const ratingTargets = [
+      ...completedWOs.map(w => ({ type: 'work_order', id: w.id })),
+      ...technicianUsers.map(t => ({ type: 'technician', id: t.id })),
+      ...suppliers.map(s => ({ type: 'supplier', id: s.id })),
+    ]
+    const ratingRows = pickMany(ratingTargets, Math.min(N.ratings, ratingTargets.length)).map(t => [
+      randomUUID(), t.type, t.id, pick(staffUsers).id, pick([3, 4, 4, 5, 5, 5]),
+      chance(0.4) ? pick(['Serviço rápido e eficaz.', 'Cumpriu o prazo combinado.', 'Poderia ter comunicado melhor.', 'Excelente profissionalismo.']) : null,
+      daysAgo(int(0, 250)),
+    ])
+    await bulkInsert(client, 'ratings', ['id', 'entity_type', 'entity_id', 'author_id', 'score', 'comment', 'created_at'], ratingRows)
+    console.log(`  ✓ ${ratingRows.length} avaliações`)
+
     await client.query('COMMIT')
 
     // ---- Resumo final -----------------------------------------------------------------
@@ -307,7 +636,22 @@ async function main() {
         (SELECT count(*) FROM work_order_time_entries) AS time_entries,
         (SELECT count(*) FROM intervention_reports) AS reports,
         (SELECT count(*) FROM quotes) AS quotes,
-        (SELECT count(*) FROM attachments) AS attachments
+        (SELECT count(*) FROM attachments) AS attachments,
+        (SELECT count(*) FROM buildings) AS buildings,
+        (SELECT count(*) FROM suppliers) AS suppliers,
+        (SELECT count(*) FROM parts) AS parts,
+        (SELECT count(*) FROM maintenance_requests) AS maintenance_requests,
+        (SELECT count(*) FROM preventive_plans) AS preventive_plans,
+        (SELECT count(*) FROM documents) AS documents,
+        (SELECT count(*) FROM contracts) AS contracts,
+        (SELECT count(*) FROM audits) AS audits,
+        (SELECT count(*) FROM reports) AS reports,
+        (SELECT count(*) FROM comments) AS comments,
+        (SELECT count(*) FROM testimonials) AS testimonials,
+        (SELECT count(*) FROM activity_log) AS activity_log,
+        (SELECT count(*) FROM calendar_events) AS calendar_events,
+        (SELECT count(*) FROM blog_posts) AS blog_posts,
+        (SELECT count(*) FROM ratings) AS ratings
     `)
     const total = Object.values(stats).reduce((a, b) => a + Number(b), 0)
     console.log('\n✅ Seed concluído. Registos por tabela:')
