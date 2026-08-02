@@ -833,11 +833,16 @@ async function main() {
     // ---- Pastas — estrutura automática por empresa → cliente → edifício -----------------
     // Espelha as RPCs create_empresa_folder_structure() / create_client_folder_structure():
     // Empresa / {Documentos, Contratos, Colaboradores, Clientes/{Cliente}/{Contratos,Orçamentos,
-    //   Faturas,Relatórios,Edifícios/{Edifício}/{Equipamentos,OT,Inspeções,Manutenção Preventiva,
-    //   Documentação Técnica},Outros Documentos}, Outros}
+    //   Faturas,Equipamentos,Fichas Técnicas,Conhecimento,Senhas,Relatórios,
+    //   Edifícios/{Edifício}/{Equipamentos,OT,Inspeções,Manutenção Preventiva,
+    //   Documentação Técnica},Outros Documentos}, Conhecimento, Fichas Técnicas, Orçamentos, Senhas, Outros}
     const folders = []
     // pastas "type" ligadas a cada pasta, para saber onde arrumar cada documento gerado a seguir
-    const folderFor = { contratos: {}, orcamentos: {}, faturas: {}, relatorios: {}, outros: {}, buildingRoot: {}, equipamentos: {}, ot: {}, inspecoes: {}, manutencaoPreventiva: {}, docTecnica: {} }
+    const folderFor = {
+      contratos: {}, orcamentos: {}, faturas: {}, relatorios: {}, outros: {},
+      clienteEquipamentos: {}, fichasTecnicas: {}, conhecimento: {}, senhas: {},
+      buildingRoot: {}, equipamentos: {}, ot: {}, inspecoes: {}, manutencaoPreventiva: {}, docTecnica: {},
+    }
     const mkFolder = (name, parentId, ownerId, empresaId, clientId, folderType) => {
       const f = { id: randomUUID(), name, parent_id: parentId, owner_id: ownerId, empresa_id: empresaId || null, client_id: clientId || null, folder_type: folderType || 'generic' }
       folders.push(f)
@@ -857,6 +862,10 @@ async function main() {
       mkFolder('Contratos', root.id, owner, emp.id, null, 'contratos')
       mkFolder('Colaboradores', root.id, owner, emp.id, null, 'colaboradores')
       empresaClientesFolderId[emp.id] = mkFolder('Clientes', root.id, owner, emp.id, null, 'clientes').id
+      mkFolder('Conhecimento', root.id, owner, emp.id, null, 'conhecimento')
+      mkFolder('Fichas Técnicas', root.id, owner, emp.id, null, 'fichas_tecnicas')
+      mkFolder('Orçamentos', root.id, owner, emp.id, null, 'orcamentos')
+      mkFolder('Senhas', root.id, owner, emp.id, null, 'senhas')
       mkFolder('Outros', root.id, owner, emp.id, null, 'outros')
     }
     console.log(`  ✓ ${empresas.length} estruturas de pastas de empresa criadas`)
@@ -868,6 +877,10 @@ async function main() {
       folderFor.contratos[c.id] = mkFolder('Contratos', root.id, owner, c.empresa_id, c.id, 'cliente_contratos').id
       folderFor.orcamentos[c.id] = mkFolder('Orçamentos', root.id, owner, c.empresa_id, c.id, 'cliente_orcamentos').id
       folderFor.faturas[c.id] = mkFolder('Faturas', root.id, owner, c.empresa_id, c.id, 'cliente_faturas').id
+      folderFor.clienteEquipamentos[c.id] = mkFolder('Equipamentos', root.id, owner, c.empresa_id, c.id, 'cliente_equipamentos').id
+      folderFor.fichasTecnicas[c.id] = mkFolder('Fichas Técnicas', root.id, owner, c.empresa_id, c.id, 'cliente_fichas_tecnicas').id
+      folderFor.conhecimento[c.id] = mkFolder('Conhecimento', root.id, owner, c.empresa_id, c.id, 'cliente_conhecimento').id
+      folderFor.senhas[c.id] = mkFolder('Senhas', root.id, owner, c.empresa_id, c.id, 'cliente_senhas').id
       folderFor.relatorios[c.id] = mkFolder('Relatórios', root.id, owner, c.empresa_id, c.id, 'cliente_relatorios').id
       const edificiosRoot = mkFolder('Edifícios', root.id, owner, c.empresa_id, c.id, 'cliente_edificios')
       folderFor.outros[c.id] = mkFolder('Outros Documentos', root.id, owner, c.empresa_id, c.id, 'cliente_outros').id
