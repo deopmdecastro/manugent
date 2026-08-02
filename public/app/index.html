@@ -9106,7 +9106,7 @@ function renderOTFormTaskRow(task, index) {
     '<textarea class="input-field ot-form-task-help" rows="2" placeholder="Ajuda técnica opcional, ferramentas ou cuidados...">' + escapeHtml(task.help || '') + '</textarea>' +
     '<div class="ot-task-file-line mt-3">' +
       '<div class="min-w-0 flex-1">' + renderOTFormTaskFilePreview(task.helpFiles || [], index) + '</div>' +
-      '<button type="button" class="btn-secondary btn-action text-xs" onclick="openOTFormTaskFileModal(' + index + ')"><i class="fas fa-upload"></i> Anexar</button>' +
+      '<label class="btn-secondary btn-action text-xs cursor-pointer" title="Selecione um ficheiro — associado automaticamente à tarefa"><i class="fas fa-upload"></i> Anexar<input type="file" multiple class="hidden" onchange="smartUploadOTFormTaskFile(event,' + index + ')"></label>' +
     '</div>' +
     '</div>';
 }
@@ -12478,6 +12478,45 @@ function smartUploadFiles(event, entityType, entityContext) {
   var files = event.target ? event.target.files : event;
   smartUploadFilesCore(files, entityType, entityContext);
   if (event.target) event.target.value = '';
+}
+
+/**
+ * Upload automático de ficheiro de ajuda técnica de tarefa no formulário de OT (sem modal).
+ * Se a OT já existe, associa diretamente via API; caso contrário enfileira como pendente na tarefa.
+ */
+function smartUploadOTFormTaskFile(event, index) {
+  var files = event.target ? event.target.files : event;
+  if (event.target) event.target.value = '';
+  if (!files || !files.length) return;
+
+  var rows = getOTFormTasksDraft();
+
+  if (APP.editingOTId) {
+    // OT já existe — associa via API e regista referência local
+    var ot = (APP.ots || []).find(function(o) { return o.id === APP.editingOTId; });
+    var prevOT = APP.currentOT;
+    APP.currentOT = ot || { id: APP.editingOTId, backendId: APP.editingOTId };
+    smartUploadFilesCore(files, 'work_order', 'ot').then(function() {
+      APP.currentOT = prevOT;
+      if (!rows[index]) return;
+      rows[index].helpFiles = rows[index].helpFiles || [];
+      Array.prototype.slice.call(files).forEach(function(file) {
+        rows[index].helpFiles.push({ id: generateId('F'), name: file.name, type: 'Ficheiro', fileName: file.name });
+      });
+      renderOTFormTasks(rows);
+      enhanceSelects();
+    });
+  } else {
+    // Nova OT — enfileira como pendente na tarefa
+    rows[index] = rows[index] || {};
+    rows[index].helpFiles = rows[index].helpFiles || [];
+    Array.prototype.slice.call(files).forEach(function(file) {
+      rows[index].helpFiles.push({ id: generateId('F'), name: file.name, type: 'Ficheiro', _rawFile: file, fileName: file.name });
+    });
+    renderOTFormTasks(rows);
+    enhanceSelects();
+    showToast(files.length + ' ficheiro(s) preparado(s) para a tarefa');
+  }
 }
 
 /**
