@@ -259,7 +259,7 @@ RETURNS TABLE (
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $
+AS $$
 BEGIN
   RETURN QUERY
   SELECT u.id, u.name, u.email, u.role,
