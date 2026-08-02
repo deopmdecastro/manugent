@@ -15138,11 +15138,23 @@ function initSampleData() {
       }
     ];
     APP.fileFolders = [
-      { id:'FOLDER-ROOT-UPS', name:'UPS Galaxy VS', parentId:'', createdAt:new Date().toISOString() },
+      // Cliente Industrial Demo — estrutura completa de pastas por cliente
+      { id:'FOLDER-CL001-ROOT', name:'Cliente Industrial Demo', parentId:'', createdAt:new Date().toISOString() },
+      { id:'FOLDER-CL001-CONTRATOS', name:'Contratos', parentId:'FOLDER-CL001-ROOT', createdAt:new Date().toISOString() },
+      { id:'FOLDER-CL001-ORCAMENTOS', name:'Orçamentos', parentId:'FOLDER-CL001-ROOT', createdAt:new Date().toISOString() },
+      { id:'FOLDER-CL001-FATURAS', name:'Faturas', parentId:'FOLDER-CL001-ROOT', createdAt:new Date().toISOString() },
+      { id:'FOLDER-CL001-FICHAS-TECNICAS', name:'Fichas Técnicas', parentId:'FOLDER-CL001-ROOT', createdAt:new Date().toISOString() },
+      { id:'FOLDER-CL001-EQUIPAMENTOS', name:'Equipamentos', parentId:'FOLDER-CL001-ROOT', createdAt:new Date().toISOString() },
+      { id:'FOLDER-ROOT-UPS', name:'UPS Galaxy VS', parentId:'FOLDER-CL001-EQUIPAMENTOS', createdAt:new Date().toISOString() },
       { id:'FOLDER-UPS-MANUAIS', name:'Manuais', parentId:'FOLDER-ROOT-UPS', createdAt:new Date().toISOString() },
       { id:'FOLDER-UPS-ESQUEMAS', name:'Esquemas elétricos', parentId:'FOLDER-ROOT-UPS', createdAt:new Date().toISOString() },
       { id:'FOLDER-UPS-MEDIA', name:'Fotos e vídeos', parentId:'FOLDER-ROOT-UPS', createdAt:new Date().toISOString() },
-      { id:'FOLDER-CLIENTE', name:'Documentos do cliente', parentId:'', createdAt:new Date().toISOString() }
+      { id:'FOLDER-CL001-MANUTENCOES', name:'Manutenções', parentId:'FOLDER-CL001-ROOT', createdAt:new Date().toISOString() },
+      { id:'FOLDER-CL001-INCIDENTES', name:'Incidentes', parentId:'FOLDER-CL001-ROOT', createdAt:new Date().toISOString() },
+      { id:'FOLDER-CL001-RELATORIOS', name:'Relatórios', parentId:'FOLDER-CL001-ROOT', createdAt:new Date().toISOString() },
+      { id:'FOLDER-CL001-CONHECIMENTO', name:'Conhecimento', parentId:'FOLDER-CL001-ROOT', createdAt:new Date().toISOString() },
+      { id:'FOLDER-CL001-SENHAS', name:'Senhas', parentId:'FOLDER-CL001-ROOT', createdAt:new Date().toISOString() },
+      { id:'FOLDER-CLIENTE', name:'Outros Documentos', parentId:'FOLDER-CL001-ROOT', createdAt:new Date().toISOString() }
     ];
     APP.files = [
       { id:'FILE-001', name:'Manual UPS Galaxy VS', type:'Ficheiro', ref:'manual-ups-galaxy-vs.pdf', folderId:'FOLDER-UPS-MANUAIS', description:'Manual técnico completo da UPS instalada na sala principal.', permission:'all', userIds:[], teams:[], clientId:'CL-001', clientName:'Cliente Industrial Demo', equipmentId:'EQ-001', equipmentName:'UPS Galaxy VS 20kVA', otId:'OT-000001', otTitle:'Verificação mensal UPS Galaxy VS', versions:[{ version:'v1.0', notes:'Manual de referência', ref:'manual-ups-galaxy-vs.pdf', createdAt:new Date().toISOString(), author:'Sistema ManuGent' }], createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), owner:'Sistema ManuGent' },
