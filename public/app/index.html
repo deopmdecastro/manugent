@@ -8663,29 +8663,37 @@ async function createBuilding() {
   var zones = document.getElementById('building-zones').value.trim();
   var image = await readSingleUpload('building-image-upload');
   APP.buildings = APP.buildings || [];
-  var building = APP.editingBuildingId ? APP.buildings.find(function(b) { return b.id === APP.editingBuildingId; }) : null;
-  if (!building) {
-    building = { id: generateId('ED'), createdAt: new Date().toISOString() };
-    APP.buildings.push(building);
+  var editingId = APP.editingBuildingId;
+  var payload = { name: name, clientId: client.id, address: address, zones: zones };
+  try {
+    var result = editingId
+      ? await apiRequest('/api/buildings/' + editingId, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      : await apiRequest('/api/buildings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    var b = result.building;
+    var local = {
+      id: b.id, clientId: b.client_id, clientName: client.name, name: b.name,
+      address: b.address || '', zones: b.zones || '', areaM2: b.area_m2, type: b.type,
+      image: image ? image.dataUrl : '', imageName: image ? image.name : '',
+      createdAt: b.created_at, updatedAt: new Date().toISOString()
+    };
+    var idx = APP.buildings.findIndex(function(x) { return x.id === b.id; });
+    if (idx >= 0) APP.buildings[idx] = local; else APP.buildings.push(local);
+    APP.editingBuildingId = null;
+    saveData(); closeModal('modal-new-building'); renderBuildings(); populateOTSelects(); showToast('Edifício guardado.');
+  } catch (error) {
+    showToast('Não foi possível guardar o edifício no servidor: ' + (error.message || 'erro desconhecido'), 'error');
   }
-  Object.assign(building, {
-    name: name,
-    clientId: client.id,
-    clientName: client.name,
-    address: address,
-    zones: zones,
-    image: image ? image.dataUrl : (building.image || ''),
-    imageName: image ? image.name : (building.imageName || ''),
-    updatedAt: new Date().toISOString()
-  });
-  APP.editingBuildingId = null;
-  saveData(); closeModal('modal-new-building'); renderBuildings(); populateOTSelects(); showToast('Edifício guardado.');
 }
-function deleteBuilding(id) {
+async function deleteBuilding(id) {
   if (!requirePermission('delete', 'buildings', 'apagar edifício')) return;
   if (!confirm('Remover este edifício?')) return;
-  APP.buildings = (APP.buildings || []).filter(function(b) { return b.id !== id; });
-  saveData(); renderBuildings(); populateOTSelects(); showToast('Edifício removido.');
+  try {
+    await apiRequest('/api/buildings/' + id, { method: 'DELETE' });
+    APP.buildings = (APP.buildings || []).filter(function(b) { return b.id !== id; });
+    saveData(); renderBuildings(); populateOTSelects(); showToast('Edifício removido.');
+  } catch (error) {
+    showToast('Não foi possível remover o edifício no servidor: ' + (error.message || 'erro desconhecido'), 'error');
+  }
 }
 function renderMaterials() {
   var tbody = document.getElementById('materials-table-body');
@@ -9823,7 +9831,8 @@ function syncBackendWorkOrders() {
     apiRequest('/api/clients').catch(function() { return null; }),
     apiRequest('/api/equipment').catch(function() { return null; }),
     apiRequest('/api/users').catch(function() { return null; }),
-    apiRequest('/api/teams').catch(function() { return null; })
+    apiRequest('/api/teams').catch(function() { return null; }),
+    apiRequest('/api/buildings').catch(function() { return null; })
   ]).then(function(results) {
     APP.backendOnline = true;
     if (results[0] && results[0].workOrders) mergeBackendOTs(results[0].workOrders);
@@ -9872,6 +9881,18 @@ function syncBackendWorkOrders() {
     // Merge backend teams into local state
     if (results[7] && results[7].teams) {
       APP.teams = results[7].teams;
+    }
+    // Buildings agora vêm sempre do backend (fonte da verdade); localStorage deixa de ser usado.
+    if (results[8] && results[8].buildings) {
+      APP.buildings = results[8].buildings.map(function(b) {
+        var client = APP.clients.find(function(c) { return c.id === b.client_id; });
+        return {
+          id: b.id, clientId: b.client_id, clientName: client ? client.name : (b.client_name || ''),
+          name: b.name, address: b.address || '', city: b.city || '', type: b.type || 'industrial',
+          areaM2: b.area_m2, zones: b.zones || '', createdAt: b.created_at
+        };
+      });
+      renderBuildings(); populateOTSelects();
     }
     saveData(); updateDashboard(); renderOTs(); renderEquipment(); renderClients(); renderManagedUsers(); renderTechnicians();
     renderSystemStatusBar({ backendDetail: 'Online — ' + (((results[0] && results[0].workOrders) || []).length + ((results[1] && results[1].workOrders) || []).length) + ' OTs sincronizadas' });

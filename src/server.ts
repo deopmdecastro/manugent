@@ -1074,6 +1074,65 @@ app.get('/api/buildings', async (c) => {
   }
 })
 
+app.post('/api/buildings', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json()
+    if (!body.name) return jsonError(c, 'name é obrigatório')
+    if (!body.clientId) return jsonError(c, 'clientId é obrigatório')
+
+    const { data, error } = await db.from('buildings').insert({
+      client_id: body.clientId,
+      name: body.name,
+      address: body.address ?? null,
+      city: body.city ?? null,
+      type: body.type ?? 'industrial',
+      area_m2: body.areaM2 ?? null,
+      zones: body.zones ?? null,
+    }).select().single()
+
+    if (error) throw error
+    return c.json({ building: data }, 201)
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not create building')
+  }
+})
+
+app.put('/api/buildings/:id', async (c) => {
+  try {
+    const db = requireDb()
+    const id = c.req.param('id')
+    const body = await c.req.json()
+    const patch: Record<string, unknown> = {}
+    if (body.name !== undefined) patch.name = body.name
+    if (body.address !== undefined) patch.address = body.address
+    if (body.city !== undefined) patch.city = body.city
+    if (body.type !== undefined) patch.type = body.type
+    if (body.areaM2 !== undefined) patch.area_m2 = body.areaM2
+    if (body.clientId !== undefined) patch.client_id = body.clientId
+    if (body.zones !== undefined) patch.zones = body.zones
+
+    const { data, error } = await db.from('buildings').update(patch).eq('id', id).select().single()
+    if (error) throw error
+    if (!data) return jsonError(c, 'Edifício não encontrado', 404)
+    return c.json({ building: data })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not update building')
+  }
+})
+
+app.delete('/api/buildings/:id', async (c) => {
+  try {
+    const db = requireDb()
+    const id = c.req.param('id')
+    const { error } = await db.from('buildings').delete().eq('id', id)
+    if (error) throw error
+    return c.json({ success: true })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not delete building')
+  }
+})
+
 // ── Routes: Suppliers, Parts & Inventory ────────────────────────────────────────
 
 app.get('/api/suppliers', async (c) => {
