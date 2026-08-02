@@ -11460,10 +11460,14 @@ function populateTechEmpresaSelect(selectedId) {
   var fill = function() {
     var options = ['<option value="">— Sem empresa —</option>'];
     (APP.empresas || []).forEach(function(e) {
-      options.push('<option value="' + e.id + '"' + (selectedId === e.id ? ' selected' : '') + '>' + escapeHtml(e.name) + (e.domain ? ' (@' + escapeHtml(e.domain) + ')' : '') + '</option>');
+      options.push('<option value="' + e.id + '"' + (String(selectedId || '') === String(e.id) ? ' selected' : '') + '>' + escapeHtml(e.name) + (e.domain ? ' (@' + escapeHtml(e.domain) + ')' : '') + '</option>');
     });
     sel.innerHTML = options.join('');
     sel.value = selectedId || '';
+    // O <select> é "melhorado" visualmente por enhanceSelects() num wrapper .select-enhanced
+    // com o seu próprio menu customizado; ao repovoar as opções dinamicamente é preciso
+    // ressincronizar esse widget, ou o dropdown continua a mostrar as opções antigas/vazias.
+    enhanceSelects();
     updateTechEmailHint();
   };
   if (APP.empresas && APP.empresas.length) { fill(); return; }
