@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
 import { StaticPageLayout } from '../../components/static/StaticPageLayout'
 import { BlogCover } from '../../components/static/BlogCover'
-import { BLOG_POSTS, pickLang, type BlogPost } from '../../data/blogPosts'
+import { pickLang, type BlogPost } from '../../data/blogPosts'
+import { useBlogPosts } from '../../hooks/useBlogPosts'
 import { useBlogStats } from '../../hooks/useBlogEngagement'
 import { useLanguage } from '../../contexts/LanguageContext'
 
@@ -30,6 +31,7 @@ function BlogCard({ post }: { post: BlogPost }) {
 }
 
 export function BlogPage() {
+  const { posts, error } = useBlogPosts()
   const { t } = useLanguage()
 
   return (
@@ -39,8 +41,10 @@ export function BlogPage() {
       desc={t.blog.desc}
       narrow={false}
     >
+      {error && <p className="static-blog-error">{error}</p>}
+{!posts && !error && <p className="static-blog-loading">A carregar...</p>}
       <div className="static-blog-grid">
-        {BLOG_POSTS.map(post => (
+        {posts?.map(post => (
           <BlogCard post={post} key={post.slug} />
         ))}
       </div>

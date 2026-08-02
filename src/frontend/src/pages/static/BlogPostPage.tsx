@@ -2,7 +2,8 @@ import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { StaticPageLayout } from '../../components/static/StaticPageLayout'
 import { BlogCover } from '../../components/static/BlogCover'
-import { BLOG_POSTS, getBlogPostBySlug, pickLang } from '../../data/blogPosts'
+import { pickLang } from '../../data/blogPosts'
+import { useBlogPost } from '../../hooks/useBlogPosts'
 import { useBlogEngagement } from '../../hooks/useBlogEngagement'
 import { useLanguage } from '../../contexts/LanguageContext'
 import type { LandingTranslations } from '../../i18n/landing'
@@ -65,7 +66,7 @@ function ShareBar({ title, t }: { title: string; t: LandingTranslations }) {
 
 export function BlogPostPage() {
   const { slug } = useParams<{ slug: string }>()
-  const post = getBlogPostBySlug(slug)
+  const { post, posts } = useBlogPost(slug)
   const { liked, likeCount, viewCount, comments, toggleLike, addComment } = useBlogEngagement(slug ?? '')
   const [author, setAuthor] = useState('')
   const [message, setMessage] = useState('')
@@ -82,7 +83,7 @@ export function BlogPostPage() {
   const content = pickLang(post.content, language)
   const readTime = pickLang(post.readTime, language)
 
-  const related = BLOG_POSTS.filter(p => p.slug !== post.slug && p.category.pt === post.category.pt).slice(0, 2)
+  const related = (posts || []).filter(p => p.slug !== post.slug && p.category.pt === post.category.pt).slice(0, 2)
 
   function handleSubmitComment(e: FormEvent) {
     e.preventDefault()

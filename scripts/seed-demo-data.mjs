@@ -106,6 +106,82 @@ const BUILDING_TYPES = ['industrial', 'comercial', 'residencial', 'saude', 'escr
 const CHECKLIST_NAMES = ['Checklist AVAC Mensal', 'Checklist Elétrico Trimestral', 'Checklist Elevadores',
   'Checklist Segurança Contra Incêndio', 'Checklist Refrigeração', 'Checklist Hidráulico', 'Ronda Geral de Instalações']
 const TESTIMONIAL_ROLES = ['Diretor de Manutenção', 'Gestor de Instalações', 'Técnico Responsável', 'Diretor Geral', 'Facility Manager']
+const BLOG_CONTENT_PT = {
+  'agente-ia-diagnostico-avarias': [
+    'Quando um técnico regista uma avaria, o agente de IA do ManuGent cruza de imediato o histórico do equipamento com sinais recolhidos em tempo real — leituras de sensores, últimas ordens de trabalho e padrões conhecidos de falha.',
+    'Este cruzamento permite sugerir, em segundos, uma lista ordenada de causas prováveis, cada uma com um grau de confiança e as ações de diagnóstico recomendadas.',
+    'O modelo aprende continuamente com o feedback dos técnicos: sempre que uma sugestão é confirmada ou rejeitada, o sistema ajusta os pesos usados nas previsões seguintes para aquele tipo de equipamento.',
+    'O resultado é uma redução significativa do tempo médio de diagnóstico (MTTD), especialmente em equipamentos com histórico rico de manutenção.',
+  ],
+  'mtbf-mttr-oee-indicadores': [
+    'MTBF (tempo médio entre falhas), MTTR (tempo médio de reparação) e OEE (eficiência global do equipamento) são os três indicadores mais citados em manutenção industrial — e também dos mais mal calculados.',
+    'O MTBF mede a fiabilidade de um ativo, dividindo o tempo total de operação pelo número de falhas registadas num período. Quanto maior, mais fiável é o equipamento.',
+    'O MTTR mede a eficiência da resposta da equipa de manutenção, do momento em que a avaria é reportada até à reposição em serviço do equipamento.',
+    'O OEE combina disponibilidade, desempenho e qualidade num único indicador, revelando o verdadeiro potencial produtivo de uma linha.',
+    'Acompanhar estes três indicadores em conjunto, e não isoladamente, é o que permite identificar se um problema de produtividade tem origem na fiabilidade dos equipamentos, na rapidez da resposta ou na qualidade do processo.',
+  ],
+  'caso-cliente-reducao-paragem-34': [
+    'Uma fábrica com três turnos e mais de 200 equipamentos ativos enfrentava um problema comum: ordens de serviço dispersas por papel, WhatsApp e folhas de Excel, sem visibilidade entre turnos.',
+    'Com o ManuGent, a equipa passou a ter um único ponto de verdade para todas as ordens de trabalho, com priorização automática baseada na criticidade do equipamento e no histórico de falhas.',
+    'A comunicação entre turnos deixou de depender de passagens de turno informais — cada ordem transporta consigo o histórico completo de intervenções, fotos e notas técnicas.',
+    'Ao fim de seis meses, o tempo médio de paragem não planeada caiu 34%, e o tempo de resposta a avarias críticas reduziu-se para menos de metade.',
+  ],
+  'manutencao-offline-pwa': [
+    'Muitas fábricas têm zonas com cobertura de rede fraca ou inexistente — caves técnicas, armazéns afastados, salas blindadas. Isto não pode impedir um técnico de registar uma intervenção.',
+    'O ManuGent é construído como uma Progressive Web App: os dados essenciais (ordens de trabalho, ativos, histórico recente) ficam disponíveis localmente no dispositivo do técnico.',
+    'Quando o técnico regista uma ação — fecha uma ordem, adiciona uma nota, tira uma fotografia — a alteração é guardada localmente e sincronizada automaticamente assim que a rede volta a estar disponível.',
+    'Este mecanismo de fila de sincronização garante que nenhuma informação se perde, mesmo em ambientes industriais hostis à conectividade.',
+  ],
+  'ia-generativa-manutencao-industrial': [
+    'A IA generativa está a mudar a forma como as equipas de manutenção interagem com dados técnicos complexos — manuais, esquemas elétricos, históricos de intervenção.',
+    'Em vez de pesquisar manualmente num manual de centenas de páginas, um técnico pode agora perguntar diretamente ao sistema qual o procedimento correto para uma avaria específica.',
+    'A manutenção preditiva também beneficia: modelos generativos conseguem explicar em linguagem natural porque é que um determinado padrão de sensores indica risco de falha, tornando as recomendações mais transparentes e mais fáceis de confiar.',
+    'O desafio para os próximos anos não é tecnológico, mas organizacional: preparar as equipas para trabalhar lado a lado com estas ferramentas.',
+  ],
+  'nfc-vs-qr-code-ativos': [
+    'A identificação de ativos é a base de qualquer sistema de manutenção eficaz — sem ela, cada intervenção começa com uma pergunta: "de que equipamento estamos a falar?"',
+    'Os códigos QR são baratos, fáceis de imprimir e não exigem hardware especial no dispositivo do técnico, mas degradam-se com sujidade, calor ou exposição solar direta.',
+    'As etiquetas NFC são mais resistentes a ambientes agressivos e permitem leitura por aproximação, mesmo com luvas de trabalho, mas têm um custo unitário mais elevado.',
+    'Na prática, muitas fábricas optam por uma abordagem híbrida: NFC em equipamentos críticos ou de difícil acesso, e QR code no restante parque de ativos.',
+  ],
+  'manutencao-preventiva-vs-preditiva': [
+    'A manutenção preventiva segue um calendário fixo — intervalos de tempo ou ciclos de operação definidos pelo fabricante. É previsível, mas pode gerar intervenções desnecessárias em equipamentos que ainda operam dentro dos parâmetros.',
+    'A manutenção preditiva, pelo contrário, baseia-se no estado real do equipamento, usando dados de sensores, análises de vibração, termografia ou análise de óleo para determinar o momento ideal para intervir.',
+    'Na prática, uma estratégia combinada é a mais eficaz: a preventiva garante o cumprimento de requisitos legais e de garantia, enquanto a preditiva otimiza os intervalos reais de intervenção nos equipamentos mais críticos.',
+    'O ManuGent suporta ambas as abordagens, permitindo definir planos preventivos por periodicidade e, quando existem dados de sensores, acionar alertas preditivos com base em limiares configuráveis.',
+  ],
+  'sla-manutencao-como-negociar': [
+    'Um SLA (Acordo de Nível de Serviço) de manutenção define o tempo máximo de resposta e de resolução para cada tipo de intervenção. Negociar SLAs realistas é essencial para manter a confiança do cliente.',
+    'O primeiro passo é conhecer o histórico real dos equipamentos: MTBF e MTTR históricos, disponibilidade da equipa, e tempo médio de obtenção de peças sobressalentes.',
+    'Com base nesses dados, define SLAs por nível de criticidade: para equipamentos críticos, um prazo de resposta de 4 horas pode ser viável; para equipamentos de suporte, 24 a 48 horas é mais realista.',
+    'Inclui cláusulas de exclusão para situações fora do controlo da equipa — falta de peças, condições de segurança no local, ou indisponibilidade do cliente para autorizar a intervenção.',
+  ],
+  'checklist-digital-vantagens': [
+    'As checklists digitais eliminam os problemas das versões em papel: extravios, rasuras, preenchimento incompleto e falta de padronização entre técnicos.',
+    'Com o ManuGent, cada checklist é preenchida no telemóvel ou tablet do técnico, com campos obrigatórios, fotos e assinatura digital, garantindo que nenhum passo é esquecido.',
+    'Os resultados ficam imediatamente disponíveis para supervisores e clientes, e o histórico de checklists por equipamento constrói automaticamente um registo de conformidade ao longo do tempo.',
+    'Em auditorias, a diferença é notória: em vez de pastas de papel, apresenta-se um histórico digital completo, pesquisável e exportável em segundos.',
+  ],
+  'gestao-inventario-pecas-sobresselentes': [
+    'Gerir peças sobressalentes é um dos maiores desafios logísticos da manutenção industrial. Ter stock a mais imobiliza capital; ter stock a menos provoca paragens prolongadas.',
+    'O módulo de inventário do ManuGent permite definir níveis mínimos para cada peça, gerando alertas automáticos quando o stock atinge o limite de reserva.',
+    'Cada peça pode ser associada a fornecedores preferenciais, com histórico de preços e prazos de entrega, facilitando a decisão de reabastecimento.',
+    'As peças usadas em ordens de trabalho são registadas automaticamente, descontando do stock e mantendo um histórico de consumos por equipamento para análise de padrões de desgaste.',
+  ],
+  'seguranca-industrial-manutencao': [
+    'A manutenção industrial desempenha um papel crucial na segurança ocupacional: equipamentos mal mantidos são uma das principais causas de acidentes de trabalho.',
+    'O ManuGent ajuda a cumprir requisitos legais de segurança através de checklists específicas, planos de manutenção preventiva obrigatórios e registo de não-conformidades durante as inspeções.',
+    'As auditorias de segurança podem ser planeadas e executadas diretamente na plataforma, com os resultados documentados e associados aos edifícios e equipamentos inspecionados.',
+    'Manter um histórico digital de todas as intervenções de segurança não é apenas boa prática — é muitas vezes um requisito legal que, em caso de fiscalização ou sinistro, pode fazer a diferença.',
+  ],
+  'roi-software-manutencao': [
+    'Calcular o retorno do investimento (ROI) de um software de manutenção exige olhar para três categorias de benefícios: redução de paragens, aumento de produtividade da equipa e otimização de stock de peças.',
+    'Estudos do setor indicam que um CMMS bem implementado reduz o tempo de paragem não planeada entre 20% e 40%, aumenta a produtividade dos técnicos entre 15% e 30% e reduz o stock de peças entre 10% e 20%.',
+    'Para uma empresa com 5 técnicos e 200 equipamentos, estes valores traduzem-se tipicamente numa poupança anual entre 30.000€ e 80.000€, dependendo do setor e da complexidade das operações.',
+    'A estes benefícios diretos, soma-se a redução de risco — menos falhas críticas, melhor conformidade regulatória e dados fiáveis para decisões de investimento em ativos.',
+  ],
+}
+
 const BLOG_POSTS_SEED = [
   { slug: 'agente-ia-diagnostico-avarias', title: 'Como o agente de IA do ManuGent diagnostica avarias em segundos', category: 'Produto', gradient: 'from-blue-500 to-cyan-400' },
   { slug: 'mtbf-mttr-oee-indicadores', title: 'MTBF, MTTR e OEE: os indicadores que todo o gestor de manutenção devia acompanhar', category: 'Indicadores', gradient: 'from-purple-500 to-pink-400' },
@@ -593,11 +669,12 @@ async function main() {
     await bulkInsert(client, 'calendar_event_assignees', ['event_id', 'user_id'], Array.from(new Map(ceAssigneeRows.map(r => [r.join(':'), r])).values()))
     console.log(`  ✓ ${calendarEvents.length} eventos de calendário`)
 
-    // ---- Blog -----------------------------------------------------------------------------
-    const blogPostRows = BLOG_POSTS_SEED.map(p => [
-      randomUUID(), p.slug, p.title, p.category, `Um olhar aprofundado sobre ${p.title.toLowerCase()}.`,
-      null, 'Equipa ManuGent', int(4, 9), true, int(400, 2600), p.gradient, daysAgo(int(5, 300)),
-    ])
+// ---- Blog -----------------------------------------------------------------------------
+    const blogPostRows = BLOG_POSTS_SEED.map(p => {
+      const content = (BLOG_CONTENT_PT[p.slug] || [`Conteúdo completo sobre ${p.title}.`]).join('\n\n')
+      return [randomUUID(), p.slug, p.title, p.category, `Um olhar aprofundado sobre ${p.title.toLowerCase()}.`,
+        content, 'Equipa ManuGent', int(4, 9), true, int(400, 2600), p.gradient, daysAgo(int(5, 300))]
+    })
     await bulkInsert(client, 'blog_posts',
       ['id', 'slug', 'title', 'category', 'excerpt', 'content', 'author', 'read_time_min', 'published', 'views', 'cover_gradient', 'published_at'], blogPostRows)
     const blogPostIds = blogPostRows.map(r => r[0])

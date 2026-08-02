@@ -1,12 +1,12 @@
-# TODO: Aba "Técnico" → "Colaborador" (consumir todos os perfis)
+# TODO: Renomear "Técnico" → "Colaborador" (consumir todos os perfis)
 
 ## Etapas
 
 ### 1. public/app/index.html — Dicionário AI
-- [ ] Adicionar `{ word: 'colaborador', module: 'technicians', label: 'Criar colaborador' }`
-- [ ] Adicionar `{ word: 'engenheiro', module: 'technicians', label: 'Criar colaborador' }`
-- [ ] Adicionar `{ word: 'financeiro', module: 'technicians', label: 'Criar colaborador' }`
-- [ ] Adicionar `{ word: 'gestor', module: 'technicians', label: 'Criar colaborador' }`
+- [x] Adicionar `{ word: 'colaborador', module: 'technicians', label: 'Criar colaborador' }`
+- [x] Adicionar `{ word: 'engenheiro', module: 'technicians', label: 'Criar colaborador' }`
+- [x] Adicionar `{ word: 'financeiro', module: 'technicians', label: 'Criar colaborador' }`
+- [x] Adicionar `{ word: 'gestor', module: 'technicians', label: 'Criar colaborador' }`
 
 ### 2. public/app/index.html — Labels da IA
 - [ ] `buildAIListResponse('technicians')`: "Técnicos no escopo" → "Colaboradores no escopo"
@@ -26,3 +26,4 @@
 
 ### 6. scripts/seed-demo-data.mjs
 - [ ] Garantir que `ROLES` inclui `engenheiro` (já tem `financeiro`)
+

@@ -928,7 +928,21 @@ app.get('/api/testimonials', async (c) => {
     const db = requireDb()
     const { data, error } = await db.from('testimonials').select('*').eq('approved', true).order('created_at', { ascending: false })
     if (error) throw error
-    return c.json({ items: data || [] })
+    // Map DB column names (author_name, author_role, etc.) to the frontend
+    // interface expected by RealTestimonial (name, role, company, text, createdAt)
+    const items = (data || []).map((row: Record<string, unknown>) => ({
+      id: row.id,
+      name: row.author_name,
+      role: row.author_role,
+      company: row.company_name,
+      text: row.content,
+      rating: row.rating,
+      approved: row.approved,
+      featured: row.featured,
+      photoUrl: row.photo_url,
+      createdAt: row.created_at || row.date,
+    }))
+    return c.json({ items })
   } catch (error) {
     // Fallback para o ficheiro JSON legado (ex: ambientes sem migração aplicada ainda)
     const data = readTestimonials()

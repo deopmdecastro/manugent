@@ -73,14 +73,29 @@ npm run db:seed              # popula ~5.000+ registos reais e interligados
 
 O script `scripts/seed-demo-data.mjs`:
 - Liga à mesma `DATABASE_URL` usada pela API (por omissão a do `docker-compose.yml`)
-- Gera equipas, utilizadores, clientes, equipamentos, ordens de trabalho,
-  diagnósticos, notificações, registos de tempo, relatórios, orçamentos e anexos
+- Gera equipas, utilizadores, clientes, edifícios, contactos, equipamentos,
+  ordens de trabalho, diagnósticos, notificações, registos de tempo, relatórios,
+  orçamentos, anexos, fornecedores, peças, inventário, pedidos de manutenção,
+  planos preventivos, checklists, documentos, contratos, auditorias, comentários,
+  testemunhos, atividade, calendário, blog e avaliações
 - É seguro para re-correr (limpa os dados fictícios anteriores antes de inserir)
 - **Preserva sempre** as 5 contas de demonstração (`superadmin@manugent.pt`,
   `admin@manugent.pt`, `gestor@manugent.pt`, `tecnico@manugent.pt`,
   `cliente@demo.pt`, password `Demo@2026`)
 - Os volumes são ajustáveis via variáveis de ambiente (`SEED_USERS`,
   `SEED_CLIENTS`, `SEED_FINDINGS`, etc.)
+
+> ⚠️ **Schema estendido:** o seed insere dados em tabelas para além das base
+> (`buildings`, `client_contacts`, `suppliers`, `parts`, `inventory_items`,
+> `maintenance_requests`, `preventive_plans`, `checklists`, `documents`, `folders`,
+> `contracts`, `audits`, `reports`, `comments`, `comment_likes`, `testimonials`,
+> `activity_log`, `calendar_events`, `calendar_event_assignees`, `blog_posts`,
+> `ratings`, `work_order_parts`, `technician_profiles`). No Docker local, estas
+> tabelas são criadas automaticamente pelo init script
+> `docker/postgres/init/006_full_demo_dataset_schema.sql` (espelho da migração
+> Supabase `20260802120000_full_demo_dataset_schema.sql`, adaptada ao Postgres
+> standalone sem RLS/roles `anon`). Depois de aplicar o schema, basta correr
+> `npm run db:seed` para popular a base com os dados fictícios.
 
 ### 🧪 Dados Fictícios (Demo Mode)
 
