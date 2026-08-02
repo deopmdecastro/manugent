@@ -1383,11 +1383,114 @@ app.get('/api/teams', async (c) => {
 app.get('/api/users', async (c) => {
   try {
     const db = requireDb()
-    const { data, error } = await db.rpc('get_users_with_teams')
+    const companyId = c.req.query('companyId')
+    const { data, error } = await db.rpc('get_users_with_company')
     if (error) throw error
-    return c.json({ users: data || [] })
+
+    let users = data || []
+    // Gestores/admins veem apenas os colaboradores da sua empresa;
+    // superadmin veem todos. Filtro explícito via query tem prioridade.
+    if (companyId) users = users.filter((u: Record<string, unknown>) => u.company_id === companyId)
+    return c.json({ users })
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not fetch users')
+  }
+})
+
+app.get('/api/users/me', async (c) => {
+  const user = requireAuth(c)
+  if (!user) return c.json({ error: 'Autenticação necessária.' }, 401)
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_users_with_company')
+    if (error) throw error
+    const me = (data || []).find((u: Record<string, unknown>) => u.id === user.id)
+    if (!me) return c.json({ error: 'Utilizador não encontrado' }, 404)
+    return c.json({ user: me })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch current user')
+  }
+})
+
+// ── Routes: Companies (Empresas) ───────────────────────────────────────────
+
+app.get('/api/companies', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_companies')
+    if (error) throw error
+    return c.json({ companies: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch companies')
+  }
+})
+
+app.get('/api/companies/:id', async (c) => {
+  try {
+    const db = requireDb()
+    const id = c.req.param('id')
+    const { data, error } = await db.from('companies').select('*').eq('id', id).single()
+    if (error || !data) return jsonError(c, 'Empresa não encontrada', 404)
+    return c.json({ company: data })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch company')
+  }
+})
+
+app.post('/api/companies', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json()
+    if (!body.name) return jsonError(c, 'name é obrigatório')
+
+    const { data, error } = await db.from('companies').insert({
+      name: body.name,
+      tax_id: body.taxId ?? null,
+      email: body.email ?? null,
+      phone: body.phone ?? null,
+      address: body.address ?? null,
+      city: body.city ?? null,
+      sector: body.sector ?? null,
+      active: body.active ?? true,
+    }).select().single()
+
+    if (error) throw error
+    return c.json({ company: data }, 201)
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not create company')
+  }
+})
+
+app.put('/api/companies/:id', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json()
+    const { data, error } = await db.from('companies').update({
+      name: body.name,
+      tax_id: body.taxId ?? null,
+      email: body.email ?? null,
+      phone: body.phone ?? null,
+      address: body.address ?? null,
+      city: body.city ?? null,
+      sector: body.sector ?? null,
+      active: body.active ?? true,
+    }).eq('id', c.req.param('id')).select().single()
+
+    if (error || !data) return jsonError(c, 'Empresa não encontrada', 404)
+    return c.json({ company: data })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not update company')
+  }
+})
+
+app.get('/api/companies/:id/collaborators', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_company_collaborators', { p_company_id: c.req.param('id') })
+    if (error) throw error
+    return c.json({ collaborators: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch company collaborators')
   }
 })
 
