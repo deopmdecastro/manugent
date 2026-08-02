@@ -13810,7 +13810,7 @@ function getAIContexts() {
     equipment: { title:'Equipamentos', actions:['Criar equipamento','Analisar histórico de falhas','Sugerir manutenção preventiva'], primary:'Criar equipamento' },
     clients: { title:'Clientes', actions:['Criar cliente','Resumir histórico de interações','Gerar relatório por cliente'], primary:'Criar cliente' },
     buildings: { title:'Edifícios', actions:['Criar edifício/local','Mapear ativos por edifício','Listar intervenções por localização'], primary:'Criar edifício' },
-    technicians: { title:'Técnicos', actions:['Criar técnico','Distribuir carga de trabalho','Analisar performance'], primary:'Criar técnico' },
+    technicians: { title:'Colaboradores', actions:['Criar colaborador','Distribuir carga de trabalho','Analisar performance'], primary:'Criar colaborador' },
     users: { title:'Utilizadores', actions:['Criar utilizador','Listar permissões','Gerar senha inicial','Auditar acessos'], primary:'Criar utilizador' },
     knowledge: { title:'Conhecimento', actions:['Criar artigo de conhecimento','Responder pergunta técnica','Sugerir documentação'], primary:'Criar artigo' },
     files: { title:'Ficheiros', actions:['Organizar ficheiros','Procurar documentos','Resumir PDFs'], primary:'Adicionar ficheiro' },
@@ -13929,7 +13929,7 @@ function getContextSummary(page) {
   if (page === 'equipment') return 'Equipamentos visíveis: ' + data.equipment.length + ' · críticos: ' + data.equipment.filter(function(e) { return e.criticality === 'Crítico'; }).length;
   if (page === 'clients') return 'Clientes visíveis: ' + data.clients.length;
   if (page === 'buildings') return 'Edifícios visíveis: ' + data.buildings.length;
-  if (page === 'technicians') return 'Técnicos visíveis: ' + data.technicians.length + ' · disponíveis: ' + data.technicians.filter(function(t) { return t.availability === 'Disponível'; }).length;
+  if (page === 'technicians') return 'Colaboradores visíveis: ' + data.technicians.length + ' · disponíveis: ' + data.technicians.filter(function(t) { return t.availability === 'Disponível'; }).length;
   if (page === 'users') return 'Utilizadores visíveis: ' + data.users.length + ' · admins/superadmins: ' + data.users.filter(function(u) { return u.role === 'admin' || u.role === 'superadmin'; }).length;
   if (page === 'knowledge') return 'Artigos visíveis: ' + data.knowledge.length;
   if (page === 'files') return 'Ficheiros visíveis: ' + data.files.length + ' · pastas: ' + (APP.fileFolders || []).length;
@@ -14729,7 +14729,12 @@ function initSampleData() {
       { id:'EQ-002', name:'Festo SPC11', code:'AUT-01', qrCode:'MG-AUT-01-DEMO', nfcTag:'NFC-EQ-AUT-01', brand:'Festo', model:'SPC11', serial:'', category:'Automação', location:'Piso 1 — Linha Produção', criticality:'Alto', status:'Operacional', installDate:'2020-06-01', notes:'', preventiveRule:{frequency:'monthly',threshold:30,lastGeneratedAt:null,assignedTechnicianId:'TC-001'}, operatingHours:860, cycleCount:12800, createdAt:new Date().toISOString() },
       { id:'EQ-003', name:'Gerador Diesel 100kVA', code:'GER-01', qrCode:'MG-GER-01-DEMO', nfcTag:'NFC-EQ-GER-01', brand:'Kohler', model:'KD100', serial:'KD-789012', category:'Gerador', location:'Exterior — Pátio', criticality:'Crítico', status:'Operacional', installDate:'2019-01-10', notes:'Próxima revisão: 500h', preventiveRule:{frequency:'operating_hours',threshold:500,lastGeneratedAt:null,assignedTechnicianId:'TC-001'}, operatingHours:510, cycleCount:76, createdAt:new Date().toISOString() }
     ];
-    APP.technicians = [{ id:'TC-001', name:'João Silva', email:'joao@empresa.com', specialty:'Elétrico', phone:'+351 912 000 001', availability:'Disponível', createdAt:new Date().toISOString() }];
+    APP.technicians = [
+      { id:'TC-001', name:'João Silva', email:'joao@empresa.com', role:'tecnico', specialty:'Elétrico', phone:'+351 912 000 001', availability:'Disponível', createdAt:new Date().toISOString() },
+      { id:'TC-002', name:'Ana Ferreira', email:'ana@empresa.com', role:'engenheiro', specialty:'AVAC', phone:'+351 912 000 002', availability:'Disponível', createdAt:new Date().toISOString() },
+      { id:'TC-003', name:'Ricardo Sousa', email:'ricardo@empresa.com', role:'financeiro', specialty:'Geral', phone:'+351 912 000 003', availability:'Disponível', createdAt:new Date().toISOString() },
+      { id:'TC-004', name:'Sofia Martins', email:'sofia@empresa.com', role:'gestor', specialty:'Geral', phone:'+351 912 000 004', availability:'Disponível', createdAt:new Date().toISOString() }
+    ];
     APP.clients = [{ id:'CL-001', name:'Cliente Industrial Demo', contact:'Maria Costa', email:'maria@cliente-demo.pt', phone:'+351 210 000 000', address:'Lisboa', createdAt:new Date().toISOString() }];
     APP.buildings = [
       { id:'ED-001', name:'Instalação Principal', clientId:'CL-001', clientName:'Cliente Industrial Demo', address:'Lisboa', zones:'Piso 0, Sala UPS, Linha Produção', createdAt:new Date().toISOString() }
