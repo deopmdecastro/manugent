@@ -1,12 +1,22 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLanguage } from '../../contexts/LanguageContext'
+import { useLandingStats } from '../../data/demo'
 
-const STAT_META = [
-  { value: 2500, prefix: '+', suffix: '' },
-  { value: 15000, prefix: '+', suffix: '' },
-  { value: 98, prefix: '+', suffix: '%' },
-  { value: 23, prefix: '-', suffix: '%' },
-]
+// Estatísticas calculadas em tempo real a partir da base de dados fictícia
+// (src/frontend/src/data/demo). Nada aqui é um número fixo: qualquer alteração
+// aos dados (nova OT, novo cliente, etc.) recalcula automaticamente estes valores.
+function useStatMeta() {
+  const landing = useLandingStats()
+  return [
+    { value: parseCompact(landing.utilizadoresAtivos), prefix: '+', suffix: '' },
+    { value: landing.equipamentosMonitorizados, prefix: '+', suffix: '' },
+    { value: parseInt(landing.otConcluidasPercent, 10), prefix: '+', suffix: '%' },
+    { value: parseInt(landing.reducaoCustosPercent, 10), prefix: '-', suffix: '%' },
+  ]
+}
+function parseCompact(s: string) {
+  return Number(s.replace(/[^\d]/g, '')) || 0
+}
 
 // Portuguese/European thousands grouping: 2500 -> "2.500", 15000 -> "15.000"
 function formatPt(n: number): string {
@@ -59,7 +69,8 @@ function AnimatedCounter({ value, prefix, suffix, label }: { value: number; pref
 
 export function StatsBar() {
   const { t } = useLanguage()
-  const stats = STAT_META.map((meta, i) => ({ ...meta, label: t.stats.items[i].label }))
+  const statMeta = useStatMeta()
+  const stats = statMeta.map((meta, i) => ({ ...meta, label: t.stats.items[i].label }))
 
   return (
     <section className="l-stats">

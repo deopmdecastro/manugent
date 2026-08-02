@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { useLanguage } from '../../contexts/LanguageContext'
+import { useDashboardStats, useLandingStats } from '../../data/demo'
 
 export function Hero() {
   const { t } = useLanguage()
@@ -93,6 +94,10 @@ export function Hero() {
 function HeroVisual() {
   const { t } = useLanguage()
   const cards = t.hero.cards
+  const kpi = useDashboardStats()
+  const landing = useLandingStats()
+  const inventoryUnits = kpi.consumoPecas + 900 // stock + consumo, para o cartão parecer uma foto de armazém real
+  const maintenanceHealthPercent = Math.round(100 - (kpi.equipamentosAvariados / Math.max(1, kpi.edificiosGeridos * 8)) * 100)
 
   return (
     <div className="l-hero-scene">
@@ -119,7 +124,7 @@ function HeroVisual() {
       <FloatingCard
         pos="top-left"
         label={cards.orders.label}
-        value="128"
+        value={String(kpi.otAbertas + kpi.otEmExecucao)}
         sub={cards.orders.sub}
         icon="check"
         color="#818cf8"
@@ -127,7 +132,7 @@ function HeroVisual() {
       <FloatingCard
         pos="top-right"
         label={cards.maintenance.label}
-        value="96%"
+        value={`${Math.max(80, Math.min(99, maintenanceHealthPercent))}%`}
         sub={cards.maintenance.sub}
         icon="tool"
         color="#34d399"
@@ -135,7 +140,7 @@ function HeroVisual() {
       <FloatingCard
         pos="mid-left"
         label={cards.assets.label}
-        value="342"
+        value={String(landing.equipamentosMonitorizados)}
         sub={cards.assets.sub}
         icon="box"
         color="#fbbf24"
@@ -151,7 +156,7 @@ function HeroVisual() {
       <FloatingCard
         pos="bottom-left"
         label={cards.inventory.label}
-        value="1.284"
+        value={inventoryUnits.toLocaleString('pt-PT')}
         sub={cards.inventory.sub}
         icon="inventory"
         color="#fb923c"
@@ -159,7 +164,7 @@ function HeroVisual() {
       <FloatingCard
         pos="bottom-right"
         label={cards.savings.label}
-        value="23%"
+        value={landing.reducaoCustosPercent}
         sub={cards.savings.sub}
         icon="money"
         color="#38bdf8"
