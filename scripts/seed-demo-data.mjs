@@ -830,39 +830,66 @@ async function main() {
       ['id', 'equipment_id', 'name', 'frequency', 'last_executed_at', 'next_due_at', 'status', 'checklist_id', 'responsible_team_id'], preventivePlanRows)
     console.log(`  ✓ ${preventivePlanRows.length} planos preventivos`)
 
-    // ---- Pastas — estrutura automática por cliente/edifício (item 4) -------------------
-    // Sempre que um cliente é criado, gera-se automaticamente:
-    // Cliente / {Contratos, Orçamentos, Faturas, Relatórios, Edifícios/{Edifício}/{Equipamentos,OT,Inspeções,
-    //   Manutenção Preventiva,Documentação Técnica}, Outros Documentos}
+    // ---- Pastas — estrutura automática por empresa → cliente → edifício -----------------
+    // Espelha as RPCs create_empresa_folder_structure() / create_client_folder_structure():
+    // Empresa / {Documentos, Contratos, Colaboradores, Clientes/{Cliente}/{Contratos,Orçamentos,
+    //   Faturas,Relatórios,Edifícios/{Edifício}/{Equipamentos,OT,Inspeções,Manutenção Preventiva,
+    //   Documentação Técnica},Outros Documentos}, Outros}
     const folders = []
     // pastas "type" ligadas a cada pasta, para saber onde arrumar cada documento gerado a seguir
     const folderFor = { contratos: {}, orcamentos: {}, faturas: {}, relatorios: {}, outros: {}, buildingRoot: {}, equipamentos: {}, ot: {}, inspecoes: {}, manutencaoPreventiva: {}, docTecnica: {} }
-    const mkFolder = (name, parentId, ownerId) => { const f = { id: randomUUID(), name, parent_id: parentId, owner_id: ownerId }; folders.push(f); return f }
+    const mkFolder = (name, parentId, ownerId, empresaId, clientId, folderType) => {
+      const f = { id: randomUUID(), name, parent_id: parentId, owner_id: ownerId, empresa_id: empresaId || null, client_id: clientId || null, folder_type: folderType || 'generic' }
+      folders.push(f)
+      return f
+    }
+    const staffByEmpresa = {}
+    for (const u of staffUsers) { if (u.empresa_id) { staffByEmpresa[u.empresa_id] = staffByEmpresa[u.empresa_id] || []; staffByEmpresa[u.empresa_id].push(u) } }
+    const ownerFor = empresaId => (staffByEmpresa[empresaId] && staffByEmpresa[empresaId].length ? pick(staffByEmpresa[empresaId]) : pick(staffUsers)).id
+
+    const empresaRootId = {}
+    const empresaClientesFolderId = {}
+    for (const emp of empresas) {
+      const owner = ownerFor(emp.id)
+      const root = mkFolder(emp.name, null, owner, emp.id, null, 'empresa_root')
+      empresaRootId[emp.id] = root.id
+      mkFolder('Documentos', root.id, owner, emp.id, null, 'documentos')
+      mkFolder('Contratos', root.id, owner, emp.id, null, 'contratos')
+      mkFolder('Colaboradores', root.id, owner, emp.id, null, 'colaboradores')
+      empresaClientesFolderId[emp.id] = mkFolder('Clientes', root.id, owner, emp.id, null, 'clientes').id
+      mkFolder('Outros', root.id, owner, emp.id, null, 'outros')
+    }
+    console.log(`  ✓ ${empresas.length} estruturas de pastas de empresa criadas`)
+
     for (const c of clients) {
-      const owner = pick(staffUsers).id
-      const root = mkFolder(c.name, null, owner)
-      folderFor.contratos[c.id] = mkFolder('Contratos', root.id, owner).id
-      folderFor.orcamentos[c.id] = mkFolder('Orçamentos', root.id, owner).id
-      folderFor.faturas[c.id] = mkFolder('Faturas', root.id, owner).id
-      folderFor.relatorios[c.id] = mkFolder('Relatórios', root.id, owner).id
-      const edificiosRoot = mkFolder('Edifícios', root.id, owner)
-      folderFor.outros[c.id] = mkFolder('Outros Documentos', root.id, owner).id
+      const owner = ownerFor(c.empresa_id)
+      const clientesFolderId = empresaClientesFolderId[c.empresa_id] || null
+      const root = mkFolder(c.name, clientesFolderId, owner, c.empresa_id, c.id, 'cliente_root')
+      folderFor.contratos[c.id] = mkFolder('Contratos', root.id, owner, c.empresa_id, c.id, 'cliente_contratos').id
+      folderFor.orcamentos[c.id] = mkFolder('Orçamentos', root.id, owner, c.empresa_id, c.id, 'cliente_orcamentos').id
+      folderFor.faturas[c.id] = mkFolder('Faturas', root.id, owner, c.empresa_id, c.id, 'cliente_faturas').id
+      folderFor.relatorios[c.id] = mkFolder('Relatórios', root.id, owner, c.empresa_id, c.id, 'cliente_relatorios').id
+      const edificiosRoot = mkFolder('Edifícios', root.id, owner, c.empresa_id, c.id, 'cliente_edificios')
+      folderFor.outros[c.id] = mkFolder('Outros Documentos', root.id, owner, c.empresa_id, c.id, 'cliente_outros').id
       for (const bId of buildingsByClient[c.id]) {
         const b = buildings.find(bb => bb.id === bId)
-        const bRoot = mkFolder(b.name, edificiosRoot.id, owner)
+        const bRoot = mkFolder(b.name, edificiosRoot.id, owner, c.empresa_id, c.id, 'building_root')
         folderFor.buildingRoot[bId] = bRoot.id
-        folderFor.equipamentos[bId] = mkFolder('Equipamentos', bRoot.id, owner).id
-        folderFor.ot[bId] = mkFolder('OT', bRoot.id, owner).id
-        folderFor.inspecoes[bId] = mkFolder('Inspeções', bRoot.id, owner).id
-        folderFor.manutencaoPreventiva[bId] = mkFolder('Manutenção Preventiva', bRoot.id, owner).id
-        folderFor.docTecnica[bId] = mkFolder('Documentação Técnica', bRoot.id, owner).id
+        folderFor.equipamentos[bId] = mkFolder('Equipamentos', bRoot.id, owner, c.empresa_id, c.id, 'building_equipamentos').id
+        folderFor.ot[bId] = mkFolder('OT', bRoot.id, owner, c.empresa_id, c.id, 'building_ot').id
+        folderFor.inspecoes[bId] = mkFolder('Inspeções', bRoot.id, owner, c.empresa_id, c.id, 'building_inspecoes').id
+        folderFor.manutencaoPreventiva[bId] = mkFolder('Manutenção Preventiva', bRoot.id, owner, c.empresa_id, c.id, 'building_manutencao_preventiva').id
+        folderFor.docTecnica[bId] = mkFolder('Documentação Técnica', bRoot.id, owner, c.empresa_id, c.id, 'building_doc_tecnica').id
       }
     }
-    await bulkInsert(client, 'folders', ['id', 'name', 'parent_id', 'owner_id'], folders.map(f => [f.id, f.name, f.parent_id, f.owner_id]))
-    console.log(`  ✓ ${folders.length} pastas (estrutura automática por cliente/edifício)`)
+    await bulkInsert(client, 'folders', ['id', 'name', 'parent_id', 'owner_id', 'empresa_id', 'client_id', 'folder_type'],
+      folders.map(f => [f.id, f.name, f.parent_id, f.owner_id, f.empresa_id, f.client_id, f.folder_type]))
+    console.log(`  ✓ ${folders.length} pastas (estrutura automática por empresa/cliente/edifício)`)
 
     // ---- Documentos — arrumados automaticamente na estrutura acima ---------------------
     const docTypes = ['manual', 'garantia', 'relatorio', 'contrato', 'fatura', 'certificado']
+    const clientEmpresaId = {}
+    for (const c of clients) clientEmpresaId[c.id] = c.empresa_id
     // cada documento sabe a que entidade pertence e é arrumado na pasta correspondente
     const docEntities = [
       ...equipment.map(e => ({ type: 'equipment', id: e.id, clientId: e.client_id, buildingId: e.building_id, docType: pick(['manual', 'garantia', 'certificado']) })),
@@ -883,9 +910,10 @@ async function main() {
     const documentRows = pickMany(docEntities, Math.min(N.documents, docEntities.length)).map((e, i) => {
       const type = e.docType || pick(docTypes)
       const folderId = folderForDoc(e) || pick(folders).id
-      return [randomUUID(), `${type}_${i}.pdf`, type, folderId, e.type, e.id, pick(staffUsers).id, daysAgo(int(0, 400)), int(50, 5000), `/uploads/documents/${i}.pdf`]
+      const empresaId = clientEmpresaId[e.clientId] || null
+      return [randomUUID(), `${type}_${i}.pdf`, type, folderId, e.type, e.id, empresaId, e.clientId || null, pick(staffUsers).id, daysAgo(int(0, 400)), int(50, 5000), `/uploads/documents/${i}.pdf`]
     })
-    await bulkInsert(client, 'documents', ['id', 'name', 'type', 'folder_id', 'entity_type', 'entity_id', 'uploaded_by', 'uploaded_at', 'size_kb', 'url'], documentRows)
+    await bulkInsert(client, 'documents', ['id', 'name', 'type', 'folder_id', 'entity_type', 'entity_id', 'empresa_id', 'client_id', 'uploaded_by', 'uploaded_at', 'size_kb', 'url'], documentRows)
     console.log(`  ✓ ${documentRows.length} documentos organizados automaticamente`)
 
     // ---- Contratos ---------------------------------------------------------------------

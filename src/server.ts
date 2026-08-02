@@ -1439,7 +1439,7 @@ app.get('/api/empresas', async (c) => {
 app.post('/api/empresas', async (c) => {
   try {
     const db = requireDb()
-    const body = await c.req.json() as { name?: string; tax_id?: string; email?: string; phone?: string; address?: string; city?: string; domain?: string; active?: boolean }
+    const body = await c.req.json() as { name?: string; tax_id?: string; email?: string; phone?: string; address?: string; city?: string; domain?: string; category?: string; active?: boolean }
     if (!body.name || !body.name.trim()) return jsonError(c, 'Nome da empresa é obrigatório.', 400)
     const { data, error } = await db.from('empresas').insert({
       name: body.name.trim(),
@@ -1449,6 +1449,7 @@ app.post('/api/empresas', async (c) => {
       address: body.address || null,
       city: body.city || null,
       domain: body.domain || null,
+      category: body.category || 'prestador',
       active: body.active !== false,
     }).select().single()
     if (error) throw error
@@ -1465,7 +1466,7 @@ app.put('/api/empresas/:id', async (c) => {
     const db = requireDb()
     const body = await c.req.json() as Record<string, unknown>
     const update: Record<string, unknown> = {}
-    for (const key of ['name','tax_id','email','phone','address','city','domain','active']) {
+    for (const key of ['name','tax_id','email','phone','address','city','domain','category','active']) {
       if (key in body) update[key] = body[key]
     }
     const { data, error } = await db.from('empresas').update(update).eq('id', c.req.param('id')).select().single()
@@ -1485,6 +1486,34 @@ app.delete('/api/empresas/:id', async (c) => {
     return c.json({ ok: true })
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not delete empresa')
+  }
+})
+
+app.post('/api/empresas/:id/collaborators/:userId', async (c) => {
+  try {
+    const db = requireDb()
+    const { error } = await db.rpc('set_user_empresa', {
+      p_user_id: c.req.param('userId'),
+      p_empresa_id: c.req.param('id'),
+    })
+    if (error) throw error
+    return c.json({ ok: true })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not associate collaborator with empresa')
+  }
+})
+
+app.delete('/api/empresas/:id/collaborators/:userId', async (c) => {
+  try {
+    const db = requireDb()
+    const { error } = await db.rpc('set_user_empresa', {
+      p_user_id: c.req.param('userId'),
+      p_empresa_id: null,
+    })
+    if (error) throw error
+    return c.json({ ok: true })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not remove collaborator from empresa')
   }
 })
 

@@ -3858,6 +3858,34 @@
         </div>
       </div>
 
+      <!-- COLABORADORES DE UMA EMPRESA (tabela, substitui o antigo modal) -->
+      <div id="page-empresa-colaboradores" class="page fade-in">
+        <div class="flex items-center justify-between mb-6 page-header">
+          <div>
+            <button class="btn-ghost mb-2" onclick="showPage('empresas')"><i class="fas fa-arrow-left"></i> Voltar a Empresas</button>
+            <h1 class="mono" id="empresa-colaboradores-page-title">Colaboradores</h1>
+            <p id="empresa-colaboradores-page-subtitle">Colaboradores desta empresa</p>
+          </div>
+        </div>
+        <div class="card p-0 overflow-x-auto">
+          <table class="w-full text-sm" id="empresa-colaboradores-table">
+            <thead>
+              <tr class="text-left text-slate-400 border-b border-white/10">
+                <th class="p-3">Nome</th>
+                <th class="p-3">Email</th>
+                <th class="p-3">Função</th>
+                <th class="p-3">Departamento</th>
+                <th class="p-3">Estado</th>
+                <th class="p-3 text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="empresa-colaboradores-tbody">
+              <tr><td colspan="6" class="p-8 text-center text-slate-500">A carregar…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- CONHECIMENTO -->
       <div id="page-knowledge" class="page fade-in">
         <div class="flex items-center justify-between mb-6 page-header">
@@ -6223,6 +6251,11 @@
         <label class="block text-sm mb-2 text-slate-300">Disponibilidade</label>
         <select id="tech-availability" class="input-field"><option>Disponível</option><option>Em campo</option><option>Em férias</option><option>Indisponível</option></select>
       </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Empresa</label>
+        <select id="tech-empresa" class="input-field" onchange="updateTechEmailHint()"><option value="">— Sem empresa —</option></select>
+        <p class="text-xs text-slate-500 mt-1" id="tech-email-hint"></p>
+      </div>
     </div>
     <div class="flex gap-3 mt-6">
       <button class="btn-secondary flex-1" onclick="closeModal('modal-new-tech')">Cancelar</button>
@@ -6249,25 +6282,26 @@
         <div><label class="block text-sm mb-2 text-slate-300">Cidade</label><input type="text" id="empresa-city" class="input-field" placeholder="Porto"></div>
       </div>
       <div><label class="block text-sm mb-2 text-slate-300">Morada</label><input type="text" id="empresa-address" class="input-field" placeholder="Rua, número, código postal"></div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Domínio de email</label>
+          <input type="text" id="empresa-domain" class="input-field" placeholder="empresa.pt">
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Categoria</label>
+          <select id="empresa-category" class="input-field">
+            <option value="prestador">Prestador de manutenção</option>
+            <option value="cliente">Cliente</option>
+            <option value="parceiro">Parceiro</option>
+          </select>
+        </div>
+      </div>
+      <p class="text-xs text-slate-500 -mt-2">Os emails dos colaboradores desta empresa devem terminar em @domínio.</p>
       <div class="flex items-center gap-2"><input type="checkbox" id="empresa-active" checked><label for="empresa-active" class="text-sm text-slate-300">Empresa ativa</label></div>
     </div>
     <div class="flex gap-3 mt-6">
       <button class="btn-secondary flex-1" onclick="closeModal('modal-new-empresa')">Cancelar</button>
       <button class="btn-primary flex-1" onclick="saveEmpresa()"><i class="fas fa-check"></i> Guardar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Empresa Colaboradores Modal -->
-<div id="modal-empresa-colaboradores" class="modal-overlay" style="display:none">
-  <div class="modal-content">
-    <div class="flex items-center justify-between mb-5">
-      <h2 class="text-lg font-semibold" id="empresa-colaboradores-title">Colaboradores</h2>
-      <button class="btn-ghost" onclick="closeModal('modal-empresa-colaboradores')"><i class="fas fa-times"></i></button>
-    </div>
-    <div id="empresa-colaboradores-body"></div>
-    <div class="flex gap-3 mt-6">
-      <button class="btn-secondary flex-1" onclick="closeModal('modal-empresa-colaboradores')">Fechar</button>
     </div>
   </div>
 </div>
@@ -11420,6 +11454,36 @@ function deleteClient(id) {
 }
 
 // ======================== COLABORADORES ========================
+function populateTechEmpresaSelect(selectedId) {
+  var sel = document.getElementById('tech-empresa');
+  if (!sel) return;
+  var fill = function() {
+    var options = ['<option value="">— Sem empresa —</option>'];
+    (APP.empresas || []).forEach(function(e) {
+      options.push('<option value="' + e.id + '"' + (selectedId === e.id ? ' selected' : '') + '>' + escapeHtml(e.name) + (e.domain ? ' (@' + escapeHtml(e.domain) + ')' : '') + '</option>');
+    });
+    sel.innerHTML = options.join('');
+    sel.value = selectedId || '';
+    updateTechEmailHint();
+  };
+  if (APP.empresas && APP.empresas.length) { fill(); return; }
+  fetch('/api/empresas', { headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } })
+    .then(function(r) { return r.json(); })
+    .then(function(data) { APP.empresas = data.empresas || []; fill(); })
+    .catch(function() { fill(); });
+}
+function getSelectedTechEmpresa() {
+  var sel = document.getElementById('tech-empresa');
+  var id = sel ? sel.value : '';
+  if (!id) return null;
+  return (APP.empresas || []).find(function(e) { return e.id === id; }) || null;
+}
+function updateTechEmailHint() {
+  var hint = document.getElementById('tech-email-hint');
+  if (!hint) return;
+  var emp = getSelectedTechEmpresa();
+  hint.textContent = (emp && emp.domain) ? 'O email deste colaborador deve terminar em @' + emp.domain : '';
+}
 function openNewTechModal() {
   if (!requirePermission('create', 'technicians', 'criar colaborador')) return;
   APP.editingTechId = null;
@@ -11430,6 +11494,8 @@ function openNewTechModal() {
   document.getElementById('tech-specialty').value = 'Elétrico';
   document.getElementById('tech-availability').value = 'Disponível';
   document.getElementById('tech-photo-upload').value = '';
+  var myEmpresaId = APP.user && APP.user.empresa_id ? String(APP.user.empresa_id) : '';
+  populateTechEmpresaSelect(myEmpresaId);
   enhanceFileInputs();
   document.getElementById('modal-new-tech').style.display = 'flex';
 }
@@ -11447,12 +11513,23 @@ function openEditTechModal(id) {
   document.getElementById('tech-phone').value = t.phone || '';
   document.getElementById('tech-availability').value = t.availability || 'Disponível';
   document.getElementById('tech-photo-upload').value = '';
+  populateTechEmpresaSelect(t.empresa_id || '');
   enhanceFileInputs();
   document.getElementById('modal-new-tech').style.display = 'flex';
 }
 async function createTechnician() {
   var name = document.getElementById('tech-name').value.trim();
   if (!name) { showToast('Nome é obrigatório.'); return; }
+  var email = document.getElementById('tech-email').value.trim();
+  var empresa = getSelectedTechEmpresa();
+  if (empresa && empresa.domain) {
+    if (!email) { showToast('Este colaborador está associado a ' + empresa.name + '; indique um email @' + empresa.domain + '.'); return; }
+    var emailDomain = email.split('@')[1] ? email.split('@')[1].toLowerCase() : '';
+    if (emailDomain !== empresa.domain.toLowerCase()) {
+      showToast('O email deve pertencer ao domínio @' + empresa.domain + ' de ' + empresa.name + '.');
+      return;
+    }
+  }
   var photo = await readSingleUpload('tech-photo-upload');
   var tech = APP.editingTechId ? APP.technicians.find(function(t) { return t.id === APP.editingTechId; }) : null;
   if (!tech) {
@@ -11460,11 +11537,13 @@ async function createTechnician() {
     APP.technicians.push(tech);
   }
   Object.assign(tech, { name: name,
-    email: document.getElementById('tech-email').value,
+    email: email,
     role: normalizeRole(document.getElementById('tech-role').value || 'tecnico'),
     specialty: document.getElementById('tech-specialty').value,
     phone: document.getElementById('tech-phone').value,
     availability: document.getElementById('tech-availability').value,
+    empresa_id: empresa ? empresa.id : null,
+    empresaName: empresa ? empresa.name : '',
     photo: photo ? photo.dataUrl : (tech.photo || ''),
     photoName: photo ? photo.name : (tech.photoName || ''),
   });
@@ -11508,6 +11587,7 @@ function renderTechnicians() {
       '<span class="badge ' + (availColors[t.availability]||'badge-gray') + ' text-xs">' + escapeHtml(t.availability || '—') + '</span></div>' +
       '<div class="entity-meta">' + (t.email ? '<div><i class="fas fa-envelope"></i><span class="truncate">' + escapeHtml(t.email) + '</span></div>' : '') +
       (t.phone ? '<div><i class="fas fa-phone"></i><span>' + escapeHtml(t.phone) + '</span></div>' : '') +
+      (t.empresaName ? '<div><i class="fas fa-building-circle-check"></i><span class="truncate">' + escapeHtml(t.empresaName) + '</span></div>' : '') +
       (t.teamName ? '<div><i class="fas fa-users"></i><span>' + escapeHtml(t.teamName) + '</span></div>' : '') +
       '<div><i class="fas fa-wrench"></i><span>' + otCount + ' OT(s) ativas</span></div></div>' +
       '<div class="entity-actions justify-end"><button class="btn-secondary entity-icon-action" title="Editar colaborador" onclick="openEditTechModal(\'' + t.id + '\')"><i class="fas fa-pen"></i></button><button class="btn-secondary entity-icon-action entity-danger-action" title="Apagar colaborador" onclick="deleteTech(\'' + t.id + '\')"><i class="fas fa-trash"></i></button></div></div>';
@@ -11521,6 +11601,10 @@ function deleteTech(id) {
 }
 
 // ======================== EMPRESAS ========================
+function getEmpresaCategoryLabel(category) {
+  var labels = { prestador: 'Prestador de manutenção', cliente: 'Cliente', parceiro: 'Parceiro' };
+  return labels[category] || 'Prestador de manutenção';
+}
 function renderEmpresas() {
   var el = document.getElementById('empresas-grid');
   if (!el) return;
@@ -11538,6 +11622,7 @@ function renderEmpresas() {
             '<div class="entity-avatar round" style="color:#c4b5fd;background:rgba(99,102,241,0.2);border-color:rgba(129,140,248,0.22)"><i class="fas fa-building-circle-check"></i></div>' +
             '<div class="min-w-0 flex-1"><div class="font-semibold text-lg truncate">' + escapeHtml(emp.name) + '</div>' +
             '<div class="flex flex-wrap gap-1 mt-1"><span class="badge ' + (emp.active ? 'badge-green' : 'badge-red') + ' text-xs">' + (emp.active ? 'Ativa' : 'Inativa') + '</span>' +
+            '<span class="badge badge-purple text-xs">' + escapeHtml(getEmpresaCategoryLabel(emp.category)) + '</span>' +
             (emp.city ? '<span class="badge badge-gray text-xs">' + escapeHtml(emp.city) + '</span>' : '') + '</div></div>' +
           '</div>' +
           '<div class="entity-meta">' +
@@ -11545,6 +11630,7 @@ function renderEmpresas() {
             (emp.phone ? '<div><i class="fas fa-phone"></i><span>' + escapeHtml(emp.phone) + '</span></div>' : '') +
             (emp.tax_id ? '<div><i class="fas fa-id-card"></i><span>' + escapeHtml(emp.tax_id) + '</span></div>' : '') +
             (emp.address ? '<div><i class="fas fa-map-marker-alt"></i><span class="truncate">' + escapeHtml(emp.address) + '</span></div>' : '') +
+            (emp.domain ? '<div><i class="fas fa-at"></i><span class="truncate">@' + escapeHtml(emp.domain) + '</span></div>' : '') +
           '</div>' +
           '<div class="mt-3"><button class="btn-secondary text-xs" onclick="viewEmpresaColaboradores(\'' + emp.id + '\',\'' + escapeHtml(emp.name) + '\')"><i class="fas fa-users"></i> Ver Colaboradores</button></div>' +
           '<div class="entity-actions justify-end">' +
@@ -11560,9 +11646,10 @@ function renderEmpresas() {
 function openNewEmpresaModal() {
   var m = document.getElementById('modal-new-empresa');
   if (!m) return;
-  ['empresa-name','empresa-tax-id','empresa-email','empresa-phone','empresa-address','empresa-city'].forEach(function(id) {
+  ['empresa-name','empresa-tax-id','empresa-email','empresa-phone','empresa-address','empresa-city','empresa-domain'].forEach(function(id) {
     var el = document.getElementById(id); if (el) el.value = '';
   });
+  var cat = document.getElementById('empresa-category'); if (cat) cat.value = 'prestador';
   var cb = document.getElementById('empresa-active'); if (cb) cb.checked = true;
   APP.editingEmpresaId = null;
   m.style.display = 'flex';
@@ -11577,6 +11664,8 @@ function openEditEmpresaModal(id) {
   document.getElementById('empresa-phone').value = emp.phone || '';
   document.getElementById('empresa-address').value = emp.address || '';
   document.getElementById('empresa-city').value = emp.city || '';
+  document.getElementById('empresa-domain').value = emp.domain || '';
+  document.getElementById('empresa-category').value = emp.category || 'prestador';
   var cb = document.getElementById('empresa-active'); if (cb) cb.checked = emp.active !== false;
   APP.editingEmpresaId = id;
   document.getElementById('modal-new-empresa').style.display = 'flex';
@@ -11585,6 +11674,7 @@ function openEditEmpresaModal(id) {
 async function saveEmpresa() {
   var name = document.getElementById('empresa-name').value.trim();
   if (!name) { showToast('Nome da empresa é obrigatório.'); return; }
+  var domain = document.getElementById('empresa-domain').value.trim().toLowerCase().replace(/^@/, '');
   var body = {
     name: name,
     tax_id: document.getElementById('empresa-tax-id').value.trim() || null,
@@ -11592,6 +11682,8 @@ async function saveEmpresa() {
     phone: document.getElementById('empresa-phone').value.trim() || null,
     address: document.getElementById('empresa-address').value.trim() || null,
     city: document.getElementById('empresa-city').value.trim() || null,
+    domain: domain || null,
+    category: document.getElementById('empresa-category').value || 'prestador',
     active: document.getElementById('empresa-active').checked
   };
   var url = APP.editingEmpresaId ? '/api/empresas/' + APP.editingEmpresaId : '/api/empresas';
@@ -11621,29 +11713,76 @@ async function deleteEmpresa(id) {
 }
 
 function viewEmpresaColaboradores(empresaId, empresaName) {
+  APP.viewingEmpresaId = empresaId;
+  APP.viewingEmpresaName = empresaName;
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  var pageEl = document.getElementById('page-empresa-colaboradores');
+  if (pageEl) pageEl.classList.add('active');
+  APP.currentPage = 'empresa-colaboradores';
+  document.getElementById('empresa-colaboradores-page-title').textContent = 'Colaboradores — ' + empresaName;
+  document.getElementById('empresa-colaboradores-page-subtitle').textContent = 'Gestão dos colaboradores associados a ' + empresaName;
+  ensurePageBackButtons();
+  renderEmpresaColaboradoresTable();
+}
+function renderEmpresaColaboradoresTable() {
+  var empresaId = APP.viewingEmpresaId;
+  var tbody = document.getElementById('empresa-colaboradores-tbody');
+  if (!empresaId || !tbody) return;
+  tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-500">A carregar…</td></tr>';
   fetch('/api/empresas/' + empresaId + '/collaborators', { headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } })
     .then(function(r) { return r.json(); })
     .then(function(data) {
       var collabs = data.collaborators || [];
-      var body = '<div class="text-sm text-slate-400 mb-4">' + collabs.length + ' colaborador(es) em <strong>' + escapeHtml(empresaName) + '</strong></div>';
+      APP.viewingEmpresaCollaborators = collabs;
       if (!collabs.length) {
-        body += '<p class="text-slate-500">Nenhum colaborador associado a esta empresa.</p>';
-      } else {
-        body += '<div class="space-y-2">' + collabs.map(function(c) {
-          return '<div class="flex items-center gap-3 p-3 rounded-lg border border-white/10">' +
-            '<div class="w-8 h-8 rounded-full flex items-center justify-center" style="background:rgba(99,102,241,0.2);color:#c4b5fd">' + escapeHtml((c.name||'C').charAt(0).toUpperCase()) + '</div>' +
-            '<div class="flex-1 min-w-0"><div class="font-medium truncate">' + escapeHtml(c.name) + '</div>' +
-            '<div class="text-xs text-slate-500 truncate">' + escapeHtml(c.email) + ' · ' + escapeHtml(c.role) + (c.department ? ' · ' + escapeHtml(c.department) : '') + '</div></div>' +
-            '</div>';
-        }).join('') + '</div>';
+        tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-500">Nenhum colaborador associado a esta empresa.</td></tr>';
+        return;
       }
-      var modal = document.getElementById('modal-empresa-colaboradores');
-      if (!modal) return;
-      document.getElementById('empresa-colaboradores-title').textContent = 'Colaboradores — ' + empresaName;
-      document.getElementById('empresa-colaboradores-body').innerHTML = body;
-      modal.style.display = 'flex';
+      var statusColors = { active: 'badge-green', inactive: 'badge-gray', suspended: 'badge-red' };
+      tbody.innerHTML = collabs.map(function(c) {
+        return '<tr class="border-b border-white/5">' +
+          '<td class="p-3 font-medium">' + escapeHtml(c.name) + '</td>' +
+          '<td class="p-3 text-slate-400">' + escapeHtml(c.email) + '</td>' +
+          '<td class="p-3"><span class="badge ' + getRoleBadgeClass(normalizeRole(c.role)) + ' text-xs">' + escapeHtml(getRoleLabel(normalizeRole(c.role))) + '</span></td>' +
+          '<td class="p-3 text-slate-400">' + escapeHtml(c.department || '—') + '</td>' +
+          '<td class="p-3"><span class="badge ' + (statusColors[c.status] || 'badge-gray') + ' text-xs">' + escapeHtml(c.status || 'active') + '</span></td>' +
+          '<td class="p-3 text-right">' +
+            '<button class="btn-secondary entity-icon-action" title="Editar" onclick="openEditEmpresaCollaboratorRow(\'' + c.id + '\')"><i class="fas fa-pen"></i></button> ' +
+            '<button class="btn-secondary entity-icon-action entity-danger-action" title="Remover da empresa" onclick="removeCollaboratorFromEmpresa(\'' + c.id + '\')"><i class="fas fa-user-minus"></i></button>' +
+          '</td></tr>';
+      }).join('');
     })
-    .catch(function() { showToast('Erro ao carregar colaboradores.'); });
+    .catch(function() { tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-500">Erro ao carregar colaboradores.</td></tr>'; });
+}
+function openEditEmpresaCollaboratorRow(userId) {
+  var c = (APP.viewingEmpresaCollaborators || []).find(function(x) { return x.id === userId; });
+  if (!c) return;
+  // Reutiliza o modal de colaborador para editar função/departamento/telefone deste utilizador real.
+  APP.editingEmpresaCollaboratorId = userId;
+  document.getElementById('tech-modal-title').textContent = 'Editar Colaborador';
+  document.getElementById('tech-submit-btn').innerHTML = '<i class="fas fa-save"></i> Guardar colaborador';
+  document.getElementById('tech-name').value = c.name || '';
+  document.getElementById('tech-email').value = c.email || '';
+  document.getElementById('tech-role').value = normalizeRole(c.role || 'tecnico');
+  document.getElementById('tech-specialty').value = 'Geral';
+  document.getElementById('tech-phone').value = c.phone || '';
+  document.getElementById('tech-availability').value = 'Disponível';
+  document.getElementById('tech-photo-upload').value = '';
+  populateTechEmpresaSelect(APP.viewingEmpresaId);
+  APP.editingTechId = null;
+  enhanceFileInputs();
+  document.getElementById('modal-new-tech').style.display = 'flex';
+}
+async function removeCollaboratorFromEmpresa(userId) {
+  if (!confirm('Remover este colaborador da empresa?')) return;
+  try {
+    var res = await fetch('/api/empresas/' + APP.viewingEmpresaId + '/collaborators/' + userId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } });
+    if (!res.ok) { var err = await res.json().catch(function() { return {}; }); throw new Error(err.error || 'Erro ao remover colaborador.'); }
+    showToast('Colaborador removido da empresa.');
+    renderEmpresaColaboradoresTable();
+  } catch (e) {
+    showToast(e.message || 'Erro ao remover colaborador.');
+  }
 }
 
 // ======================== KNOWLEDGE ========================
