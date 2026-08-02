@@ -923,10 +923,18 @@ app.get('/api/stats', async (c) => {
 
 // ── Routes: Public Testimonials (landing page) ────────────────────────────────
 
-app.get('/api/testimonials', (c) => {
-  const data = readTestimonials()
-  const approved = data.items.filter((i) => (i as Record<string, unknown>).approved === true)
-  return c.json({ items: approved })
+app.get('/api/testimonials', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.from('testimonials').select('*').eq('approved', true).order('created_at', { ascending: false })
+    if (error) throw error
+    return c.json({ items: data || [] })
+  } catch (error) {
+    // Fallback para o ficheiro JSON legado (ex: ambientes sem migração aplicada ainda)
+    const data = readTestimonials()
+    const approved = data.items.filter((i) => (i as Record<string, unknown>).approved === true)
+    return c.json({ items: approved })
+  }
 })
 
 // ── Routes: Clients & Equipment ───────────────────────────────────────────────
@@ -1001,6 +1009,347 @@ app.post('/api/equipment', async (c) => {
     return c.json({ equipment: data }, 201)
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not create equipment')
+  }
+})
+
+// ── Routes: Buildings ──────────────────────────────────────────────────────────
+
+app.get('/api/buildings', async (c) => {
+  try {
+    const db = requireDb()
+    const clientId = c.req.query('clientId')
+    let query = db.from('buildings').select('*').order('name', { ascending: true })
+    if (clientId) query = query.eq('client_id', clientId)
+    const { data, error } = await query
+    if (error) throw error
+    return c.json({ buildings: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch buildings')
+  }
+})
+
+// ── Routes: Suppliers, Parts & Inventory ────────────────────────────────────────
+
+app.get('/api/suppliers', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.from('suppliers').select('*').order('name', { ascending: true })
+    if (error) throw error
+    return c.json({ suppliers: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch suppliers')
+  }
+})
+
+app.get('/api/parts', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.from('parts').select('*').order('name', { ascending: true })
+    if (error) throw error
+    return c.json({ parts: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch parts')
+  }
+})
+
+app.get('/api/inventory', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.from('inventory_items').select('*')
+    if (error) throw error
+    return c.json({ inventory: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch inventory')
+  }
+})
+
+// ── Routes: Maintenance Requests ─────────────────────────────────────────────────
+
+app.get('/api/maintenance-requests', async (c) => {
+  try {
+    const db = requireDb()
+    const clientId = c.req.query('clientId')
+    let query = db.from('maintenance_requests').select('*').order('created_at', { ascending: false })
+    if (clientId) query = query.eq('client_id', clientId)
+    const { data, error } = await query
+    if (error) throw error
+    return c.json({ requests: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch maintenance requests')
+  }
+})
+
+app.post('/api/maintenance-requests', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json()
+    if (!body.clientId) return jsonError(c, 'clientId é obrigatório')
+    if (!body.title) return jsonError(c, 'title é obrigatório')
+
+    const { data, error } = await db.from('maintenance_requests').insert({
+      client_id: body.clientId,
+      building_id: body.buildingId ?? null,
+      equipment_id: body.equipmentId ?? null,
+      requested_by: body.requestedBy ?? null,
+      priority: body.priority ?? 'media',
+      title: body.title,
+      description: body.description ?? null,
+      due_at: body.dueAt ?? null,
+    }).select().single()
+
+    if (error) throw error
+    return c.json({ request: data }, 201)
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not create maintenance request')
+  }
+})
+
+// ── Routes: Preventive Plans & Checklists ───────────────────────────────────────
+
+app.get('/api/preventive-plans', async (c) => {
+  try {
+    const db = requireDb()
+    const equipmentId = c.req.query('equipmentId')
+    let query = db.from('preventive_plans').select('*').order('next_due_at', { ascending: true })
+    if (equipmentId) query = query.eq('equipment_id', equipmentId)
+    const { data, error } = await query
+    if (error) throw error
+    return c.json({ plans: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch preventive plans')
+  }
+})
+
+app.get('/api/checklists', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.from('checklists').select('*').order('name', { ascending: true })
+    if (error) throw error
+    return c.json({ checklists: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch checklists')
+  }
+})
+
+// ── Routes: Documents & Folders ────────────────────────────────────────────────
+
+app.get('/api/documents', async (c) => {
+  try {
+    const db = requireDb()
+    const entityType = c.req.query('entityType')
+    const entityId = c.req.query('entityId')
+    let query = db.from('documents').select('*').order('uploaded_at', { ascending: false })
+    if (entityType) query = query.eq('entity_type', entityType)
+    if (entityId) query = query.eq('entity_id', entityId)
+    const { data, error } = await query
+    if (error) throw error
+    return c.json({ documents: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch documents')
+  }
+})
+
+app.get('/api/folders', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.from('folders').select('*').order('name', { ascending: true })
+    if (error) throw error
+    return c.json({ folders: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch folders')
+  }
+})
+
+// ── Routes: Contracts ──────────────────────────────────────────────────────────
+
+app.get('/api/contracts', async (c) => {
+  try {
+    const db = requireDb()
+    const clientId = c.req.query('clientId')
+    let query = db.from('contracts').select('*').order('start_date', { ascending: false })
+    if (clientId) query = query.eq('client_id', clientId)
+    const { data, error } = await query
+    if (error) throw error
+    return c.json({ contracts: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch contracts')
+  }
+})
+
+// ── Routes: Audits & Reports ────────────────────────────────────────────────────
+
+app.get('/api/audits', async (c) => {
+  try {
+    const db = requireDb()
+    const buildingId = c.req.query('buildingId')
+    let query = db.from('audits').select('*').order('date', { ascending: false })
+    if (buildingId) query = query.eq('building_id', buildingId)
+    const { data, error } = await query
+    if (error) throw error
+    return c.json({ audits: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch audits')
+  }
+})
+
+app.get('/api/reports', async (c) => {
+  try {
+    const db = requireDb()
+    const clientId = c.req.query('clientId')
+    let query = db.from('reports').select('*').order('generated_at', { ascending: false })
+    if (clientId) query = query.eq('client_id', clientId)
+    const { data, error } = await query
+    if (error) throw error
+    return c.json({ reports: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch reports')
+  }
+})
+
+// ── Routes: Comments (work orders, requests, blog, audits) ─────────────────────
+
+app.get('/api/comments', async (c) => {
+  try {
+    const db = requireDb()
+    const entityType = c.req.query('entityType')
+    const entityId = c.req.query('entityId')
+    if (!entityType || !entityId) return jsonError(c, 'entityType e entityId são obrigatórios')
+    const { data, error } = await db.from('comments').select('*').eq('entity_type', entityType).eq('entity_id', entityId).order('created_at', { ascending: true })
+    if (error) throw error
+    return c.json({ comments: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch comments')
+  }
+})
+
+app.post('/api/comments', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json()
+    if (!body.entityType || !body.entityId) return jsonError(c, 'entityType e entityId são obrigatórios')
+    if (!body.content) return jsonError(c, 'content é obrigatório')
+
+    const { data, error } = await db.from('comments').insert({
+      entity_type: body.entityType,
+      entity_id: body.entityId,
+      author_id: body.authorId ?? null,
+      content: body.content,
+      parent_id: body.parentId ?? null,
+    }).select().single()
+
+    if (error) throw error
+    return c.json({ comment: data }, 201)
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not create comment')
+  }
+})
+
+// ── Routes: Activity Log ────────────────────────────────────────────────────────
+
+app.get('/api/activity-log', async (c) => {
+  try {
+    const db = requireDb()
+    const limit = Math.min(Number(c.req.query('limit') ?? 100), 500)
+    const { data, error } = await db.from('activity_log').select('*').order('created_at', { ascending: false }).limit(limit)
+    if (error) throw error
+    return c.json({ activity: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch activity log')
+  }
+})
+
+// ── Routes: Calendar ────────────────────────────────────────────────────────────
+
+app.get('/api/calendar-events', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.from('calendar_events').select('*').order('start_at', { ascending: true })
+    if (error) throw error
+    return c.json({ events: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch calendar events')
+  }
+})
+
+// ── Routes: Blog (público — substitui data/blogPosts.ts estático) ──────────────
+
+app.get('/api/blog', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.from('blog_posts').select('*').eq('published', true).order('published_at', { ascending: false })
+    if (error) throw error
+    return c.json({ posts: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch blog posts')
+  }
+})
+
+app.get('/api/blog/:slug', async (c) => {
+  try {
+    const db = requireDb()
+    const slug = c.req.param('slug')
+    const { data, error } = await db.from('blog_posts').select('*').eq('slug', slug).single()
+    if (error) throw error
+    if (!data) return jsonError(c, 'Post não encontrado', 404)
+    return c.json({ post: data })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch blog post')
+  }
+})
+
+app.post('/api/blog/:slug/view', async (c) => {
+  try {
+    const db = requireDb()
+    const slug = c.req.param('slug')
+    const { data: post, error: findError } = await db.from('blog_posts').select('id, views').eq('slug', slug).single()
+    if (findError) throw findError
+    if (!post) return jsonError(c, 'Post não encontrado', 404)
+    const postRow = post as { id: string; views: number | null }
+    const { error } = await db.from('blog_posts').update({ views: (postRow.views ?? 0) + 1 }).eq('id', postRow.id)
+    if (error) throw error
+    return c.json({ ok: true })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not register view')
+  }
+})
+
+// ── Routes: Ratings ──────────────────────────────────────────────────────────────
+
+app.get('/api/ratings', async (c) => {
+  try {
+    const db = requireDb()
+    const entityType = c.req.query('entityType')
+    const entityId = c.req.query('entityId')
+    let query = db.from('ratings').select('*').order('created_at', { ascending: false })
+    if (entityType) query = query.eq('entity_type', entityType)
+    if (entityId) query = query.eq('entity_id', entityId)
+    const { data, error } = await query
+    if (error) throw error
+    return c.json({ ratings: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch ratings')
+  }
+})
+
+app.post('/api/ratings', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json()
+    if (!body.entityType || !body.entityId) return jsonError(c, 'entityType e entityId são obrigatórios')
+    if (!body.score) return jsonError(c, 'score é obrigatório')
+
+    const { data, error } = await db.from('ratings').insert({
+      entity_type: body.entityType,
+      entity_id: body.entityId,
+      author_id: body.authorId ?? null,
+      score: body.score,
+      comment: body.comment ?? null,
+    }).select().single()
+
+    if (error) throw error
+    return c.json({ rating: data }, 201)
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not create rating')
   }
 })
 
