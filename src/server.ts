@@ -1482,6 +1482,86 @@ app.get('/api/users', async (c) => {
   }
 })
 
+// ── Routes: Technicians (Colaboradores) ────────────────────────────────────────
+
+app.get('/api/technicians', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_technicians')
+    if (error) throw error
+    return c.json({ technicians: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch technicians')
+  }
+})
+
+app.post('/api/technicians', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json()
+    if (!body.name) return jsonError(c, 'name é obrigatório')
+    const { data, error } = await db.rpc('create_technician', {
+      p_name: body.name,
+      p_email: body.email ?? '',
+      p_role: body.role ?? 'tecnico',
+      p_phone: body.phone ?? '',
+      p_specialty: body.specialty ?? '',
+      p_availability: body.availability ?? '',
+      p_empresa_id: body.empresaId ?? null,
+      p_team_id: body.teamId ?? null,
+      p_avatar_url: body.avatarUrl ?? '',
+    })
+    if (error) throw error
+    const newId = (data as Array<{ create_technician: string }>)?.[0]?.create_technician
+    const { data: created, error: fetchError } = await db.rpc('get_technicians')
+    if (fetchError) throw fetchError
+    const technician = (created || []).find((t: { id: string }) => t.id === newId)
+    return c.json({ technician }, 201)
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not create technician')
+  }
+})
+
+app.put('/api/technicians/:id', async (c) => {
+  try {
+    const db = requireDb()
+    const id = c.req.param('id')
+    const body = await c.req.json()
+    const { error } = await db.rpc('update_technician', {
+      p_user_id: id,
+      p_name: body.name,
+      p_email: body.email ?? '',
+      p_role: body.role ?? 'tecnico',
+      p_phone: body.phone ?? '',
+      p_specialty: body.specialty ?? '',
+      p_availability: body.availability ?? '',
+      p_empresa_id: body.empresaId ?? null,
+      p_team_id: body.teamId ?? null,
+      p_avatar_url: body.avatarUrl ?? '',
+    })
+    if (error) throw error
+    const { data: all, error: fetchError } = await db.rpc('get_technicians')
+    if (fetchError) throw fetchError
+    const technician = (all || []).find((t: { id: string }) => t.id === id)
+    if (!technician) return jsonError(c, 'Colaborador não encontrado', 404)
+    return c.json({ technician })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not update technician')
+  }
+})
+
+app.delete('/api/technicians/:id', async (c) => {
+  try {
+    const db = requireDb()
+    const id = c.req.param('id')
+    const { error } = await db.from('users').delete().eq('id', id)
+    if (error) throw error
+    return c.json({ success: true })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not delete technician')
+  }
+})
+
 // ── Routes: Empresas (provider companies) ─────────────────────────────────────
 
 app.get('/api/empresas', async (c) => {

@@ -9832,7 +9832,8 @@ function syncBackendWorkOrders() {
     apiRequest('/api/equipment').catch(function() { return null; }),
     apiRequest('/api/users').catch(function() { return null; }),
     apiRequest('/api/teams').catch(function() { return null; }),
-    apiRequest('/api/buildings').catch(function() { return null; })
+    apiRequest('/api/buildings').catch(function() { return null; }),
+    apiRequest('/api/technicians').catch(function() { return null; })
   ]).then(function(results) {
     APP.backendOnline = true;
     if (results[0] && results[0].workOrders) mergeBackendOTs(results[0].workOrders);
@@ -9893,6 +9894,20 @@ function syncBackendWorkOrders() {
         };
       });
       renderBuildings(); populateOTSelects();
+    }
+    // Colaboradores/técnicos agora vêm sempre do backend (fonte da verdade).
+    if (results[9] && results[9].technicians) {
+      APP.technicians = results[9].technicians.map(function(t) {
+        return {
+          id: t.id, name: t.name, email: t.email || '', role: t.role,
+          phone: t.phone || '', teamId: t.team_id, teamName: t.team_name || '',
+          empresa_id: t.empresa_id, empresaName: t.empresa_name || '',
+          specialty: t.specialty || 'Geral', availability: t.availability || 'Disponível',
+          rating: t.rating, completedOrders: t.completed_orders, activeOrders: t.active_orders,
+          photo: t.avatar_url || '', createdAt: t.created_at
+        };
+      });
+      renderTechnicians();
     }
     saveData(); updateDashboard(); renderOTs(); renderEquipment(); renderClients(); renderManagedUsers(); renderTechnicians();
     renderSystemStatusBar({ backendDetail: 'Online — ' + (((results[0] && results[0].workOrders) || []).length + ((results[1] && results[1].workOrders) || []).length) + ' OTs sincronizadas' });
@@ -11556,27 +11571,37 @@ async function createTechnician() {
     }
   }
   var photo = await readSingleUpload('tech-photo-upload');
-  var tech = APP.editingTechId ? APP.technicians.find(function(t) { return t.id === APP.editingTechId; }) : null;
-  if (!tech) {
-    tech = { id: generateId('TC'), createdAt: new Date().toISOString() };
-    APP.technicians.push(tech);
-  }
-  Object.assign(tech, { name: name,
-    email: email,
+  var editingId = APP.editingTechId;
+  var payload = {
+    name: name, email: email,
     role: normalizeRole(document.getElementById('tech-role').value || 'tecnico'),
     specialty: document.getElementById('tech-specialty').value,
     phone: document.getElementById('tech-phone').value,
     availability: document.getElementById('tech-availability').value,
-    empresa_id: empresa ? empresa.id : null,
-    empresaName: empresa ? empresa.name : '',
-    photo: photo ? photo.dataUrl : (tech.photo || ''),
-    photoName: photo ? photo.name : (tech.photoName || ''),
-  });
-  saveData(); closeModal('modal-new-tech');
-  ['tech-name','tech-email','tech-phone'].forEach(function(id) { document.getElementById(id).value = ''; });
-  document.getElementById('tech-photo-upload').value = '';
-  APP.editingTechId = null;
-  renderTechnicians(); populateOTSelects(); showToast('Colaborador guardado!');
+    empresaId: empresa ? empresa.id : null,
+    avatarUrl: photo ? photo.dataUrl : ''
+  };
+  try {
+    var result = editingId
+      ? await apiRequest('/api/technicians/' + editingId, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      : await apiRequest('/api/technicians', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    var t = result.technician;
+    var local = {
+      id: t.id, name: t.name, email: t.email || '', role: t.role, phone: t.phone || '',
+      teamId: t.team_id, teamName: t.team_name || '', empresa_id: t.empresa_id, empresaName: t.empresa_name || '',
+      specialty: t.specialty || 'Geral', availability: t.availability || 'Disponível',
+      photo: t.avatar_url || '', createdAt: t.created_at
+    };
+    var idx = APP.technicians.findIndex(function(x) { return x.id === t.id; });
+    if (idx >= 0) APP.technicians[idx] = local; else APP.technicians.push(local);
+    saveData(); closeModal('modal-new-tech');
+    ['tech-name','tech-email','tech-phone'].forEach(function(id) { document.getElementById(id).value = ''; });
+    document.getElementById('tech-photo-upload').value = '';
+    APP.editingTechId = null;
+    renderTechnicians(); populateOTSelects(); showToast('Colaborador guardado!');
+  } catch (error) {
+    showToast('Não foi possível guardar o colaborador no servidor: ' + (error.message || 'erro desconhecido'), 'error');
+  }
 }
 function renderTechnicians() {
   var el = document.getElementById('technicians-grid');
@@ -11618,11 +11643,16 @@ function renderTechnicians() {
       '<div class="entity-actions justify-end"><button class="btn-secondary entity-icon-action" title="Editar colaborador" onclick="openEditTechModal(\'' + t.id + '\')"><i class="fas fa-pen"></i></button><button class="btn-secondary entity-icon-action entity-danger-action" title="Apagar colaborador" onclick="deleteTech(\'' + t.id + '\')"><i class="fas fa-trash"></i></button></div></div>';
   }).join('');
 }
-function deleteTech(id) {
+async function deleteTech(id) {
   if (!requirePermission('delete', 'technicians', 'apagar colaborador')) return;
   if (!confirm('Remover este colaborador?')) return;
-  APP.technicians = APP.technicians.filter(function(t) { return t.id !== id; });
-  saveData(); renderTechnicians(); populateOTSelects();
+  try {
+    await apiRequest('/api/technicians/' + id, { method: 'DELETE' });
+    APP.technicians = APP.technicians.filter(function(t) { return t.id !== id; });
+    saveData(); renderTechnicians(); populateOTSelects(); showToast('Colaborador removido.');
+  } catch (error) {
+    showToast('Não foi possível remover o colaborador no servidor: ' + (error.message || 'erro desconhecido'), 'error');
+  }
 }
 
 // ======================== EMPRESAS ========================
