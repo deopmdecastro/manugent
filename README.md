@@ -59,6 +59,29 @@ manugent/
 └── package.json
 ```
 
+### 🗄️ Popular a Base de Dados Real (SuperAdmin, API, SPA legada)
+
+A camada acima (`src/frontend/src/data/demo/`) alimenta a **landing page React**
+sem tocar no backend. Para que o **SuperAdmin**, a API (`/api/*`) e a SPA legada
+(`public/app/index.html`) também mostrem dados realistas — em vez de 0 —, é
+preciso popular a **base de dados Postgres real**:
+
+```bash
+docker compose up -d db      # garante que o Postgres local está a correr
+npm run db:seed              # popula ~5.000+ registos reais e interligados
+```
+
+O script `scripts/seed-demo-data.mjs`:
+- Liga à mesma `DATABASE_URL` usada pela API (por omissão a do `docker-compose.yml`)
+- Gera equipas, utilizadores, clientes, equipamentos, ordens de trabalho,
+  diagnósticos, notificações, registos de tempo, relatórios, orçamentos e anexos
+- É seguro para re-correr (limpa os dados fictícios anteriores antes de inserir)
+- **Preserva sempre** as 5 contas de demonstração (`superadmin@manugent.pt`,
+  `admin@manugent.pt`, `gestor@manugent.pt`, `tecnico@manugent.pt`,
+  `cliente@demo.pt`, password `Demo@2026`)
+- Os volumes são ajustáveis via variáveis de ambiente (`SEED_USERS`,
+  `SEED_CLIENTS`, `SEED_FINDINGS`, etc.)
+
 ### 🧪 Dados Fictícios (Demo Mode)
 
 `src/frontend/src/data/demo/` contém uma base de dados fictícia completa e

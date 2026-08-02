@@ -13,7 +13,8 @@
     "preview": "npm run build && node dist/server.js",
     "lint": "tsc --noEmit",
     "deploy": "npm run build && wrangler pages deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "db:seed": "node scripts/seed-demo-data.mjs"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.6",
