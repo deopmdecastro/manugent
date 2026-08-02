@@ -10,8 +10,22 @@ import type { DemoDatabase } from './types'
 import { generateDemoDatabase } from './generator'
 import { computeDashboardStats, computeLandingStats, DashboardStats, LandingStats } from './stats'
 
-const STORAGE_KEY = 'manugent_demo_db_v1'
+// Sempre que a estrutura/geração dos dados mudar de forma incompatível,
+// incrementar esta versão força todos os browsers a regenerar do zero em
+// vez de reutilizar um estado antigo (evita ficar preso a dados
+// parciais/corrompidos indefinidamente).
+const STORAGE_KEY = 'manugent_demo_db_v2'
 const DEMO_MODE_KEY = 'manugent_demo_mode'
+
+// Coleções que nunca devem ficar vazias numa base de dados válida.
+// Se alguma estiver vazia/ausente, tratamos os dados carregados como
+// corrompidos e regeneramos, em vez de mostrar zeros permanentemente.
+const CRITICAL_COLLECTIONS: (keyof DemoDatabase)[] = ['companies', 'clients', 'buildings', 'equipment', 'workOrders']
+
+function isValidDatabase(db: unknown): db is DemoDatabase {
+  if (!db || typeof db !== 'object') return false
+  return CRITICAL_COLLECTIONS.every(key => Array.isArray((db as any)[key]) && (db as any)[key].length > 0)
+}
 
 type Collection = {
   [K in keyof DemoDatabase]: DemoDatabase[K] extends Array<infer _T> ? K : never
@@ -24,8 +38,15 @@ class DemoDataService {
   private listeners = new Set<Listener>()
 
   constructor() {
-    this.db = this.load() || generateDemoDatabase()
-    if (typeof window !== 'undefined' && !this.load()) this.persist()
+    const loaded = this.load()
+    if (isValidDatabase(loaded)) {
+      this.db = loaded
+    } else {
+      // Não existe estado guardado, ou está vazio/corrompido: gera de novo
+      // e substitui imediatamente o que estiver em localStorage.
+      this.db = generateDemoDatabase()
+      this.persist()
+    }
   }
 
   // ---- modo demo (liga/desliga sem tocar no backend real) -----------------
