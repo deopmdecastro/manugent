@@ -889,6 +889,14 @@ app.get('/api/stats', async (c) => {
   }
 })
 
+// ── Routes: Public Testimonials (landing page) ────────────────────────────────
+
+app.get('/api/testimonials', (c) => {
+  const data = readTestimonials()
+  const approved = data.items.filter((i) => (i as Record<string, unknown>).approved === true)
+  return c.json({ items: approved })
+})
+
 // ── Routes: Clients & Equipment ───────────────────────────────────────────────
 
 app.get('/api/clients', async (c) => {
