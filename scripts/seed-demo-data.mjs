@@ -252,7 +252,7 @@ async function main() {
     // ---- Limpar dados fictícios anteriores (preserva app_metadata) --------
     console.log('🧹 A limpar dados fictícios anteriores...')
     await client.query(`
-TRUNCATE TABLE
+      TRUNCATE TABLE
         quote_status_history, quote_items, quotes, intervention_reports, work_order_time_entries, notifications,
         work_order_links, work_order_findings, attachments, work_order_parts,
         ratings, comment_likes, comments, calendar_event_assignees, calendar_events,
@@ -263,7 +263,7 @@ TRUNCATE TABLE
         incident_comments, incidents, knowledge_article_versions, knowledge_articles, knowledge_categories,
         building_assignments, areas, floors,
         blog_posts, buildings, work_orders,
-        equipment, clients, users, teams, companies
+        equipment, clients, users, teams
       RESTART IDENTITY CASCADE
     `)
 
@@ -271,34 +271,40 @@ TRUNCATE TABLE
     const teamIds = Array.from({ length: N.teams }, () => randomUUID())
     const teamNames = ['Equipa AVAC Norte', 'Equipa Elétrica', 'Equipa Elevadores', 'Equipa Segurança Contra Incêndio',
       'Equipa Refrigeração', 'Equipa Hidráulica', 'Equipa Multidisciplinar Sul', 'Equipa Intervenção Rápida']
-await bulkInsert(client, 'teams', ['id', 'name'], teamIds.map((id, i) => [id, teamNames[i] || `Equipa ${i + 1}`]))
+    await bulkInsert(client, 'teams', ['id', 'name'], teamIds.map((id, i) => [id, teamNames[i] || `Equipa ${i + 1}`]))
     console.log(`  ✓ ${teamIds.length} equipas`)
 
-    // ---- Empresas (companies) ----------------------------------------------------
-    const COMPANY_SEEDS = [
-      { id: 'c0000000-0000-0000-0000-000000000001', name: 'Norte Fabril Lda', tax_id: 'PT512345678', email: 'geral@nortefabril.pt', phone: '+351 220 100 100', address: 'Rua do Parque Industrial, 150', city: 'Porto', sector: 'Fabril' },
-      { id: 'c0000000-0000-0000-0000-000000000002', name: 'Atlântico Health S.A.', tax_id: 'PT598765432', email: 'info@atlanticoh.pt', phone: '+351 210 200 200', address: 'Av. da Liberdade, 250', city: 'Lisboa', sector: 'Saúde' },
-      { id: 'c0000000-0000-0000-0000-000000000003', name: 'Ibérica Hotels Group', tax_id: 'PT556789012', email: 'contacto@ibericahotels.pt', phone: '+351 240 300 300', address: 'Rua do Hotel, 50', city: 'Coimbra', sector: 'Hotelaria' },
-      { id: 'c0000000-0000-0000-0000-000000000004', name: 'Douro Tech Lda', tax_id: 'PT534567890', email: 'suporte@dourtech.pt', phone: '+351 220 400 400', address: 'Zona Industrial, Lt 12', city: 'Aveiro', sector: 'Tecnologia' },
-      { id: 'c0000000-0000-0000-0000-000000000005', name: 'Lusitana Foods S.A.', tax_id: 'PT576543210', email: 'comercial@lusifoods.pt', phone: '+351 210 500 500', address: 'Rua do Comércio, 85', city: 'Braga', sector: 'Alimentar' },
+    // ---- Empresas (prestadoras de manutenção) --------------------------------
+    const empresas = [
+      { id: randomUUID(), name: 'ManuGent Facility Services', tax_id: 'PT500123456', email: 'geral@manugent-fs.pt', phone: '+351 210 000 001', address: 'Rua das Oficinas 12', city: 'Lisboa' },
+      { id: randomUUID(), name: 'TechMaint Lda', tax_id: 'PT500987654', email: 'info@techmaint.pt', phone: '+351 220 000 002', address: 'Av. Industrial 45', city: 'Porto' },
+      { id: randomUUID(), name: 'Elevadores & Energia Unipessoal', tax_id: 'PT500345678', email: 'contacto@elevenergia.pt', phone: '+351 230 000 003', address: 'Zona Industrial Lote 7', city: 'Coimbra' },
     ]
-    const companyIds = COMPANY_SEEDS.map(c => c.id)
-    await bulkInsert(client, 'companies', ['id', 'name', 'tax_id', 'email', 'phone', 'address', 'city', 'sector', 'active'],
-      COMPANY_SEEDS.map(c => [c.id, c.name, c.tax_id, c.email, c.phone, c.address, c.city, c.sector, true]))
-    console.log(`  ✓ ${companyIds.length} empresas (companies)`)
+    await bulkInsert(client, 'empresas', ['id', 'name', 'tax_id', 'email', 'phone', 'address', 'city', 'active'],
+      empresas.map(e => [e.id, e.name, e.tax_id, e.email, e.phone, e.address, e.city, true]))
+    console.log(`  ✓ ${empresas.length} empresas (prestadoras de manutenção)`)
+    const manugentFsId = empresas[0].id
+    const techmaintId = empresas[1].id
+    const elevEnergiaId = empresas[2].id
 
     // ---- Utilizadores (inclui as 5 contas de demonstração fixas) -------------
     const users = []
     const demoAccounts = [
-      { name: 'SuperAdmin', email: 'superadmin@manugent.pt', role: 'superadmin' },
-      { name: 'Admin ManuGent', email: 'admin@manugent.pt', role: 'admin' },
-      { name: 'Gestor Silva', email: 'gestor@manugent.pt', role: 'gestor' },
-      { name: 'Tecnico Costa', email: 'tecnico@manugent.pt', role: 'tecnico' },
-      { name: 'Cliente Demo', email: 'cliente@demo.pt', role: 'cliente' },
+      { name: 'SuperAdmin', email: 'superadmin@manugent.pt', role: 'superadmin', empresa_id: null },
+      { name: 'Admin ManuGent', email: 'admin@manugent.pt', role: 'admin', empresa_id: manugentFsId },
+      { name: 'Gestor Silva', email: 'gestor@manugent.pt', role: 'gestor', empresa_id: manugentFsId },
+      { name: 'Tecnico Costa', email: 'tecnico@manugent.pt', role: 'tecnico', empresa_id: manugentFsId },
+      { name: 'Cliente Demo', email: 'cliente@demo.pt', role: 'cliente', empresa_id: null },
+      // Contas adicionais por empresa
+      { name: 'Carlos TechMaint', email: 'admin@techmaint.pt', role: 'admin', empresa_id: techmaintId },
+      { name: 'Ana TechMaint', email: 'gestor@techmaint.pt', role: 'gestor', empresa_id: techmaintId },
+      { name: 'Pedro TechMaint', email: 'tecnico@techmaint.pt', role: 'tecnico', empresa_id: techmaintId },
+      { name: 'Rui ElevEnergia', email: 'admin@elevenergia.pt', role: 'admin', empresa_id: elevEnergiaId },
+      { name: 'Sofia ElevEnergia', email: 'gestor@elevenergia.pt', role: 'gestor', empresa_id: elevEnergiaId },
+      { name: 'Miguel ElevEnergia', email: 'tecnico@elevenergia.pt', role: 'tecnico', empresa_id: elevEnergiaId },
     ]
-for (let di = 0; di < demoAccounts.length; di++) {
-      const d = demoAccounts[di]
-      users.push({ id: randomUUID(), team_id: pick(teamIds), name: d.name, email: d.email, role: d.role, status: 'active', fixed: true, company_id: null }) // demo accounts are global (no company)
+    for (const d of demoAccounts) {
+      users.push({ id: randomUUID(), team_id: pick(teamIds), name: d.name, email: d.email, role: d.role, status: 'active', fixed: true, empresa_id: d.empresa_id })
     }
     const ROLES = ['gestor', 'tecnico', 'tecnico', 'tecnico', 'admin', 'financeiro', 'engenheiro', 'engenheiro']
     const DEPARTMENTS_BY_ROLE = {
@@ -318,22 +324,29 @@ for (let di = 0; di < demoAccounts.length; di++) {
         status: chance(0.94) ? 'active' : chance(0.7) ? 'blocked' : 'banned',
         department: DEPARTMENTS_BY_ROLE[role], position: POSITIONS_BY_ROLE[role],
         phone: `+351 9${int(1, 6)} ${int(100, 999)} ${int(1000, 9999)}`,
-        company_id: pick(companyIds),
       })
     }
     for (const u of users) {
       if (!u.department) { u.department = DEPARTMENTS_BY_ROLE[u.role] || 'Geral'; u.position = POSITIONS_BY_ROLE[u.role] || u.role; u.phone = `+351 9${int(1, 6)} ${int(100, 999)} ${int(1000, 9999)}` }
     }
+    // atribuir empresa_id aos utilizadores gerados (round-robin entre as 3 empresas)
+    const empresaIds = [manugentFsId, techmaintId, elevEnergiaId]
+    for (let i = 0; i < users.length; i++) {
+      const u = users[i]
+      if (u.fixed && u.empresa_id !== undefined) continue // já definido nas contas fixas
+      if (u.role === 'cliente' || u.role === 'superadmin') { u.empresa_id = null; continue }
+      u.empresa_id = empresaIds[i % empresaIds.length]
+    }
     await client.query(
-      `INSERT INTO users (id, team_id, name, email, role, password_hash, status, department, position, phone, company_id)
+      `INSERT INTO users (id, team_id, name, email, role, password_hash, status, department, position, phone, empresa_id)
        SELECT * FROM UNNEST($1::uuid[], $2::uuid[], $3::text[], $4::text[], $5::text[], $6::text[], $7::text[], $8::text[], $9::text[], $10::text[], $11::uuid[])`,
       [
         users.map(u => u.id), users.map(u => u.team_id), users.map(u => u.name), users.map(u => u.email),
         users.map(u => u.role),
-        users.map(u => (u.fixed ? null : null)), // password_hash preenchido a seguir só para as contas fixas
+        users.map(u => null),
         users.map(u => u.status || 'active'),
         users.map(u => u.department), users.map(u => u.position), users.map(u => u.phone),
-        users.map(u => u.company_id),
+        users.map(u => u.empresa_id || null),
       ]
     )
     // Password real ("Demo@2026") apenas nas 5 contas fixas usadas pelo seletor de perfil
@@ -346,18 +359,17 @@ for (let di = 0; di < demoAccounts.length; di++) {
     console.log(`  ✓ ${users.length} utilizadores (5 contas fixas + ${N.users} adicionais)`)
     const staffUsers = users.filter(u => u.role !== 'cliente')
 
-// ---- Clientes (empresas) -----------------------------------------------------
+    // ---- Clientes (empresas) -----------------------------------------------------
     const clients = Array.from({ length: N.clients }, () => {
       const name = COMPANY_NAME()
       return {
         id: randomUUID(), name, email: `geral@${slug(name)}.pt`, phone: `+351 2${int(1, 9)} ${int(100, 999)} ${int(1000, 9999)}`,
         tax_id: `PT${int(100000000, 599999999)}`, sector: pick(SUPPLIER_CATEGORIES),
         since: daysAgo(int(60, 1800)).slice(0, 10),
-        company_id: pick(companyIds),
       }
     })
-    await bulkInsert(client, 'clients', ['id', 'name', 'email', 'phone', 'tax_id', 'sector', 'active', 'since', 'company_id'],
-      clients.map(c => [c.id, c.name, c.email, c.phone, c.tax_id, c.sector, true, c.since, c.company_id]))
+    await bulkInsert(client, 'clients', ['id', 'name', 'email', 'phone', 'tax_id', 'sector', 'active', 'since'],
+      clients.map(c => [c.id, c.name, c.email, c.phone, c.tax_id, c.sector, true, c.since]))
     console.log(`  ✓ ${clients.length} clientes (empresas)`)
 
     // ---- Edifícios -----------------------------------------------------------------
