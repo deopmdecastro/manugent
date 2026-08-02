@@ -881,6 +881,8 @@ async function main() {
       folderFor.fichasTecnicas[c.id] = mkFolder('Fichas Técnicas', root.id, owner, c.empresa_id, c.id, 'cliente_fichas_tecnicas').id
       folderFor.conhecimento[c.id] = mkFolder('Conhecimento', root.id, owner, c.empresa_id, c.id, 'cliente_conhecimento').id
       folderFor.senhas[c.id] = mkFolder('Senhas', root.id, owner, c.empresa_id, c.id, 'cliente_senhas').id
+      mkFolder('Manutenções', root.id, owner, c.empresa_id, c.id, 'cliente_manutencoes')
+      mkFolder('Incidentes', root.id, owner, c.empresa_id, c.id, 'cliente_incidentes')
       folderFor.relatorios[c.id] = mkFolder('Relatórios', root.id, owner, c.empresa_id, c.id, 'cliente_relatorios').id
       const edificiosRoot = mkFolder('Edifícios', root.id, owner, c.empresa_id, c.id, 'cliente_edificios')
       folderFor.outros[c.id] = mkFolder('Outros Documentos', root.id, owner, c.empresa_id, c.id, 'cliente_outros').id
