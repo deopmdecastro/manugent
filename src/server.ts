@@ -219,6 +219,7 @@ function mapWorkOrder(row: Record<string, unknown>) {
     parentWorkOrderId: row.parent_work_order_id,
     clientId: row.client_id,
     equipmentId: row.equipment_id,
+    buildingId: row.building_id,
     teamId: row.team_id,
     supervisorId: row.supervisor_id,
     type: row.type,
@@ -233,6 +234,7 @@ function mapWorkOrder(row: Record<string, unknown>) {
     cancelledAt: row.cancelled_at,
     clientName: row.client_name,
     equipmentName: row.equipment_name,
+    buildingName: row.building_name,
     teamName: row.team_name,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -1714,11 +1716,106 @@ app.post('/api/client-portal/requests', async (c) => {
 app.get('/api/client-portal/clients/:clientId/work-orders', async (c) => {
   try {
     const db = requireDb()
-    const { data, error } = await db.rpc('get_client_work_orders', { p_client_id: c.req.param('clientId') })
+    const buildingId = c.req.query('buildingId')
+    const { data, error } = await db.rpc('get_client_work_orders', {
+      p_client_id: c.req.param('clientId'),
+      p_building_id: buildingId ?? null,
+    })
     if (error) throw error
     return c.json({ workOrders: (data || []).map(mapWorkOrder) })
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not fetch client work orders')
+  }
+})
+
+// ── Routes: Client Portal — Building/Sucursal scoping ─────────────────────────
+// Cada cliente só vê dados do seu edifício (sucursal).
+
+app.get('/api/client-portal/clients/:clientId/buildings', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_client_buildings', { p_client_id: c.req.param('clientId') })
+    if (error) throw error
+    return c.json({ buildings: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch client buildings')
+  }
+})
+
+app.get('/api/client-portal/buildings/:buildingId/work-orders', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_building_work_orders', { p_building_id: c.req.param('buildingId') })
+    if (error) throw error
+    return c.json({ workOrders: (data || []).map(mapWorkOrder) })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch building work orders')
+  }
+})
+
+app.get('/api/client-portal/buildings/:buildingId/documents', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_building_documents', { p_building_id: c.req.param('buildingId') })
+    if (error) throw error
+    return c.json({ documents: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch building documents')
+  }
+})
+
+app.get('/api/client-portal/buildings/:buildingId/quotes', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_building_quotes', { p_building_id: c.req.param('buildingId') })
+    if (error) throw error
+    return c.json({ quotes: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch building quotes')
+  }
+})
+
+app.get('/api/client-portal/buildings/:buildingId/incidents', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_building_incidents', { p_building_id: c.req.param('buildingId') })
+    if (error) throw error
+    return c.json({ incidents: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch building incidents')
+  }
+})
+
+app.get('/api/client-portal/buildings/:buildingId/calendar-events', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_building_calendar_events', { p_building_id: c.req.param('buildingId') })
+    if (error) throw error
+    return c.json({ events: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch building calendar events')
+  }
+})
+
+app.get('/api/client-portal/buildings/:buildingId/reports', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_building_reports', { p_building_id: c.req.param('buildingId') })
+    if (error) throw error
+    return c.json({ reports: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch building reports')
+  }
+})
+
+app.get('/api/client-portal/buildings/:buildingId/checklists', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_building_checklists', { p_building_id: c.req.param('buildingId') })
+    if (error) throw error
+    return c.json({ checklists: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch building checklists')
   }
 })
 

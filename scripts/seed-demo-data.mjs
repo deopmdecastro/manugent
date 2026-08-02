@@ -280,14 +280,20 @@ async function main() {
       { id: randomUUID(), name: 'TechMaint Lda', tax_id: 'PT500987654', email: 'info@techmaint.pt', phone: '+351 220 000 002', address: 'Av. Industrial 45', city: 'Porto' },
       { id: randomUUID(), name: 'Elevadores & Energia Unipessoal', tax_id: 'PT500345678', email: 'contacto@elevenergia.pt', phone: '+351 230 000 003', address: 'Zona Industrial Lote 7', city: 'Coimbra' },
     ]
+    // domínio de email cooperativo de cada empresa (extraído do email geral)
+    for (const e of empresas) { e.domain = e.email.split('@')[1] }
     await bulkInsert(client, 'empresas', ['id', 'name', 'tax_id', 'email', 'phone', 'address', 'city', 'active'],
       empresas.map(e => [e.id, e.name, e.tax_id, e.email, e.phone, e.address, e.city, true]))
     console.log(`  ✓ ${empresas.length} empresas (prestadoras de manutenção)`)
     const manugentFsId = empresas[0].id
     const techmaintId = empresas[1].id
     const elevEnergiaId = empresas[2].id
+    const empresaDomain = {}
+    empresaDomain[manugentFsId] = empresas[0].domain
+    empresaDomain[techmaintId] = empresas[1].domain
+    empresaDomain[elevEnergiaId] = empresas[2].domain
 
-    // ---- Utilizadores (inclui as 5 contas de demonstração fixas) -------------
+    // ---- Utilizadores (inclui contas de demonstração fixas + credenciais por empresa) ----
     const users = []
     const demoAccounts = [
       { name: 'SuperAdmin', email: 'superadmin@manugent.pt', role: 'superadmin', empresa_id: null },
@@ -295,13 +301,20 @@ async function main() {
       { name: 'Gestor Silva', email: 'gestor@manugent.pt', role: 'gestor', empresa_id: manugentFsId },
       { name: 'Tecnico Costa', email: 'tecnico@manugent.pt', role: 'tecnico', empresa_id: manugentFsId },
       { name: 'Cliente Demo', email: 'cliente@demo.pt', role: 'cliente', empresa_id: null },
-      // Contas adicionais por empresa
-      { name: 'Carlos TechMaint', email: 'admin@techmaint.pt', role: 'admin', empresa_id: techmaintId },
-      { name: 'Ana TechMaint', email: 'gestor@techmaint.pt', role: 'gestor', empresa_id: techmaintId },
-      { name: 'Pedro TechMaint', email: 'tecnico@techmaint.pt', role: 'tecnico', empresa_id: techmaintId },
-      { name: 'Rui ElevEnergia', email: 'admin@elevenergia.pt', role: 'admin', empresa_id: elevEnergiaId },
-      { name: 'Sofia ElevEnergia', email: 'gestor@elevenergia.pt', role: 'gestor', empresa_id: elevEnergiaId },
-      { name: 'Miguel ElevEnergia', email: 'tecnico@elevenergia.pt', role: 'tecnico', empresa_id: elevEnergiaId },
+      // Credenciais completas por empresa (email cooperativo no domínio da empresa)
+      { name: 'Carlos TechMaint', email: `admin@${empresaDomain[techmaintId]}`, role: 'admin', empresa_id: techmaintId },
+      { name: 'Ana TechMaint', email: `gestor@${empresaDomain[techmaintId]}`, role: 'gestor', empresa_id: techmaintId },
+      { name: 'Pedro TechMaint', email: `tecnico@${empresaDomain[techmaintId]}`, role: 'tecnico', empresa_id: techmaintId },
+      { name: 'Fernanda TechMaint', email: `financeiro@${empresaDomain[techmaintId]}`, role: 'financeiro', empresa_id: techmaintId },
+      { name: 'Diogo TechMaint', email: `engenheiro@${empresaDomain[techmaintId]}`, role: 'engenheiro', empresa_id: techmaintId },
+      { name: 'Rui ElevEnergia', email: `admin@${empresaDomain[elevEnergiaId]}`, role: 'admin', empresa_id: elevEnergiaId },
+      { name: 'Sofia ElevEnergia', email: `gestor@${empresaDomain[elevEnergiaId]}`, role: 'gestor', empresa_id: elevEnergiaId },
+      { name: 'Miguel ElevEnergia', email: `tecnico@${empresaDomain[elevEnergiaId]}`, role: 'tecnico', empresa_id: elevEnergiaId },
+      { name: 'Teresa ElevEnergia', email: `financeiro@${empresaDomain[elevEnergiaId]}`, role: 'financeiro', empresa_id: elevEnergiaId },
+      { name: 'Vasco ElevEnergia', email: `engenheiro@${empresaDomain[elevEnergiaId]}`, role: 'engenheiro', empresa_id: elevEnergiaId },
+      // Credenciais adicionais ManuGent
+      { name: 'Ricardo ManuGent', email: `financeiro@${empresaDomain[manugentFsId]}`, role: 'financeiro', empresa_id: manugentFsId },
+      { name: 'Hugo ManuGent', email: `engenheiro@${empresaDomain[manugentFsId]}`, role: 'engenheiro', empresa_id: manugentFsId },
     ]
     for (const d of demoAccounts) {
       users.push({ id: randomUUID(), team_id: pick(teamIds), name: d.name, email: d.email, role: d.role, status: 'active', fixed: true, empresa_id: d.empresa_id })
@@ -315,27 +328,23 @@ async function main() {
       superadmin: 'Diretor de Plataforma', admin: 'Assistente Administrativo', gestor: 'Gestor de Edifício',
       tecnico: 'Técnico de Manutenção', engenheiro: 'Engenheiro de Manutenção', financeiro: 'Analista Financeiro', cliente: 'Contacto do Cliente',
     }
+    const empresaIds = [manugentFsId, techmaintId, elevEnergiaId]
     for (let i = 0; i < N.users; i++) {
       const role = pick(ROLES)
       const name = fullName()
+      const empId = empresaIds[i % empresaIds.length]
+      const domain = empresaDomain[empId]
       users.push({
         id: randomUUID(), team_id: chance(0.8) ? pick(teamIds) : null, name,
-        email: `${slug(name)}.${i}@manugent.pt`, role,
+        email: `${slug(name)}.${i}@${domain}`, role,
         status: chance(0.94) ? 'active' : chance(0.7) ? 'blocked' : 'banned',
         department: DEPARTMENTS_BY_ROLE[role], position: POSITIONS_BY_ROLE[role],
         phone: `+351 9${int(1, 6)} ${int(100, 999)} ${int(1000, 9999)}`,
+        empresa_id: empId,
       })
     }
     for (const u of users) {
       if (!u.department) { u.department = DEPARTMENTS_BY_ROLE[u.role] || 'Geral'; u.position = POSITIONS_BY_ROLE[u.role] || u.role; u.phone = `+351 9${int(1, 6)} ${int(100, 999)} ${int(1000, 9999)}` }
-    }
-    // atribuir empresa_id aos utilizadores gerados (round-robin entre as 3 empresas)
-    const empresaIds = [manugentFsId, techmaintId, elevEnergiaId]
-    for (let i = 0; i < users.length; i++) {
-      const u = users[i]
-      if (u.fixed && u.empresa_id !== undefined) continue // já definido nas contas fixas
-      if (u.role === 'cliente' || u.role === 'superadmin') { u.empresa_id = null; continue }
-      u.empresa_id = empresaIds[i % empresaIds.length]
     }
     await client.query(
       `INSERT INTO users (id, team_id, name, email, role, password_hash, status, department, position, phone, empresa_id)
@@ -497,7 +506,7 @@ async function main() {
         const completedAt = status === 'completed' ? hoursAfter(startedAt, int(1, 120)) : null
         const cancelledAt = status === 'cancelled' ? hoursAfter(createdAt, int(1, 48)) : null
         workOrders.push({
-          id: randomUUID(), client_id: eq.client_id, equipment_id: eq.id, team_id: pick(teamIds),
+          id: randomUUID(), client_id: eq.client_id, equipment_id: eq.id, building_id: eq.building_id, team_id: pick(teamIds),
           supervisor_id: pick(staffUsers).id, type: pick(WO_TYPES), origin, status, priority: pick(PRIORITIES),
           title: `${pick(['Reparação', 'Manutenção', 'Inspeção', 'Substituição de peça em'])} ${eq.name}`,
           description: `Intervenção em ${eq.name} (${eq.serial}).`,
@@ -507,8 +516,8 @@ async function main() {
       }
     }
     await bulkInsert(client, 'work_orders',
-      ['id', 'client_id', 'equipment_id', 'team_id', 'supervisor_id', 'type', 'origin', 'status', 'priority', 'title', 'description', 'scheduled_for', 'started_at', 'completed_at', 'cancelled_at', 'created_at'],
-      workOrders.map(w => [w.id, w.client_id, w.equipment_id, w.team_id, w.supervisor_id, w.type, w.origin, w.status, w.priority, w.title, w.description, w.scheduled_for, w.started_at, w.completed_at, w.cancelled_at, w.created_at]))
+      ['id', 'client_id', 'equipment_id', 'building_id', 'team_id', 'supervisor_id', 'type', 'origin', 'status', 'priority', 'title', 'description', 'scheduled_for', 'started_at', 'completed_at', 'cancelled_at', 'created_at'],
+      workOrders.map(w => [w.id, w.client_id, w.equipment_id, w.building_id, w.team_id, w.supervisor_id, w.type, w.origin, w.status, w.priority, w.title, w.description, w.scheduled_for, w.started_at, w.completed_at, w.cancelled_at, w.created_at]))
     console.log(`  ✓ ${workOrders.length} ordens de trabalho`)
 
     const completedWOs = workOrders.filter(w => w.status === 'completed')
@@ -1066,6 +1075,10 @@ async function main() {
     console.table(stats)
     console.log(`Total: ${total} registos\n`)
     console.log('Login de demonstração: superadmin@manugent.pt / Demo@2026 (e admin/gestor/tecnico/cliente com o mesmo padrão)')
+    console.log('\nCredenciais por empresa (password: Demo@2026):')
+    console.log(`  ManuGent Facility Services: admin@${empresas[0].domain} | gestor@${empresas[0].domain} | tecnico@${empresas[0].domain} | financeiro@${empresas[0].domain} | engenheiro@${empresas[0].domain}`)
+    console.log(`  TechMaint Lda:              admin@${empresas[1].domain} | gestor@${empresas[1].domain} | tecnico@${empresas[1].domain} | financeiro@${empresas[1].domain} | engenheiro@${empresas[1].domain}`)
+    console.log(`  Elevadores & Energia:       admin@${empresas[2].domain} | gestor@${empresas[2].domain} | tecnico@${empresas[2].domain} | financeiro@${empresas[2].domain} | engenheiro@${empresas[2].domain}`)
   } catch (err) {
     await client.query('ROLLBACK')
     console.error('❌ Erro ao popular a base de dados, revertido (ROLLBACK):', err)
