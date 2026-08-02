@@ -263,7 +263,7 @@ async function main() {
         incident_comments, incidents, knowledge_article_versions, knowledge_articles, knowledge_categories,
         building_assignments, areas, floors,
         blog_posts, buildings, work_orders,
-        equipment, clients, users, teams
+        equipment, clients, users, teams, empresas
       RESTART IDENTITY CASCADE
     `)
 
@@ -282,8 +282,8 @@ async function main() {
     ]
     // domínio de email cooperativo de cada empresa (extraído do email geral)
     for (const e of empresas) { e.domain = e.email.split('@')[1] }
-    await bulkInsert(client, 'empresas', ['id', 'name', 'tax_id', 'email', 'phone', 'address', 'city', 'active'],
-      empresas.map(e => [e.id, e.name, e.tax_id, e.email, e.phone, e.address, e.city, true]))
+    await bulkInsert(client, 'empresas', ['id', 'name', 'tax_id', 'email', 'phone', 'address', 'city', 'domain', 'active'],
+      empresas.map(e => [e.id, e.name, e.tax_id, e.email, e.phone, e.address, e.city, e.domain, true]))
     console.log(`  ✓ ${empresas.length} empresas (prestadoras de manutenção)`)
     const manugentFsId = empresas[0].id
     const techmaintId = empresas[1].id
@@ -302,18 +302,26 @@ async function main() {
       { name: 'Tecnico Costa', email: 'tecnico@manugent.pt', role: 'tecnico', empresa_id: manugentFsId },
       { name: 'Cliente Demo', email: 'cliente@demo.pt', role: 'cliente', empresa_id: null },
       // Credenciais completas por empresa (email cooperativo no domínio da empresa)
+      // TechMaint Lda — credenciais cooperativas completas
       { name: 'Carlos TechMaint', email: `admin@${empresaDomain[techmaintId]}`, role: 'admin', empresa_id: techmaintId },
       { name: 'Ana TechMaint', email: `gestor@${empresaDomain[techmaintId]}`, role: 'gestor', empresa_id: techmaintId },
+      { name: 'Paulo TechMaint', email: `supervisor@${empresaDomain[techmaintId]}`, role: 'supervisor', empresa_id: techmaintId },
       { name: 'Pedro TechMaint', email: `tecnico@${empresaDomain[techmaintId]}`, role: 'tecnico', empresa_id: techmaintId },
       { name: 'Fernanda TechMaint', email: `financeiro@${empresaDomain[techmaintId]}`, role: 'financeiro', empresa_id: techmaintId },
       { name: 'Diogo TechMaint', email: `engenheiro@${empresaDomain[techmaintId]}`, role: 'engenheiro', empresa_id: techmaintId },
+      // Elevadores & Energia — credenciais cooperativas completas
       { name: 'Rui ElevEnergia', email: `admin@${empresaDomain[elevEnergiaId]}`, role: 'admin', empresa_id: elevEnergiaId },
       { name: 'Sofia ElevEnergia', email: `gestor@${empresaDomain[elevEnergiaId]}`, role: 'gestor', empresa_id: elevEnergiaId },
+      { name: 'André ElevEnergia', email: `supervisor@${empresaDomain[elevEnergiaId]}`, role: 'supervisor', empresa_id: elevEnergiaId },
       { name: 'Miguel ElevEnergia', email: `tecnico@${empresaDomain[elevEnergiaId]}`, role: 'tecnico', empresa_id: elevEnergiaId },
       { name: 'Teresa ElevEnergia', email: `financeiro@${empresaDomain[elevEnergiaId]}`, role: 'financeiro', empresa_id: elevEnergiaId },
       { name: 'Vasco ElevEnergia', email: `engenheiro@${empresaDomain[elevEnergiaId]}`, role: 'engenheiro', empresa_id: elevEnergiaId },
-      // Credenciais adicionais ManuGent
-      { name: 'Ricardo ManuGent', email: `financeiro@${empresaDomain[manugentFsId]}`, role: 'financeiro', empresa_id: manugentFsId },
+      // ManuGent Facility Services — credenciais cooperativas completas
+      { name: 'Ricardo ManuGent', email: `supervisor@${empresaDomain[manugentFsId]}`, role: 'supervisor', empresa_id: manugentFsId },
+      { name: 'Rita ManuGent', email: `admin@${empresaDomain[manugentFsId]}`, role: 'admin', empresa_id: manugentFsId },
+      { name: 'Nuno ManuGent', email: `gestor@${empresaDomain[manugentFsId]}`, role: 'gestor', empresa_id: manugentFsId },
+      { name: 'Teresa ManuGent', email: `tecnico@${empresaDomain[manugentFsId]}`, role: 'tecnico', empresa_id: manugentFsId },
+      { name: 'Fábio ManuGent', email: `financeiro@${empresaDomain[manugentFsId]}`, role: 'financeiro', empresa_id: manugentFsId },
       { name: 'Hugo ManuGent', email: `engenheiro@${empresaDomain[manugentFsId]}`, role: 'engenheiro', empresa_id: manugentFsId },
     ]
     for (const d of demoAccounts) {
@@ -322,11 +330,13 @@ async function main() {
     const ROLES = ['gestor', 'tecnico', 'tecnico', 'tecnico', 'admin', 'financeiro', 'engenheiro', 'engenheiro']
     const DEPARTMENTS_BY_ROLE = {
       superadmin: 'Direção', admin: 'Administrativo', gestor: 'Gestão de Operações',
-      tecnico: 'Manutenção Técnica', engenheiro: 'Engenharia', financeiro: 'Financeiro', cliente: 'Cliente',
+      supervisor: 'Supervisão Técnica', tecnico: 'Manutenção Técnica',
+      engenheiro: 'Engenharia', financeiro: 'Financeiro', cliente: 'Cliente',
     }
     const POSITIONS_BY_ROLE = {
       superadmin: 'Diretor de Plataforma', admin: 'Assistente Administrativo', gestor: 'Gestor de Edifício',
-      tecnico: 'Técnico de Manutenção', engenheiro: 'Engenheiro de Manutenção', financeiro: 'Analista Financeiro', cliente: 'Contacto do Cliente',
+      supervisor: 'Supervisor de Manutenção', tecnico: 'Técnico de Manutenção',
+      engenheiro: 'Engenheiro de Manutenção', financeiro: 'Analista Financeiro', cliente: 'Contacto do Cliente',
     }
     const empresaIds = [manugentFsId, techmaintId, elevEnergiaId]
     for (let i = 0; i < N.users; i++) {
@@ -358,27 +368,28 @@ async function main() {
         users.map(u => u.empresa_id || null),
       ]
     )
-    // Password real ("Demo@2026") apenas nas 5 contas fixas usadas pelo seletor de perfil
-    for (const d of demoAccounts) {
-      await client.query(
-        `UPDATE users SET password_hash = crypt('Demo@2026', gen_salt('bf', 10)) WHERE email = $1`,
-        [d.email]
-      )
-    }
-    console.log(`  ✓ ${users.length} utilizadores (5 contas fixas + ${N.users} adicionais)`)
+    // Password real ("Demo@2026") para TODOS os utilizadores (contas fixas + colaboradores)
+    await client.query(
+      `UPDATE users SET password_hash = crypt('Demo@2026', gen_salt('bf', 10)) WHERE email = ANY($1::text[])`,
+      [users.map(u => u.email)]
+    )
+    console.log(`  ✓ ${users.length} utilizadores (${demoAccounts.length} contas fixas + ${N.users} adicionais)`)
     const staffUsers = users.filter(u => u.role !== 'cliente')
 
     // ---- Clientes (empresas) -----------------------------------------------------
-    const clients = Array.from({ length: N.clients }, () => {
+    // distribui os clientes pelas 3 empresas prestadoras (round-robin) e guarda empresa_id
+    const empresaIdsList = [manugentFsId, techmaintId, elevEnergiaId]
+    const clients = Array.from({ length: N.clients }, (_, i) => {
       const name = COMPANY_NAME()
       return {
         id: randomUUID(), name, email: `geral@${slug(name)}.pt`, phone: `+351 2${int(1, 9)} ${int(100, 999)} ${int(1000, 9999)}`,
         tax_id: `PT${int(100000000, 599999999)}`, sector: pick(SUPPLIER_CATEGORIES),
         since: daysAgo(int(60, 1800)).slice(0, 10),
+        empresa_id: empresaIdsList[i % empresaIdsList.length],
       }
     })
-    await bulkInsert(client, 'clients', ['id', 'name', 'email', 'phone', 'tax_id', 'sector', 'active', 'since'],
-      clients.map(c => [c.id, c.name, c.email, c.phone, c.tax_id, c.sector, true, c.since]))
+    await bulkInsert(client, 'clients', ['id', 'name', 'email', 'phone', 'tax_id', 'sector', 'active', 'since', 'empresa_id'],
+      clients.map(c => [c.id, c.name, c.email, c.phone, c.tax_id, c.sector, true, c.since, c.empresa_id]))
     console.log(`  ✓ ${clients.length} clientes (empresas)`)
 
     // ---- Edifícios -----------------------------------------------------------------
@@ -1076,9 +1087,9 @@ async function main() {
     console.log(`Total: ${total} registos\n`)
     console.log('Login de demonstração: superadmin@manugent.pt / Demo@2026 (e admin/gestor/tecnico/cliente com o mesmo padrão)')
     console.log('\nCredenciais por empresa (password: Demo@2026):')
-    console.log(`  ManuGent Facility Services: admin@${empresas[0].domain} | gestor@${empresas[0].domain} | tecnico@${empresas[0].domain} | financeiro@${empresas[0].domain} | engenheiro@${empresas[0].domain}`)
-    console.log(`  TechMaint Lda:              admin@${empresas[1].domain} | gestor@${empresas[1].domain} | tecnico@${empresas[1].domain} | financeiro@${empresas[1].domain} | engenheiro@${empresas[1].domain}`)
-    console.log(`  Elevadores & Energia:       admin@${empresas[2].domain} | gestor@${empresas[2].domain} | tecnico@${empresas[2].domain} | financeiro@${empresas[2].domain} | engenheiro@${empresas[2].domain}`)
+admin@${empresas[0].domain} | gestor@${empresas[0].domain} | supervisor@${empresas[0].domain} | tecnico@${empresas[0].domain} | financeiro@${empresas[0].domain} | engenheiro@${empresas[0].domain}
+admin@${empresas[1].domain} | gestor@${empresas[1].domain} | supervisor@${empresas[1].domain} | tecnico@${empresas[1].domain} | financeiro@${empresas[1].domain} | engenheiro@${empresas[1].domain}
+admin@${empresas[2].domain} | gestor@${empresas[2].domain} | supervisor@${empresas[2].domain} | tecnico@${empresas[2].domain} | financeiro@${empresas[2].domain} | engenheiro@${empresas[2].domain}
   } catch (err) {
     await client.query('ROLLBACK')
     console.error('❌ Erro ao popular a base de dados, revertido (ROLLBACK):', err)
