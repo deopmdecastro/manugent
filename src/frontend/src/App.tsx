@@ -9,6 +9,8 @@ import { ApiPage } from './pages/static/ApiPage'
 import { ChangelogPage } from './pages/static/ChangelogPage'
 import { AboutPage } from './pages/static/AboutPage'
 import { FeaturesPage } from './pages/static/FeaturesPage'
+import { AiDemoPage } from './pages/AiDemoPage'
+import { PricingPage } from './pages/PricingPage'
 import { BlogPage } from './pages/static/BlogPage'
 import { BlogPostPage } from './pages/static/BlogPostPage'
 import { CareersPage } from './pages/static/CareersPage'
@@ -41,6 +43,8 @@ export function App() {
             <Route path="/changelog" element={<ChangelogPage />} />
             <Route path="/sobre" element={<AboutPage />} />
             <Route path="/funcionalidades" element={<FeaturesPage />} />
+            <Route path="/ia" element={<AiDemoPage />} />
+            <Route path="/precos" element={<PricingPage />} />
             <Route path="/blog" element={<BlogPage />} />
             <Route path="/blog/:slug" element={<BlogPostPage />} />
             <Route path="/carreiras" element={<CareersPage />} />

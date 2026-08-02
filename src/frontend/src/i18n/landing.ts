@@ -50,6 +50,55 @@ export interface LandingTranslations {
     ctaDesc: string
     ctaButton: string
   }
+  aiPage: {
+    badge: string
+    titleLine1: string
+    titleGradient: string
+    desc: string
+    capabilitiesTitle: string
+    capabilities: { title: string; desc: string; icon: string }[]
+    chatTitle: string
+    chatSubtitle: string
+    welcomeMessage: string
+    inputPlaceholder: string
+    send: string
+    thinking: string
+    errorMessage: string
+    disclaimer: string
+    suggestionsTitle: string
+    suggestions: string[]
+    ctaTitle: string
+    ctaDesc: string
+    ctaButton: string
+  }
+  pricingPage: {
+    badge: string
+    titleLine1: string
+    titleGradient: string
+    desc: string
+    billingMonthly: string
+    billingAnnual: string
+    billingAnnualBadge: string
+    perUser: string
+    perMonth: string
+    custom: string
+    popularLabel: string
+    plans: {
+      name: string
+      tagline: string
+      priceMonthly: string
+      priceAnnual: string
+      cta: string
+      ctaHref: string
+      popular?: boolean
+      features: string[]
+    }[]
+    faqTitle: string
+    faq: { q: string; a: string }[]
+    ctaTitle: string
+    ctaDesc: string
+    ctaButton: string
+  }
   testimonials: {
     badge: string
     titleLine1: string
@@ -117,8 +166,8 @@ export const landingTranslations: Record<Language, LandingTranslations> = {
       links: [
         { label: 'Funcionalidades', href: '/landing#features' },
         { label: 'Módulos', href: '/landing#modules' },
-        { label: 'IA', href: '/landing#ai' },
-        { label: 'Preços', href: '/landing#pricing' },
+        { label: 'IA', href: '/ia' },
+        { label: 'Preços', href: '/precos' },
       ],
       resourcesLabel: 'Recursos',
       resources: [
@@ -212,6 +261,113 @@ export const landingTranslations: Record<Language, LandingTranslations> = {
       ctaDesc: 'Cria a tua conta grátis e vê estas funcionalidades a funcionar com os dados da tua equipa.',
       ctaButton: 'Começar grátis',
     },
+    aiPage: {
+      badge: 'Agente IA',
+      titleLine1: 'Fala agora com o',
+      titleGradient: 'técnico sénior digital da ManuGent',
+      desc: 'Este é o mesmo agente de IA que os técnicos usam dentro da plataforma — treinado em diagnóstico industrial, manutenção preventiva e boas práticas de CMMS. Experimenta uma pergunta real, sem criar conta.',
+      capabilitiesTitle: 'O que o agente sabe fazer',
+      capabilities: [
+        { title: 'Diagnóstico de avarias', desc: 'Descreve um sintoma e recebe hipóteses de causa, por ordem de probabilidade, com base em boas práticas de manutenção industrial.', icon: 'fas fa-stethoscope' },
+        { title: 'Planeamento preventivo', desc: 'Sugere periodicidades e checklists de manutenção preventiva/preditiva adequadas a cada tipo de equipamento.', icon: 'fas fa-calendar-check' },
+        { title: 'Indicadores técnicos', desc: 'Explica e ajuda a calcular MTBF, MTTR, OEE e outros indicadores de desempenho da manutenção.', icon: 'fas fa-chart-line' },
+        { title: 'Normas e conformidade', desc: 'Orienta sobre requisitos de normas como ISO 55000, EN 13306 e boas práticas de segurança no trabalho.', icon: 'fas fa-shield-halved' },
+      ],
+      chatTitle: 'Experimenta o agente ManuGent',
+      chatSubtitle: 'Demonstração pública — sem acesso a dados reais de conta',
+      welcomeMessage: 'Olá! 👋 Sou o agente técnico da ManuGent, em modo de demonstração pública. Posso ajudar-te a pensar num diagnóstico, num plano preventivo ou explicar um indicador de manutenção. O que queres experimentar?',
+      inputPlaceholder: 'Escreve a tua pergunta técnica...',
+      send: 'Enviar',
+      thinking: 'A analisar...',
+      errorMessage: 'Não foi possível obter resposta agora. Tenta novamente dentro de momentos.',
+      disclaimer: 'Demonstração pública do agente IA da ManuGent. Não tem acesso a dados reais de conta, OTs ou equipamentos.',
+      suggestionsTitle: 'Experimenta perguntar',
+      suggestions: [
+        'O compressor de ar está a disparar o térmico com frequência, o que pode ser?',
+        'Com que periodicidade devo fazer manutenção preventiva a um chiller?',
+        'Como calculo o MTBF de um equipamento?',
+        'Que checklist devo usar numa inspeção a um quadro elétrico?',
+      ],
+      ctaTitle: 'Gostaste do agente?',
+      ctaDesc: 'Na plataforma, o agente já conhece os teus equipamentos, o histórico de OTs e o stock de peças — as respostas ficam ainda mais precisas.',
+      ctaButton: 'Criar conta grátis',
+    },
+    pricingPage: {
+      badge: 'Preços',
+      titleLine1: 'Um plano para cada',
+      titleGradient: 'fase da tua operação',
+      desc: 'Preços simples, sem custos escondidos. Começa grátis e cresce ao ritmo da tua equipa de manutenção.',
+      billingMonthly: 'Mensal',
+      billingAnnual: 'Anual',
+      billingAnnualBadge: '-20%',
+      perUser: '/ utilizador',
+      perMonth: '/ mês',
+      custom: 'Personalizado',
+      popularLabel: 'Mais popular',
+      plans: [
+        {
+          name: 'Starter',
+          tagline: 'Para equipas pequenas a começar a organizar a manutenção.',
+          priceMonthly: '0€',
+          priceAnnual: '0€',
+          cta: 'Começar grátis',
+          ctaHref: '/login',
+          features: [
+            'Até 3 utilizadores',
+            'Até 50 equipamentos',
+            'Ordens de Trabalho ilimitadas',
+            'App móvel (PWA) com modo offline',
+            'Checklists e QR Code',
+            'Suporte por email',
+          ],
+        },
+        {
+          name: 'Professional',
+          tagline: 'Para equipas que querem IA, preventivas e relatórios automáticos.',
+          priceMonthly: '49€',
+          priceAnnual: '39€',
+          cta: 'Começar grátis',
+          ctaHref: '/login',
+          popular: true,
+          features: [
+            'Utilizadores ilimitados',
+            'Equipamentos ilimitados',
+            'Agente IA incluído',
+            'Manutenção preventiva/preditiva automática',
+            'Relatórios PDF automáticos',
+            'Indicadores MTBF, MTTR e OEE',
+            'Suporte prioritário',
+          ],
+        },
+        {
+          name: 'Enterprise',
+          tagline: 'Para operações multi-site com requisitos de segurança e integração.',
+          priceMonthly: 'Personalizado',
+          priceAnnual: 'Personalizado',
+          cta: 'Falar com a equipa',
+          ctaHref: '/contacto',
+          features: [
+            'Tudo do plano Professional',
+            'SSO / SAML e permissões avançadas',
+            'Integrações via API dedicada',
+            'SLA e onboarding assistido',
+            'Gestor de conta dedicado',
+            'Contrato e faturação à medida',
+          ],
+        },
+      ],
+      faqTitle: 'Perguntas frequentes',
+      faq: [
+        { q: 'Preciso de cartão de crédito para experimentar?', a: 'Não. O plano Starter é gratuito para sempre e não pede dados de pagamento. Só pedimos cartão se decidires mudar para o plano Professional.' },
+        { q: 'Posso mudar de plano mais tarde?', a: 'Sim, podes subir ou descer de plano a qualquer momento. As alterações aplicam-se no ciclo de faturação seguinte, sem perda de dados.' },
+        { q: 'O que acontece se ultrapassar o limite de equipamentos do Starter?', a: 'Avisamos-te antes de chegares ao limite e sugerimos a mudança para o plano Professional, que não tem limites de equipamentos ou utilizadores.' },
+        { q: 'Os meus dados ficam guardados se eu cancelar?', a: 'Mantemos os teus dados disponíveis para exportação durante 30 dias após o cancelamento, para que nunca percas o histórico de manutenção.' },
+        { q: 'Como funciona o desconto anual?', a: 'Ao escolher faturação anual, pagas o equivalente a 10 meses em vez de 12 — uma poupança de cerca de 20% face ao plano mensal.' },
+      ],
+      ctaTitle: 'Ainda com dúvidas sobre o plano ideal?',
+      ctaDesc: 'A nossa equipa ajuda-te a escolher o plano certo para o tamanho e complexidade da tua operação.',
+      ctaButton: 'Falar com a equipa',
+    },
     testimonials: {
       badge: 'Testemunhos',
       titleLine1: 'O que dizem',
@@ -302,8 +458,8 @@ export const landingTranslations: Record<Language, LandingTranslations> = {
       links: [
         { label: 'Features', href: '/landing#features' },
         { label: 'Modules', href: '/landing#modules' },
-        { label: 'AI', href: '/landing#ai' },
-        { label: 'Pricing', href: '/landing#pricing' },
+        { label: 'AI', href: '/ia' },
+        { label: 'Pricing', href: '/precos' },
       ],
       resourcesLabel: 'Resources',
       resources: [
@@ -396,6 +552,113 @@ export const landingTranslations: Record<Language, LandingTranslations> = {
       ctaTitle: 'Ready to try it out?',
       ctaDesc: 'Create your free account and see these features work with your own team\u2019s data.',
       ctaButton: 'Start for free',
+    },
+    aiPage: {
+      badge: 'AI Agent',
+      titleLine1: 'Talk right now to',
+      titleGradient: 'ManuGent\u2019s digital senior technician',
+      desc: 'This is the same AI agent technicians use inside the platform — trained on industrial diagnostics, preventive maintenance and CMMS best practices. Try a real question, no account needed.',
+      capabilitiesTitle: 'What the agent can do',
+      capabilities: [
+        { title: 'Fault diagnosis', desc: 'Describe a symptom and get likely causes, ranked by probability, based on industrial maintenance best practices.', icon: 'fas fa-stethoscope' },
+        { title: 'Preventive planning', desc: 'Get suggested frequencies and preventive/predictive maintenance checklists tailored to each equipment type.', icon: 'fas fa-calendar-check' },
+        { title: 'Technical KPIs', desc: 'Understand and calculate MTBF, MTTR, OEE and other maintenance performance indicators.', icon: 'fas fa-chart-line' },
+        { title: 'Standards & compliance', desc: 'Get guidance on standards like ISO 55000, EN 13306 and workplace safety best practices.', icon: 'fas fa-shield-halved' },
+      ],
+      chatTitle: 'Try the ManuGent agent',
+      chatSubtitle: 'Public demo — no access to real account data',
+      welcomeMessage: 'Hi! 👋 I\u2019m the ManuGent technical agent, in public demo mode. I can help you think through a diagnosis, a preventive plan, or explain a maintenance KPI. What would you like to try?',
+      inputPlaceholder: 'Type your technical question...',
+      send: 'Send',
+      thinking: 'Analyzing...',
+      errorMessage: 'Couldn\u2019t get a reply right now. Please try again in a moment.',
+      disclaimer: 'Public demo of the ManuGent AI agent. Has no access to real account, work order or equipment data.',
+      suggestionsTitle: 'Try asking',
+      suggestions: [
+        'Our air compressor keeps tripping the thermal overload, what could it be?',
+        'How often should I run preventive maintenance on a chiller?',
+        'How do I calculate the MTBF of a piece of equipment?',
+        'What checklist should I use for an electrical panel inspection?',
+      ],
+      ctaTitle: 'Liked the agent?',
+      ctaDesc: 'Inside the platform, the agent already knows your equipment, work order history and parts stock — so answers get even more precise.',
+      ctaButton: 'Create free account',
+    },
+    pricingPage: {
+      badge: 'Pricing',
+      titleLine1: 'A plan for every',
+      titleGradient: 'stage of your operation',
+      desc: 'Simple pricing, no hidden costs. Start for free and grow at your maintenance team\u2019s pace.',
+      billingMonthly: 'Monthly',
+      billingAnnual: 'Annual',
+      billingAnnualBadge: '-20%',
+      perUser: '/ user',
+      perMonth: '/ month',
+      custom: 'Custom',
+      popularLabel: 'Most popular',
+      plans: [
+        {
+          name: 'Starter',
+          tagline: 'For small teams getting their maintenance organized.',
+          priceMonthly: '$0',
+          priceAnnual: '$0',
+          cta: 'Start for free',
+          ctaHref: '/login',
+          features: [
+            'Up to 3 users',
+            'Up to 50 assets',
+            'Unlimited work orders',
+            'Offline-ready mobile app (PWA)',
+            'Checklists and QR code',
+            'Email support',
+          ],
+        },
+        {
+          name: 'Professional',
+          tagline: 'For teams that want AI, preventive maintenance and automatic reports.',
+          priceMonthly: '$49',
+          priceAnnual: '$39',
+          cta: 'Start for free',
+          ctaHref: '/login',
+          popular: true,
+          features: [
+            'Unlimited users',
+            'Unlimited assets',
+            'AI agent included',
+            'Automatic preventive/predictive maintenance',
+            'Automatic PDF reports',
+            'MTBF, MTTR and OEE indicators',
+            'Priority support',
+          ],
+        },
+        {
+          name: 'Enterprise',
+          tagline: 'For multi-site operations with security and integration needs.',
+          priceMonthly: 'Custom',
+          priceAnnual: 'Custom',
+          cta: 'Talk to sales',
+          ctaHref: '/contacto',
+          features: [
+            'Everything in Professional',
+            'SSO / SAML and advanced permissions',
+            'Dedicated API integrations',
+            'SLA and guided onboarding',
+            'Dedicated account manager',
+            'Custom contract and billing',
+          ],
+        },
+      ],
+      faqTitle: 'Frequently asked questions',
+      faq: [
+        { q: 'Do I need a credit card to try it?', a: 'No. The Starter plan is free forever and never asks for payment details. We only ask for a card if you choose to upgrade to Professional.' },
+        { q: 'Can I change plans later?', a: 'Yes, you can upgrade or downgrade at any time. Changes apply on the next billing cycle, with no data loss.' },
+        { q: 'What happens if I go over the Starter asset limit?', a: 'We\u2019ll warn you before you hit the limit and suggest upgrading to Professional, which has no asset or user limits.' },
+        { q: 'Is my data kept if I cancel?', a: 'We keep your data available for export for 30 days after cancellation, so you never lose your maintenance history.' },
+        { q: 'How does the annual discount work?', a: 'Choosing annual billing means you pay the equivalent of 10 months instead of 12 — roughly a 20% saving versus monthly billing.' },
+      ],
+      ctaTitle: 'Still not sure which plan fits?',
+      ctaDesc: 'Our team can help you choose the right plan for the size and complexity of your operation.',
+      ctaButton: 'Talk to sales',
     },
     testimonials: {
       badge: 'Testimonials',

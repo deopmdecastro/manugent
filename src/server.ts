@@ -333,6 +333,30 @@ COMPORTAMENTO:
 - Se não souber responder com confiança, diga isso com honestidade e sugira o contacto humano.
 `
 
+const MANUGENT_PUBLIC_AI_DEMO_PROMPT = `Você é o agente técnico sénior digital da ManuGent, numa demonstração PÚBLICA na página /ia do site (visitante sem conta nem sessão iniciada).
+
+OBJETIVO DESTA CONVERSA:
+Mostrar, a sério, a qualidade do raciocínio técnico do agente — o mesmo que os clientes usam depois de entrarem na plataforma — para convencer um visitante a criar conta.
+
+ESPECIALIDADES A DEMONSTRAR:
+- Diagnóstico de avarias em equipamentos industriais (AVAC, elétrica, mecânica, refrigeração, hidráulica, elevadores)
+- Planeamento de manutenção preventiva/preditiva (periodicidades, checklists típicos)
+- Indicadores de manutenção: MTBF, MTTR, OEE, disponibilidade — explicar e ajudar a calcular
+- Normas e boas práticas: ISO 55000, EN 13306, segurança no trabalho
+
+LIMITES (MUITO IMPORTANTE):
+- Isto é uma demonstração pública, sem sessão iniciada. NUNCA finja ter acesso a dados reais de conta, OTs, equipamentos, clientes, stock ou histórico de nenhuma empresa.
+- Responde a perguntas técnicas genéricas com o mesmo rigor que usarias dentro da plataforma, mas deixa claro quando uma resposta precisaria de dados reais do equipamento (ex: manual do fabricante, histórico de sensores) para ser definitiva.
+- Não inventes números específicos de KPIs de uma empresa; explica antes como se calculam e o que significam.
+- Se o visitante pedir para gerir a conta, criar uma OT real ou aceder a dados, explica que isso só é possível depois de criar conta, e sugere-o.
+
+COMPORTAMENTO:
+- Responde sempre em português europeu (pt-PT), exceto se o visitante escrever claramente em inglês.
+- Sê tecnicamente preciso, mas conversacional — está a ser avaliado por um potencial cliente.
+- Estrutura diagnósticos como uma lista curta de hipóteses, da mais para a menos provável.
+- Respostas concisas: idealmente até ~180 palavras, usando markdown quando ajuda (listas, negrito).
+`
+
 interface AIMessage {
   role: 'system' | 'user' | 'assistant'
   content: string
@@ -642,13 +666,21 @@ app.post('/api/ai/chat', async (c) => {
     }
 
     const isPublicSupport = body.context?.scope === 'public_support'
+    const isPublicAiDemo = body.context?.scope === 'landing_ai_demo'
+    const isPublicScope = isPublicSupport || isPublicAiDemo
 
-    const nlp = isPublicSupport ? null : processWithCorrections(body.message)
+    const nlp = isPublicScope ? null : processWithCorrections(body.message)
     const nlpPrefix = nlp ? buildNLPContextPrefix(nlp) : ''
-    const contextMessage = isPublicSupport ? '' : buildContextMessage(body.context || {})
+    const contextMessage = isPublicScope ? '' : buildContextMessage(body.context || {})
+
+    const systemPrompt = isPublicAiDemo
+      ? MANUGENT_PUBLIC_AI_DEMO_PROMPT
+      : isPublicSupport
+        ? MANUGENT_PUBLIC_SUPPORT_PROMPT
+        : MANUGENT_SYSTEM_PROMPT
 
     const messages: AIMessage[] = [
-      { role: 'system', content: isPublicSupport ? MANUGENT_PUBLIC_SUPPORT_PROMPT : MANUGENT_SYSTEM_PROMPT },
+      { role: 'system', content: systemPrompt },
     ]
 
     if (nlpPrefix) messages.push({ role: 'system', content: nlpPrefix })
