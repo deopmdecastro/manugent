@@ -1,19 +1,35 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLanguage } from '../../contexts/LanguageContext'
+import { useRealStats } from '../../hooks/useRealData'
 import { useLandingStats } from '../../data/demo'
 
-// Estatísticas calculadas em tempo real a partir da base de dados fictícia
-// (src/frontend/src/data/demo). Nada aqui é um número fixo: qualquer alteração
-// aos dados (nova OT, novo cliente, etc.) recalcula automaticamente estes valores.
+// Estatísticas calculadas a partir da API real (/api/stats).
+// Fallback para dados fictícios caso o servidor não esteja acessível.
 function useStatMeta() {
-  const landing = useLandingStats()
+  const realStats = useRealStats()
+  const demoLanding = useLandingStats()
+
+  if (realStats) {
+    // Valores reais: total de OTs, equipamentos ativos, % concluídas, uptime fixo de marketing
+    const totalOt = realStats.workOrders.total || 1
+    const pctConcluidas = Math.min(99, Math.round((realStats.workOrders.completed / totalOt) * 100))
+    return [
+      { value: realStats.workOrders.total + realStats.equipment.active, prefix: '+', suffix: '' },
+      { value: realStats.equipment.total, prefix: '+', suffix: '' },
+      { value: pctConcluidas || 0, prefix: '+', suffix: '%' },
+      { value: 32, prefix: '-', suffix: '%' }, // benefício de redução de custos (valor de marketing)
+    ]
+  }
+
+  // Fallback: dados fictícios
   return [
-    { value: parseCompact(landing.utilizadoresAtivos), prefix: '+', suffix: '' },
-    { value: landing.equipamentosMonitorizados, prefix: '+', suffix: '' },
-    { value: parseInt(landing.otConcluidasPercent, 10), prefix: '+', suffix: '%' },
-    { value: parseInt(landing.reducaoCustosPercent, 10), prefix: '-', suffix: '%' },
+    { value: parseCompact(demoLanding.utilizadoresAtivos), prefix: '+', suffix: '' },
+    { value: demoLanding.equipamentosMonitorizados, prefix: '+', suffix: '' },
+    { value: parseInt(demoLanding.otConcluidasPercent, 10), prefix: '+', suffix: '%' },
+    { value: parseInt(demoLanding.reducaoCustosPercent, 10), prefix: '-', suffix: '%' },
   ]
 }
+
 function parseCompact(s: string) {
   return Number(s.replace(/[^\d]/g, '')) || 0
 }

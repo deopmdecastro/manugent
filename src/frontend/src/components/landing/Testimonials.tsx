@@ -1,7 +1,19 @@
 import { useLanguage } from '../../contexts/LanguageContext'
+import { useRealTestimonials } from '../../hooks/useRealData'
 
 export function Testimonials() {
   const { t } = useLanguage()
+  const realTestimonials = useRealTestimonials()
+
+  // Usar testemunhos reais da API; fallback para i18n enquanto carrega ou se falhar
+  const items = realTestimonials && realTestimonials.length > 0
+    ? realTestimonials.map(item => ({
+        quote: item.text,
+        name: item.name,
+        role: item.role + (item.company ? ` · ${item.company}` : ''),
+        rating: item.rating,
+      }))
+    : t.testimonials.items.map(item => ({ ...item, quote: item.quote, rating: 5 }))
 
   return (
     <section id="testimonials" className="l-section">
@@ -16,10 +28,10 @@ export function Testimonials() {
       </div>
 
       <div className="l-testimonials-grid l-reveal l-reveal-delay-1">
-        {t.testimonials.items.map((item, i) => (
+        {items.map((item, i) => (
           <figure key={i} className="l-testimonial-card">
             <div className="l-testimonial-stars" aria-hidden="true">
-              {Array.from({ length: 5 }).map((_, star) => (
+              {Array.from({ length: item.rating ?? 5 }).map((_, star) => (
                 <i key={star} className="fas fa-star" />
               ))}
             </div>

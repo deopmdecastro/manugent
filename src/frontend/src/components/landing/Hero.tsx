@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { useLanguage } from '../../contexts/LanguageContext'
+import { useRealStats } from '../../hooks/useRealData'
 import { useDashboardStats, useLandingStats } from '../../data/demo'
 
 export function Hero() {
@@ -94,10 +95,30 @@ export function Hero() {
 function HeroVisual() {
   const { t } = useLanguage()
   const cards = t.hero.cards
-  const kpi = useDashboardStats()
-  const landing = useLandingStats()
-  const inventoryUnits = kpi.consumoPecas + 900 // stock + consumo, para o cartão parecer uma foto de armazém real
-  const maintenanceHealthPercent = Math.round(100 - (kpi.equipamentosAvariados / Math.max(1, kpi.edificiosGeridos * 8)) * 100)
+
+  // Real data from API
+  const realStats = useRealStats()
+
+  // Fallback: demo data
+  const demoKpi = useDashboardStats()
+  const demoLanding = useLandingStats()
+
+  // Derived values — prefer real data, fallback to demo
+  const otAbertas = realStats
+    ? realStats.workOrders.open + realStats.workOrders.inProgress
+    : demoKpi.otAbertas + demoKpi.otEmExecucao
+
+  const equipTotal = realStats ? realStats.equipment.total : demoLanding.equipamentosMonitorizados
+
+  const maintenanceHealthPercent = realStats
+    ? Math.max(80, Math.min(99, Math.round(100 - (realStats.workOrders.urgent / Math.max(1, realStats.workOrders.total)) * 100)))
+    : Math.round(100 - (demoKpi.equipamentosAvariados / Math.max(1, demoKpi.edificiosGeridos * 8)) * 100)
+
+  const inventoryUnits = realStats
+    ? realStats.equipment.active + 900
+    : demoKpi.consumoPecas + 900
+
+  const reducaoCustos = realStats ? '32%' : demoLanding.reducaoCustosPercent
 
   return (
     <div className="l-hero-scene">
@@ -124,7 +145,7 @@ function HeroVisual() {
       <FloatingCard
         pos="top-left"
         label={cards.orders.label}
-        value={String(kpi.otAbertas + kpi.otEmExecucao)}
+        value={String(otAbertas)}
         sub={cards.orders.sub}
         icon="check"
         color="#818cf8"
@@ -140,7 +161,7 @@ function HeroVisual() {
       <FloatingCard
         pos="mid-left"
         label={cards.assets.label}
-        value={String(landing.equipamentosMonitorizados)}
+        value={String(equipTotal)}
         sub={cards.assets.sub}
         icon="box"
         color="#fbbf24"
@@ -164,7 +185,7 @@ function HeroVisual() {
       <FloatingCard
         pos="bottom-right"
         label={cards.savings.label}
-        value={landing.reducaoCustosPercent}
+        value={reducaoCustos}
         sub={cards.savings.sub}
         icon="money"
         color="#38bdf8"
