@@ -29,6 +29,13 @@ export interface DashboardStats {
   consumoPecas: number
   alertasAtivos: number
   notificacoesPendentes: number
+  // Módulos adicionais
+  avaliacaoMediaOTs: number
+  avaliacaoMediaTecnicos: number
+  totalComentarios: number
+  totalAnexos: number
+  postsBlogPublicados: number
+  totalViewsBlog: number
 }
 
 export function computeDashboardStats(db: DemoDatabase): DashboardStats {
@@ -48,6 +55,13 @@ export function computeDashboardStats(db: DemoDatabase): DashboardStats {
   const custosPorCliente = [...custosPorClienteMap.entries()]
     .map(([clientId, total]) => ({ clientId, clientName: db.clients.find(c => c.id === clientId)?.name || '—', total }))
     .sort((a, b) => b.total - a.total)
+
+  const ratings = db.ratings ?? []
+  const otRatings = ratings.filter(r => r.entityType === 'work_order').map(r => r.score)
+  const techRatings = ratings.filter(r => r.entityType === 'technician').map(r => r.score)
+  const blogPosts = db.blogPosts ?? []
+  const allComments = db.comments ?? []
+  const allAttachments = db.attachments ?? []
 
   return {
     utilizadoresAtivos: db.users.filter(u => u.active).length,
@@ -72,6 +86,12 @@ export function computeDashboardStats(db: DemoDatabase): DashboardStats {
     consumoPecas: otConcluidasList.reduce((s, w) => s + w.partsUsed.reduce((s2, p) => s2 + p.quantity, 0), 0),
     alertasAtivos: db.notifications.filter(n => !n.read).length,
     notificacoesPendentes: db.notifications.filter(n => !n.read).length,
+    avaliacaoMediaOTs: avg(otRatings),
+    avaliacaoMediaTecnicos: avg(techRatings),
+    totalComentarios: allComments.length,
+    totalAnexos: allAttachments.length,
+    postsBlogPublicados: blogPosts.filter(p => p.published).length,
+    totalViewsBlog: blogPosts.reduce((s, p) => s + p.views, 0),
   }
 }
 
@@ -90,16 +110,23 @@ export function computeLandingStats(db: DemoDatabase): LandingStats {
   const s = computeDashboardStats(db)
   const totalOt = db.workOrders.length || 1
   const otConcluidasPercent = (s.otConcluidas / totalOt) * 100
-  const avgRating = avg(db.testimonials.map(t => t.rating))
+
+  // Satisfação calculada a partir de avaliações explícitas (ratings) + testemunhos
+  const ratingsScores = (db.ratings ?? []).filter(r => r.entityType === 'work_order').map(r => r.score)
+  const testimonialScores = db.testimonials.map(t => t.rating)
+  const allSatisfactionScores = [...ratingsScores, ...testimonialScores]
+  const avgSatisfaction = avg(allSatisfactionScores)
+  const satisfacaoPercent = avgSatisfaction > 0 ? Math.round((avgSatisfaction / 5) * 100) : 96
+
   const rollingMonthAgo = new Date(Date.now() - 30 * 24 * 3_600_000)
   const resolvidosEsteMes = db.maintenanceRequests.filter(
-    r => r.status === 'concluido' && new Date(r.createdAt) >= rollingMonthAgo
+    r => r.status === 'concluido' && new Date(r.createdAt) >= rollingMonthAgo,
   ).length
 
   return {
     utilizadoresAtivos: formatCompact(db.users.length * 87), // simula base alargada de utilizadores finais das empresas clientes
     otConcluidasPercent: `${Math.min(99, Math.round(otConcluidasPercent))}%`,
-    satisfacaoClientes: `${Math.round((avgRating / 5) * 100)}%`,
+    satisfacaoClientes: `${satisfacaoPercent}%`,
     reducaoCustosPercent: `${Math.round(12 + (s.preventivasExecutadas / Math.max(1, db.preventivePlans.length)) * 20)}%`,
     tempoMedioResposta: `${s.tempoMedioRespostaHoras.toFixed(1)}h`,
     equipamentosMonitorizados: db.equipment.length,

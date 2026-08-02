@@ -318,6 +318,41 @@ export interface CalendarEvent {
   assignedTo: UUID[]
 }
 
+// ---- Módulos adicionais -------------------------------------------------------
+
+/**
+ * Artigo de blog com métricas de engagement calculadas a partir dos dados demo.
+ * Os campos dinâmicos (views, likes, commentCount) são recalculados no serviço.
+ */
+export interface BlogPost {
+  id: UUID
+  slug: string
+  title: string
+  category: string
+  excerpt: string
+  author: string
+  date: string
+  readTimeMin: number
+  published: boolean
+  views: number
+  coverGradient: string
+}
+
+/**
+ * Avaliação explícita de uma entidade por um utilizador.
+ * Complementa os likes (implícitos) com uma classificação numérica (1-5)
+ * e um comentário opcional.
+ */
+export interface Rating {
+  id: UUID
+  entityType: 'technician' | 'work_order' | 'supplier' | 'service'
+  entityId: UUID
+  authorId: UUID
+  score: number          // 1–5
+  comment?: string
+  createdAt: string
+}
+
 export interface DemoDatabase {
   users: User[]
   teams: Team[]
@@ -344,6 +379,8 @@ export interface DemoDatabase {
   attachments: Attachment[]
   activityLog: ActivityLogEntry[]
   calendarEvents: CalendarEvent[]
+  blogPosts: BlogPost[]
+  ratings: Rating[]
   generatedAt: string
   seed: number
 }

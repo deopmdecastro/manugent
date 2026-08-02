@@ -14,7 +14,8 @@ import { computeDashboardStats, computeLandingStats, DashboardStats, LandingStat
 // incrementar esta versão força todos os browsers a regenerar do zero em
 // vez de reutilizar um estado antigo (evita ficar preso a dados
 // parciais/corrompidos indefinidamente).
-const STORAGE_KEY = 'manugent_demo_db_v2'
+// v3: adicionados módulos blogPosts e ratings; volume de dados expandido.
+const STORAGE_KEY = 'manugent_demo_db_v3'
 const DEMO_MODE_KEY = 'manugent_demo_mode'
 
 // Coleções que nunca devem ficar vazias numa base de dados válida.
