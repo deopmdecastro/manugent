@@ -1,13 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLanguage } from '../../contexts/LanguageContext'
 import { useRealStats } from '../../hooks/useRealData'
-import { useLandingStats } from '../../data/demo'
 
-// Estatísticas calculadas a partir da API real (/api/stats).
-// Fallback para dados fictícios caso o servidor não esteja acessível.
+// Estatísticas calculadas exclusivamente a partir da API real (/api/stats).
+// Enquanto os dados carregam (ou se o pedido falhar), mostra zeros em vez de valores fictícios.
 function useStatMeta() {
   const realStats = useRealStats()
-  const demoLanding = useLandingStats()
 
   if (realStats) {
     // Valores reais: total de OTs, equipamentos ativos, % concluídas, uptime fixo de marketing
@@ -21,17 +19,12 @@ function useStatMeta() {
     ]
   }
 
-  // Fallback: dados fictícios
   return [
-    { value: parseCompact(demoLanding.utilizadoresAtivos), prefix: '+', suffix: '' },
-    { value: demoLanding.equipamentosMonitorizados, prefix: '+', suffix: '' },
-    { value: parseInt(demoLanding.otConcluidasPercent, 10), prefix: '+', suffix: '%' },
-    { value: parseInt(demoLanding.reducaoCustosPercent, 10), prefix: '-', suffix: '%' },
+    { value: 0, prefix: '+', suffix: '' },
+    { value: 0, prefix: '+', suffix: '' },
+    { value: 0, prefix: '+', suffix: '%' },
+    { value: 0, prefix: '-', suffix: '%' },
   ]
-}
-
-function parseCompact(s: string) {
-  return Number(s.replace(/[^\d]/g, '')) || 0
 }
 
 // Portuguese/European thousands grouping: 2500 -> "2.500", 15000 -> "15.000"

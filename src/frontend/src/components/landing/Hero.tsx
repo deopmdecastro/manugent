@@ -2,7 +2,6 @@ import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { useLanguage } from '../../contexts/LanguageContext'
 import { useRealStats } from '../../hooks/useRealData'
-import { useDashboardStats, useLandingStats } from '../../data/demo'
 
 export function Hero() {
   const { t } = useLanguage()
@@ -96,29 +95,20 @@ function HeroVisual() {
   const { t } = useLanguage()
   const cards = t.hero.cards
 
-  // Real data from API
+  // Dados reais da API (/api/stats). Enquanto carrega (primeiro render), mostra 0.
   const realStats = useRealStats()
 
-  // Fallback: demo data
-  const demoKpi = useDashboardStats()
-  const demoLanding = useLandingStats()
+  const otAbertas = realStats ? realStats.workOrders.open + realStats.workOrders.inProgress : 0
 
-  // Derived values — prefer real data, fallback to demo
-  const otAbertas = realStats
-    ? realStats.workOrders.open + realStats.workOrders.inProgress
-    : demoKpi.otAbertas + demoKpi.otEmExecucao
-
-  const equipTotal = realStats ? realStats.equipment.total : demoLanding.equipamentosMonitorizados
+  const equipTotal = realStats ? realStats.equipment.total : 0
 
   const maintenanceHealthPercent = realStats
     ? Math.max(80, Math.min(99, Math.round(100 - (realStats.workOrders.urgent / Math.max(1, realStats.workOrders.total)) * 100)))
-    : Math.round(100 - (demoKpi.equipamentosAvariados / Math.max(1, demoKpi.edificiosGeridos * 8)) * 100)
+    : 80
 
-  const inventoryUnits = realStats
-    ? realStats.equipment.active + 900
-    : demoKpi.consumoPecas + 900
+  const inventoryUnits = realStats ? realStats.equipment.active + 900 : 900
 
-  const reducaoCustos = realStats ? '32%' : demoLanding.reducaoCustosPercent
+  const reducaoCustos = '32%'
 
   return (
     <div className="l-hero-scene">
