@@ -59,6 +59,36 @@ manugent/
 └── package.json
 ```
 
+### 🧪 Dados Fictícios (Demo Mode)
+
+`src/frontend/src/data/demo/` contém uma base de dados fictícia completa e
+relacional (~7.000 registos) que simula um ambiente de produção real, cobrindo
+utilizadores, empresas, clientes, edifícios, equipamentos, ordens de trabalho,
+pedidos de manutenção, planos preventivos, técnicos, equipas, fornecedores,
+inventário/peças, documentos/pastas, contratos, notificações, auditorias,
+relatórios, checklists, comentários, testemunhos, anexos, histórico de
+atividades e calendário — todos interligados por IDs reais (cliente → edifício
+→ equipamento → OT → comentários/anexos).
+
+```ts
+import { demoDataService, useDashboardStats, useLandingStats } from './data/demo'
+
+const db = demoDataService.getDatabase()
+demoDataService.create('workOrders', novaOT)
+demoDataService.update('workOrders', id, { status: 'concluida' })
+demoDataService.delete('notifications', id)
+```
+
+- **KPIs e estatísticas** (`stats.ts`) são sempre calculados a partir dos dados
+  atuais — nunca valores fixos — por isso qualquer criação/edição/remoção
+  recalcula automaticamente dashboards e a landing page.
+- **Persistência**: os dados vivem em `localStorage`, com pub/sub (`useDemoDatabase`,
+  `useDashboardStats`, `useLandingStats`) para que a UI reaja em tempo real.
+- **Modo demo** pode ser ligado/desligado sem afetar o backend real via
+  `demoDataService.setDemoMode(true | false)`.
+- A `StatsBar` e os *floating cards* do `Hero` da landing page já consomem
+  estes dados dinamicamente (`src/frontend/src/components/landing/`).
+
 ### Stack Tecnológica
 
 | Camada | Tecnologia | Porquê |
