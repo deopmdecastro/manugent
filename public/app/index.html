@@ -9709,9 +9709,9 @@ function mergeBackendOTs(items) {
 }
 function syncBackendWorkOrders() {
   return Promise.all([
-    apiRequest('/api/work-orders?tab=agendadas'),
-    apiRequest('/api/work-orders?tab=pedidos'),
-    apiRequest('/api/notifications?unread=true'),
+    apiRequest('/api/work-orders?tab=agendadas').catch(function() { return null; }),
+    apiRequest('/api/work-orders?tab=pedidos').catch(function() { return null; }),
+    apiRequest('/api/notifications?unread=true').catch(function() { return null; }),
     apiRequest('/api/stats').catch(function() { return null; }),
     apiRequest('/api/clients').catch(function() { return null; }),
     apiRequest('/api/equipment').catch(function() { return null; }),
@@ -9719,10 +9719,10 @@ function syncBackendWorkOrders() {
     apiRequest('/api/teams').catch(function() { return null; })
   ]).then(function(results) {
     APP.backendOnline = true;
-    mergeBackendOTs(results[0].workOrders || []);
-    mergeBackendOTs(results[1].workOrders || []);
+    if (results[0] && results[0].workOrders) mergeBackendOTs(results[0].workOrders);
+    if (results[1] && results[1].workOrders) mergeBackendOTs(results[1].workOrders);
     // Update notification badge
-    var unreadNotifs = (results[2].notifications || []);
+    var unreadNotifs = (results[2] && results[2].notifications) || [];
     var badge = document.getElementById('ot-count-badge');
     var notifCount = unreadNotifs.length;
     if (badge) {
@@ -9767,7 +9767,7 @@ function syncBackendWorkOrders() {
       APP.teams = results[7].teams;
     }
     saveData(); updateDashboard(); renderOTs(); renderEquipment(); renderClients(); renderManagedUsers(); renderTechnicians();
-    renderSystemStatusBar({ backendDetail: 'Online — ' + ((results[0].workOrders || []).length + (results[1].workOrders || []).length) + ' OTs sincronizadas' });
+    renderSystemStatusBar({ backendDetail: 'Online — ' + (((results[0] && results[0].workOrders) || []).length + ((results[1] && results[1].workOrders) || []).length) + ' OTs sincronizadas' });
   }).catch(function() {
     APP.backendOnline = false;
     renderSystemStatusBar();
