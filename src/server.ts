@@ -607,7 +607,7 @@ app.post('/api/auth/login', async (c) => {
     loginAttempts.delete(rateLimitKey)
 
     const token = jwt.sign(
-      { id: userData.id, email: userData.email, role: userData.role, empresa_id: userData.empresa_id || null },
+      { id: userData.id, email: userData.email, role: userData.role, empresa_id: userData.empresa_id || null, permissions: userData.permissions || [] },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN } as jwt.SignOptions
     )
@@ -618,7 +618,7 @@ app.post('/api/auth/login', async (c) => {
   }
 })
 
-type AuthUser = { id: string; email: string; role: string; empresa_id?: string | null }
+type AuthUser = { id: string; email: string; role: string; empresa_id?: string | null; permissions?: string[] }
 
 function verifyToken(token: string): AuthUser | null {
   try {
@@ -644,6 +644,30 @@ function requireSuperAdminUser(c: Context): SuperAdminAuthResult {
   if (!user) return { ok: false, status: 401, message: 'Autenticação necessária.' }
   if (user.role !== 'superadmin') return { ok: false, status: 403, message: 'Acesso restrito a SuperAdmin.' }
   return { ok: true, user }
+}
+
+type ScopedAuthResult =
+  | { ok: true; user: AuthUser; empresaId: string | null }
+  | { ok: false; status: 401 | 403; message: string }
+
+function requireEmpresaAdminOrHigher(c: Context): ScopedAuthResult {
+  const user = requireAuth(c)
+  if (!user) return { ok: false, status: 401, message: 'Autenticação necessária.' }
+  if (user.role !== 'superadmin' && user.role !== 'admin') {
+    return { ok: false, status: 403, message: 'Acesso restrito a Admin ou SuperAdmin.' }
+  }
+  const empresaId = user.role === 'superadmin' ? null : (user.empresa_id ?? null)
+  return { ok: true, user, empresaId }
+}
+
+function requireGestorOrHigher(c: Context): ScopedAuthResult {
+  const user = requireAuth(c)
+  if (!user) return { ok: false, status: 401, message: 'Autenticação necessária.' }
+  if (!['superadmin', 'admin', 'gestor'].includes(user.role)) {
+    return { ok: false, status: 403, message: 'Acesso restrito a Gestor, Admin ou SuperAdmin.' }
+  }
+  const empresaId = user.role === 'superadmin' ? null : (user.empresa_id ?? null)
+  return { ok: true, user, empresaId }
 }
 
 app.post('/api/auth/validate', (c) => {
@@ -971,14 +995,20 @@ app.post('/api/clients', async (c) => {
     const db = requireDb()
     const body = await c.req.json()
     if (!body.name) return jsonError(c, 'name é obrigatório')
+    if (!body.empresaId) return jsonError(c, 'empresaId é obrigatório')
 
     const { data, error } = await db.from('clients').insert({
       name: body.name,
       email: body.email ?? null,
       phone: body.phone ?? null,
+      tax_id: body.taxId ?? null,
+      sector: body.sector ?? null,
+      empresa_id: body.empresaId,
     }).select().single()
 
     if (error) throw error
+    // Auto-create folder structure for this client
+    await db.rpc('create_client_folder_structure', { p_client_id: data.id, p_empresa_id: body.empresaId }).then(() => {}, () => {})
     return c.json({ client: data }, 201)
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not create client')
@@ -1409,7 +1439,7 @@ app.get('/api/empresas', async (c) => {
 app.post('/api/empresas', async (c) => {
   try {
     const db = requireDb()
-    const body = await c.req.json() as { name?: string; tax_id?: string; email?: string; phone?: string; address?: string; city?: string; active?: boolean }
+    const body = await c.req.json() as { name?: string; tax_id?: string; email?: string; phone?: string; address?: string; city?: string; domain?: string; active?: boolean }
     if (!body.name || !body.name.trim()) return jsonError(c, 'Nome da empresa é obrigatório.', 400)
     const { data, error } = await db.from('empresas').insert({
       name: body.name.trim(),
@@ -1418,9 +1448,12 @@ app.post('/api/empresas', async (c) => {
       phone: body.phone || null,
       address: body.address || null,
       city: body.city || null,
+      domain: body.domain || null,
       active: body.active !== false,
     }).select().single()
     if (error) throw error
+    // Auto-create folder structure for this empresa
+    await db.rpc('create_empresa_folder_structure', { p_empresa_id: data.id }).then(() => {}, () => {})
     return c.json({ empresa: data }, 201)
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not create empresa')
@@ -1432,7 +1465,7 @@ app.put('/api/empresas/:id', async (c) => {
     const db = requireDb()
     const body = await c.req.json() as Record<string, unknown>
     const update: Record<string, unknown> = {}
-    for (const key of ['name','tax_id','email','phone','address','city','active']) {
+    for (const key of ['name','tax_id','email','phone','address','city','domain','active']) {
       if (key in body) update[key] = body[key]
     }
     const { data, error } = await db.from('empresas').update(update).eq('id', c.req.param('id')).select().single()
@@ -1458,12 +1491,105 @@ app.delete('/api/empresas/:id', async (c) => {
 app.get('/api/empresas/:id/collaborators', async (c) => {
   try {
     const db = requireDb()
-    const { data, error } = await db.rpc('get_collaborators_with_empresa')
+    const { data, error } = await db.rpc('get_collaborators_by_empresa', { p_empresa_id: c.req.param('id') })
     if (error) throw error
-    const filtered = (data || []).filter((row: Record<string, unknown>) => row.empresa_id === c.req.param('id'))
-    return c.json({ collaborators: filtered })
+    return c.json({ collaborators: data || [] })
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not fetch empresa collaborators')
+  }
+})
+
+// ── Routes: Multi-tenant scoped data ──────────────────────────────────────────
+
+app.get('/api/empresas/:id/clients', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_clients_by_empresa', { p_empresa_id: c.req.param('id') })
+    if (error) throw error
+    return c.json({ clients: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch empresa clients')
+  }
+})
+
+app.get('/api/empresas/:id/folders', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_empresa_folder_tree', { p_empresa_id: c.req.param('id') })
+    if (error) throw error
+    return c.json({ folders: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch empresa folder tree')
+  }
+})
+
+app.get('/api/empresas/:id/documents', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.from('documents')
+      .select('*')
+      .eq('empresa_id', c.req.param('id'))
+      .order('uploaded_at', { ascending: false })
+    if (error) throw error
+    return c.json({ documents: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch empresa documents')
+  }
+})
+
+app.post('/api/empresas/:id/folders', async (c) => {
+  const auth = requireGestorOrHigher(c)
+  if (!auth.ok) return c.json({ error: auth.message }, auth.status)
+
+  try {
+    const db = requireDb()
+    const body = await c.req.json() as { name?: string; parentId?: string; folderType?: string }
+    if (!body.name?.trim()) return jsonError(c, 'name é obrigatório', 400)
+
+    const { data, error } = await db.from('folders').insert({
+      name: body.name.trim(),
+      parent_id: body.parentId ?? null,
+      empresa_id: c.req.param('id'),
+      folder_type: body.folderType ?? 'generic',
+      owner_id: auth.user.id,
+    }).select().single()
+    if (error) throw error
+    return c.json({ folder: data }, 201)
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not create folder')
+  }
+})
+
+// ── Routes: Clients — scoped to empresa ───────────────────────────────────────
+
+app.get('/api/clients/:id/folders', async (c) => {
+  try {
+    const db = requireDb()
+    const { data: client } = await db.from('clients').select('empresa_id').eq('id', c.req.param('id')).maybeSingle() as { data: { empresa_id: string | null } | null }
+    if (!client) return jsonError(c, 'Cliente não encontrado.', 404)
+
+    const { data, error } = await db.from('folders')
+      .select('*')
+      .or(`client_id.eq.${c.req.param('id')},and(empresa_id.eq.${client.empresa_id ?? ''},folder_type.eq.clientes)`)
+      .order('name', { ascending: true })
+    if (error) throw error
+    return c.json({ folders: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch client folders')
+  }
+})
+
+app.get('/api/clients/:id/documents', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.from('documents')
+      .select('*')
+      .eq('client_id', c.req.param('id'))
+      .order('uploaded_at', { ascending: false })
+    if (error) throw error
+    return c.json({ documents: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch client documents')
   }
 })
 

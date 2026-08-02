@@ -1,6 +1,6 @@
 import { useState, useCallback, useSyncExternalStore } from 'react'
 
-export type Role = 'superadmin' | 'admin' | 'gestor' | 'tecnico' | 'cliente'
+export type Role = 'superadmin' | 'admin' | 'gestor' | 'tecnico' | 'engenheiro' | 'financeiro' | 'supervisor' | 'cliente'
 export type Permission = 
   | 'dashboard:view' | 'ots:view' | 'ots:create' | 'ots:edit' | 'ots:delete'
   | 'equipment:view' | 'equipment:create' | 'equipment:edit' | 'equipment:delete'
@@ -18,6 +18,8 @@ export interface User {
   avatar?: string
   teamId?: string
   teamName?: string
+  empresaId?: string | null
+  permissions?: string[]
 }
 
 const AUTH_KEY = 'manugent.user'
@@ -140,6 +142,27 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'files:view', 'ai:use', 'calendar:view',
     'time:track',
   ],
+  engenheiro: [
+    'dashboard:view', 'ots:view', 'ots:create', 'ots:edit',
+    'equipment:view', 'equipment:edit',
+    'clients:view',
+    'files:view', 'ai:use', 'calendar:view',
+    'reports:view', 'time:track',
+  ],
+  financeiro: [
+    'dashboard:view', 'ots:view',
+    'clients:view',
+    'reports:view', 'quotes:approve',
+    'files:view',
+  ],
+  supervisor: [
+    'dashboard:view', 'ots:view', 'ots:create', 'ots:edit',
+    'equipment:view', 'equipment:edit',
+    'clients:view', 'clients:edit',
+    'technicians:view', 'projects:view',
+    'files:view', 'ai:use', 'calendar:view',
+    'settings:view', 'reports:view', 'time:track',
+  ],
   cliente: [
     'dashboard:view', 'ots:view',
     'equipment:view',
@@ -163,7 +186,7 @@ export function useAuth() {
       if (!res.ok) {
         throw new Error(data?.error || 'Credenciais inválidas.')
       }
-      const raw = data.user as { id: string; name: string; email: string; role: Role; team_id?: string; team_name?: string }
+      const raw = data.user as { id: string; name: string; email: string; role: Role; team_id?: string; team_name?: string; empresa_id?: string | null; permissions?: string[] }
       const loggedUser: User = {
         id: raw.id,
         name: raw.name,
@@ -171,6 +194,8 @@ export function useAuth() {
         role: raw.role,
         teamId: raw.team_id,
         teamName: raw.team_name,
+        empresaId: raw.empresa_id ?? null,
+        permissions: Array.isArray(raw.permissions) ? raw.permissions : [],
       }
       persist(loggedUser, data.token as string | undefined)
       return loggedUser

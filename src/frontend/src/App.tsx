@@ -11,6 +11,8 @@ import { AboutPage } from './pages/static/AboutPage'
 import { FeaturesPage } from './pages/static/FeaturesPage'
 import { AiDemoPage } from './pages/AiDemoPage'
 import { PricingPage } from './pages/PricingPage'
+import { SuperAdminPage } from './pages/SuperAdminPage'
+import { EmpresaAdminPage } from './pages/EmpresaAdminPage'
 import { BlogPage } from './pages/static/BlogPage'
 import { BlogPostPage } from './pages/static/BlogPostPage'
 import { CareersPage } from './pages/static/CareersPage'
@@ -56,6 +58,8 @@ export function App() {
             <Route path="/termos" element={<TermsPage />} />
             <Route path="/gdpr" element={<GdprPage />} />
             <Route path="/cookies" element={<CookiesPage />} />
+            <Route path="/superadmin" element={<SuperAdminPage />} />
+            <Route path="/admin-empresa" element={<EmpresaAdminPage />} />
             <Route path="/react/index.html" element={<Navigate to="/landing" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

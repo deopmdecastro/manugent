@@ -45,8 +45,11 @@ export function LoginPage() {
       return
     }
     try {
-      await login(email, password)
-      window.location.href = redirectTo
+      const user = await login(email, password)
+      const role = user?.role
+      if (role === 'superadmin') window.location.href = '/superadmin'
+      else if (role === 'admin') window.location.href = '/admin-empresa'
+      else window.location.href = redirectTo
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao iniciar sessão. Tenta novamente.')
     }
@@ -128,7 +131,7 @@ export function LoginPage() {
                   role="tab"
                   aria-selected={activeRole === r.key}
                   className={`auth-role-pill ${activeRole === r.key ? 'is-active' : ''}`}
-                  onClick={() => { setEmail(r.email); setPassword('Demo@2026'); setRedirectTo(r.key === 'superadmin' ? '/superadmin' : '/app/') }}
+                  onClick={() => { setEmail(r.email); setPassword('Demo@2026'); setRedirectTo(r.key === 'superadmin' ? '/superadmin' : r.key === 'admin' ? '/admin-empresa' : '/app/') }}
                 >
                   <i className={`fas ${r.icon}`} /> {r.label}
                 </button>

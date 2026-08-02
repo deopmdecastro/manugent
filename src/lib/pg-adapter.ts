@@ -27,7 +27,7 @@ interface OrderOpts {
 
 // ── Builder ───────────────────────────────────────────────────────────────────
 
-type Op = 'select' | 'insert' | 'update'
+type Op = 'select' | 'insert' | 'update' | 'delete'
 
 class QueryBuilder<T = SupaRow> {
   private pool: Pool
@@ -36,6 +36,7 @@ class QueryBuilder<T = SupaRow> {
   private cols = '*'
   private mutateData: SupaRow | null = null
   private conds: Array<{ col: string; eq: boolean; val: unknown }> = []
+  private orConds: string | null = null
   private orderCol: string | null = null
   private orderAsc = true
   private limitN: number | null = null
@@ -75,6 +76,21 @@ class QueryBuilder<T = SupaRow> {
 
   is(col: string, val: null) {
     this.conds.push({ col, eq: false, val })
+    return this
+  }
+
+  or(filter: string) {
+    this.orConds = filter
+    return this
+  }
+
+  maybeSingle() {
+    this.isSingle = true
+    return this
+  }
+
+  delete() {
+    this.op = 'delete'
     return this
   }
 
@@ -134,13 +150,24 @@ class QueryBuilder<T = SupaRow> {
       if (this.op === 'update' && this.mutateData) {
         const keys = Object.keys(this.mutateData)
         const setVals = Object.values(this.mutateData)
-        const sets = keys.map((k, i) => `${k} = $${i + 1}`)
+        const sets = keys.map((k, i) => `${k} = ${i + 1}`)
         const allVals: unknown[] = [...setVals]
         let sql = `UPDATE ${this.table} SET ${sets.join(', ')}`
         sql += this._buildWhere(allVals)
         if (this.doReturn) sql += ' RETURNING *'
 
         const res = await client.query(sql, allVals)
+        if (!this.doReturn) return { data: null, error: null }
+        if (this.isSingle) return { data: (res.rows[0] ?? null) as T, error: null }
+        return { data: res.rows as T[], error: null }
+      }
+
+      if (this.op === 'delete') {
+        let sql = `DELETE FROM ${this.table}`
+        const vals: unknown[] = []
+        sql += this._buildWhere(vals)
+        if (this.doReturn) sql += ' RETURNING *'
+        const res = await client.query(sql, vals)
         if (!this.doReturn) return { data: null, error: null }
         if (this.isSingle) return { data: (res.rows[0] ?? null) as T, error: null }
         return { data: res.rows as T[], error: null }
@@ -155,13 +182,25 @@ class QueryBuilder<T = SupaRow> {
   }
 
   private _buildWhere(vals: unknown[]): string {
-    if (this.conds.length === 0) return ''
-    const parts = this.conds.map((c) => {
-      if (!c.eq) return `${c.col} IS NULL`
-      vals.push(c.val)
-      return `${c.col} = $${vals.length}`
-    })
-    return ` WHERE ${parts.join(' AND ')}`
+    const parts: string[] = []
+    if (this.conds.length > 0) {
+      for (const c of this.conds) {
+        if (!c.eq) { parts.push(`${c.col} IS NULL`); continue }
+        vals.push(c.val)
+        parts.push(`${c.col} = ${vals.length}`)
+      }
+    }
+    if (this.orConds) {
+      // Translate Supabase .or() filter syntax: "col.eq.val,col.eq.val2"
+      const orParts = this.orConds.split(',').map(p => {
+        const [col, op, val] = p.split('.')
+        if (op === 'eq') { vals.push(val); return `${col} = ${vals.length}` }
+        return p
+      })
+      if (parts.length > 0) parts.push(`(${orParts.join(' OR ')})`)
+      else parts.push(orParts.join(' OR '))
+    }
+    return parts.length > 0 ? ` WHERE ${parts.join(' AND ')}` : ''
   }
 
   /** Handles `select('*, client:clients(name), equipment:equipment(name), team:teams(name)')` */
