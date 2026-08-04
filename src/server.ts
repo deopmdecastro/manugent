@@ -1399,6 +1399,67 @@ app.post('/api/ratings', async (c) => {
   }
 })
 
+// ── Routes: Incidents ──────────────────────────────────────────────────────────
+
+app.get('/api/incidents', async (c) => {
+  try {
+    const db = requireDb()
+    const buildingId = c.req.query('buildingId')
+    let query = db.from('incidents').select('*').order('occurred_at', { ascending: false })
+    if (buildingId) query = query.eq('building_id', buildingId)
+    const { data, error } = await query
+    if (error) throw error
+    return c.json({ incidents: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch incidents')
+  }
+})
+
+// ── Routes: Knowledge Articles ─────────────────────────────────────────────────
+
+app.get('/api/knowledge', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.from('knowledge_articles')
+      .select('*, category:knowledge_categories(name,slug)')
+      .order('created_at', { ascending: false })
+    if (error) throw error
+    return c.json({ articles: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch knowledge articles')
+  }
+})
+
+// ── Routes: Purchase Orders ────────────────────────────────────────────────────
+
+app.get('/api/purchase-orders', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.from('purchase_orders')
+      .select('*, supplier:suppliers(name), items:purchase_order_items(part_id,quantity,unit_price)')
+      .order('created_at', { ascending: false })
+    if (error) throw error
+    return c.json({ purchaseOrders: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch purchase orders')
+  }
+})
+
+// ── Routes: Quotes ─────────────────────────────────────────────────────────────
+
+app.get('/api/quotes', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.from('quotes')
+      .select('*, items:quote_items(id,type,description,quantity,unit_price)')
+      .order('created_at', { ascending: false })
+    if (error) throw error
+    return c.json({ quotes: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch quotes')
+  }
+})
+
 // ── Routes: Teams & Users ─────────────────────────────────────────────────────
 
 app.get('/api/teams', async (c) => {
