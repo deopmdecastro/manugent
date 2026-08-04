@@ -9834,7 +9834,9 @@ function syncBackendWorkOrders() {
     apiRequest('/api/teams').catch(function() { return null; }),
     apiRequest('/api/buildings').catch(function() { return null; }),
     apiRequest('/api/technicians').catch(function() { return null; }),
-    apiRequest('/api/checklists').catch(function() { return null; })
+    apiRequest('/api/checklists').catch(function() { return null; }),
+    apiRequest('/api/suppliers').catch(function() { return null; }),
+    apiRequest('/api/contracts').catch(function() { return null; })
   ]).then(function(results) {
     APP.backendOnline = true;
     if (results[0] && results[0].workOrders) mergeBackendOTs(results[0].workOrders);
@@ -9922,6 +9924,21 @@ function syncBackendWorkOrders() {
         };
       });
       renderChecklists();
+    }
+    // Fornecedores e contratos agora vêm sempre do backend (fonte da verdade).
+    if (results[11] && results[11].suppliers) {
+      APP.suppliers = results[11].suppliers.map(function(s) {
+        return { id: s.id, name: s.name, taxId: s.tax_id, category: s.category, email: s.email, phone: s.phone, rating: s.rating, approved: !!s.active, createdAt: s.created_at };
+      });
+    }
+    if (results[12] && results[12].contracts) {
+      APP.contracts = results[12].contracts.map(function(ct) {
+        return {
+          id: ct.id, client: ct.client_name || 'Cliente', clientId: ct.client_id, type: ct.type,
+          status: ct.status, startDate: ct.start_date, renewal: ct.end_date || '—',
+          hoursIncluded: ct.sla_hours, sla: ct.sla_hours + 'h SLA', monthlyValue: ct.monthly_value, createdAt: ct.created_at
+        };
+      });
     }
     saveData(); updateDashboard(); renderOTs(); renderEquipment(); renderClients(); renderManagedUsers(); renderTechnicians();
     renderSystemStatusBar({ backendDetail: 'Online — ' + (((results[0] && results[0].workOrders) || []).length + ((results[1] && results[1].workOrders) || []).length) + ' OTs sincronizadas' });

@@ -1339,7 +1339,15 @@ app.get('/api/contracts', async (c) => {
     if (clientId) query = query.eq('client_id', clientId)
     const { data, error } = await query
     if (error) throw error
-    return c.json({ contracts: data || [] })
+    const rows = (data || []) as Array<Record<string, unknown>>
+    const clientIds = [...new Set(rows.map((r) => r.client_id).filter(Boolean))] as string[]
+    let clientMap: Record<string, string> = {}
+    if (clientIds.length) {
+      const { data: clientRows } = await db.from('clients').select('id,name')
+      clientMap = Object.fromEntries(((clientRows || []) as Array<Record<string, unknown>>).map((cl) => [cl.id as string, cl.name as string]))
+    }
+    const contracts = rows.map((r) => ({ ...r, client_name: clientMap[r.client_id as string] || null }))
+    return c.json({ contracts })
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not fetch contracts')
   }
