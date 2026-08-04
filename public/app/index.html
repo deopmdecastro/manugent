@@ -9833,7 +9833,8 @@ function syncBackendWorkOrders() {
     apiRequest('/api/users').catch(function() { return null; }),
     apiRequest('/api/teams').catch(function() { return null; }),
     apiRequest('/api/buildings').catch(function() { return null; }),
-    apiRequest('/api/technicians').catch(function() { return null; })
+    apiRequest('/api/technicians').catch(function() { return null; }),
+    apiRequest('/api/checklists').catch(function() { return null; })
   ]).then(function(results) {
     APP.backendOnline = true;
     if (results[0] && results[0].workOrders) mergeBackendOTs(results[0].workOrders);
@@ -9908,6 +9909,19 @@ function syncBackendWorkOrders() {
         };
       });
       renderTechnicians();
+    }
+    // Checklists agora vêm sempre do backend (fonte da verdade).
+    if (results[10] && results[10].checklists) {
+      APP.checklists = results[10].checklists.map(function(cl) {
+        var items = Array.isArray(cl.items) ? cl.items : [];
+        return {
+          id: cl.id, title: cl.name, description: cl.description || '',
+          frequency: cl.frequency || 'Quando necessário', category: cl.category || 'Operação',
+          equipmentId: cl.equipment_id || '', equipmentName: cl.equipment_name || '',
+          tasks: items, createdAt: cl.created_at
+        };
+      });
+      renderChecklists();
     }
     saveData(); updateDashboard(); renderOTs(); renderEquipment(); renderClients(); renderManagedUsers(); renderTechnicians();
     renderSystemStatusBar({ backendDetail: 'Online — ' + (((results[0] && results[0].workOrders) || []).length + ((results[1] && results[1].workOrders) || []).length) + ' OTs sincronizadas' });
@@ -13272,26 +13286,33 @@ function openNewChecklistModal() {
 function saveChecklist() {
   if (!requirePermission('create', 'checklists', 'criar checklist')) return;
   var title = document.getElementById('checklist-title').value.trim();
-  var tasks = document.getElementById('checklist-tasks').value.split('\n').map(function(t) { return t.trim(); }).filter(Boolean);
+  var tasksRaw = document.getElementById('checklist-tasks').value.split('\n').map(function(t) { return t.trim(); }).filter(Boolean);
   if (!title) { showToast('Indique o título da checklist.'); return; }
-  if (!tasks.length) { showToast('Adicione pelo menos uma tarefa.'); return; }
+  if (!tasksRaw.length) { showToast('Adicione pelo menos uma tarefa.'); return; }
   var equipId = document.getElementById('checklist-equipment').value;
   var equip = (APP.equipment || []).find(function(e) { return e.id === equipId; }) || null;
-  APP.checklists = APP.checklists || [];
-  var checklist = {
-    id: generateId('CHK'),
+  var payload = {
     title: title,
     description: document.getElementById('checklist-desc').value.trim() || 'Checklist criada manualmente.',
     frequency: document.getElementById('checklist-frequency').value,
     category: document.getElementById('checklist-category').value,
-    equipmentId: equip ? equip.id : '',
-    equipmentName: equip ? equip.name : '',
-    tasks: tasks.map(function(name) { return { name: name, section: equip ? equip.name : 'Geral', help: 'Executar e registar evidência quando necessário.', done: false }; }),
-    createdAt: new Date().toISOString()
+    equipmentId: equip ? equip.id : null,
+    tasks: tasksRaw.map(function(name) { return { name: name, section: equip ? equip.name : 'Geral', help: 'Executar e registar evidência quando necessário.', done: false }; })
   };
-  APP.checklists.push(checklist);
-  addNotification({ key:'checklist-created-' + checklist.id, type:'checklist', title:'Nova checklist criada', body: checklist.title + ' · ' + checklist.frequency, targetType:'checklist', targetId:checklist.id });
-  saveData(); closeModal('modal-new-checklist'); renderChecklists(); showToast('Checklist criada.');
+  apiRequest('/api/checklists', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).then(function(result) {
+    var cl = result.checklist;
+    var local = {
+      id: cl.id, title: cl.name, description: cl.description || '', frequency: cl.frequency || '',
+      category: cl.category || '', equipmentId: cl.equipment_id || '', equipmentName: equip ? equip.name : '',
+      tasks: cl.items || [], createdAt: cl.created_at
+    };
+    APP.checklists = APP.checklists || [];
+    APP.checklists.push(local);
+    addNotification({ key:'checklist-created-' + cl.id, type:'checklist', title:'Nova checklist criada', body: local.title + ' · ' + local.frequency, targetType:'checklist', targetId:cl.id });
+    saveData(); closeModal('modal-new-checklist'); renderChecklists(); showToast('Checklist criada.');
+  }).catch(function(error) {
+    showToast('Não foi possível criar a checklist no servidor: ' + (error.message || 'erro desconhecido'), 'error');
+  });
 }
 function openChecklistDetail(type) {
   var cl = getAllChecklists().find(function(item) { return item.id === type; }) || getRondaDiaria();

@@ -1230,9 +1230,73 @@ app.get('/api/checklists', async (c) => {
     const db = requireDb()
     const { data, error } = await db.from('checklists').select('*').order('name', { ascending: true })
     if (error) throw error
-    return c.json({ checklists: data || [] })
+    const rows = (data || []) as Array<Record<string, unknown>>
+    const equipIds = [...new Set(rows.map((r) => r.equipment_id).filter(Boolean))] as string[]
+    let equipMap: Record<string, string> = {}
+    if (equipIds.length) {
+      const { data: equipRows } = await db.from('equipment').select('id,name')
+      equipMap = Object.fromEntries(((equipRows || []) as Array<Record<string, unknown>>).map((e) => [e.id as string, e.name as string]))
+    }
+    const checklists = rows.map((r) => ({ ...r, equipment_name: r.equipment_id ? equipMap[r.equipment_id as string] || null : null }))
+    return c.json({ checklists })
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not fetch checklists')
+  }
+})
+
+app.post('/api/checklists', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json()
+    if (!body.title && !body.name) return jsonError(c, 'title é obrigatório')
+    const { data, error } = await db.from('checklists').insert({
+      name: body.title ?? body.name,
+      description: body.description ?? null,
+      frequency: body.frequency ?? null,
+      category: body.category ?? null,
+      equipment_id: body.equipmentId ?? null,
+      items: body.tasks ?? body.items ?? [],
+      equipment_category: body.equipmentCategory ?? null,
+    }).select().single()
+    if (error) throw error
+    return c.json({ checklist: data }, 201)
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not create checklist')
+  }
+})
+
+app.put('/api/checklists/:id', async (c) => {
+  try {
+    const db = requireDb()
+    const id = c.req.param('id')
+    const body = await c.req.json()
+    const patch: Record<string, unknown> = {}
+    if (body.title !== undefined) patch.name = body.title
+    if (body.name !== undefined) patch.name = body.name
+    if (body.description !== undefined) patch.description = body.description
+    if (body.frequency !== undefined) patch.frequency = body.frequency
+    if (body.category !== undefined) patch.category = body.category
+    if (body.equipmentId !== undefined) patch.equipment_id = body.equipmentId
+    if (body.tasks !== undefined) patch.items = body.tasks
+    if (body.items !== undefined) patch.items = body.items
+    const { data, error } = await db.from('checklists').update(patch).eq('id', id).select().single()
+    if (error) throw error
+    if (!data) return jsonError(c, 'Checklist não encontrada', 404)
+    return c.json({ checklist: data })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not update checklist')
+  }
+})
+
+app.delete('/api/checklists/:id', async (c) => {
+  try {
+    const db = requireDb()
+    const id = c.req.param('id')
+    const { error } = await db.from('checklists').delete().eq('id', id)
+    if (error) throw error
+    return c.json({ success: true })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not delete checklist')
   }
 })
 
