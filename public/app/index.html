@@ -9822,6 +9822,78 @@ function mergeBackendOTs(items) {
     else APP.ots.push(mapped);
   });
 }
+function mapBackendIncident(inc) {
+  var priorityMap = { critica: 'Crítica', alta: 'Alta', media: 'Média', baixa: 'Baixa' };
+  var statusMap = { aberto: 'Aberto', em_analise: 'Em Análise', em_resolucao: 'Em Resolução', resolvido: 'Resolvido', fechado: 'Fechado' };
+  var photos = Array.isArray(inc.photos) ? inc.photos : (function() { try { return JSON.parse(inc.photos || '[]'); } catch (e) { return []; } })();
+  var equip = (APP.equipment || []).find(function(e) { return e.id === inc.equipment_id; });
+  return {
+    id: inc.id,
+    description: inc.title || inc.description || 'Incidente',
+    equipmentName: equip ? equip.name : (inc.equipment_id || '—'),
+    severity: priorityMap[inc.priority] || inc.priority || 'Média',
+    status: statusMap[inc.status] || inc.status || 'Aberto',
+    media: photos.length ? photos[0] : '',
+    mediaType: photos.length ? 'image' : '',
+    mediaName: photos.length ? 'Anexo do incidente' : '',
+    createdAt: inc.occurred_at || inc.created_at
+  };
+}
+function mapBackendKnowledge(article) {
+  var typeMap = {
+    procedimento: 'Procedimento', manual: 'Manual', guia_tecnico: 'Guia Técnico', faq: 'FAQ',
+    boas_praticas: 'Boas Práticas', norma: 'Norma', checklist: 'Checklist', tutorial: 'Tutorial',
+    instrucao_seguranca: 'Instruções de Segurança', solucao_frequente: 'Solução Frequente'
+  };
+  var author = (APP.users || []).find(function(u) { return u.id === article.author_id; });
+  var catName = article.category ? article.category.name : 'Geral';
+  return {
+    id: article.slug || article.id,
+    title: article.title || 'Artigo',
+    category: catName,
+    kind: typeMap[article.type] || article.type || 'Procedimento',
+    symptom: '',
+    solution: article.content || 'Conteúdo não disponível.',
+    tools: Array.isArray(article.tags) ? article.tags.join(', ') : '',
+    author: author ? author.name : (author ? author.email : 'Autor'),
+    photos: '', videos: '', pdf: '',
+    createdAt: article.created_at
+  };
+}
+function mapBackendPurchaseOrder(po) {
+  var supplier = po.supplier ? po.supplier.name : 'Fornecedor';
+  var statusMap = {
+    rascunho: 'Rascunho', pendente_aprovacao: 'Aprovação', aprovada: 'Aprovada',
+    encomendada: 'Encomendada', recebida: 'Recebida', cancelada: 'Cancelada'
+  };
+  return {
+    id: po.id,
+    item: po.cost_center || 'Encomenda',
+    supplier: supplier,
+    status: statusMap[po.status] || po.status || 'Aprovação',
+    value: Number(po.total_amount || 0),
+    createdAt: po.created_at
+  };
+}
+function mapBackendQuote(q) {
+  var statusMap = { pending: 'Pendente', approved: 'Aprovado', rejected: 'Rejeitado', expired: 'Expirado' };
+  var client = (APP.clients || []).find(function(c) { return c.id === q.client_id; });
+  return {
+    id: q.reference || q.id,
+    type: 'Orçamento',
+    source: q.description || 'Orçamento',
+    clientName: client ? client.name : '',
+    value: Number(q.amount || 0),
+    createdAt: q.created_at
+  };
+}
+function mergeBackendArray(arr, items, key) {
+  items.forEach(function(item) {
+    var existing = arr.find(function(x) { return x[key] === item[key]; });
+    if (existing) Object.assign(existing, item);
+    else arr.push(item);
+  });
+}
 function syncBackendWorkOrders() {
   return Promise.all([
     apiRequest('/api/work-orders?tab=agendadas').catch(function() { return null; }),
@@ -9834,9 +9906,23 @@ function syncBackendWorkOrders() {
     apiRequest('/api/teams').catch(function() { return null; }),
     apiRequest('/api/buildings').catch(function() { return null; }),
     apiRequest('/api/technicians').catch(function() { return null; }),
-    apiRequest('/api/checklists').catch(function() { return null; }),
     apiRequest('/api/suppliers').catch(function() { return null; }),
-    apiRequest('/api/contracts').catch(function() { return null; })
+    apiRequest('/api/parts').catch(function() { return null; }),
+    apiRequest('/api/inventory').catch(function() { return null; }),
+    apiRequest('/api/maintenance-requests').catch(function() { return null; }),
+    apiRequest('/api/preventive-plans').catch(function() { return null; }),
+    apiRequest('/api/checklists').catch(function() { return null; }),
+    apiRequest('/api/documents').catch(function() { return null; }),
+    apiRequest('/api/folders').catch(function() { return null; }),
+    apiRequest('/api/contracts').catch(function() { return null; }),
+    apiRequest('/api/audits').catch(function() { return null; }),
+    apiRequest('/api/reports').catch(function() { return null; }),
+    apiRequest('/api/activity-log').catch(function() { return null; }),
+    apiRequest('/api/calendar-events').catch(function() { return null; }),
+    apiRequest('/api/incidents').catch(function() { return null; }),
+    apiRequest('/api/knowledge').catch(function() { return null; }),
+    apiRequest('/api/purchase-orders').catch(function() { return null; }),
+    apiRequest('/api/quotes').catch(function() { return null; })
   ]).then(function(results) {
     APP.backendOnline = true;
     if (results[0] && results[0].workOrders) mergeBackendOTs(results[0].workOrders);
@@ -9886,19 +9972,19 @@ function syncBackendWorkOrders() {
     if (results[7] && results[7].teams) {
       APP.teams = results[7].teams;
     }
-    // Buildings agora vêm sempre do backend (fonte da verdade); localStorage deixa de ser usado.
+    // Merge backend buildings
     if (results[8] && results[8].buildings) {
       APP.buildings = results[8].buildings.map(function(b) {
-        var client = APP.clients.find(function(c) { return c.id === b.client_id; });
+        var client = (APP.clients || []).find(function(c) { return c.id === b.client_id; });
         return {
           id: b.id, clientId: b.client_id, clientName: client ? client.name : (b.client_name || ''),
           name: b.name, address: b.address || '', city: b.city || '', type: b.type || 'industrial',
-          areaM2: b.area_m2, zones: b.zones || '', createdAt: b.created_at
+          areaM2: b.area_m2, zones: b.zones || '', image: '', createdAt: b.created_at
         };
       });
       renderBuildings(); populateOTSelects();
     }
-    // Colaboradores/técnicos agora vêm sempre do backend (fonte da verdade).
+    // Merge backend technicians
     if (results[9] && results[9].technicians) {
       APP.technicians = results[9].technicians.map(function(t) {
         return {
@@ -9912,27 +9998,60 @@ function syncBackendWorkOrders() {
       });
       renderTechnicians();
     }
-    // Checklists agora vêm sempre do backend (fonte da verdade).
-    if (results[10] && results[10].checklists) {
-      APP.checklists = results[10].checklists.map(function(cl) {
-        var items = Array.isArray(cl.items) ? cl.items : [];
+    // Merge backend suppliers
+    if (results[10] && results[10].suppliers) {
+      APP.suppliers = results[10].suppliers.map(function(s) {
+        return { id: s.id, name: s.name, taxId: s.tax_id, category: s.category || 'Geral', email: s.email || '', phone: s.phone || '', rating: Number(s.rating || 0), approved: !!s.active, createdAt: s.created_at };
+      });
+    }
+    // Merge backend parts
+    if (results[11] && results[11].parts) {
+      APP.stockMaterials = results[11].parts.map(function(p) {
+        return { id: p.id, name: p.name, category: p.category || 'Geral', stock: 0, cost: Number(p.unit_cost || 0), minStock: 0, location: 'Armazém central' };
+      });
+    }
+    // Merge backend inventory into materials stock
+    if (results[12] && results[12].inventory) {
+      (results[12].inventory || []).forEach(function(inv) {
+        var mat = (APP.stockMaterials || []).find(function(m) { return m.id === inv.part_id; });
+        if (mat) { mat.stock = Number(inv.quantity || 0); mat.minStock = Number(inv.min_quantity || 0); }
+      });
+    }
+    // Merge backend maintenance requests
+    if (results[13] && results[13].requests) {
+      APP.maintenanceRequests = results[13].requests;
+    }
+    // Merge backend preventive plans
+    if (results[14] && results[14].plans) {
+      APP.preventivePlans = results[14].plans;
+    }
+    // Merge backend checklists
+    if (results[15] && results[15].checklists) {
+      APP.checklists = results[15].checklists.map(function(cl) {
+        var items = Array.isArray(cl.items) ? cl.items : (function() { try { return JSON.parse(cl.items || '[]'); } catch (e) { return []; } })();
         return {
-          id: cl.id, title: cl.name, description: cl.description || '',
-          frequency: cl.frequency || 'Quando necessário', category: cl.category || 'Operação',
+          id: cl.id, title: cl.name || 'Checklist', description: cl.description || '',
+          frequency: cl.frequency || 'Conforme necessário', category: cl.equipment_category || cl.category || 'Geral',
           equipmentId: cl.equipment_id || '', equipmentName: cl.equipment_name || '',
-          tasks: items, createdAt: cl.created_at
+          tasks: items.map(function(it) { return { name: it.label || it.name || 'Tarefa', section: cl.equipment_category || 'Geral', done: !!it.done }; }),
+          createdAt: cl.created_at
         };
       });
       renderChecklists();
     }
-    // Fornecedores e contratos agora vêm sempre do backend (fonte da verdade).
-    if (results[11] && results[11].suppliers) {
-      APP.suppliers = results[11].suppliers.map(function(s) {
-        return { id: s.id, name: s.name, taxId: s.tax_id, category: s.category, email: s.email, phone: s.phone, rating: s.rating, approved: !!s.active, createdAt: s.created_at };
+    // Merge backend documents
+    if (results[16] && results[16].documents) {
+      APP.files = results[16].documents.map(function(d) {
+        return { id: d.id, name: d.name, type: d.type || 'Ficheiro', folderId: d.folder_id || '', ref: d.url || '', description: '', createdAt: d.uploaded_at };
       });
     }
-    if (results[12] && results[12].contracts) {
-      APP.contracts = results[12].contracts.map(function(ct) {
+    // Merge backend folders
+    if (results[17] && results[17].folders) {
+      APP.folders = results[17].folders;
+    }
+    // Merge backend contracts
+    if (results[18] && results[18].contracts) {
+      APP.contracts = results[18].contracts.map(function(ct) {
         return {
           id: ct.id, client: ct.client_name || 'Cliente', clientId: ct.client_id, type: ct.type,
           status: ct.status, startDate: ct.start_date, renewal: ct.end_date || '—',
@@ -9940,7 +10059,42 @@ function syncBackendWorkOrders() {
         };
       });
     }
-    saveData(); updateDashboard(); renderOTs(); renderEquipment(); renderClients(); renderManagedUsers(); renderTechnicians();
+    // Merge backend audits
+    if (results[19] && results[19].audits) {
+      APP.audits = results[19].audits;
+    }
+    // Merge backend reports
+    if (results[20] && results[20].reports) {
+      APP.reports = results[20].reports;
+    }
+    // Merge backend activity log
+    if (results[21] && results[21].activity) {
+      APP.activityLog = results[21].activity;
+    }
+    // Merge backend calendar events
+    if (results[22] && results[22].events) {
+      APP.calendarEvents = results[22].events;
+    }
+    // Merge backend incidents
+    if (results[23] && results[23].incidents) {
+      APP.incidents = results[23].incidents.map(mapBackendIncident);
+    }
+    // Merge backend knowledge articles
+    if (results[24] && results[24].articles) {
+      APP.knowledge = results[24].articles.map(mapBackendKnowledge);
+    }
+    // Merge backend purchase orders
+    if (results[25] && results[25].purchaseOrders) {
+      APP.purchases = results[25].purchaseOrders.map(mapBackendPurchaseOrder);
+    }
+    // Merge backend quotes
+    if (results[26] && results[26].quotes) {
+      APP.invoices = results[26].quotes.map(mapBackendQuote);
+    }
+    saveData();
+    updateDashboard(); renderOTs(); renderEquipment(); renderClients(); renderManagedUsers(); renderTechnicians();
+    renderBuildings(); renderMaterials(); renderPurchases(); renderQuotes(); renderIncidents();
+    renderKnowledge(); renderChecklists(); renderCalendar();
     renderSystemStatusBar({ backendDetail: 'Online — ' + (((results[0] && results[0].workOrders) || []).length + ((results[1] && results[1].workOrders) || []).length) + ' OTs sincronizadas' });
   }).catch(function() {
     APP.backendOnline = false;
