@@ -29,6 +29,50 @@ interface OrderOpts {
 
 type Op = 'select' | 'insert' | 'update' | 'delete'
 
+// ── Supabase-style filter-string parsing (used by .or()) ───────────────────
+// Splits on top-level commas only, ignoring commas nested inside parentheses,
+// so groups like "and(a.eq.1,b.eq.2)" stay intact as one segment.
+function splitTopLevel(s: string): string[] {
+  const parts: string[] = []
+  let depth = 0
+  let current = ''
+  for (const ch of s) {
+    if (ch === '(') depth++
+    if (ch === ')') depth--
+    if (ch === ',' && depth === 0) {
+      parts.push(current)
+      current = ''
+    } else {
+      current += ch
+    }
+  }
+  if (current) parts.push(current)
+  return parts
+}
+
+const FILTER_OPS: Record<string, string> = {
+  eq: '=', neq: '<>', gt: '>', gte: '>=', lt: '<', lte: '<=',
+}
+
+/** Recursively translates one Supabase filter segment ("col.op.val", "and(...)", or "or(...)") into a parameterized SQL fragment. */
+function parseFilterCondition(cond: string, vals: unknown[]): string {
+  const trimmed = cond.trim()
+  if (trimmed.startsWith('and(') && trimmed.endsWith(')')) {
+    const inner = trimmed.slice(4, -1)
+    return `(${splitTopLevel(inner).map((p) => parseFilterCondition(p, vals)).join(' AND ')})`
+  }
+  if (trimmed.startsWith('or(') && trimmed.endsWith(')')) {
+    const inner = trimmed.slice(3, -1)
+    return `(${splitTopLevel(inner).map((p) => parseFilterCondition(p, vals)).join(' OR ')})`
+  }
+  const [col, op, ...rest] = trimmed.split('.')
+  const val = rest.join('.')
+  if (op === 'is' && (val === 'null' || val === '')) return `${col} IS NULL`
+  const sqlOp = FILTER_OPS[op] || '='
+  vals.push(val)
+  return `${col} ${sqlOp} $${vals.length}`
+}
+
 // ── Relational-select registry ──────────────────────────────────────────────
 // Declarative map describing the "alias:table(cols)" relations used across
 // server.ts, so the generic query builder can translate them into real SQL
@@ -224,12 +268,9 @@ class QueryBuilder<T = SupaRow> {
       }
     }
     if (this.orConds) {
-      // Translate Supabase .or() filter syntax: "col.eq.val,col.eq.val2"
-      const orParts = this.orConds.split(',').map(p => {
-        const [col, op, val] = p.split('.')
-        if (op === 'eq') { vals.push(val); return `${col} = $${vals.length}` }
-        return p
-      })
+      // Translate Supabase .or() filter syntax, including nested and(...)/or(...)
+      // groups, e.g. "client_id.eq.X,and(empresa_id.eq.Y,folder_type.eq.clientes)"
+      const orParts = splitTopLevel(this.orConds).map((p) => parseFilterCondition(p, vals))
       if (parts.length > 0) parts.push(`(${orParts.join(' OR ')})`)
       else parts.push(orParts.join(' OR '))
     }
