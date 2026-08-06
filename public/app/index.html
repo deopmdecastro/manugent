@@ -5746,7 +5746,7 @@
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div class="card p-4">
-            <h4 class="font-medium mb-3 text-sm">Material Gasto</h4>
+            <h4 class="font-medium mb-3 text-sm">Material Consumido</h4>
             <div id="ot-materials-list" class="text-sm text-slate-400 mb-3">Nenhum material registado.</div>
             <button class="btn-secondary btn-action text-xs w-full" onclick="openAddMaterialModal()" id="ot-material-action-btn"><i class="fas fa-plus"></i> Adicionar material</button>
           </div>
@@ -5959,14 +5959,14 @@
   <div class="modal-content">
     <div class="flex items-center justify-between mb-5">
       <div>
-        <h2 class="text-lg font-semibold" id="ot-material-modal-title">Associar material à OT</h2>
-        <p class="text-sm text-slate-500 mt-1" id="ot-material-modal-subtitle">Escolha um material já registado em stock.</p>
+        <h2 class="text-lg font-semibold" id="ot-material-modal-title">Consumir material</h2>
+        <p class="text-sm text-slate-500 mt-1" id="ot-material-modal-subtitle">Consuma material do stock nesta OT, Obra ou Pedido.</p>
       </div>
       <button class="btn-ghost" onclick="closeModal('modal-add-material')"><i class="fas fa-times"></i></button>
     </div>
     <div class="space-y-4">
       <div>
-        <label class="block text-sm mb-2 text-slate-300">Material existente *</label>
+        <label class="block text-sm mb-2 text-slate-300">Material em stock *</label>
         <select id="ot-material-stock" class="input-field" onchange="updateOTMaterialPreview()"></select>
       </div>
       <div id="ot-material-preview" class="p-3 rounded-lg border border-white/10 bg-white/5 text-sm text-slate-400">
@@ -10313,7 +10313,7 @@ function updateOTMaterialActionUI() {
   if (!btn) return;
   btn.innerHTML = getUserRole() === 'tecnico'
     ? '<i class="fas fa-cart-plus"></i> Solicitar material'
-    : '<i class="fas fa-plus"></i> Adicionar material';
+    : '<i class="fas fa-boxes-stacked"></i> Consumir material';
 }
 function renderWorkInstallationDetail(ot) {
   var el = document.getElementById('ot-work-detail');
@@ -11349,10 +11349,12 @@ function openAddMaterialModal() {
   var subtitle = document.getElementById('ot-material-modal-subtitle');
   var qtyLabel = document.getElementById('ot-material-qty-label');
   var submit = document.getElementById('ot-material-submit-btn');
-  if (title) title.textContent = technicianRequest ? 'Solicitar material' : 'Associar material à OT';
-  if (subtitle) subtitle.textContent = technicianRequest ? 'O pedido será enviado para gestão/compras, sem inserir material gasto.' : 'Escolha um material já registado em stock.';
+  var otType = APP.currentOT.type || 'OT';
+  var otLabel = otType === 'Obras/Instalações' ? 'Obra' : (APP.currentOT.origin === 'request' ? 'Pedido' : 'OT');
+  if (title) title.textContent = technicianRequest ? 'Solicitar material' : 'Consumir material nesta ' + otLabel;
+  if (subtitle) subtitle.textContent = technicianRequest ? 'O pedido será enviado para gestão/compras, sem consumir stock.' : 'Selecione um material do stock para consumir nesta ' + otLabel + '. O stock será atualizado automaticamente.';
   if (qtyLabel) qtyLabel.textContent = technicianRequest ? 'Quantidade solicitada' : 'Quantidade usada';
-  if (submit) submit.innerHTML = technicianRequest ? '<i class="fas fa-cart-plus"></i> Solicitar material' : '<i class="fas fa-link"></i> Associar material';
+  if (submit) submit.innerHTML = technicianRequest ? '<i class="fas fa-cart-plus"></i> Solicitar material' : '<i class="fas fa-boxes-stacked"></i> Consumir material';
   populateOTMaterialSelect();
   document.getElementById('ot-material-qty').value = '1';
   document.getElementById('ot-material-notes').value = '';
@@ -11427,14 +11429,14 @@ function addSelectedMaterialToOT() {
   });
   material.stock = Math.max(0, available - qty);
   APP.currentOT.activity = APP.currentOT.activity || [];
-  APP.currentOT.activity.push({ text: 'Material associado: ' + material.name + ' x' + qty, time: new Date().toLocaleString('pt-PT') });
+  APP.currentOT.activity.push({ text: 'Material consumido: ' + material.name + ' x' + qty, time: new Date().toLocaleString('pt-PT') });
   saveData();
   closeModal('modal-add-material');
   renderOTMaterials();
   renderOTActivity();
   renderMaterials();
   updateDashboard();
-  showToast('Material associado à OT e stock atualizado.');
+  showToast('Material consumido e stock atualizado.');
 }
 async function requestMaterialForCurrentOT(material, qty, cost, notes) {
   if (!APP.currentOT || !material) return;
@@ -11476,7 +11478,7 @@ function renderOTMaterials() {
   var materials = (APP.currentOT && APP.currentOT.materials) || [];
   var requests = APP.currentOT ? (APP.purchases || []).filter(function(p) { return p.otId === APP.currentOT.id && p.requestedByRole === 'tecnico'; }) : [];
   var materialHtml = (!materials.length)
-    ? '<span class="text-slate-400">Nenhum material registado.</span>'
+    ? '<span class="text-slate-400">Nenhum material consumido.</span>'
     : materials.map(function(m) {
       var qty = Number(m.qty || 1);
       var total = qty * Number(m.cost || 0);
