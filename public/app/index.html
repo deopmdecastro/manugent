@@ -4176,7 +4176,7 @@
           <button class="btn-primary" onclick="createStockMaterial()" id="new-material-page-btn"><i class="fas fa-plus"></i> Novo Material</button>
         </div>
         <div class="card overflow-hidden">
-          <table class="data-table"><thead><tr><th>Material</th><th>Categoria</th><th>Stock</th><th>Custo</th><th>Local</th></tr></thead><tbody id="materials-table-body"></tbody></table>
+          <table class="data-table"><thead><tr><th>Material</th><th>Categoria</th><th>Cliente</th><th>Empresa</th><th>Stock</th><th>Custo</th><th>Local</th><th>Ações</th></tr></thead><tbody id="materials-table-body"></tbody></table>
         </div>
       </div>
 
@@ -5224,6 +5224,16 @@
         <label class="block text-sm mb-2 text-slate-300">Nome do material *</label>
         <input type="text" id="material-name" class="input-field" placeholder="Ex: Rolamento 6205">
       </div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Cliente associado</label>
+          <select id="material-client" class="input-field" onchange="updateMaterialEmpresaHint()"><option value="">Sem associação</option></select>
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Empresa</label>
+          <input type="text" id="material-empresa-hint" class="input-field" disabled placeholder="—">
+        </div>
+      </div>
       <div>
         <label class="block text-sm mb-2 text-slate-300">Foto do material</label>
         <input type="file" id="material-photo-upload" class="input-field" accept="image/*">
@@ -5266,7 +5276,7 @@
       </div>
       <div class="flex gap-3 pt-2">
         <button class="btn-secondary flex-1" onclick="closeModal('modal-new-material')">Cancelar</button>
-        <button class="btn-primary flex-1" onclick="saveStockMaterial()"><i class="fas fa-boxes-stacked"></i> Guardar material</button>
+        <button class="btn-primary flex-1" id="material-submit-btn" onclick="saveStockMaterial()"><i class="fas fa-boxes-stacked"></i> Guardar material</button>
       </div>
     </div>
   </div>
@@ -8967,7 +8977,7 @@ async function deleteBuilding(id) {
 }
 // ── Dar baixa (desativação) de equipamentos e edifícios ──────────────────────
 function openDecommissionModal(kind, id) {
-  if (!requirePermission('edit', kind === 'equipment' ? 'equipment' : 'buildings', 'dar baixa')) return;
+  if (!requirePermission('edit', kind === 'equipment' ? 'equipment' : kind === 'material' ? 'materials' : 'buildings', 'dar baixa')) return;
   var label = '';
   if (kind === 'equipment') {
     var eq = (APP.equipment || []).find(function(e) { return e.id === id; });
@@ -8977,6 +8987,10 @@ function openDecommissionModal(kind, id) {
     var b = (APP.buildings || []).find(function(x) { return x.id === id; });
     if (!b) return;
     label = 'Edifício: <strong>' + escapeHtml(b.name) + '</strong> (' + abbreviateId(id, 12) + ')';
+  } else if (kind === 'material') {
+    var mat = (APP.stockMaterials || []).find(function(x) { return x.id === id; });
+    if (!mat) return;
+    label = 'Material: <strong>' + escapeHtml(mat.name) + '</strong> (' + abbreviateId(id, 12) + ')';
   } else {
     return;
   }
@@ -9011,6 +9025,15 @@ async function confirmDecommission() {
       });
       b.status = 'baixa'; b.decommissionReason = reason; b.decommissionedAt = now;
       renderBuildings();
+    } else if (target.kind === 'material') {
+      var mat = (APP.stockMaterials || []).find(function(x) { return x.id === target.id; });
+      if (!mat) return;
+      await apiRequest('/api/parts/' + target.id, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'baixa', decommissionReason: reason, decommissionedAt: now })
+      });
+      mat.status = 'baixa'; mat.decommissionReason = reason; mat.decommissionedAt = now;
+      renderMaterials();
     }
     APP.decommissionTarget = null;
     saveData(); closeModal('modal-decommission');
@@ -9023,30 +9046,64 @@ function renderMaterials() {
   var tbody = document.getElementById('materials-table-body');
   if (!tbody) return;
   var rows = (APP.stockMaterials || []).slice();
+  var otUsage = [];
   APP.ots.forEach(function(ot) {
     (ot.materials || []).forEach(function(m) {
-      rows.push({ name: m.description || m.name || 'Material usado', category: 'Usado em OT', stock: m.qty || 1, cost: m.cost || 0, location: ot.title || ot.id });
+      otUsage.push({ name: m.description || m.name || 'Material usado', category: 'Usado em OT', stock: m.qty || 1, cost: m.cost || 0, location: ot.title || ot.id, readOnly: true });
     });
   });
+  rows = rows.concat(otUsage);
   var categoryFilter = APP.materialCategoryFilter || '';
   var quick = APP.materialQuickFilters || {};
   rows = rows.filter(function(m) {
-    if (!matchesSearch(m, ['name','category','location','notes'])) return false;
+    if (!matchesSearch(m, ['name','category','location','notes','clientName','empresaName'])) return false;
     if (categoryFilter && m.category !== categoryFilter) return false;
     if (quick.lowStock && !(m.minStock != null && Number(m.stock || 0) <= Number(m.minStock || 0))) return false;
     return true;
   });
   if (!rows.length) {
-    tbody.innerHTML = emptyTableState(5, 'fa-boxes-stacked', 'Nenhum material registado.', 'Adicionar material', 'createStockMaterial()');
+    tbody.innerHTML = emptyTableState(8, 'fa-boxes-stacked', 'Nenhum material registado.', 'Adicionar material', 'openNewMaterialModal()');
     return;
   }
   tbody.innerHTML = rows.map(function(m) {
     var photo = m.photo ? '<img src="' + m.photo + '" alt="' + escapeHtml(m.photoName || m.name || 'Material') + '" style="width:34px;height:34px;border-radius:8px;object-fit:cover;border:1px solid rgba(255,255,255,.12)">' : '<div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(99,102,241,0.16)"><i class="fas fa-boxes-stacked text-purple-400 text-xs"></i></div>';
-    return '<tr><td class="font-medium"><div class="flex items-center gap-3">' + photo + '<span>' + escapeHtml(m.name || 'Material') + '</span></div></td><td><span class="badge badge-blue">' + escapeHtml(m.category || 'Geral') + '</span></td><td>' + escapeHtml(String(m.stock || 0)) + '</td><td class="mono">' + formatCurrency(Number(m.cost || 0)) + '</td><td class="text-slate-400">' + escapeHtml(m.location || 'Armazém') + '</td></tr>';
+    var nameCell = '<div class="flex items-center gap-3">' + photo + '<div><div>' + escapeHtml(m.name || 'Material') + '</div>' + (m.id && !m.readOnly ? '<div class="text-xs text-slate-600 mono" title="' + escapeHtml(m.id) + '">' + abbreviateId(m.id) + '</div>' : '') + '</div></div>';
+    var statusBadge = m.status === 'baixa' ? ' <span class="badge badge-gray text-xs">Baixa</span>' : '';
+    var actions = m.readOnly ? '<span class="text-xs text-slate-600">—</span>' : '<div class="flex items-center gap-1">' +
+      '<button class="btn-ghost text-xs" title="Editar" onclick="openEditMaterialModal(\'' + m.id + '\')"><i class="fas fa-pen"></i></button>' +
+      (m.status !== 'baixa' ? '<button class="btn-ghost text-xs" title="Dar baixa" onclick="openDecommissionModal(\'material\',\'' + m.id + '\')"><i class="fas fa-power-off text-orange-400"></i></button>' : '') +
+      '<button class="btn-ghost text-xs" title="Apagar" onclick="deleteMaterial(\'' + m.id + '\')"><i class="fas fa-trash text-red-400"></i></button></div>';
+    return '<tr><td class="font-medium">' + nameCell + '</td><td><span class="badge badge-blue">' + escapeHtml(m.category || 'Geral') + '</span>' + statusBadge + '</td>' +
+      '<td>' + escapeHtml(m.clientName || '—') + '</td>' +
+      '<td>' + escapeHtml(m.empresaName || '—') + '</td>' +
+      '<td>' + escapeHtml(String(m.stock || 0)) + '</td><td class="mono">' + formatCurrency(Number(m.cost || 0)) + '</td><td class="text-slate-400">' + escapeHtml(m.location || 'Armazém') + '</td>' +
+      '<td>' + actions + '</td></tr>';
   }).join('');
 }
-function createStockMaterial() {
+function populateMaterialClientSelect(selectedId) {
+  var sel = document.getElementById('material-client');
+  if (!sel) return;
+  var options = ['<option value="">Sem associação</option>'];
+  (APP.clients || []).forEach(function(c) {
+    options.push('<option value="' + c.id + '"' + (String(selectedId || '') === String(c.id) ? ' selected' : '') + '>' + escapeHtml(c.name) + '</option>');
+  });
+  sel.innerHTML = options.join('');
+  sel.value = selectedId || '';
+  enhanceSelects();
+  updateMaterialEmpresaHint();
+}
+function updateMaterialEmpresaHint() {
+  var sel = document.getElementById('material-client');
+  var hint = document.getElementById('material-empresa-hint');
+  if (!sel || !hint) return;
+  var client = (APP.clients || []).find(function(c) { return c.id === sel.value; });
+  var empresaId = client ? (client.empresa_id || client.empresaId) : null;
+  var empresa = empresaId ? (APP.empresas || []).find(function(e) { return e.id === empresaId; }) : null;
+  hint.value = empresa ? empresa.name : (client ? 'Sem empresa associada' : '—');
+}
+function openNewMaterialModal() {
   if (!requirePermission('create', 'materials', 'adicionar material')) return;
+  APP.editingMaterialId = null;
   document.getElementById('material-name').value = '';
   document.getElementById('material-photo-upload').value = '';
   document.getElementById('material-category').value = 'Elétrico';
@@ -9055,35 +9112,91 @@ function createStockMaterial() {
   document.getElementById('material-cost').value = '0';
   document.getElementById('material-min-stock').value = '1';
   document.getElementById('material-notes').value = '';
+  document.getElementById('material-submit-btn').innerHTML = '<i class="fas fa-boxes-stacked"></i> Guardar material';
+  ensureEmpresasLoaded(function() { populateMaterialClientSelect(); });
+  enhanceFileInputs();
+  enhanceSelects();
+  document.getElementById('modal-new-material').style.display = 'flex';
+}
+var createStockMaterial = openNewMaterialModal; // compat com chamadas antigas (empty state)
+function openEditMaterialModal(id) {
+  if (!requirePermission('edit', 'materials', 'editar material')) return;
+  var m = (APP.stockMaterials || []).find(function(x) { return x.id === id; });
+  if (!m) return;
+  APP.editingMaterialId = id;
+  document.getElementById('material-name').value = m.name || '';
+  document.getElementById('material-photo-upload').value = '';
+  document.getElementById('material-category').value = m.category || 'Elétrico';
+  document.getElementById('material-location').value = m.location || 'Armazém central';
+  document.getElementById('material-stock').value = m.stock || 0;
+  document.getElementById('material-cost').value = m.cost || 0;
+  document.getElementById('material-min-stock').value = m.minStock || 0;
+  document.getElementById('material-notes').value = m.notes || '';
+  document.getElementById('material-submit-btn').innerHTML = '<i class="fas fa-save"></i> Guardar material';
+  ensureEmpresasLoaded(function() { populateMaterialClientSelect(m.clientId); });
   enhanceFileInputs();
   enhanceSelects();
   document.getElementById('modal-new-material').style.display = 'flex';
 }
 async function saveStockMaterial() {
-  if (!requirePermission('create', 'materials', 'adicionar material')) return;
+  var editingId = APP.editingMaterialId;
+  if (!requirePermission(editingId ? 'edit' : 'create', 'materials', editingId ? 'editar material' : 'adicionar material')) return;
   var name = document.getElementById('material-name').value.trim();
   if (!name) { showToast('Indique o nome do material.'); return; }
   var photo = await readSingleUpload('material-photo-upload');
-  APP.stockMaterials = APP.stockMaterials || [];
-  APP.stockMaterials.push({
-    id: generateId('MAT'),
+  var clientId = document.getElementById('material-client').value;
+  var client = (APP.clients || []).find(function(c) { return c.id === clientId; });
+  var empresaId = client ? (client.empresa_id || client.empresaId) : null;
+  var empresa = empresaId ? (APP.empresas || []).find(function(e) { return e.id === empresaId; }) : null;
+  var editing = editingId ? (APP.stockMaterials || []).find(function(x) { return x.id === editingId; }) : null;
+  var payload = {
     name: name,
     category: document.getElementById('material-category').value || 'Geral',
     stock: Number(document.getElementById('material-stock').value || 0),
-    cost: Number(document.getElementById('material-cost').value || 0),
+    unitCost: Number(document.getElementById('material-cost').value || 0),
     minStock: Number(document.getElementById('material-min-stock').value || 0),
     location: document.getElementById('material-location').value.trim() || 'Armazém central',
     notes: document.getElementById('material-notes').value.trim(),
-    photo: photo ? photo.dataUrl : '',
-    photoName: photo ? photo.name : '',
-    createdAt: new Date().toISOString()
-  });
-  var material = APP.stockMaterials[APP.stockMaterials.length - 1];
-  addNotification({ key:'material-created-' + material.id, type:'material', title:'Material adicionado ao stock', body: material.name + ' · stock ' + material.stock, targetType:'material', targetId:material.id });
-  if (Number(material.stock || 0) <= Number(material.minStock || 0)) {
-    addNotification({ key:'stock-low-' + material.id, type:'stock', title:'Stock baixo', body: material.name + ' está em ' + material.stock + ' unidade(s).', targetType:'material', targetId:material.id, priority:'high' });
+    clientId: clientId || null
+  };
+  try {
+    var result = editing
+      ? await apiRequest('/api/parts/' + editing.id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      : await apiRequest('/api/parts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    var p = result.part;
+    var local = {
+      id: p.id, name: p.name, category: p.category || 'Geral', stock: Number(p.stock || 0), cost: Number(p.unit_cost || 0),
+      minStock: Number(p.min_stock || 0), location: p.location || 'Armazém central', notes: p.notes || '',
+      clientId: p.client_id || '', clientName: client ? client.name : '', empresaId: empresaId || '', empresaName: empresa ? empresa.name : '',
+      status: p.status || 'ativo', decommissionReason: p.decommission_reason || '', decommissionedAt: p.decommissioned_at || '',
+      photo: photo ? photo.dataUrl : (editing ? editing.photo : ''), photoName: photo ? photo.name : (editing ? editing.photoName : ''),
+      createdAt: p.created_at || (editing ? editing.createdAt : new Date().toISOString())
+    };
+    APP.stockMaterials = APP.stockMaterials || [];
+    var idx = APP.stockMaterials.findIndex(function(x) { return x.id === p.id; });
+    if (idx >= 0) APP.stockMaterials[idx] = local; else APP.stockMaterials.push(local);
+    if (!editing) {
+      addNotification({ key:'material-created-' + local.id, type:'material', title:'Material adicionado ao stock', body: local.name + ' · stock ' + local.stock, targetType:'material', targetId:local.id });
+    }
+    if (Number(local.stock || 0) <= Number(local.minStock || 0)) {
+      addNotification({ key:'stock-low-' + local.id, type:'stock', title:'Stock baixo', body: local.name + ' está em ' + local.stock + ' unidade(s).', targetType:'material', targetId:local.id, priority:'high' });
+    }
+    APP.editingMaterialId = null;
+    saveData(); closeModal('modal-new-material'); renderMaterials(); renderCommercialWidgets(); showToast(editing ? 'Material atualizado!' : 'Material adicionado ao stock.');
+  } catch (error) {
+    showToast('Não foi possível guardar o material no servidor: ' + (error.message || 'erro desconhecido'), 'error');
   }
-  saveData(); closeModal('modal-new-material'); renderMaterials(); renderCommercialWidgets(); showToast('Material adicionado ao stock.');
+}
+async function deleteMaterial(id) {
+  if (!requirePermission('delete', 'materials', 'apagar material')) return;
+  if (!confirm('Remover este material do stock?')) return;
+  try {
+    await apiRequest('/api/parts/' + id, { method: 'DELETE' });
+    APP.stockMaterials = (APP.stockMaterials || []).filter(function(m) { return m.id !== id; });
+    saveData(); renderMaterials(); renderCommercialWidgets(); showToast('Material removido.');
+  } catch (error) {
+    showToast('Não foi possível remover o material no servidor: ' + (error.message || 'erro desconhecido'), 'error');
+  }
 }
 function getPurchaseStatusClass(s) {
   return { 'Rascunho':'badge-gray', 'Aprovação':'badge-yellow', 'Aprovada':'badge-blue', 'Encomendada':'badge-blue', 'Recebida':'badge-green', 'Cancelada':'badge-red' }[s] || 'badge-gray';
@@ -10487,10 +10600,26 @@ function syncBackendWorkOrders() {
         return { id: s.id, name: s.name, taxId: s.tax_id, category: s.category || 'Geral', email: s.email || '', phone: s.phone || '', rating: Number(s.rating || 0), approved: !!s.active, createdAt: s.created_at };
       });
     }
-    // Merge backend parts
+    // Merge backend parts (mantém material criado localmente; não substitui o array todo)
     if (results[11] && results[11].parts) {
-      APP.stockMaterials = results[11].parts.map(function(p) {
-        return { id: p.id, name: p.name, category: p.category || 'Geral', stock: 0, cost: Number(p.unit_cost || 0), minStock: 0, location: 'Armazém central' };
+      var backendMaterialIds = {};
+      results[11].parts.forEach(function(p) {
+        backendMaterialIds[p.id] = true;
+        var client = (APP.clients || []).find(function(c) { return c.id === p.client_id; });
+        var empresaId = client ? (client.empresa_id || client.empresaId) : null;
+        var empresa = empresaId ? (APP.empresas || []).find(function(e) { return e.id === empresaId; }) : null;
+        var existing = (APP.stockMaterials || []).find(function(m) { return m.id === p.id; });
+        var mapped = {
+          id: p.id, name: p.name, category: p.category || 'Geral',
+          stock: Number(p.stock || 0), cost: Number(p.unit_cost || 0), minStock: Number(p.min_stock || 0),
+          location: p.location || 'Armazém central', notes: p.notes || '',
+          clientId: p.client_id || '', clientName: client ? client.name : '', empresaId: empresaId || '', empresaName: empresa ? empresa.name : '',
+          status: p.status || 'ativo', decommissionReason: p.decommission_reason || '', decommissionedAt: p.decommissioned_at || '',
+          photo: existing ? existing.photo : '', photoName: existing ? existing.photoName : '',
+          createdAt: p.created_at
+        };
+        var idx = (APP.stockMaterials || []).findIndex(function(m) { return m.id === p.id; });
+        if (idx >= 0) APP.stockMaterials[idx] = mapped; else (APP.stockMaterials = APP.stockMaterials || []).push(mapped);
       });
     }
     // Merge backend inventory into materials stock

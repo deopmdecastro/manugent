@@ -1203,6 +1203,75 @@ app.get('/api/parts', async (c) => {
   }
 })
 
+app.post('/api/parts', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json()
+    if (!body.name) return jsonError(c, 'name é obrigatório')
+
+    const { data, error } = await db.from('parts').insert({
+      name: body.name,
+      sku: body.sku ?? null,
+      category: body.category ?? null,
+      unit_cost: body.unitCost ?? 0,
+      supplier_id: body.supplierId ?? null,
+      client_id: body.clientId ?? null,
+      location: body.location ?? null,
+      notes: body.notes ?? null,
+      stock: body.stock ?? 0,
+      min_stock: body.minStock ?? 0,
+      status: body.status ?? 'ativo',
+    }).select().single()
+
+    if (error) throw error
+    return c.json({ part: data }, 201)
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not create part')
+  }
+})
+
+app.put('/api/parts/:id', async (c) => {
+  try {
+    const db = requireDb()
+    const id = c.req.param('id')
+    const body = await c.req.json()
+    const patch: Record<string, unknown> = {}
+    if (body.name !== undefined) patch.name = body.name
+    if (body.sku !== undefined) patch.sku = body.sku
+    if (body.category !== undefined) patch.category = body.category
+    if (body.unitCost !== undefined) patch.unit_cost = body.unitCost
+    if (body.supplierId !== undefined) patch.supplier_id = body.supplierId
+    if (body.clientId !== undefined) patch.client_id = body.clientId
+    if (body.location !== undefined) patch.location = body.location
+    if (body.notes !== undefined) patch.notes = body.notes
+    if (body.stock !== undefined) patch.stock = body.stock
+    if (body.minStock !== undefined) patch.min_stock = body.minStock
+    if (body.status !== undefined) patch.status = body.status
+    if (body.decommissionReason !== undefined) patch.decommission_reason = body.decommissionReason
+    if (body.decommissionedAt !== undefined) patch.decommissioned_at = body.decommissionedAt
+    if (body.decommissionedBy !== undefined) patch.decommissioned_by = body.decommissionedBy
+
+    const { data, error } = await db.from('parts').update(patch).eq('id', id).select().single()
+    if (error) throw error
+    if (!data) return jsonError(c, 'Material não encontrado', 404)
+    return c.json({ part: data })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not update part')
+  }
+})
+
+app.delete('/api/parts/:id', async (c) => {
+  try {
+    const db = requireDb()
+    const id = c.req.param('id')
+    const { error } = await db.from('parts').delete().eq('id', id)
+    if (error) throw error
+    return c.json({ success: true })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not delete part')
+  }
+})
+
 app.get('/api/inventory', async (c) => {
   try {
     const db = requireDb()
