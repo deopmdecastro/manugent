@@ -5431,6 +5431,13 @@
       </div>
       <div id="purchase-detail-consumed" class="text-sm text-slate-400">Nenhum material consumido associado.</div>
     </div>
+    <div class="card p-4 mt-4">
+      <div class="flex items-center justify-between mb-3">
+        <h4 class="font-medium text-sm"><i class="fas fa-clock-rotate-left text-purple-400"></i> Histórico de Atividades</h4>
+        <span class="badge badge-blue" id="purchase-detail-history-badge">0</span>
+      </div>
+      <div id="purchase-detail-history" class="space-y-1 text-xs max-h-48 overflow-y-auto"></div>
+    </div>
     <div class="flex gap-3 mt-5">
       <button class="btn-secondary flex-1" onclick="closeModal('modal-purchase-detail')">Fechar</button>
       <button class="btn-primary flex-1" onclick="closeModal('modal-purchase-detail');editPurchase(APP.currentPurchaseId)"><i class="fas fa-pen"></i> Editar</button>
@@ -8872,7 +8879,19 @@ async function savePurchaseRequest() {
     local.materialName = material ? material.name : '';
     if (!local.supplier && document.getElementById('purchase-supplier').selectedOptions.length) local.supplier = document.getElementById('purchase-supplier').selectedOptions[0].textContent;
     var idx = APP.purchases.findIndex(function(p) { return p.id === local.id; });
-    if (idx >= 0) APP.purchases[idx] = local; else APP.purchases.push(local);
+    if (idx >= 0) {
+      var oldP = APP.purchases[idx];
+      local.activity = oldP.activity || [];
+      if (oldP.status !== local.status) {
+        local.activity.push({ text: 'Estado alterado de ' + (oldP.status || '—') + ' para ' + local.status, time: new Date().toLocaleString('pt-PT'), user: APP.user ? APP.user.name : 'Sistema' });
+      } else {
+        local.activity.push({ text: 'Pedido de compra editado', time: new Date().toLocaleString('pt-PT'), user: APP.user ? APP.user.name : 'Sistema' });
+      }
+      APP.purchases[idx] = local;
+    } else {
+      local.activity = [{ text: 'Pedido de compra criado', time: new Date().toLocaleString('pt-PT'), user: APP.user ? APP.user.name : 'Sistema' }];
+      APP.purchases.push(local);
+    }
     if (!editing) {
       addNotification({ key:'purchase-created-' + local.id, type:'purchase', title:'Novo pedido de compra', body: abbreviateId(local.id) + ' · ' + local.item, targetType:'purchase', targetId:local.id });
     }
@@ -9396,7 +9415,20 @@ function openPurchaseDetail(id) {
         '<div class="mono text-xs text-slate-400">' + formatCurrency(total) + '</div></div>';
     }).join('') : 'Nenhum material consumido associado.';
   }
+  renderPurchaseActivity(p);
   document.getElementById('modal-purchase-detail').style.display = 'flex';
+}
+function renderPurchaseActivity(p) {
+  var el = document.getElementById('purchase-detail-history');
+  var badge = document.getElementById('purchase-detail-history-badge');
+  if (!el) return;
+  var acts = p.activity || [];
+  if (badge) badge.textContent = acts.length;
+  el.innerHTML = acts.length === 0
+    ? '<p class="text-slate-500">Sem atividade.</p>'
+    : acts.slice().reverse().map(function(a) {
+      return '<div class="py-1.5 border-b border-white/5"><div class="text-slate-300">' + escapeHtml(a.text) + '</div><div class="text-slate-600">' + escapeHtml(a.time) + (a.user ? ' · ' + escapeHtml(a.user) : '') + '</div></div>';
+    }).join('');
 }
 function openReceivePurchaseModal(id) {
   if (!requirePermission('edit', 'purchases', 'marcar compra como recebida')) return;
@@ -9417,6 +9449,8 @@ async function confirmReceivePurchase() {
     var result = await apiRequest('/api/purchase-orders/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'recebida', receivedNotes: notes }) });
     var local = mapBackendPurchaseOrder(result.purchaseOrder);
     local.materialId = p.materialId; local.materialName = p.materialName;
+    local.activity = (p.activity || []).slice();
+    local.activity.push({ text: 'Material recebido · ' + (notes || 'Sem notas'), time: new Date().toLocaleString('pt-PT'), user: APP.user ? APP.user.name : 'Sistema' });
     var idx = APP.purchases.findIndex(function(x) { return x.id === id; });
     if (idx >= 0) APP.purchases[idx] = local;
     APP.receivingPurchaseId = null;
@@ -9925,7 +9959,7 @@ async function createOT() {
     ot.imageName = ot.imageName || '';
   }
   ot.activity = ot.activity || [];
-  ot.activity.push({ text: editing ? 'OT editada' : 'OT criada', time: new Date().toLocaleString('pt-PT') });
+  ot.activity.push({ text: editing ? 'OT editada' : 'OT criada', time: new Date().toLocaleString('pt-PT'), user: APP.user ? APP.user.name : 'Sistema' });
   if (!editing) APP.ots.push(ot);
   addNotification({
     key: (editing ? 'ot-edited-' : 'ot-created-') + ot.id + '-' + Date.now(),
@@ -10355,7 +10389,7 @@ function updateOTStatus(status) {
     var reportEl = document.getElementById('ot-report');
     if (reportEl) reportEl.value = APP.currentOT.report;
   }
-  APP.currentOT.activity.push({ text: 'Estado alterado para ' + status, time: new Date().toLocaleString('pt-PT') });
+  APP.currentOT.activity.push({ text: 'Estado alterado para ' + status, time: new Date().toLocaleString('pt-PT'), user: APP.user ? APP.user.name : 'Sistema' });
   addNotification({ key:'ot-status-' + APP.currentOT.id + '-' + status + '-' + Date.now(), type:'ot', title:'Estado da OT alterado', body: APP.currentOT.id + ' · ' + APP.currentOT.title + ' → ' + status, targetType:'ot', targetId:APP.currentOT.id, priority: status === 'Aguarda Material' ? 'high' : 'normal' });
   syncEnhancedSelect(document.getElementById('ot-detail-status'));
   saveData(); updateDashboard(); renderOTs(); renderOTActivity();
@@ -10892,7 +10926,7 @@ function workOrderTimeAction(action) {
   var labels = { join: 'Técnico juntou-se ao trabalho', start: 'Cronómetro iniciado', pause: 'Cronómetro pausado', resume: 'Cronómetro retomado', exit: 'Técnico saiu da intervenção' };
   var statusByAction = { start: 'Em Curso', pause: 'Pausada', resume: 'Em Curso' };
   APP.currentOT.activity = APP.currentOT.activity || [];
-  APP.currentOT.activity.push({ text: labels[action], time: new Date().toLocaleString('pt-PT') });
+  APP.currentOT.activity.push({ text: labels[action], time: new Date().toLocaleString('pt-PT'), user: APP.user ? APP.user.name : 'Sistema' });
   if (statusByAction[action]) APP.currentOT.status = statusByAction[action];
   if (action === 'join' || action === 'start' || action === 'resume') startLocalOTTimer(labels[action], action === 'join');
   if (action === 'exit') stopLocalOTTimer(labels[action]);
@@ -10935,7 +10969,7 @@ function confirmPauseOT() {
   if (statusEl) statusEl.value = APP.currentOT.status;
   stopLocalOTTimer('Pausado: ' + reason, reason, note);
   APP.currentOT.activity = APP.currentOT.activity || [];
-  APP.currentOT.activity.push({ text: 'Cronómetro pausado · ' + reason + (note ? ' · ' + note : ''), time: new Date().toLocaleString('pt-PT') });
+  APP.currentOT.activity.push({ text: 'Cronómetro pausado · ' + reason + (note ? ' · ' + note : ''), time: new Date().toLocaleString('pt-PT'), user: APP.user ? APP.user.name : 'Sistema' });
   saveData();
   closeModal('modal-pause-ot');
   updateOTTimeDisplay();
@@ -11039,7 +11073,7 @@ function registerOutOfLimitFinding() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     }).then(function(result) {
-      APP.currentOT.activity.push({ text: 'Medição fora do limite registada: ' + value, time: new Date().toLocaleString('pt-PT') });
+      APP.currentOT.activity.push({ text: 'Medição fora do limite registada: ' + value, time: new Date().toLocaleString('pt-PT'), user: APP.user ? APP.user.name : 'Sistema' });
       if (result.interventionRequest) {
         mergeBackendOTs([result.interventionRequest]);
         apiRequest('/api/notifications?workOrderId=' + result.interventionRequest.id).then(function(n) {
@@ -11061,7 +11095,7 @@ function registerOutOfLimitFinding() {
   };
   APP.ots.push(request);
   addNotification({ key:'intervention-request-' + request.id, type:'ot', title:'Pedido criado por medição fora do limite', body: request.id + ' · ' + request.title, targetType:'ot', targetId:request.id, priority:'high' });
-  APP.currentOT.activity.push({ text: 'Medição fora do limite registada: ' + value, time: new Date().toLocaleString('pt-PT') });
+  APP.currentOT.activity.push({ text: 'Medição fora do limite registada: ' + value, time: new Date().toLocaleString('pt-PT'), user: APP.user ? APP.user.name : 'Sistema' });
   showAutoRequestResult(request.id, 2);
   saveData(); filterOTs('pedidos'); updateDashboard(); renderOTs(); renderOTActivity();
 }
@@ -11136,7 +11170,7 @@ function startOTTimerFromTask(label) {
   if (!APP.currentOT) return;
   if (startLocalOTTimer(label)) {
     APP.currentOT.activity = APP.currentOT.activity || [];
-    APP.currentOT.activity.push({ text: label + ' · cronómetro iniciado', time: new Date().toLocaleString('pt-PT') });
+    APP.currentOT.activity.push({ text: label + ' · cronómetro iniciado', time: new Date().toLocaleString('pt-PT'), user: APP.user ? APP.user.name : 'Sistema' });
   }
 }
 function showTaskHelp(i) {
@@ -11337,7 +11371,7 @@ async function addTaskToOT() {
     APP.pendingTaskHelpFile = null;
   }
   APP.currentOT.tasks.push(task);
-  APP.currentOT.activity.push({ text: 'Tarefa adicionada: ' + desc, time: new Date().toLocaleString('pt-PT') });
+  APP.currentOT.activity.push({ text: 'Tarefa adicionada: ' + desc, time: new Date().toLocaleString('pt-PT'), user: APP.user ? APP.user.name : 'Sistema' });
   saveData(); closeModal('modal-add-task'); renderOTTasks(); renderOTActivity();
 }
 function addMaterial() { openAddMaterialModal(); }
@@ -11429,7 +11463,7 @@ function addSelectedMaterialToOT() {
   });
   material.stock = Math.max(0, available - qty);
   APP.currentOT.activity = APP.currentOT.activity || [];
-  APP.currentOT.activity.push({ text: 'Material consumido: ' + material.name + ' x' + qty, time: new Date().toLocaleString('pt-PT') });
+  APP.currentOT.activity.push({ text: 'Material consumido: ' + material.name + ' x' + qty, time: new Date().toLocaleString('pt-PT'), user: APP.user ? APP.user.name : 'Sistema' });
   saveData();
   closeModal('modal-add-material');
   renderOTMaterials();
@@ -11457,10 +11491,11 @@ async function requestMaterialForCurrentOT(material, qty, cost, notes) {
     request.materialName = material.name;
     request.requestedBy = APP.user ? APP.user.name : 'Técnico';
     request.requestedByRole = getUserRole();
+    request.activity = [{ text: 'Solicitação de material por técnico · ' + material.name + ' x' + qty, time: new Date().toLocaleString('pt-PT'), user: APP.user ? APP.user.name : 'Técnico' }];
     APP.purchases.push(request);
     addNotification({ key:'material-request-' + request.id, type:'purchase', title:'Material solicitado por técnico', body: abbreviateId(request.id) + ' · ' + request.item + ' x' + request.qty + ' · ' + APP.currentOT.id, targetType:'purchase', targetId:request.id, priority:'high' });
     APP.currentOT.activity = APP.currentOT.activity || [];
-    APP.currentOT.activity.push({ text: 'Material solicitado: ' + material.name + ' x' + qty, time: new Date().toLocaleString('pt-PT') });
+    APP.currentOT.activity.push({ text: 'Material solicitado: ' + material.name + ' x' + qty, time: new Date().toLocaleString('pt-PT'), user: APP.user ? APP.user.name : 'Sistema' });
     saveData();
     closeModal('modal-add-material');
     renderOTMaterials();
@@ -11496,12 +11531,12 @@ function addTimeLog() {
   if (!APP.currentOT) return;
   startLocalOTTimer('Tempo iniciado manualmente');
   APP.currentOT.activity = APP.currentOT.activity || [];
-  APP.currentOT.activity.push({ text: 'Cronómetro iniciado manualmente', time: new Date().toLocaleString('pt-PT') });
+  APP.currentOT.activity.push({ text: 'Cronómetro iniciado manualmente', time: new Date().toLocaleString('pt-PT'), user: APP.user ? APP.user.name : 'Sistema' });
   saveData(); updateOTTimeDisplay(); renderOTTimeControls(); renderOTActivity(); renderOTs();
 }
 function saveOTReport() {
   APP.currentOT.report = document.getElementById('ot-report').value;
-  APP.currentOT.activity.push({ text: 'Relatório atualizado', time: new Date().toLocaleString('pt-PT') });
+  APP.currentOT.activity.push({ text: 'Relatório atualizado', time: new Date().toLocaleString('pt-PT'), user: APP.user ? APP.user.name : 'Sistema' });
   saveData(); renderOTActivity(); showToast('Relatório guardado!');
 }
 function generateAutoReport(ot) {
@@ -11552,7 +11587,7 @@ function renderOTActivity() {
   var acts = APP.currentOT.activity || [];
   el.innerHTML = acts.length === 0
     ? '<p class="text-slate-500">Sem atividade.</p>'
-    : acts.slice().reverse().map(function(a) { return '<div class="py-1.5 border-b border-white/5"><div class="text-slate-300">' + a.text + '</div><div class="text-slate-600">' + a.time + '</div></div>'; }).join('');
+    : acts.slice().reverse().map(function(a) { return '<div class="py-1.5 border-b border-white/5"><div class="text-slate-300">' + a.text + '</div><div class="text-slate-600">' + a.time + (a.user ? ' · ' + a.user : '') + '</div></div>'; }).join('');
 }
 function requestSignature() { showToast('Pedido de assinatura enviado ao cliente.'); }
 function renderOTCopilot() {
