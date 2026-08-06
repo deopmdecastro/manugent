@@ -4182,7 +4182,7 @@
         <div class="flex items-center justify-between mb-6 page-header">
           <div>
             <h1 class="mono">Material</h1>
-            <p>Stock, consumo e material usado em OTs</p>
+            <p>Inventário de material e respetivas fotos</p>
           </div>
           <button class="btn-primary" onclick="createStockMaterial()" id="new-material-page-btn"><i class="fas fa-plus"></i> Novo Material</button>
         </div>
@@ -5423,6 +5423,13 @@
         <span class="text-slate-500"><i class="fas fa-check-circle text-green-400"></i> Notas de receção:</span>
         <p id="purchase-detail-reception" class="mt-1 text-slate-300">—</p>
       </div>
+    </div>
+    <div class="card p-4 mt-4">
+      <div class="flex items-center justify-between mb-3">
+        <h4 class="font-medium text-sm"><i class="fas fa-boxes-stacked text-purple-400"></i> Material Consumido</h4>
+        <span class="badge badge-blue" id="purchase-detail-consumed-badge">0</span>
+      </div>
+      <div id="purchase-detail-consumed" class="text-sm text-slate-400">Nenhum material consumido associado.</div>
     </div>
     <div class="flex gap-3 mt-5">
       <button class="btn-secondary flex-1" onclick="closeModal('modal-purchase-detail')">Fechar</button>
@@ -6685,7 +6692,7 @@
         </div>
         <div class="card p-4">
           <div class="flex items-center justify-between mb-3">
-            <h4 class="font-medium text-sm">Anexos</h4>
+            <h4 class="font-medium text-sm"><i class="fas fa-images text-purple-400"></i> Fotos e Anexos</h4>
             <span class="badge badge-blue" id="material-detail-attachments-badge"><i class="fas fa-paperclip"></i> 0</span>
           </div>
           <div id="material-detail-attachments"></div>
@@ -8737,6 +8744,8 @@ function openNotification(id) {
   renderNotifications();
   if (n.targetType === 'ot' && n.targetId) { showPage('ots'); return openOTDetail(n.targetId); }
   if (n.targetType === 'purchase') return showPage('purchases');
+  if (n.targetType === 'incident' && n.targetId) { showPage('incidents'); return openIncidentDetail(n.targetId); }
+  if (n.targetType === 'material' && n.targetId) { showPage('materials'); return openMaterialDetail(n.targetId); }
   if (n.targetType === 'incident') return showPage('incidents');
   if (n.targetType === 'material') return showPage('materials');
   if (n.targetType === 'checklist') return showPage('checklists');
@@ -9106,13 +9115,6 @@ function renderMaterials() {
   var tbody = document.getElementById('materials-table-body');
   if (!tbody) return;
   var rows = (APP.stockMaterials || []).slice();
-  var otUsage = [];
-  APP.ots.forEach(function(ot) {
-    (ot.materials || []).forEach(function(m) {
-      otUsage.push({ name: m.description || m.name || 'Material usado', category: 'Usado em OT', stock: m.qty || 1, cost: m.cost || 0, location: ot.title || ot.id, readOnly: true });
-    });
-  });
-  rows = rows.concat(otUsage);
   var categoryFilter = APP.materialCategoryFilter || '';
   var quick = APP.materialQuickFilters || {};
   rows = rows.filter(function(m) {
@@ -9372,6 +9374,27 @@ function openPurchaseDetail(id) {
     document.getElementById('purchase-detail-reception').textContent = p.receivedNotes;
   } else {
     recWrap.style.display = 'none';
+  }
+  var consumedWrap = document.getElementById('purchase-detail-consumed');
+  var consumedBadge = document.getElementById('purchase-detail-consumed-badge');
+  var otMaterials = [];
+  if (p.otId) {
+    var ot = (APP.ots || []).find(function(o) { return o.id === p.otId; });
+    if (ot && ot.materials && ot.materials.length) otMaterials = ot.materials;
+  }
+  if (p.materialName && !otMaterials.length) {
+    otMaterials = [{ name: p.materialName, qty: p.qty || 1, cost: p.value ? (Number(p.value) / Math.max(1, Number(p.qty || 1))) : 0, category: 'Pedido de compra', notes: p.notes || '' }];
+  }
+  if (consumedBadge) consumedBadge.textContent = otMaterials.length;
+  if (consumedWrap) {
+    consumedWrap.innerHTML = otMaterials.length ? otMaterials.map(function(m) {
+      var qty = Number(m.qty || 1);
+      var total = qty * Number(m.cost || 0);
+      return '<div class="flex items-center justify-between gap-3 py-2 border-b border-white/5">' +
+        '<div class="min-w-0"><div class="text-slate-200">' + escapeHtml(m.name || m.description || 'Material') + '</div>' +
+        '<div class="text-xs text-slate-500">' + escapeHtml(m.category || 'Material') + ' · qtd. ' + qty + (m.notes ? ' · ' + escapeHtml(m.notes) : '') + '</div></div>' +
+        '<div class="mono text-xs text-slate-400">' + formatCurrency(total) + '</div></div>';
+    }).join('') : 'Nenhum material consumido associado.';
   }
   document.getElementById('modal-purchase-detail').style.display = 'flex';
 }
