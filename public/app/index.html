@@ -4197,7 +4197,7 @@
           </div>
         </div>
         <div id="purchases-table-wrap" class="card overflow-hidden">
-          <table class="data-table"><thead><tr><th>ID</th><th>Item</th><th>Fornecedor</th><th>Estado</th><th>Valor</th><th>Data</th></tr></thead><tbody id="purchases-table-body"></tbody></table>
+          <table class="data-table"><thead><tr><th>ID</th><th>Item</th><th>Cliente</th><th>Empresa</th><th>Fornecedor</th><th>Estado</th><th>Valor</th><th>Data</th><th>Ações</th></tr></thead><tbody id="purchases-table-body"></tbody></table>
         </div>
       </div>
 
@@ -5276,7 +5276,7 @@
 <div id="modal-new-purchase" class="modal-overlay" style="display:none">
   <div class="modal-content">
     <div class="flex items-center justify-between mb-5">
-      <h2 class="text-lg font-semibold">Novo Pedido de Compra</h2>
+      <h2 class="text-lg font-semibold" id="purchase-modal-title">Novo Pedido de Compra</h2>
       <button class="btn-ghost" onclick="closeModal('modal-new-purchase')"><i class="fas fa-times"></i></button>
     </div>
     <div class="space-y-4">
@@ -5293,10 +5293,26 @@
         </div>
         <div>
           <label class="block text-sm mb-2 text-slate-300">OT associada</label>
-          <select id="purchase-ot" class="input-field">
+          <select id="purchase-ot" class="input-field" onchange="syncPurchaseOTClient()">
             <option value="">Sem OT</option>
           </select>
         </div>
+      </div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Cliente</label>
+          <select id="purchase-client" class="input-field" onchange="populatePurchaseBuildingSelect();updatePurchaseEmpresaHint()">
+            <option value="">Sem cliente associado</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Empresa</label>
+          <input type="text" id="purchase-empresa-hint" class="input-field" disabled placeholder="—">
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Edifício</label>
+        <select id="purchase-building" class="input-field"><option value="">Sem edifício associado</option></select>
       </div>
       <div class="grid md:grid-cols-3 gap-4">
         <div>
@@ -5311,15 +5327,16 @@
           <label class="block text-sm mb-2 text-slate-300">Estado</label>
           <select id="purchase-status" class="input-field">
             <option>Aprovação</option>
-            <option>Pedido enviado</option>
-            <option>Recebido</option>
-            <option>Cancelado</option>
+            <option>Aprovada</option>
+            <option>Encomendada</option>
+            <option>Recebida</option>
+            <option>Cancelada</option>
           </select>
         </div>
       </div>
       <div>
         <label class="block text-sm mb-2 text-slate-300">Fornecedor</label>
-        <input type="text" id="purchase-supplier" class="input-field" placeholder="Fornecedor homologado">
+        <select id="purchase-supplier" class="input-field"><option value="">Sem fornecedor associado</option></select>
       </div>
       <div>
         <label class="block text-sm mb-2 text-slate-300">Justificação</label>
@@ -5327,8 +5344,67 @@
       </div>
       <div class="flex gap-3 pt-2">
         <button class="btn-secondary flex-1" onclick="closeModal('modal-new-purchase')">Cancelar</button>
-        <button class="btn-primary flex-1" onclick="savePurchaseRequest()"><i class="fas fa-cart-plus"></i> Criar pedido</button>
+        <button class="btn-primary flex-1" id="purchase-modal-submit-btn" onclick="savePurchaseRequest()"><i class="fas fa-cart-plus"></i> Criar pedido</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Purchase Reception Modal -->
+<div id="modal-receive-purchase" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-semibold"><i class="fas fa-check-circle text-green-400"></i> Marcar como Recebido</h2>
+      <button class="btn-ghost" onclick="closeModal('modal-receive-purchase')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div class="text-xs text-slate-500 mono" id="receive-purchase-id">—</div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Notas de receção *</label>
+        <textarea id="receive-purchase-notes" class="input-field" rows="4" placeholder="Confirme quantidade recebida, estado do material, discrepâncias..."></textarea>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-receive-purchase')">Cancelar</button>
+      <button class="btn-primary flex-1" onclick="confirmReceivePurchase()"><i class="fas fa-check"></i> Confirmar Receção</button>
+    </div>
+  </div>
+</div>
+
+<!-- Purchase Detail Modal -->
+<div id="modal-purchase-detail" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <div class="text-xs text-slate-500 mono mb-1" id="purchase-detail-id" title="">PC-000</div>
+        <h2 class="text-lg font-semibold" id="purchase-detail-title">Detalhe do Pedido</h2>
+      </div>
+      <button class="btn-ghost" onclick="closeModal('modal-purchase-detail')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="card p-4 space-y-2 text-sm">
+      <div class="grid grid-cols-2 gap-3">
+        <div><span class="text-slate-500">Cliente:</span> <span id="purchase-detail-client" class="font-medium ml-2">—</span></div>
+        <div><span class="text-slate-500">Empresa:</span> <span id="purchase-detail-empresa" class="font-medium ml-2">—</span></div>
+        <div><span class="text-slate-500">Edifício:</span> <span id="purchase-detail-building" class="font-medium ml-2">—</span></div>
+        <div><span class="text-slate-500">OT:</span> <span id="purchase-detail-ot" class="font-medium ml-2">—</span></div>
+        <div><span class="text-slate-500">Fornecedor:</span> <span id="purchase-detail-supplier" class="font-medium ml-2">—</span></div>
+        <div><span class="text-slate-500">Quantidade:</span> <span id="purchase-detail-qty" class="font-medium ml-2">—</span></div>
+        <div><span class="text-slate-500">Valor:</span> <span id="purchase-detail-value" class="font-medium ml-2">—</span></div>
+        <div><span class="text-slate-500">Estado:</span> <span id="purchase-detail-status" class="ml-2">—</span></div>
+        <div><span class="text-slate-500">Data:</span> <span id="purchase-detail-date" class="font-medium ml-2">—</span></div>
+      </div>
+      <div class="pt-2 border-t border-white/5">
+        <span class="text-slate-500">Justificação:</span>
+        <p id="purchase-detail-notes" class="mt-1 text-slate-300">—</p>
+      </div>
+      <div class="pt-2 border-t border-white/5" id="purchase-detail-reception-wrap" style="display:none">
+        <span class="text-slate-500"><i class="fas fa-check-circle text-green-400"></i> Notas de receção:</span>
+        <p id="purchase-detail-reception" class="mt-1 text-slate-300">—</p>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-5">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-purchase-detail')">Fechar</button>
+      <button class="btn-primary flex-1" onclick="closeModal('modal-purchase-detail');editPurchase(APP.currentPurchaseId)"><i class="fas fa-pen"></i> Editar</button>
     </div>
   </div>
 </div>
@@ -8280,15 +8356,18 @@ function renderAutomationWidgets() {
     return '<div class="dashboard-widget-row"><div><div class="dashboard-widget-row__title">' + r[0] + '</div><div class="dashboard-widget-row__meta">Atualização operacional</div></div><div class="dashboard-widget-row__value mono">' + r[1] + '</div></div>';
   }).join('');
 }
+function isPurchaseReceived(status) {
+  return status === 'Recebida' || status === 'Recebido';
+}
 function renderCommercialWidgets() {
   var purchases = document.getElementById('purchase-dashboard');
   if (purchases) {
-    var pending = (APP.purchases || []).filter(function(p) { return p.status !== 'Recebido'; }).length;
+    var pending = (APP.purchases || []).filter(function(p) { return !isPurchaseReceived(p.status); }).length;
     var approvedSuppliers = (APP.suppliers || []).filter(function(s) { return s.approved; }).length;
     purchases.innerHTML = [
       ['Pedidos de compra', (APP.purchases || []).length + ' total', 'badge-blue'],
       ['Aprovações pendentes', pending + ' pendente(s)', pending ? 'badge-yellow' : 'badge-green'],
-      ['Receção de material', ((APP.purchases || []).filter(function(p) { return p.status === 'Recebido'; }).length) + ' recebida(s)', 'badge-green'],
+      ['Receção de material', ((APP.purchases || []).filter(function(p) { return isPurchaseReceived(p.status); }).length) + ' recebida(s)', 'badge-green'],
       ['Fornecedores homologados', approvedSuppliers + ' ativo(s)', 'badge-purple']
     ].map(function(r) {
       return '<div class="dashboard-widget-row"><div><div class="dashboard-widget-row__title">' + r[0] + '</div><div class="dashboard-widget-row__meta">Pipeline comercial</div></div><span class="badge ' + r[2] + '">' + r[1] + '</span></div>';
@@ -8362,7 +8441,7 @@ function addNotification(data) {
   renderNotifications();
 }
 function isClosedOperationalStatus(status) {
-  return ['Concluída','Cancelada','Fechada','Resolvido','Recebido'].includes(status);
+  return ['Concluída','Cancelada','Cancelado','Fechada','Fechado','Resolvido','Resolvida','Recebido','Recebida'].includes(status);
 }
 function parseNotificationDate(value) {
   if (!value) return null;
@@ -8477,7 +8556,7 @@ function ensureOperationalNotifications() {
     }
   });
   (APP.purchases || []).forEach(function(p) {
-    if (p.status && p.status !== 'Recebido') {
+    if (p.status && !isPurchaseReceived(p.status)) {
       addNotification({ key:'purchase-open-' + p.id, type:'purchase', title:'Pedido de compra pendente', body: p.id + ' · ' + (p.item || 'Material') + ' · ' + p.status, targetType:'purchase', targetId:p.id, priority:p.status === 'Solicitado' ? 'high' : 'normal' });
       if (p.requestedByRole === 'tecnico') {
         addNotification({ key:'tech-material-request-' + p.id, type:'request', title:'Solicitação técnica de material', body: p.id + ' · ' + (p.item || 'Material') + ' x' + Number(p.qty || 1) + (p.otId ? ' · ' + p.otId : ''), targetType:'purchase', targetId:p.id, priority:'high' });
@@ -8580,19 +8659,27 @@ function getDefaultBillingDocs() {
 function createPurchaseRequest() {
   if (!requirePermission('create', 'purchases', 'criar requisição de compra')) return;
   try {
+    APP.editingPurchaseId = null;
     APP.ots = APP.ots || [];
     var sourceOT = APP.ots.slice().reverse().find(function(o) { return ['Alta','Urgente'].includes(o.priority); }) || APP.ots[APP.ots.length - 1];
     populateCommercialModalSelects();
+    document.getElementById('purchase-modal-title').textContent = 'Novo Pedido de Compra';
+    document.getElementById('purchase-modal-submit-btn').innerHTML = '<i class="fas fa-cart-plus"></i> Criar pedido';
     document.getElementById('purchase-item').value = sourceOT ? 'Material para ' + sourceOT.title : '';
     document.getElementById('purchase-material').value = '';
     document.getElementById('purchase-ot').value = sourceOT ? sourceOT.id : '';
     document.getElementById('purchase-qty').value = '1';
     document.getElementById('purchase-value').value = sourceOT ? Math.max(520, Math.round(getOTCost(sourceOT))) : '0';
     document.getElementById('purchase-status').value = 'Aprovação';
-    document.getElementById('purchase-supplier').value = 'Fornecedor homologado';
+    document.getElementById('purchase-supplier').value = '';
     document.getElementById('purchase-notes').value = '';
+    populatePurchaseBuildingSelect('');
+    var clientSel = document.getElementById('purchase-client');
+    clientSel.value = sourceOT && sourceOT.clientId ? sourceOT.clientId : '';
+    populatePurchaseBuildingSelect('');
+    updatePurchaseEmpresaHint();
     enhanceSelects();
-    ['purchase-material','purchase-ot','purchase-status'].forEach(function(id) {
+    ['purchase-material','purchase-ot','purchase-status','purchase-client','purchase-supplier','purchase-building'].forEach(function(id) {
       var sel = document.getElementById(id);
       if (sel) syncEnhancedSelect(sel);
     });
@@ -8602,6 +8689,32 @@ function createPurchaseRequest() {
     console.error(err);
     showToast('Não foi possível abrir o pedido de compra. Verifique os dados e tente novamente.');
   }
+}
+function editPurchase(id) {
+  var p = (APP.purchases || []).find(function(x) { return x.id === id; });
+  if (!p) return;
+  if (!requirePermission('edit', 'purchases', 'editar pedido de compra')) return;
+  APP.editingPurchaseId = id;
+  populateCommercialModalSelects();
+  document.getElementById('purchase-modal-title').textContent = 'Editar Pedido de Compra';
+  document.getElementById('purchase-modal-submit-btn').innerHTML = '<i class="fas fa-save"></i> Guardar';
+  document.getElementById('purchase-item').value = p.item || '';
+  document.getElementById('purchase-material').value = p.materialId || '';
+  document.getElementById('purchase-ot').value = p.otId || '';
+  document.getElementById('purchase-qty').value = p.qty || 1;
+  document.getElementById('purchase-value').value = p.value || 0;
+  document.getElementById('purchase-status').value = p.status || 'Aprovação';
+  document.getElementById('purchase-supplier').value = p.supplierId || '';
+  document.getElementById('purchase-notes').value = p.notes || '';
+  document.getElementById('purchase-client').value = p.clientId || '';
+  populatePurchaseBuildingSelect(p.buildingId || '');
+  updatePurchaseEmpresaHint();
+  enhanceSelects();
+  ['purchase-material','purchase-ot','purchase-status','purchase-client','purchase-supplier','purchase-building'].forEach(function(id) {
+    var sel = document.getElementById(id);
+    if (sel) syncEnhancedSelect(sel);
+  });
+  document.getElementById('modal-new-purchase').style.display = 'flex';
 }
 function generateBillingDocuments() {
   if (!requirePermission('create', 'quotes', 'criar orçamento')) return;
@@ -8619,8 +8732,10 @@ function generateBillingDocuments() {
   enhanceSelects();
   document.getElementById('modal-new-quote').style.display = 'flex';
 }
-function savePurchaseRequest() {
-  if (!requirePermission('create', 'purchases', 'criar requisição de compra')) return;
+var PURCHASE_STATUS_TO_BACKEND = { 'Rascunho':'rascunho', 'Aprovação':'pendente_aprovacao', 'Aprovada':'aprovada', 'Encomendada':'encomendada', 'Recebida':'recebida', 'Cancelada':'cancelada' };
+async function savePurchaseRequest() {
+  var editing = APP.editingPurchaseId;
+  if (!requirePermission(editing ? 'edit' : 'create', 'purchases', editing ? 'editar pedido de compra' : 'criar requisição de compra')) return;
   var item = document.getElementById('purchase-item').value.trim();
   if (!item) { showToast('Indique o item do pedido de compra.'); return; }
   APP.purchases = APP.purchases || [];
@@ -8628,23 +8743,37 @@ function savePurchaseRequest() {
   var ot = (APP.ots || []).find(function(o) { return o.id === otId; }) || null;
   var materialId = document.getElementById('purchase-material').value;
   var material = (APP.stockMaterials || []).find(function(m) { return m.id === materialId; }) || null;
-  var purchase = {
-    id: 'PC-' + String(APP.purchases.length + 1).padStart(3, '0'),
-    item: item,
-    materialId: material ? material.id : '',
-    materialName: material ? material.name : '',
-    otId: ot ? ot.id : '',
-    otTitle: ot ? ot.title : '',
-    supplier: document.getElementById('purchase-supplier').value.trim() || 'Fornecedor',
-    status: document.getElementById('purchase-status').value || 'Aprovação',
-    qty: Number(document.getElementById('purchase-qty').value || 1),
-    value: Number(document.getElementById('purchase-value').value || 0),
+  var payload = {
+    itemDescription: item,
+    quantity: Number(document.getElementById('purchase-qty').value || 1),
+    totalAmount: Number(document.getElementById('purchase-value').value || 0),
+    status: PURCHASE_STATUS_TO_BACKEND[document.getElementById('purchase-status').value] || 'pendente_aprovacao',
+    supplierId: document.getElementById('purchase-supplier').value || null,
+    clientId: document.getElementById('purchase-client').value || null,
+    buildingId: document.getElementById('purchase-building').value || null,
+    workOrderId: otId || null,
     notes: document.getElementById('purchase-notes').value.trim(),
-    createdAt: new Date().toISOString()
   };
-  APP.purchases.push(purchase);
-  addNotification({ key:'purchase-created-' + purchase.id, type:'purchase', title:'Novo pedido de compra', body: purchase.id + ' · ' + purchase.item, targetType:'purchase', targetId:purchase.id });
-  saveData(); closeModal('modal-new-purchase'); renderCommercialWidgets(); renderPurchases(); showToast('Pedido de compra criado.');
+  try {
+    var result = editing
+      ? await apiRequest('/api/purchase-orders/' + editing, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      : await apiRequest('/api/purchase-orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    var raw = result.purchaseOrder;
+    var local = mapBackendPurchaseOrder(raw);
+    local.materialId = material ? material.id : '';
+    local.materialName = material ? material.name : '';
+    if (!local.supplier && document.getElementById('purchase-supplier').selectedOptions.length) local.supplier = document.getElementById('purchase-supplier').selectedOptions[0].textContent;
+    var idx = APP.purchases.findIndex(function(p) { return p.id === local.id; });
+    if (idx >= 0) APP.purchases[idx] = local; else APP.purchases.push(local);
+    if (!editing) {
+      addNotification({ key:'purchase-created-' + local.id, type:'purchase', title:'Novo pedido de compra', body: abbreviateId(local.id) + ' · ' + local.item, targetType:'purchase', targetId:local.id });
+    }
+    APP.editingPurchaseId = null;
+    saveData(); closeModal('modal-new-purchase'); renderCommercialWidgets(); renderPurchases();
+    showToast(editing ? 'Pedido de compra atualizado!' : 'Pedido de compra criado.');
+  } catch (error) {
+    showToast('Não foi possível guardar o pedido de compra: ' + (error.message || 'erro desconhecido'));
+  }
 }
 function saveBillingDocument() {
   if (!requirePermission('create', 'quotes', 'criar orçamento')) return;
@@ -8857,13 +8986,16 @@ async function saveStockMaterial() {
   }
   saveData(); closeModal('modal-new-material'); renderMaterials(); renderCommercialWidgets(); showToast('Material adicionado ao stock.');
 }
+function getPurchaseStatusClass(s) {
+  return { 'Rascunho':'badge-gray', 'Aprovação':'badge-yellow', 'Aprovada':'badge-blue', 'Encomendada':'badge-blue', 'Recebida':'badge-green', 'Cancelada':'badge-red' }[s] || 'badge-gray';
+}
 function renderPurchases() {
   var tbody = document.getElementById('purchases-table-body');
   if (!tbody) return;
   APP.purchases = APP.purchases || [];
   var statusFilter = APP.purchaseStatusFilter || '';
   var rows = APP.purchases.filter(function(p) {
-    if (!matchesSearch(p, ['id','item','supplier','status','notes'])) return false;
+    if (!matchesSearch(p, ['id','item','supplier','clientName','empresaName','status','notes'])) return false;
     if (statusFilter && (p.status || 'Aprovação') !== statusFilter) return false;
     return true;
   });
@@ -8877,9 +9009,92 @@ function renderPurchases() {
   }
   if (empty) empty.style.display = 'none';
   if (table) table.style.display = 'block';
+  var canEdit = canDo('edit', 'purchases');
+  var canDelete = canDo('delete', 'purchases');
   tbody.innerHTML = rows.slice().reverse().map(function(p) {
-    return '<tr><td class="mono">' + escapeHtml(p.id) + '</td><td>' + escapeHtml(p.item) + '</td><td>' + escapeHtml(p.supplier || 'Fornecedor') + '</td><td><span class="badge badge-yellow">' + escapeHtml(p.status || 'Aprovação') + '</span></td><td class="mono">' + formatCurrency(Number(p.value || 0)) + '</td><td class="text-slate-400">' + formatDate(p.createdAt) + '</td></tr>';
+    var actions = '<div class="flex items-center gap-1">' +
+      '<button class="btn-ghost text-xs" title="Visualizar" onclick="openPurchaseDetail(\'' + p.id + '\')"><i class="fas fa-eye"></i></button>' +
+      (canEdit ? '<button class="btn-ghost text-xs" title="Editar" onclick="editPurchase(\'' + p.id + '\')"><i class="fas fa-pen"></i></button>' : '') +
+      (!isPurchaseReceived(p.status) ? '<button class="btn-ghost text-xs" title="Marcar como recebido" onclick="openReceivePurchaseModal(\'' + p.id + '\')"><i class="fas fa-check-circle text-green-400"></i></button>' : '') +
+      (canDelete ? '<button class="btn-ghost text-xs" title="Apagar" onclick="deletePurchase(\'' + p.id + '\')"><i class="fas fa-trash text-red-400"></i></button>' : '') +
+      '</div>';
+    return '<tr>' +
+      '<td class="mono text-xs text-slate-400" title="' + escapeHtml(p.id) + '">' + abbreviateId(p.id) + '</td>' +
+      '<td>' + escapeHtml(p.item) + '</td>' +
+      '<td>' + (escapeHtml(p.clientName) || '—') + '</td>' +
+      '<td>' + (escapeHtml(p.empresaName) || '—') + '</td>' +
+      '<td>' + (escapeHtml(p.supplier) || '—') + '</td>' +
+      '<td><span class="badge ' + getPurchaseStatusClass(p.status) + '">' + escapeHtml(p.status || 'Aprovação') + '</span></td>' +
+      '<td class="mono">' + formatCurrency(Number(p.value || 0)) + '</td>' +
+      '<td class="text-slate-400">' + formatDate(p.createdAt) + '</td>' +
+      '<td>' + actions + '</td></tr>';
   }).join('');
+}
+function openPurchaseDetail(id) {
+  var p = (APP.purchases || []).find(function(x) { return x.id === id; });
+  if (!p) return;
+  APP.currentPurchaseId = id;
+  document.getElementById('purchase-detail-id').textContent = abbreviateId(id, 12);
+  document.getElementById('purchase-detail-id').title = id;
+  document.getElementById('purchase-detail-title').textContent = p.item;
+  document.getElementById('purchase-detail-client').textContent = p.clientName || '—';
+  document.getElementById('purchase-detail-empresa').textContent = p.empresaName || '—';
+  document.getElementById('purchase-detail-building').textContent = p.buildingName || '—';
+  document.getElementById('purchase-detail-ot').textContent = p.otTitle || '—';
+  document.getElementById('purchase-detail-supplier').textContent = p.supplier || '—';
+  document.getElementById('purchase-detail-qty').textContent = p.qty || 1;
+  document.getElementById('purchase-detail-value').textContent = formatCurrency(Number(p.value || 0));
+  document.getElementById('purchase-detail-status').innerHTML = '<span class="badge ' + getPurchaseStatusClass(p.status) + '">' + p.status + '</span>';
+  document.getElementById('purchase-detail-date').textContent = p.createdAt ? new Date(p.createdAt).toLocaleDateString('pt-PT') : '—';
+  document.getElementById('purchase-detail-notes').textContent = p.notes || '—';
+  var recWrap = document.getElementById('purchase-detail-reception-wrap');
+  if (p.receivedNotes) {
+    recWrap.style.display = 'block';
+    document.getElementById('purchase-detail-reception').textContent = p.receivedNotes;
+  } else {
+    recWrap.style.display = 'none';
+  }
+  document.getElementById('modal-purchase-detail').style.display = 'flex';
+}
+function openReceivePurchaseModal(id) {
+  if (!requirePermission('edit', 'purchases', 'marcar compra como recebida')) return;
+  var p = (APP.purchases || []).find(function(x) { return x.id === id; });
+  if (!p) return;
+  APP.receivingPurchaseId = id;
+  document.getElementById('receive-purchase-id').textContent = abbreviateId(id, 12) + ' · ' + p.item;
+  document.getElementById('receive-purchase-notes').value = p.receivedNotes || '';
+  document.getElementById('modal-receive-purchase').style.display = 'flex';
+}
+async function confirmReceivePurchase() {
+  var id = APP.receivingPurchaseId;
+  var p = (APP.purchases || []).find(function(x) { return x.id === id; });
+  if (!p) return;
+  var notes = document.getElementById('receive-purchase-notes').value.trim();
+  if (!notes) { showToast('Descreva as notas de receção.'); return; }
+  try {
+    var result = await apiRequest('/api/purchase-orders/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'recebida', receivedNotes: notes }) });
+    var local = mapBackendPurchaseOrder(result.purchaseOrder);
+    local.materialId = p.materialId; local.materialName = p.materialName;
+    var idx = APP.purchases.findIndex(function(x) { return x.id === id; });
+    if (idx >= 0) APP.purchases[idx] = local;
+    APP.receivingPurchaseId = null;
+    saveData(); closeModal('modal-receive-purchase'); renderCommercialWidgets(); renderPurchases();
+    showToast('Pedido de compra marcado como recebido.');
+  } catch (error) {
+    showToast('Não foi possível confirmar a receção: ' + (error.message || 'erro desconhecido'));
+  }
+}
+async function deletePurchase(id) {
+  if (!requirePermission('delete', 'purchases', 'apagar pedido de compra')) return;
+  if (!confirm('Apagar este pedido de compra? Esta ação não pode ser desfeita.')) return;
+  try {
+    await apiRequest('/api/purchase-orders/' + id, { method: 'DELETE' });
+    APP.purchases = (APP.purchases || []).filter(function(x) { return x.id !== id; });
+    saveData(); renderCommercialWidgets(); renderPurchases();
+    showToast('Pedido de compra removido.');
+  } catch (error) {
+    showToast('Não foi possível remover o pedido de compra: ' + (error.message || 'erro desconhecido'));
+  }
 }
 function renderQuotes() {
   var tbody = document.getElementById('quotes-table-body');
@@ -8919,6 +9134,48 @@ function populateCommercialModalSelects() {
       return '<option value="' + escapeHtml(c.id) + '">' + escapeHtml(c.name || 'Cliente') + '</option>';
     }).join('');
   }
+  var purchaseClient = document.getElementById('purchase-client');
+  if (purchaseClient) {
+    purchaseClient.innerHTML = '<option value="">Sem cliente associado</option>' + (APP.clients || []).map(function(c) {
+      return '<option value="' + escapeHtml(c.id) + '">' + escapeHtml(c.name || 'Cliente') + '</option>';
+    }).join('');
+  }
+  var purchaseSupplier = document.getElementById('purchase-supplier');
+  if (purchaseSupplier) {
+    purchaseSupplier.innerHTML = '<option value="">Sem fornecedor associado</option>' + (APP.suppliers || []).map(function(s) {
+      return '<option value="' + escapeHtml(s.id) + '">' + escapeHtml(s.name || 'Fornecedor') + '</option>';
+    }).join('');
+  }
+}
+function populatePurchaseBuildingSelect(selectedId) {
+  var clientSel = document.getElementById('purchase-client');
+  var buildingSel = document.getElementById('purchase-building');
+  if (!buildingSel) return;
+  var clientId = clientSel ? clientSel.value : '';
+  var buildings = (APP.buildings || []).filter(function(b) { return !clientId || b.clientId === clientId; });
+  buildingSel.innerHTML = '<option value="">Sem edifício associado</option>' + buildings.map(function(b) {
+    return '<option value="' + escapeHtml(b.id) + '"' + (String(selectedId || '') === String(b.id) ? ' selected' : '') + '>' + escapeHtml(b.name) + '</option>';
+  }).join('');
+  buildingSel.value = selectedId || '';
+  enhanceSelects();
+}
+function updatePurchaseEmpresaHint() {
+  var sel = document.getElementById('purchase-client');
+  var hint = document.getElementById('purchase-empresa-hint');
+  if (!sel || !hint) return;
+  var client = (APP.clients || []).find(function(c) { return c.id === sel.value; });
+  var empresaId = client ? (client.empresa_id || client.empresaId) : null;
+  var empresa = empresaId ? (APP.empresas || []).find(function(e) { return e.id === empresaId; }) : null;
+  hint.value = empresa ? empresa.name : (client ? 'Sem empresa associada' : '—');
+}
+function syncPurchaseOTClient() {
+  var otId = document.getElementById('purchase-ot').value;
+  var ot = (APP.ots || []).find(function(o) { return o.id === otId; });
+  if (!ot || !ot.clientId) return;
+  var clientSel = document.getElementById('purchase-client');
+  if (clientSel) { clientSel.value = ot.clientId; syncEnhancedSelect(clientSel); }
+  populatePurchaseBuildingSelect('');
+  updatePurchaseEmpresaHint();
 }
 function syncPurchaseMaterial() {
   var id = document.getElementById('purchase-material').value;
@@ -9970,17 +10227,35 @@ function mapBackendKnowledge(article) {
   };
 }
 function mapBackendPurchaseOrder(po) {
-  var supplier = po.supplier ? po.supplier.name : 'Fornecedor';
+  var supplier = po.supplier ? po.supplier.name : '';
   var statusMap = {
     rascunho: 'Rascunho', pendente_aprovacao: 'Aprovação', aprovada: 'Aprovada',
     encomendada: 'Encomendada', recebida: 'Recebida', cancelada: 'Cancelada'
   };
+  var client = (APP.clients || []).find(function(c) { return c.id === po.client_id; });
+  var building = (APP.buildings || []).find(function(b) { return b.id === po.building_id; });
+  var empresaId = client ? (client.empresa_id || client.empresaId) : null;
+  var empresa = empresaId ? (APP.empresas || []).find(function(e) { return e.id === empresaId; }) : null;
+  var ot = (APP.ots || []).find(function(o) { return o.id === po.work_order_id; });
   return {
     id: po.id,
-    item: po.cost_center || 'Encomenda',
+    item: po.item_description || po.cost_center || 'Encomenda',
+    qty: Number(po.quantity || 1),
+    supplierId: po.supplier_id || '',
     supplier: supplier,
+    clientId: po.client_id || '',
+    clientName: client ? client.name : '',
+    empresaId: empresaId || '',
+    empresaName: empresa ? empresa.name : '',
+    buildingId: po.building_id || '',
+    buildingName: building ? building.name : '',
+    otId: po.work_order_id || '',
+    otTitle: ot ? ot.title : '',
     status: statusMap[po.status] || po.status || 'Aprovação',
     value: Number(po.total_amount || 0),
+    notes: po.notes || '',
+    receivedNotes: po.received_notes || '',
+    receivedAt: po.received_at || '',
     createdAt: po.created_at
   };
 }
@@ -10199,6 +10474,10 @@ function syncBackendWorkOrders() {
     // Merge backend purchase orders
     if (results[25] && results[25].purchaseOrders) {
       APP.purchases = results[25].purchaseOrders.map(mapBackendPurchaseOrder);
+      ensureEmpresasLoaded(function() {
+        APP.purchases = results[25].purchaseOrders.map(mapBackendPurchaseOrder);
+        renderPurchases();
+      });
     }
     // Merge backend quotes
     if (results[26] && results[26].quotes) {
@@ -10796,36 +11075,39 @@ function addSelectedMaterialToOT() {
   updateDashboard();
   showToast('Material associado à OT e stock atualizado.');
 }
-function requestMaterialForCurrentOT(material, qty, cost, notes) {
+async function requestMaterialForCurrentOT(material, qty, cost, notes) {
   if (!APP.currentOT || !material) return;
   APP.purchases = APP.purchases || [];
-  var request = {
-    id: 'PC-' + String(APP.purchases.length + 1).padStart(3, '0'),
-    item: material.name,
-    materialId: material.id,
-    materialName: material.name,
-    otId: APP.currentOT.id,
-    otTitle: APP.currentOT.title,
-    supplier: 'A definir',
-    status: 'Solicitado',
-    qty: qty,
-    value: qty * Number(cost || 0),
+  var payload = {
+    itemDescription: material.name,
+    quantity: qty,
+    totalAmount: qty * Number(cost || 0),
+    status: 'pendente_aprovacao',
+    clientId: APP.currentOT.clientId || null,
+    workOrderId: APP.currentOT.id || null,
     notes: notes || 'Solicitado pelo técnico na OT.',
-    requestedBy: APP.user ? APP.user.name : 'Técnico',
-    requestedByRole: getUserRole(),
-    createdAt: new Date().toISOString()
   };
-  APP.purchases.push(request);
-  addNotification({ key:'material-request-' + request.id, type:'purchase', title:'Material solicitado por técnico', body: request.id + ' · ' + request.item + ' x' + request.qty + ' · ' + APP.currentOT.id, targetType:'purchase', targetId:request.id, priority:'high' });
-  APP.currentOT.activity = APP.currentOT.activity || [];
-  APP.currentOT.activity.push({ text: 'Material solicitado: ' + material.name + ' x' + qty, time: new Date().toLocaleString('pt-PT') });
-  saveData();
-  closeModal('modal-add-material');
-  renderOTMaterials();
-  renderOTActivity();
-  renderPurchases();
-  updateDashboard();
-  showToast('Solicitação de material enviada para gestão/compras.');
+  try {
+    var result = await apiRequest('/api/purchase-orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    var request = mapBackendPurchaseOrder(result.purchaseOrder);
+    request.materialId = material.id;
+    request.materialName = material.name;
+    request.requestedBy = APP.user ? APP.user.name : 'Técnico';
+    request.requestedByRole = getUserRole();
+    APP.purchases.push(request);
+    addNotification({ key:'material-request-' + request.id, type:'purchase', title:'Material solicitado por técnico', body: abbreviateId(request.id) + ' · ' + request.item + ' x' + request.qty + ' · ' + APP.currentOT.id, targetType:'purchase', targetId:request.id, priority:'high' });
+    APP.currentOT.activity = APP.currentOT.activity || [];
+    APP.currentOT.activity.push({ text: 'Material solicitado: ' + material.name + ' x' + qty, time: new Date().toLocaleString('pt-PT') });
+    saveData();
+    closeModal('modal-add-material');
+    renderOTMaterials();
+    renderOTActivity();
+    renderPurchases();
+    updateDashboard();
+    showToast('Solicitação de material enviada para gestão/compras.');
+  } catch (error) {
+    showToast('Não foi possível enviar a solicitação de material: ' + (error.message || 'erro desconhecido'));
+  }
 }
 function renderOTMaterials() {
   var el = document.getElementById('ot-materials-list');
@@ -14966,6 +15248,8 @@ function closeModal(id) {
   if (id === 'modal-equip-detail') { showPage('equipment'); return; }
   if (id === 'modal-new-incident') { APP.editingIncidentId = null; }
   if (id === 'modal-resolve-incident') { APP.resolvingIncidentId = null; }
+  if (id === 'modal-new-purchase') { APP.editingPurchaseId = null; }
+  if (id === 'modal-receive-purchase') { APP.receivingPurchaseId = null; }
   if (id === 'modal-new-file') {
     APP.fileReturnContext = '';
     APP.editingFileId = '';
@@ -15499,7 +15783,7 @@ function renderGlobalFilterFields(page) {
       '</div></div>';
   }
   if (page === 'purchases') {
-    return '<div><label class="block text-sm mb-2 text-slate-300">Estado</label><select id="filter-purchase-status" class="input-field">' + filterOpt('', 'Todos', APP.purchaseStatusFilter) + ['Aprovação','Pedido enviado','Recebido','Cancelado'].map(function(s) { return filterOpt(s, s, APP.purchaseStatusFilter); }).join('') + '</select></div>';
+    return '<div><label class="block text-sm mb-2 text-slate-300">Estado</label><select id="filter-purchase-status" class="input-field">' + filterOpt('', 'Todos', APP.purchaseStatusFilter) + ['Aprovação','Aprovada','Encomendada','Recebida','Cancelada'].map(function(s) { return filterOpt(s, s, APP.purchaseStatusFilter); }).join('') + '</select></div>';
   }
   if (page === 'quotes') {
     return '<div><label class="block text-sm mb-2 text-slate-300">Tipo</label><select id="filter-quote-type" class="input-field">' + filterOpt('', 'Todos', APP.quoteTypeFilter) + ['Orçamento','Fatura'].map(function(s) { return filterOpt(s, s, APP.quoteTypeFilter); }).join('') + '</select></div>';
@@ -15673,7 +15957,7 @@ function initSampleData() {
     ];
     APP.purchases = [
       { id:'PC-001', item:'Banco de baterias UPS', supplier:'UPS Battery Store', status:'Aprovação', value:1850, createdAt:new Date().toISOString() },
-      { id:'PC-002', item:'Filtros gerador', supplier:'Diesel Service Lda', status:'Recebido', value:320, createdAt:new Date().toISOString() }
+      { id:'PC-002', item:'Filtros gerador', supplier:'Diesel Service Lda', status:'Recebida', value:320, createdAt:new Date().toISOString() }
     ];
     APP.contracts = [
       { id:'CT-001', client:'Contrato UPS', sla:'4h', hoursIncluded:40, preventivesIncluded:12, renewal:'automática' },

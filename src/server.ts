@@ -1644,13 +1644,89 @@ app.get('/api/knowledge', async (c) => {
 app.get('/api/purchase-orders', async (c) => {
   try {
     const db = requireDb()
-    const { data, error } = await db.from('purchase_orders')
+    const clientId = c.req.query('clientId')
+    let query = db.from('purchase_orders')
       .select('*, supplier:suppliers(name), items:purchase_order_items(part_id,quantity,unit_price)')
       .order('created_at', { ascending: false })
+    if (clientId) query = query.eq('client_id', clientId)
+    const { data, error } = await query
     if (error) throw error
     return c.json({ purchaseOrders: data || [] })
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not fetch purchase orders')
+  }
+})
+
+app.post('/api/purchase-orders', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json()
+    if (!body.itemDescription) return jsonError(c, 'itemDescription é obrigatório')
+
+    const { data, error } = await db.from('purchase_orders').insert({
+      supplier_id: body.supplierId ?? null,
+      client_id: body.clientId ?? null,
+      building_id: body.buildingId ?? null,
+      work_order_id: body.workOrderId ?? null,
+      item_description: body.itemDescription,
+      quantity: body.quantity ?? 1,
+      status: body.status ?? 'pendente_aprovacao',
+      cost_center: body.costCenter ?? null,
+      total_amount: body.totalAmount ?? 0,
+      notes: body.notes ?? null,
+      requested_by: body.requestedBy ?? null,
+    }).select().single()
+
+    if (error) throw error
+    return c.json({ purchaseOrder: data }, 201)
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not create purchase order')
+  }
+})
+
+app.patch('/api/purchase-orders/:id', async (c) => {
+  try {
+    const db = requireDb()
+    const id = c.req.param('id')
+    const body = await c.req.json()
+    const patch: Record<string, unknown> = {}
+    if (body.itemDescription !== undefined) patch.item_description = body.itemDescription
+    if (body.quantity !== undefined) patch.quantity = body.quantity
+    if (body.status !== undefined) patch.status = body.status
+    if (body.supplierId !== undefined) patch.supplier_id = body.supplierId
+    if (body.clientId !== undefined) patch.client_id = body.clientId
+    if (body.buildingId !== undefined) patch.building_id = body.buildingId
+    if (body.workOrderId !== undefined) patch.work_order_id = body.workOrderId
+    if (body.totalAmount !== undefined) patch.total_amount = body.totalAmount
+    if (body.notes !== undefined) patch.notes = body.notes
+    if (body.receivedNotes !== undefined) patch.received_notes = body.receivedNotes
+    if (body.receivedBy !== undefined) patch.received_by = body.receivedBy
+    // Marcar como recebida regista automaticamente a data de receção;
+    // sair do estado recebida limpa a data.
+    if (body.status === 'recebida') {
+      patch.received_at = new Date().toISOString()
+    } else if (body.status !== undefined) {
+      patch.received_at = null
+    }
+
+    const { data, error } = await db.from('purchase_orders').update(patch).eq('id', id).select().single()
+    if (error) throw error
+    if (!data) return jsonError(c, 'Pedido de compra não encontrado', 404)
+    return c.json({ purchaseOrder: data })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not update purchase order')
+  }
+})
+
+app.delete('/api/purchase-orders/:id', async (c) => {
+  try {
+    const db = requireDb()
+    const id = c.req.param('id')
+    const { error } = await db.from('purchase_orders').delete().eq('id', id)
+    if (error) throw error
+    return c.json({ success: true })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not delete purchase order')
   }
 })
 
