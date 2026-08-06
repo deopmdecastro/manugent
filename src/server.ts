@@ -202,6 +202,17 @@ function jsonError(c: Context, message: string, status = 400) {
   return c.json({ error: message }, status as 400)
 }
 
+// Gera um código de barras alfanumérico (EAN-like, uso interno) para
+// equipamentos, OTs ou pedidos: PREFIXO-AAMMDD-XXXXXX
+function generateBarcode(prefix: string): string {
+  const date = new Date()
+  const y = String(date.getFullYear()).slice(2)
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  const rand = randomBytes(4).toString('hex').toUpperCase().slice(0, 6)
+  return `${prefix}-${y}${m}${d}-${rand}`
+}
+
 function assertOption(value: unknown, options: string[], field: string) {
   if (typeof value !== 'string' || !options.includes(value)) {
     throw new Error(`${field} must be one of: ${options.join(', ')}`)
@@ -399,11 +410,21 @@ function classifyAIProviderError(provider: string, status: number, error: Record
 }
 
 async function callOpenAI(messages: AIMessage[], model: string, apiKey: string): Promise<string> {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-    body: JSON.stringify({ model, messages, temperature: 0.7, max_tokens: 1024 }),
-  })
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 25000)
+  let response: Response
+  try {
+    response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify({ model, messages, temperature: 0.7, max_tokens: 1024 }),
+      signal: controller.signal,
+    })
+  } catch (err) {
+    throw new AIProviderError('openai', 504, 'provider_unavailable', 'A OpenAI demorou demasiado tempo a responder. O Assistente IA ManuGent continua em modo local.', err instanceof Error ? err.message : String(err))
+  } finally {
+    clearTimeout(timeout)
+  }
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({})) as Record<string, unknown>
@@ -415,11 +436,21 @@ async function callOpenAI(messages: AIMessage[], model: string, apiKey: string):
 }
 
 async function callGroq(messages: AIMessage[], model: string, apiKey: string): Promise<string> {
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-    body: JSON.stringify({ model, messages, temperature: 0.7, max_tokens: 1024 }),
-  })
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 25000)
+  let response: Response
+  try {
+    response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify({ model, messages, temperature: 0.7, max_tokens: 1024 }),
+      signal: controller.signal,
+    })
+  } catch (err) {
+    throw new AIProviderError('groq', 504, 'provider_unavailable', 'A Groq demorou demasiado tempo a responder. O Assistente IA ManuGent continua em modo local.', err instanceof Error ? err.message : String(err))
+  } finally {
+    clearTimeout(timeout)
+  }
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({})) as Record<string, unknown>
@@ -433,27 +464,44 @@ async function callGroq(messages: AIMessage[], model: string, apiKey: string): P
 async function callAI(messages: AIMessage[]): Promise<{ text: string; provider: string; model: string }> {
   const effectiveProvider = aiProvider
 
+  // Tenta o provedor preferido; em caso de falha (quota/indisponibilidade),
+  // tenta automaticamente o outro provedor configurado antes de desistir —
+  // isto evita que o chat de IA fique indisponível só porque um dos dois
+  // serviços está em baixo ou sem quota.
+  const attempts: Array<() => Promise<{ text: string; provider: string; model: string }>> = []
+
   if (effectiveProvider === 'openai' && openaiApiKey) {
-    const text = await callOpenAI(messages, aiModel, openaiApiKey)
-    return { text, provider: 'openai', model: aiModel }
+    attempts.push(async () => ({ text: await callOpenAI(messages, aiModel, openaiApiKey!), provider: 'openai', model: aiModel }))
   }
-
   if (effectiveProvider === 'groq' && groqApiKey) {
-    const text = await callGroq(messages, aiModel, groqApiKey)
-    return { text, provider: 'groq', model: aiModel }
+    attempts.push(async () => ({ text: await callGroq(messages, aiModel, groqApiKey!), provider: 'groq', model: aiModel }))
+  }
+  if (groqApiKey && effectiveProvider !== 'groq') {
+    attempts.push(async () => ({ text: await callGroq(messages, 'llama3-8b-8192', groqApiKey!), provider: 'groq', model: 'llama3-8b-8192' }))
+  }
+  if (openaiApiKey && effectiveProvider !== 'openai') {
+    attempts.push(async () => ({ text: await callOpenAI(messages, 'gpt-4o-mini', openaiApiKey!), provider: 'openai', model: 'gpt-4o-mini' }))
   }
 
-  if (groqApiKey) {
-    const text = await callGroq(messages, 'llama3-8b-8192', groqApiKey)
-    return { text, provider: 'groq', model: 'llama3-8b-8192' }
+  if (attempts.length === 0) {
+    throw new Error('Nenhum provedor de IA configurado. Configure OPENAI_API_KEY ou GROQ_API_KEY no ficheiro .env')
   }
 
-  if (openaiApiKey) {
-    const text = await callOpenAI(messages, 'gpt-4o-mini', openaiApiKey)
-    return { text, provider: 'openai', model: 'gpt-4o-mini' }
+  let lastError: unknown = null
+  for (const attempt of attempts) {
+    try {
+      return await attempt()
+    } catch (error) {
+      lastError = error
+      // Só tenta o próximo provedor se o erro for de quota/indisponibilidade
+      // (não repete em caso de erro de validação da própria mensagem).
+      if (error instanceof AIProviderError && (error.code === 'provider_quota' || error.code === 'provider_unavailable' || error.code === 'provider_auth')) {
+        continue
+      }
+      throw error
+    }
   }
-
-  throw new Error('Nenhum provedor de IA configurado. Configure OPENAI_API_KEY ou GROQ_API_KEY no ficheiro .env')
+  throw lastError instanceof Error ? lastError : new Error('Todos os provedores de IA falharam')
 }
 
 function buildContextMessage(context: Record<string, unknown>): string {
@@ -496,6 +544,7 @@ function buildContextMessage(context: Record<string, unknown>): string {
   }
 
   lines.push('\nDICA: Use GET /api/fuzzy/:entity?q=QUERY para pesquisar equipamentos, tecnicos, clientes ou OTs com tolerancia a erros ortograficos.')
+  lines.push('DICA: OTs, pedidos/obras e equipamentos têm NFC, QR e código de barras associados — GET /api/work-orders/:id/history ou /api/maintenance-requests/:id/history devolvem o histórico completo, incluindo leituras NFC/QR/código de barras e pausas com motivo (GET /api/pause-reasons para a lista de motivos).')
   return lines.join('\n')
 }
 
@@ -1050,6 +1099,9 @@ app.post('/api/equipment', async (c) => {
       criticality: body.criticality ?? 'normal',
       status: body.status ?? 'active',
       notes: body.notes ?? null,
+      nfc_tag: body.nfcTag ?? null,
+      qr_code: body.qrCode ?? null,
+      barcode: body.barcode ?? generateBarcode('EQ'),
     }).select().single()
 
     if (error) throw error
@@ -1078,6 +1130,9 @@ app.put('/api/equipment/:id', async (c) => {
     if (body.decommissionReason !== undefined) patch.decommission_reason = body.decommissionReason
     if (body.decommissionedAt !== undefined) patch.decommissioned_at = body.decommissionedAt
     if (body.decommissionedBy !== undefined) patch.decommissioned_by = body.decommissionedBy
+    if (body.nfcTag !== undefined) patch.nfc_tag = body.nfcTag
+    if (body.qrCode !== undefined) patch.qr_code = body.qrCode
+    if (body.barcode !== undefined) patch.barcode = body.barcode
 
     const { data, error } = await db.from('equipment').update(patch).eq('id', id).select().single()
     if (error) throw error
@@ -1317,12 +1372,150 @@ app.post('/api/maintenance-requests', async (c) => {
       title: body.title,
       description: body.description ?? null,
       due_at: body.dueAt ?? null,
+      nfc_tag: body.nfcTag ?? null,
+      qr_code: body.qrCode ?? null,
+      barcode: body.barcode ?? generateBarcode('PED'),
     }).select().single()
 
     if (error) throw error
     return c.json({ request: data }, 201)
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not create maintenance request')
+  }
+})
+
+app.post('/api/maintenance-requests/:id/status', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json()
+    const status = assertOption(body.status, ['aberto', 'em_analise', 'atribuido', 'em_execucao', 'pausado', 'concluido', 'cancelado'], 'status')
+    const { data, error } = await db.from('maintenance_requests').update({ status }).eq('id', c.req.param('id')).select().single()
+    if (error) throw error
+    if (!data) return jsonError(c, 'Pedido not found', 404)
+    return c.json({ request: data })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not update request status')
+  }
+})
+
+// Pausar/retomar um Pedido (ou Obra) com motivo — mesma lista partilhada de
+// motivos de pausa usada pelas OTs.
+app.post('/api/maintenance-requests/:id/pause', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json()
+    if (!body.reasonId) return jsonError(c, 'reasonId é obrigatório')
+    const { data, error } = await db.rpc('pause_maintenance_request', {
+      p_request_id: c.req.param('id'),
+      p_reason_id: body.reasonId,
+      p_note: body.note ?? null,
+      p_user_id: body.userId ?? null,
+    })
+    if (error) throw error
+    if ((data as Record<string, unknown>)?.error) return jsonError(c, String((data as Record<string, unknown>).error), 404)
+    return c.json({ request: data })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not pause request')
+  }
+})
+
+app.post('/api/maintenance-requests/:id/resume', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json().catch(() => ({}))
+    const { data, error } = await db.rpc('resume_maintenance_request', {
+      p_request_id: c.req.param('id'),
+      p_user_id: body.userId ?? null,
+    })
+    if (error) throw error
+    if ((data as Record<string, unknown>)?.error) return jsonError(c, String((data as Record<string, unknown>).error), 404)
+    return c.json({ request: data })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not resume request')
+  }
+})
+
+// Histórico unificado do Pedido/Obra: mudanças de estado, pausas, e leituras
+// de NFC / QR / código de barras.
+app.get('/api/maintenance-requests/:id/history', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_entity_history', {
+      p_entity_type: 'maintenance_request',
+      p_entity_id: c.req.param('id'),
+    })
+    if (error) throw error
+    return c.json({ history: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch request history')
+  }
+})
+
+// ── Routes: Motivos de Pausa (OT / Pedido / Obra) ───────────────────────────
+
+app.get('/api/pause-reasons', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.from('pause_reasons').select('*').eq('active', true).order('sort_order', { ascending: true })
+    if (error) throw error
+    return c.json({ reasons: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch pause reasons')
+  }
+})
+
+app.post('/api/pause-reasons', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json()
+    if (!body.label) return jsonError(c, 'label é obrigatório')
+    const { data, error } = await db.from('pause_reasons').insert({
+      label: body.label,
+      applies_to: body.appliesTo ?? ['work_order', 'maintenance_request'],
+      sort_order: body.sortOrder ?? 50,
+    }).select().single()
+    if (error) throw error
+    return c.json({ reason: data }, 201)
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not create pause reason')
+  }
+})
+
+app.delete('/api/pause-reasons/:id', async (c) => {
+  try {
+    const db = requireDb()
+    const { error } = await db.from('pause_reasons').update({ active: false }).eq('id', c.req.param('id'))
+    if (error) throw error
+    return c.json({ success: true })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not remove pause reason')
+  }
+})
+
+// ── Routes: Leitura de NFC / QR / Código de Barras ──────────────────────────
+// Regista, no histórico da entidade (OT, Pedido/Obra ou Equipamento), sempre
+// que uma tag NFC é picada, um QR code é lido, ou um código de barras é lido.
+
+app.post('/api/scans', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json()
+    const entityType = assertOption(body.entityType, ['work_order', 'maintenance_request', 'equipment'], 'entityType')
+    const method = assertOption(body.method, ['nfc', 'qr', 'barcode'], 'method')
+    if (!body.entityId) return jsonError(c, 'entityId é obrigatório')
+
+    const { data, error } = await db.rpc('log_entity_scan', {
+      p_entity_type: entityType,
+      p_entity_id: String(body.entityId),
+      p_method: method,
+      p_code: body.code ?? null,
+      p_user_id: body.userId ?? null,
+    })
+
+    if (error) throw error
+    return c.json({ event: data }, 201)
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not log scan')
   }
 })
 
@@ -2071,6 +2264,48 @@ app.get('/api/empresas/:id/collaborators', async (c) => {
   }
 })
 
+// Visão geral completa de uma empresa para o SuperAdmin: dados da empresa +
+// clientes + colaboradores + pastas + documentos, tudo numa só chamada —
+// usada pelo botão "Ver" no card de empresa (mini-gestão direta).
+app.get('/api/empresas/:id/overview', async (c) => {
+  try {
+    const db = requireDb()
+    const id = c.req.param('id')
+
+    const [empresaRes, clientsRes, collabsRes, foldersRes, documentsRes] = await Promise.all([
+      db.from('empresas').select('*').eq('id', id).single(),
+      db.rpc('get_clients_by_empresa', { p_empresa_id: id }),
+      db.rpc('get_collaborators_by_empresa', { p_empresa_id: id }),
+      db.rpc('get_empresa_folder_tree', { p_empresa_id: id }),
+      db.from('documents').select('*').eq('empresa_id', id).order('uploaded_at', { ascending: false }).limit(50),
+    ])
+
+    if (empresaRes.error) throw empresaRes.error
+    if (!empresaRes.data) return jsonError(c, 'Empresa não encontrada.', 404)
+
+    const clients = clientsRes.data || []
+    const collaborators = collabsRes.data || []
+    const folders = foldersRes.data || []
+    const documents = documentsRes.data || []
+
+    return c.json({
+      empresa: empresaRes.data,
+      clients,
+      collaborators,
+      folders,
+      documents,
+      stats: {
+        clients: clients.length,
+        collaborators: collaborators.length,
+        folders: folders.length,
+        documents: documents.length,
+      },
+    })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch empresa overview')
+  }
+})
+
 // ── Routes: Multi-tenant scoped data ──────────────────────────────────────────
 
 app.get('/api/empresas/:id/clients', async (c) => {
@@ -2297,12 +2532,55 @@ app.post('/api/work-orders', async (c) => {
       title: body.title,
       description: body.description ?? null,
       scheduled_for: body.scheduledFor ?? null,
+      nfc_tag: body.nfcTag ?? null,
+      qr_code: body.qrCode ?? null,
+      barcode: body.barcode ?? generateBarcode('OT'),
     }).select().single()
 
     if (error) throw error
     return c.json({ workOrder: mapWorkOrder(data) }, 201)
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not create work order')
+  }
+})
+
+// Pausar uma OT com motivo (lista partilhada de motivos de pausa) — regista
+// no histórico e atualiza o registo de tempo ativo do técnico.
+app.post('/api/work-orders/:id/pause', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json()
+    if (!body.technicianId) return jsonError(c, 'technicianId é obrigatório')
+    if (!body.reasonId) return jsonError(c, 'reasonId é obrigatório')
+
+    const { data, error } = await db.rpc('pause_work_order_time_entry', {
+      p_work_order_id: c.req.param('id'),
+      p_technician_id: body.technicianId,
+      p_reason_id: body.reasonId,
+      p_note: body.note ?? null,
+    })
+
+    if (error) throw error
+    if ((data as Record<string, unknown>)?.error) return jsonError(c, String((data as Record<string, unknown>).error), 404)
+    return c.json({ timeEntry: data })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not pause work order')
+  }
+})
+
+// Histórico unificado da OT: mudanças de estado, tempo, pausas, e leituras
+// de NFC / QR / código de barras.
+app.get('/api/work-orders/:id/history', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_entity_history', {
+      p_entity_type: 'work_order',
+      p_entity_id: c.req.param('id'),
+    })
+    if (error) throw error
+    return c.json({ history: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch work order history')
   }
 })
 
