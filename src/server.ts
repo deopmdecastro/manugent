@@ -1221,6 +1221,7 @@ app.post('/api/parts', async (c) => {
       stock: body.stock ?? 0,
       min_stock: body.minStock ?? 0,
       status: body.status ?? 'ativo',
+      photos: body.photos ?? [],
     }).select().single()
 
     if (error) throw error
@@ -1247,6 +1248,7 @@ app.put('/api/parts/:id', async (c) => {
     if (body.stock !== undefined) patch.stock = body.stock
     if (body.minStock !== undefined) patch.min_stock = body.minStock
     if (body.status !== undefined) patch.status = body.status
+    if (body.photos !== undefined) patch.photos = body.photos
     if (body.decommissionReason !== undefined) patch.decommission_reason = body.decommissionReason
     if (body.decommissionedAt !== undefined) patch.decommissioned_at = body.decommissionedAt
     if (body.decommissionedBy !== undefined) patch.decommissioned_by = body.decommissionedBy

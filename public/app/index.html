@@ -3274,6 +3274,17 @@
     .sa-user-row-actions .btn-action.danger { background: rgba(239,68,68,0.12); border-color: rgba(248,113,113,0.35); color: #f87171; }
     .sa-user-row-actions .btn-action.danger:hover { background: rgba(239,68,68,0.22); color: #fff; }
     .sa-status-reason { font-size: 11px; color: var(--text-muted); margin-top: 2px; max-width: 220px; }
+
+    /* Attachment carousel (fotos/vídeos/documentos/áudios em incidentes e material) */
+    .attachment-carousel__viewport {
+      position: relative; width: 100%; border-radius: 12px; overflow: hidden;
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border-light);
+      min-height: 140px; display: flex; align-items: center; justify-content: center;
+    }
+    .attachment-carousel__img { width: 100%; max-height: 320px; object-fit: cover; display: block; }
+    .attachment-carousel__controls { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 8px; }
+    .attachment-pending-item { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 10px; border: 1px solid var(--border-light); font-size: 12px; }
+    .attachment-pending-item .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   </style>
 </head>
 <body>
@@ -5235,9 +5246,10 @@
         </div>
       </div>
       <div>
-        <label class="block text-sm mb-2 text-slate-300">Foto do material</label>
-        <input type="file" id="material-photo-upload" class="input-field" accept="image/*">
-        <div class="text-xs text-slate-500 mt-2">A foto fica disponível na lista de material. Pode remover antes de guardar.</div>
+        <label class="block text-sm mb-2 text-slate-300">Anexos (fotos, vídeos, documentos, áudios)</label>
+        <input type="file" id="material-photo-upload" class="input-field" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv" multiple>
+        <div class="text-xs text-slate-500 mt-2">Pode carregar múltiplos ficheiros. A primeira foto fica disponível como miniatura na lista de material.</div>
+        <div id="material-attachments-list" class="space-y-1 mt-2"></div>
       </div>
       <div class="grid md:grid-cols-2 gap-4">
         <div>
@@ -6529,9 +6541,10 @@
         <select id="incident-severity" class="input-field"><option>Baixa</option><option>Média</option><option>Alta</option><option>Crítica</option></select>
       </div>
       <div>
-        <label class="block text-sm mb-2 text-slate-300">Imagem ou vídeo</label>
-        <input type="file" id="incident-media-upload" class="input-field" accept="image/*,video/*">
-        <div class="text-xs text-slate-500 mt-2">Carregue evidência visual do incidente, como foto do equipamento, alarme ou vídeo curto.</div>
+        <label class="block text-sm mb-2 text-slate-300">Anexos (fotos, vídeos, documentos, áudios)</label>
+        <input type="file" id="incident-media-upload" class="input-field" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv" multiple>
+        <div class="text-xs text-slate-500 mt-2">Pode carregar múltiplos ficheiros de uma vez: fotos, vídeos, documentos ou áudios como evidência do incidente.</div>
+        <div id="incident-attachments-list" class="space-y-1 mt-2"></div>
       </div>
     </div>
 <div class="flex gap-3 mt-6">
@@ -6623,19 +6636,65 @@
         </div>
         <div class="card p-4">
           <div class="flex items-center justify-between mb-3">
-            <h4 class="font-medium text-sm">Evidência visual</h4>
-            <span class="badge badge-blue"><i class="fas fa-image"></i> Anexo</span>
+            <h4 class="font-medium text-sm">Anexos</h4>
+            <span class="badge badge-blue" id="incident-detail-attachments-badge"><i class="fas fa-paperclip"></i> 0</span>
           </div>
-          <div id="incident-detail-media-wrap" style="display:none">
-            <img id="incident-detail-media" alt="Evidência do incidente" class="w-full rounded-lg border border-white/10 object-cover" style="max-height:320px">
-          </div>
-          <div id="incident-detail-media-empty" class="text-sm text-slate-500">Sem evidência visual associada.</div>
+          <div id="incident-detail-attachments"></div>
         </div>
       </div>
       <div class="space-y-4">
         <div class="card p-4">
           <h3 class="font-semibold mb-3 text-sm">Detalhes</h3>
           <div id="incident-detail-meta" class="space-y-2 text-sm text-slate-300"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Material Detail -->
+<div id="modal-material-detail" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
+      <div>
+        <div class="text-xs text-slate-500 mono mb-1" id="material-detail-id" title="">MAT-000</div>
+        <h2 class="text-xl font-bold" id="material-detail-title">Detalhe do Material</h2>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <button class="btn-ghost" title="Editar" onclick="closeMaterialDetail();openEditMaterialModal(APP.currentMaterialId)"><i class="fas fa-pen"></i></button>
+        <button class="btn-ghost" title="Apagar" onclick="deleteMaterial(APP.currentMaterialId)"><i class="fas fa-trash"></i></button>
+        <button class="btn-ghost" onclick="closeMaterialDetail()"><i class="fas fa-arrow-left"></i> Voltar</button>
+      </div>
+    </div>
+    <div class="grid md:grid-cols-3 gap-5">
+      <div class="md:col-span-2 space-y-5">
+        <div class="card p-4">
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div><span class="text-slate-500">Categoria:</span> <span id="material-detail-category" class="font-medium ml-2">—</span></div>
+            <div><span class="text-slate-500">Estado:</span> <span id="material-detail-status" class="ml-2">—</span></div>
+            <div><span class="text-slate-500">Cliente:</span> <span id="material-detail-client" class="font-medium ml-2">—</span></div>
+            <div><span class="text-slate-500">Empresa:</span> <span id="material-detail-empresa" class="font-medium ml-2">—</span></div>
+            <div><span class="text-slate-500">Stock:</span> <span id="material-detail-stock" class="font-medium ml-2">—</span></div>
+            <div><span class="text-slate-500">Custo unitário:</span> <span id="material-detail-cost" class="font-medium ml-2">—</span></div>
+            <div><span class="text-slate-500">Localização:</span> <span id="material-detail-location" class="font-medium ml-2">—</span></div>
+          </div>
+          <div class="mt-3 pt-3 border-t border-white/5">
+            <span class="text-slate-500 text-sm">Notas:</span>
+            <p id="material-detail-notes" class="text-sm mt-1 text-slate-300">—</p>
+          </div>
+        </div>
+        <div class="card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-medium text-sm">Anexos</h4>
+            <span class="badge badge-blue" id="material-detail-attachments-badge"><i class="fas fa-paperclip"></i> 0</span>
+          </div>
+          <div id="material-detail-attachments"></div>
+        </div>
+      </div>
+      <div class="space-y-4">
+        <div class="card p-4">
+          <h3 class="font-semibold mb-3 text-sm">Detalhes</h3>
+          <div id="material-detail-meta" class="space-y-2 text-sm text-slate-300"></div>
         </div>
       </div>
     </div>
@@ -7170,7 +7229,7 @@ function ensurePageBackButtons() {
 }
 
 function isMobileDetailPage(page) {
-  return ['modal-new-ot','modal-ot-detail','modal-new-equip','modal-equip-detail','article-detail','modal-incident-detail'].includes(page);
+  return ['modal-new-ot','modal-ot-detail','modal-new-equip','modal-equip-detail','article-detail','modal-incident-detail','modal-material-detail'].includes(page);
 }
 
 function isMobileShellPage(page) {
@@ -7609,7 +7668,8 @@ function setupDetailPages() {
     { id: 'modal-ot-detail', nav: 'nav-ots' },
     { id: 'modal-new-equip', nav: 'nav-equipment' },
     { id: 'modal-equip-detail', nav: 'nav-equipment' },
-    { id: 'modal-incident-detail', nav: 'nav-incidents' }
+    { id: 'modal-incident-detail', nav: 'nav-incidents' },
+    { id: 'modal-material-detail', nav: 'nav-materials' }
   ].forEach(function(cfg) {
     var el = document.getElementById(cfg.id);
     if (!el || el.dataset.pageReady === 'true') return;
@@ -7622,7 +7682,7 @@ function setupDetailPages() {
 }
 function showDetailPage(id) {
   setupDetailPages();
-  APP.currentPage = (id === 'modal-ot-detail' || id === 'modal-new-ot') ? 'ots' : (id === 'modal-equip-detail' || id === 'modal-new-equip') ? 'equipment' : (id === 'modal-incident-detail') ? 'incidents' : APP.currentPage;
+  APP.currentPage = (id === 'modal-ot-detail' || id === 'modal-new-ot') ? 'ots' : (id === 'modal-equip-detail' || id === 'modal-new-equip') ? 'equipment' : (id === 'modal-incident-detail') ? 'incidents' : (id === 'modal-material-detail') ? 'materials' : APP.currentPage;
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
   document.querySelectorAll('.sidebar-item').forEach(function(i) { i.classList.remove('active'); });
   var el = document.getElementById(id);
@@ -9069,15 +9129,18 @@ function renderMaterials() {
     var photo = m.photo ? '<img src="' + m.photo + '" alt="' + escapeHtml(m.photoName || m.name || 'Material') + '" style="width:34px;height:34px;border-radius:8px;object-fit:cover;border:1px solid rgba(255,255,255,.12)">' : '<div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(99,102,241,0.16)"><i class="fas fa-boxes-stacked text-purple-400 text-xs"></i></div>';
     var nameCell = '<div class="flex items-center gap-3">' + photo + '<div><div>' + escapeHtml(m.name || 'Material') + '</div>' + (m.id && !m.readOnly ? '<div class="text-xs text-slate-600 mono" title="' + escapeHtml(m.id) + '">' + abbreviateId(m.id) + '</div>' : '') + '</div></div>';
     var statusBadge = m.status === 'baixa' ? ' <span class="badge badge-gray text-xs">Baixa</span>' : '';
+    var attCount = (m.attachments || []).length;
+    var attBadge = attCount ? ' <span class="badge badge-blue text-xs"><i class="fas fa-paperclip"></i> ' + attCount + '</span>' : '';
     var actions = m.readOnly ? '<span class="text-xs text-slate-600">—</span>' : '<div class="flex items-center gap-1">' +
+      '<button class="btn-ghost text-xs" title="Visualizar" onclick="openMaterialDetail(\'' + m.id + '\')"><i class="fas fa-eye"></i></button>' +
       '<button class="btn-ghost text-xs" title="Editar" onclick="openEditMaterialModal(\'' + m.id + '\')"><i class="fas fa-pen"></i></button>' +
       (m.status !== 'baixa' ? '<button class="btn-ghost text-xs" title="Dar baixa" onclick="openDecommissionModal(\'material\',\'' + m.id + '\')"><i class="fas fa-power-off text-orange-400"></i></button>' : '') +
       '<button class="btn-ghost text-xs" title="Apagar" onclick="deleteMaterial(\'' + m.id + '\')"><i class="fas fa-trash text-red-400"></i></button></div>';
-    return '<tr><td class="font-medium">' + nameCell + '</td><td><span class="badge badge-blue">' + escapeHtml(m.category || 'Geral') + '</span>' + statusBadge + '</td>' +
+    return '<tr class="' + (m.readOnly ? '' : 'cursor-pointer hover:bg-white/5') + '"' + (m.readOnly ? '' : ' onclick="openMaterialDetail(\'' + m.id + '\')"') + '><td class="font-medium">' + nameCell + '</td><td><span class="badge badge-blue">' + escapeHtml(m.category || 'Geral') + '</span>' + statusBadge + attBadge + '</td>' +
       '<td>' + escapeHtml(m.clientName || '—') + '</td>' +
       '<td>' + escapeHtml(m.empresaName || '—') + '</td>' +
       '<td>' + escapeHtml(String(m.stock || 0)) + '</td><td class="mono">' + formatCurrency(Number(m.cost || 0)) + '</td><td class="text-slate-400">' + escapeHtml(m.location || 'Armazém') + '</td>' +
-      '<td>' + actions + '</td></tr>';
+      '<td onclick="event.stopPropagation()">' + actions + '</td></tr>';
   }).join('');
 }
 function populateMaterialClientSelect(selectedId) {
@@ -9113,6 +9176,8 @@ function openNewMaterialModal() {
   document.getElementById('material-min-stock').value = '1';
   document.getElementById('material-notes').value = '';
   document.getElementById('material-submit-btn').innerHTML = '<i class="fas fa-boxes-stacked"></i> Guardar material';
+  APP.pendingMaterialAttachments = [];
+  renderPendingAttachments('material-attachments-list', 'pendingMaterialAttachments');
   ensureEmpresasLoaded(function() { populateMaterialClientSelect(); });
   enhanceFileInputs();
   enhanceSelects();
@@ -9133,6 +9198,8 @@ function openEditMaterialModal(id) {
   document.getElementById('material-min-stock').value = m.minStock || 0;
   document.getElementById('material-notes').value = m.notes || '';
   document.getElementById('material-submit-btn').innerHTML = '<i class="fas fa-save"></i> Guardar material';
+  APP.pendingMaterialAttachments = normalizeAttachments(m.attachments);
+  renderPendingAttachments('material-attachments-list', 'pendingMaterialAttachments');
   ensureEmpresasLoaded(function() { populateMaterialClientSelect(m.clientId); });
   enhanceFileInputs();
   enhanceSelects();
@@ -9143,7 +9210,8 @@ async function saveStockMaterial() {
   if (!requirePermission(editingId ? 'edit' : 'create', 'materials', editingId ? 'editar material' : 'adicionar material')) return;
   var name = document.getElementById('material-name').value.trim();
   if (!name) { showToast('Indique o nome do material.'); return; }
-  var photo = await readSingleUpload('material-photo-upload');
+  var newFiles = await readMultipleUploads('material-photo-upload');
+  var attachments = (APP.pendingMaterialAttachments || []).concat(newFiles.map(encodeAttachmentEntry));
   var clientId = document.getElementById('material-client').value;
   var client = (APP.clients || []).find(function(c) { return c.id === clientId; });
   var empresaId = client ? (client.empresa_id || client.empresaId) : null;
@@ -9157,7 +9225,8 @@ async function saveStockMaterial() {
     minStock: Number(document.getElementById('material-min-stock').value || 0),
     location: document.getElementById('material-location').value.trim() || 'Armazém central',
     notes: document.getElementById('material-notes').value.trim(),
-    clientId: clientId || null
+    clientId: clientId || null,
+    photos: attachments,
   };
   try {
     var result = editing
@@ -9169,7 +9238,8 @@ async function saveStockMaterial() {
       minStock: Number(p.min_stock || 0), location: p.location || 'Armazém central', notes: p.notes || '',
       clientId: p.client_id || '', clientName: client ? client.name : '', empresaId: empresaId || '', empresaName: empresa ? empresa.name : '',
       status: p.status || 'ativo', decommissionReason: p.decommission_reason || '', decommissionedAt: p.decommissioned_at || '',
-      photo: photo ? photo.dataUrl : (editing ? editing.photo : ''), photoName: photo ? photo.name : (editing ? editing.photoName : ''),
+      photo: attachments.length ? getAssetHref(attachments[0]) : '', photoName: attachments.length ? getAssetName(attachments[0]) : '',
+      attachments: attachments,
       createdAt: p.created_at || (editing ? editing.createdAt : new Date().toISOString())
     };
     APP.stockMaterials = APP.stockMaterials || [];
@@ -9182,10 +9252,46 @@ async function saveStockMaterial() {
       addNotification({ key:'stock-low-' + local.id, type:'stock', title:'Stock baixo', body: local.name + ' está em ' + local.stock + ' unidade(s).', targetType:'material', targetId:local.id, priority:'high' });
     }
     APP.editingMaterialId = null;
+    APP.pendingMaterialAttachments = [];
     saveData(); closeModal('modal-new-material'); renderMaterials(); renderCommercialWidgets(); showToast(editing ? 'Material atualizado!' : 'Material adicionado ao stock.');
   } catch (error) {
     showToast('Não foi possível guardar o material no servidor: ' + (error.message || 'erro desconhecido'), 'error');
   }
+}
+function openMaterialDetail(id) {
+  var m = (APP.stockMaterials || []).find(function(x) { return x.id === id; });
+  if (!m) return;
+  APP.currentMaterialId = id;
+  document.getElementById('material-detail-id').textContent = abbreviateId(id, 12);
+  document.getElementById('material-detail-id').title = id;
+  document.getElementById('material-detail-title').textContent = m.name || 'Material';
+  document.getElementById('material-detail-category').textContent = m.category || 'Geral';
+  document.getElementById('material-detail-status').innerHTML = m.status === 'baixa' ? '<span class="badge badge-gray">Baixa</span>' : '<span class="badge badge-green">Ativo</span>';
+  document.getElementById('material-detail-client').textContent = m.clientName || '—';
+  document.getElementById('material-detail-empresa').textContent = m.empresaName || '—';
+  document.getElementById('material-detail-stock').textContent = String(m.stock || 0);
+  document.getElementById('material-detail-cost').textContent = formatCurrency(Number(m.cost || 0));
+  document.getElementById('material-detail-location').textContent = m.location || 'Armazém central';
+  document.getElementById('material-detail-notes').textContent = m.notes || '—';
+  var attachments = normalizeAttachments(m.attachments);
+  document.getElementById('material-detail-attachments-badge').innerHTML = '<i class="fas fa-paperclip"></i> ' + attachments.length;
+  document.getElementById('material-detail-attachments').innerHTML = renderAttachmentGallery(attachments, 'material-detail');
+  var metaRows = [
+    ['Stock mínimo', String(m.minStock || 0)],
+    ['Criado em', m.createdAt ? new Date(m.createdAt).toLocaleString('pt-PT') : '—']
+  ];
+  if (m.status === 'baixa') {
+    metaRows.push(['Motivo da baixa', m.decommissionReason || '—']);
+    metaRows.push(['Baixa em', m.decommissionedAt ? new Date(m.decommissionedAt).toLocaleString('pt-PT') : '—']);
+  }
+  document.getElementById('material-detail-meta').innerHTML = metaRows.map(function(r) {
+    return '<div class="flex justify-between py-1.5 border-b border-white/5"><span class="text-slate-400">' + r[0] + ':</span><span>' + escapeHtml(String(r[1])) + '</span></div>';
+  }).join('');
+  showDetailPage('modal-material-detail');
+}
+function closeMaterialDetail() {
+  APP.currentMaterialId = null;
+  showPage('materials');
 }
 async function deleteMaterial(id) {
   if (!requirePermission('delete', 'materials', 'apagar material')) return;
@@ -9193,6 +9299,7 @@ async function deleteMaterial(id) {
   try {
     await apiRequest('/api/parts/' + id, { method: 'DELETE' });
     APP.stockMaterials = (APP.stockMaterials || []).filter(function(m) { return m.id !== id; });
+    if (APP.currentMaterialId === id) closeMaterialDetail();
     saveData(); renderMaterials(); renderCommercialWidgets(); showToast('Material removido.');
   } catch (error) {
     showToast('Não foi possível remover o material no servidor: ' + (error.message || 'erro desconhecido'), 'error');
@@ -10409,9 +10516,10 @@ function mapBackendIncident(inc) {
     equipmentName: equip ? equip.name : (inc.equipment_id || '—'),
     severity: priorityMap[inc.priority] || inc.priority || 'Média',
     status: statusMap[inc.status] || inc.status || 'Aberto',
-    media: photos.length ? photos[0] : '',
-    mediaType: photos.length ? 'image' : '',
-    mediaName: photos.length ? 'Anexo do incidente' : '',
+    attachments: normalizeAttachments(photos),
+    media: photos.length ? getAssetHref(photos[0]) : '',
+    mediaType: photos.length ? getAttachmentKind(photos[0]) : '',
+    mediaName: photos.length ? getAssetName(photos[0]) : '',
     resolutionNotes: inc.resolution_notes || '',
     resolvedAt: inc.resolved_at || '',
     createdAt: inc.occurred_at || inc.created_at
@@ -10615,7 +10723,9 @@ function syncBackendWorkOrders() {
           location: p.location || 'Armazém central', notes: p.notes || '',
           clientId: p.client_id || '', clientName: client ? client.name : '', empresaId: empresaId || '', empresaName: empresa ? empresa.name : '',
           status: p.status || 'ativo', decommissionReason: p.decommission_reason || '', decommissionedAt: p.decommissioned_at || '',
-          photo: existing ? existing.photo : '', photoName: existing ? existing.photoName : '',
+          photo: (Array.isArray(p.photos) && p.photos.length) ? getAssetHref(p.photos[0]) : (existing ? existing.photo : ''),
+          photoName: (Array.isArray(p.photos) && p.photos.length) ? getAssetName(p.photos[0]) : (existing ? existing.photoName : ''),
+          attachments: normalizeAttachments(p.photos && p.photos.length ? p.photos : (existing ? existing.attachments : [])),
           createdAt: p.created_at
         };
         var idx = (APP.stockMaterials || []).findIndex(function(m) { return m.id === p.id; });
@@ -12863,8 +12973,110 @@ function getAssetHref(asset) {
   return String(asset || '').split('#name=')[0];
 }
 function getAssetName(asset) {
-  var match = String(asset || '').match(/#name=([^#]+)$/);
+  var match = String(asset || '').match(/#name=([^#&]+)/);
   return match ? decodeURIComponent(match[1]) : String(asset || '');
+}
+function getAssetType(asset) {
+  var match = String(asset || '').match(/[#&]type=([^#&]+)/);
+  return match ? decodeURIComponent(match[1]) : '';
+}
+function isAudioUrl(value) {
+  return /^data:audio\//i.test(value) || /\.(mp3|wav|ogg|oga|m4a|aac|flac)(\?.*)?$/i.test(value);
+}
+function encodeAttachmentEntry(file) {
+  return file.dataUrl + '#name=' + encodeURIComponent(file.name || '') + '&type=' + encodeURIComponent(file.type || '');
+}
+function getAttachmentKind(asset) {
+  var href = getAssetHref(asset);
+  var type = getAssetType(asset).toLowerCase();
+  if (type.indexOf('image') === 0 || isImageUrl(href)) return 'image';
+  if (type.indexOf('video') === 0 || isVideoUrl(href)) return 'video';
+  if (type.indexOf('audio') === 0 || isAudioUrl(href)) return 'audio';
+  return 'document';
+}
+function normalizeAttachments(raw) {
+  if (!raw) return [];
+  if (!Array.isArray(raw)) { try { raw = JSON.parse(raw); } catch (e) { raw = [raw]; } }
+  if (!Array.isArray(raw)) return [];
+  return raw.filter(Boolean).map(function(item) {
+    if (item && typeof item === 'object' && (item.url || item.dataUrl)) {
+      var name = item.name || getAssetName(item.url || item.dataUrl);
+      var type = item.type || '';
+      return (item.url || item.dataUrl) + '#name=' + encodeURIComponent(name) + '&type=' + encodeURIComponent(type);
+    }
+    return String(item);
+  });
+}
+/* ── Gestão de anexos já existentes (ao editar Incidente ou Material) ── */
+function renderPendingAttachments(containerId, listVarName) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  var list = APP[listVarName] || [];
+  if (!list.length) { el.innerHTML = ''; return; }
+  var kindIcon = { image: 'fa-image', video: 'fa-video', audio: 'fa-music', document: 'fa-file-lines' };
+  el.innerHTML = '<div class="text-xs text-slate-500 mb-1">Anexos já guardados:</div>' + list.map(function(asset, idx) {
+    var kind = getAttachmentKind(asset);
+    return '<div class="attachment-pending-item"><i class="fas ' + (kindIcon[kind] || 'fa-file-lines') + ' text-purple-400"></i>' +
+      '<span class="name">' + escapeHtml(getAssetName(asset)) + '</span>' +
+      '<button type="button" class="btn-ghost text-xs" title="Remover" onclick="removePendingAttachment(\'' + listVarName + '\',' + idx + ',\'' + containerId + '\')"><i class="fas fa-times text-red-400"></i></button></div>';
+  }).join('');
+}
+function removePendingAttachment(listVarName, idx, containerId) {
+  if (!APP[listVarName]) return;
+  APP[listVarName].splice(idx, 1);
+  renderPendingAttachments(containerId, listVarName);
+}
+/* ── Galeria/carrossel de anexos (visualização) ── */
+function renderAttachmentGallery(attachments, prefix) {
+  attachments = normalizeAttachments(attachments);
+  if (!attachments.length) return '<p class="text-sm text-slate-500">Sem ficheiros anexados.</p>';
+  var images = attachments.filter(function(a) { return getAttachmentKind(a) === 'image'; });
+  var videos = attachments.filter(function(a) { return getAttachmentKind(a) === 'video'; });
+  var audios = attachments.filter(function(a) { return getAttachmentKind(a) === 'audio'; });
+  var docs = attachments.filter(function(a) { return getAttachmentKind(a) === 'document'; });
+  var html = '';
+  if (images.length) {
+    html += '<div class="attachment-carousel" id="' + prefix + '-carousel" data-index="0">' +
+      '<div class="attachment-carousel__viewport">' +
+      images.map(function(a, i) {
+        return '<img src="' + escapeHtml(getAssetHref(a)) + '" alt="' + escapeHtml(getAssetName(a)) + '" class="attachment-carousel__img" style="display:' + (i === 0 ? 'block' : 'none') + '" data-idx="' + i + '">';
+      }).join('') + '</div>' +
+      (images.length > 1 ? '<div class="attachment-carousel__controls">' +
+        '<button type="button" class="btn-ghost text-xs" onclick="moveCarousel(\'' + prefix + '\',-1)"><i class="fas fa-chevron-left"></i></button>' +
+        '<span class="text-xs text-slate-400" id="' + prefix + '-carousel-count">1 / ' + images.length + '</span>' +
+        '<button type="button" class="btn-ghost text-xs" onclick="moveCarousel(\'' + prefix + '\',1)"><i class="fas fa-chevron-right"></i></button>' +
+        '</div>' : '') + '</div>';
+  }
+  if (videos.length) {
+    html += '<div class="mt-3 space-y-2">' + videos.map(function(a) {
+      return '<video controls class="w-full rounded-lg border border-white/10" style="max-height:280px"><source src="' + escapeHtml(getAssetHref(a)) + '"></video>';
+    }).join('') + '</div>';
+  }
+  if (audios.length) {
+    html += '<div class="mt-3 space-y-2">' + audios.map(function(a) {
+      return '<div class="text-xs text-slate-400 mb-1">' + escapeHtml(getAssetName(a)) + '</div><audio controls class="w-full" src="' + escapeHtml(getAssetHref(a)) + '"></audio>';
+    }).join('') + '</div>';
+  }
+  if (docs.length) {
+    html += '<div class="mt-3 space-y-2">' + docs.map(function(a) {
+      return '<a href="' + escapeHtml(getAssetHref(a)) + '" target="_blank" class="flex items-center gap-3 p-2 rounded-lg border border-white/10 hover:border-purple-400/60 transition-all">' +
+        '<div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(99,102,241,0.18)"><i class="fas fa-file-lines text-purple-400"></i></div>' +
+        '<div class="text-xs text-slate-300 truncate">' + escapeHtml(getAssetName(a)) + '</div></a>';
+    }).join('') + '</div>';
+  }
+  return html;
+}
+function moveCarousel(prefix, delta) {
+  var el = document.getElementById(prefix + '-carousel');
+  if (!el) return;
+  var imgs = el.querySelectorAll('.attachment-carousel__img');
+  if (!imgs.length) return;
+  var idx = Number(el.getAttribute('data-index') || 0);
+  idx = (idx + delta + imgs.length) % imgs.length;
+  Array.prototype.forEach.call(imgs, function(img, i) { img.style.display = i === idx ? 'block' : 'none'; });
+  el.setAttribute('data-index', String(idx));
+  var counter = document.getElementById(prefix + '-carousel-count');
+  if (counter) counter.textContent = (idx + 1) + ' / ' + imgs.length;
 }
 function inferFileTypeFromUpload(uploaded) {
   if (!uploaded) return '';
@@ -14116,6 +14328,8 @@ function openNewIncidentModal() {
   document.getElementById('incident-desc').value = '';
   document.getElementById('incident-severity').value = 'Média';
   document.getElementById('incident-media-upload').value = '';
+  APP.pendingIncidentAttachments = [];
+  renderPendingAttachments('incident-attachments-list', 'pendingIncidentAttachments');
   enhanceFileInputs();
   document.getElementById('modal-new-incident').style.display = 'flex';
 }
@@ -14133,6 +14347,8 @@ function editIncident(id) {
   document.getElementById('incident-equip').value = inc.equipmentId || '';
   document.getElementById('incident-severity').value = inc.severity || 'Média';
   document.getElementById('incident-media-upload').value = '';
+  APP.pendingIncidentAttachments = normalizeAttachments(inc.attachments);
+  renderPendingAttachments('incident-attachments-list', 'pendingIncidentAttachments');
   enhanceFileInputs();
   enhanceSelects();
   document.getElementById('modal-new-incident').style.display = 'flex';
@@ -14150,7 +14366,8 @@ async function saveIncident() {
   var equipId = document.getElementById('incident-equip').value;
   var equip = APP.equipment.find(function(e) { return e.id === equipId; });
   var severity = document.getElementById('incident-severity').value;
-  var media = await readSingleUpload('incident-media-upload');
+  var newFiles = await readMultipleUploads('incident-media-upload');
+  var attachments = (APP.pendingIncidentAttachments || []).concat(newFiles.map(encodeAttachmentEntry));
   var payload = {
     title: desc.slice(0, 120),
     description: desc,
@@ -14158,8 +14375,8 @@ async function saveIncident() {
     buildingId: buildingId,
     equipmentId: equipId || null,
     priority: INCIDENT_SEVERITY_TO_PRIORITY[severity] || 'media',
+    photos: attachments,
   };
-  if (media) payload.photos = [media.dataUrl];
   try {
     var result = editing
       ? await apiRequest('/api/incidents/' + editing, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
@@ -14167,17 +14384,15 @@ async function saveIncident() {
     var raw = result.incident;
     var local = mapBackendIncident(raw);
     if (!local.equipmentName || local.equipmentName === raw.equipment_id) local.equipmentName = equip ? equip.name : '—';
-    if (media) { local.media = media.dataUrl; local.mediaName = media.name; local.mediaType = media.type || ''; }
-    else if (editing) {
-      var prevInc = (APP.incidents || []).find(function(i) { return i.id === editing; });
-      if (prevInc) { local.media = prevInc.media; local.mediaName = prevInc.mediaName; local.mediaType = prevInc.mediaType; }
-    }
+    local.attachments = attachments;
+    if (attachments.length) { local.media = getAssetHref(attachments[0]); local.mediaName = getAssetName(attachments[0]); local.mediaType = getAttachmentKind(attachments[0]); }
     var idx = (APP.incidents || []).findIndex(function(i) { return i.id === local.id; });
     if (idx >= 0) APP.incidents[idx] = local; else APP.incidents.push(local);
     if (!editing) {
       addNotification({ key:'incident-created-' + local.id, type:'incident', title:'Novo incidente registado', body: abbreviateId(local.id) + ' · ' + local.severity + ' · ' + local.equipmentName, targetType:'incident', targetId:local.id, priority:['Alta','Crítica'].includes(local.severity) ? 'high' : 'normal' });
     }
     APP.editingIncidentId = null;
+    APP.pendingIncidentAttachments = [];
     saveData(); closeModal('modal-new-incident');
     renderIncidents(); showToast(editing ? 'Incidente atualizado!' : 'Incidente registado!');
   } catch (error) {
@@ -14198,7 +14413,8 @@ function renderIncidents() {
     return;
   }
   tbody.innerHTML = rows.slice().reverse().map(function(inc) {
-    var mediaBadge = inc.media ? ' <button class="badge badge-blue cursor-pointer" onclick="event.stopPropagation();openIncidentMedia(\'' + inc.id + '\')"><i class="fas ' + ((inc.mediaType || '').indexOf('video') === 0 ? 'fa-video' : 'fa-image') + '"></i> Ver anexo</button>' : '';
+    var attCount = (inc.attachments || []).length;
+    var mediaBadge = attCount ? ' <button class="badge badge-blue cursor-pointer" title="Ver anexos" onclick="event.stopPropagation();openIncidentDetail(\'' + inc.id + '\')"><i class="fas fa-paperclip"></i> ' + attCount + '</button>' : '';
     var canEdit = canDo('edit', 'incidents');
     var canDelete = canDo('delete', 'incidents');
     var actions = '<div class="flex items-center gap-1" onclick="event.stopPropagation()">' +
@@ -14224,6 +14440,7 @@ function openIncidentMedia(id) {
   if (!inc || !inc.media) return;
   window.open(inc.media, '_blank');
 }
+
 function openIncidentDetail(id) {
   var inc = (APP.incidents || []).find(function(i) { return i.id === id; });
   if (!inc) return;
@@ -14246,14 +14463,9 @@ function openIncidentDetail(id) {
   } else {
     resWrap.style.display = 'none';
   }
-  var mediaWrap = document.getElementById('incident-detail-media-wrap');
-  var mediaEmpty = document.getElementById('incident-detail-media-empty');
-  if (inc.media && (inc.mediaType || '').indexOf('video') !== 0) {
-    document.getElementById('incident-detail-media').src = inc.media;
-    mediaWrap.style.display = 'block'; mediaEmpty.style.display = 'none';
-  } else {
-    mediaWrap.style.display = 'none'; mediaEmpty.style.display = 'block';
-  }
+  var attachments = normalizeAttachments(inc.attachments);
+  document.getElementById('incident-detail-attachments-badge').innerHTML = '<i class="fas fa-paperclip"></i> ' + attachments.length;
+  document.getElementById('incident-detail-attachments').innerHTML = renderAttachmentGallery(attachments, 'incident-detail');
   document.getElementById('incident-detail-meta').innerHTML = [
     ['Edifício', inc.buildingName || '—'],
     ['Registado em', inc.createdAt ? new Date(inc.createdAt).toLocaleString('pt-PT') : '—'],
@@ -14282,7 +14494,7 @@ async function updateIncidentStatus(newStatus) {
   try {
     var result = await apiRequest('/api/incidents/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: INCIDENT_STATUS_TO_BACKEND[newStatus] || 'aberto' }) });
     var local = mapBackendIncident(result.incident);
-    local.media = inc.media; local.mediaName = inc.mediaName; local.mediaType = inc.mediaType;
+    local.media = inc.media; local.mediaName = inc.mediaName; local.mediaType = inc.mediaType; local.attachments = inc.attachments;
     var idx = APP.incidents.findIndex(function(i) { return i.id === id; });
     if (idx >= 0) APP.incidents[idx] = local;
     saveData(); renderIncidents(); openIncidentDetail(id);
@@ -14310,7 +14522,7 @@ async function confirmResolveIncident() {
   try {
     var result = await apiRequest('/api/incidents/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'resolvido', resolutionNotes: notes }) });
     var local = mapBackendIncident(result.incident);
-    local.media = inc.media; local.mediaName = inc.mediaName; local.mediaType = inc.mediaType;
+    local.media = inc.media; local.mediaName = inc.mediaName; local.mediaType = inc.mediaType; local.attachments = inc.attachments;
     var idx = APP.incidents.findIndex(function(i) { return i.id === id; });
     if (idx >= 0) APP.incidents[idx] = local;
     APP.resolvingIncidentId = null;
