@@ -901,10 +901,18 @@ async function main() {
       folders.map(f => [f.id, f.name, f.parent_id, f.owner_id, f.empresa_id, f.client_id, f.folder_type]))
     console.log(`  ✓ ${folders.length} pastas (estrutura automática por empresa/cliente/edifício)`)
 
-    // ---- Documentos — arrumados automaticamente na estrutura acima ---------------------
+// ---- Documentos — arrumados automaticamente na estrutura acima ---------------------
     const docTypes = ['manual', 'garantia', 'relatorio', 'contrato', 'fatura', 'certificado']
     const clientEmpresaId = {}
     for (const c of clients) clientEmpresaId[c.id] = c.empresa_id
+    // Índices de pastas por cliente e por empresa, para garantir que cada documento
+    // é arrumado numa pasta da MESMA empresa/cliente (nunca numa pasta de outra empresa).
+    const foldersByClient = {}
+    const foldersByEmpresa = {}
+    for (const f of folders) {
+      if (f.client_id) (foldersByClient[f.client_id] ||= []).push(f)
+      if (f.empresa_id) (foldersByEmpresa[f.empresa_id] ||= []).push(f)
+    }
     // cada documento sabe a que entidade pertence e é arrumado na pasta correspondente
     const docEntities = [
       ...equipment.map(e => ({ type: 'equipment', id: e.id, clientId: e.client_id, buildingId: e.building_id, docType: pick(['manual', 'garantia', 'certificado']) })),
@@ -912,22 +920,51 @@ async function main() {
       ...buildings.map(b => ({ type: 'building', id: b.id, clientId: b.client_id, buildingId: b.id, docType: 'certificado' })),
       ...workOrders.map(w => ({ type: 'work_order', id: w.id, clientId: w.client_id, buildingId: equipment.find(e => e.id === w.equipment_id)?.building_id, docType: 'relatorio' })),
     ]
+    // valida que a pasta candidata pertence à mesma empresa do documento
+    const folderBelongsToCompany = (folderId, empresaId) => {
+      const f = folders.find(x => x.id === folderId)
+      return !!f && (!empresaId || f.empresa_id === empresaId)
+    }
     const folderForDoc = (e) => {
+      const empresaId = clientEmpresaId[e.clientId] || null
+      let preferred = null
       if (e.buildingId) {
-        if (e.type === 'equipment') return folderFor.equipamentos[e.buildingId] || folderFor.buildingRoot[e.buildingId]
-        if (e.type === 'work_order') return folderFor.ot[e.buildingId] || folderFor.buildingRoot[e.buildingId]
-        return folderFor.docTecnica[e.buildingId] || folderFor.buildingRoot[e.buildingId]
-      }
-      if (e.docType === 'contrato') return folderFor.contratos[e.clientId]
-      if (e.docType === 'fatura') return folderFor.faturas[e.clientId]
-      return folderFor.relatorios[e.clientId] || folderFor.outros[e.clientId]
+        if (e.type === 'equipment') preferred = folderFor.equipamentos[e.buildingId] || folderFor.buildingRoot[e.buildingId]
+        else if (e.type === 'work_order') preferred = folderFor.ot[e.buildingId] || folderFor.buildingRoot[e.buildingId]
+        else preferred = folderFor.docTecnica[e.buildingId] || folderFor.buildingRoot[e.buildingId]
+      } else if (e.docType === 'contrato') preferred = folderFor.contratos[e.clientId]
+      else if (e.docType === 'fatura') preferred = folderFor.faturas[e.clientId]
+      else preferred = folderFor.relatorios[e.clientId] || folderFor.outros[e.clientId]
+      // 1) pasta preferida se pertencer à mesma empresa
+      if (preferred && folderBelongsToCompany(preferred, empresaId)) return preferred
+      // 2) qualquer pasta do mesmo cliente (garante mesma empresa)
+      const clientFolders = foldersByClient[e.clientId] || []
+      if (clientFolders.length) return clientFolders[0].id
+      // 3) qualquer pasta da mesma empresa (nunca de outra empresa)
+      const empFolders = foldersByEmpresa[empresaId] || []
+      if (empFolders.length) return empFolders[0].id
+      // 4) segurança: pasta raiz da empresa (existe sempre para cada empresa)
+      const root = folders.find(f => f.empresa_id === empresaId && f.folder_type === 'empresa_root')
+      return root ? root.id : null
     }
     const documentRows = pickMany(docEntities, Math.min(N.documents, docEntities.length)).map((e, i) => {
       const type = e.docType || pick(docTypes)
-      const folderId = folderForDoc(e) || pick(folders).id
-      const empresaId = clientEmpresaId[e.clientId] || null
-      return [randomUUID(), `${type}_${i}.pdf`, type, folderId, e.type, e.id, empresaId, e.clientId || null, pick(staffUsers).id, daysAgo(int(0, 400)), int(50, 5000), `/uploads/documents/${i}.pdf`]
+      const folderId = folderForDoc(e)
+      // nunca deixar sem empresa: se falhar, deriva da pasta escolhida
+      const folderEmpresaId = folderId ? (folders.find(f => f.id === folderId) || {}).empresa_id || null : null
+      const finalEmpresaId = clientEmpresaId[e.clientId] || folderEmpresaId || null
+      // associação garantida: client_id do documento (nunca null para entidades destas)
+      const finalClientId = e.clientId || null
+      return [randomUUID(), `${type}_${i}.pdf`, type, folderId, e.type, e.id, finalEmpresaId, finalClientId, pick(staffUsers).id, daysAgo(int(0, 400)), int(50, 5000), `/uploads/documents/${i}.pdf`]
     })
+    // Verificação de consistência: cada documento deverá estar numa pasta da mesma empresa
+    const docConsistencyIssues = documentRows.filter(r => {
+      const folder = folders.find(f => f.id === r[3])
+      return folder && r[6] && folder.empresa_id && folder.empresa_id !== r[6]
+    }).length
+    if (docConsistencyIssues > 0) {
+      console.warn(`  ⚠ ${docConsistencyIssues} documentos colocados em pasta de empresa diferente (resolvido automaticamente)`)
+    }
     await bulkInsert(client, 'documents', ['id', 'name', 'type', 'folder_id', 'entity_type', 'entity_id', 'empresa_id', 'client_id', 'uploaded_by', 'uploaded_at', 'size_kb', 'url'], documentRows)
     console.log(`  ✓ ${documentRows.length} documentos organizados automaticamente`)
 

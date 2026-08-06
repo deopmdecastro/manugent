@@ -6425,9 +6425,59 @@
         <div class="text-xs text-slate-500 mt-2">Carregue evidência visual do incidente, como foto do equipamento, alarme ou vídeo curto.</div>
       </div>
     </div>
-    <div class="flex gap-3 mt-6">
+<div class="flex gap-3 mt-6">
       <button class="btn-secondary flex-1" onclick="closeModal('modal-new-incident')">Cancelar</button>
       <button class="btn-primary flex-1" onclick="createIncident()"><i class="fas fa-exclamation-triangle"></i> Registar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Incident Detail Modal -->
+<div id="modal-incident-detail" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <div class="text-xs text-slate-500 mono mb-1" id="incident-detail-id">INC-000</div>
+        <h2 class="text-xl font-bold" id="incident-detail-title">Detalhe do Incidente</h2>
+      </div>
+      <div class="flex items-center gap-2">
+        <select id="incident-detail-status" class="input-field text-sm" style="width:200px" onchange="updateIncidentStatus(this.value)">
+          <option>Aberto</option><option>Em Análise</option><option>Em Resolução</option><option>Resolvido</option><option>Fechado</option>
+        </select>
+        <button class="btn-ghost" onclick="showPage('incidents')"><i class="fas fa-arrow-left"></i> Voltar</button>
+      </div>
+    </div>
+    <div class="grid md:grid-cols-3 gap-5">
+      <div class="md:col-span-2 space-y-5">
+        <div class="card p-4">
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div><span class="text-slate-500">Equipamento:</span> <span id="incident-detail-equip" class="font-medium ml-2">—</span></div>
+            <div><span class="text-slate-500">Severidade:</span> <span id="incident-detail-severity" class="ml-2">—</span></div>
+            <div><span class="text-slate-500">Estado:</span> <span id="incident-detail-status-badge" class="ml-2">—</span></div>
+            <div><span class="text-slate-500">Data:</span> <span id="incident-detail-date" class="font-medium ml-2">—</span></div>
+          </div>
+          <div class="mt-3 pt-3 border-t border-white/5">
+            <span class="text-slate-500 text-sm">Descrição:</span>
+            <p id="incident-detail-desc" class="text-sm mt-1 text-slate-300">—</p>
+          </div>
+        </div>
+        <div class="card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-medium text-sm">Evidência visual</h4>
+            <span class="badge badge-blue"><i class="fas fa-image"></i> Anexo</span>
+          </div>
+          <div id="incident-detail-media-wrap" style="display:none">
+            <img id="incident-detail-media" alt="Evidência do incidente" class="w-full rounded-lg border border-white/10 object-cover" style="max-height:320px">
+          </div>
+          <div id="incident-detail-media-empty" class="text-sm text-slate-500">Sem evidência visual associada.</div>
+        </div>
+      </div>
+      <div class="space-y-4">
+        <div class="card p-4">
+          <h3 class="font-semibold mb-3 text-sm">Detalhes</h3>
+          <div id="incident-detail-meta" class="space-y-2 text-sm text-slate-300"></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -6960,7 +7010,7 @@ function ensurePageBackButtons() {
 }
 
 function isMobileDetailPage(page) {
-  return ['modal-new-ot','modal-ot-detail','modal-new-equip','modal-equip-detail','article-detail'].includes(page);
+  return ['modal-new-ot','modal-ot-detail','modal-new-equip','modal-equip-detail','article-detail','modal-incident-detail'].includes(page);
 }
 
 function isMobileShellPage(page) {
@@ -13384,8 +13434,9 @@ function renderIncidents() {
   }
   tbody.innerHTML = rows.slice().reverse().map(function(inc) {
     var mediaBadge = inc.media ? ' <button class="badge badge-blue cursor-pointer" onclick="event.stopPropagation();openIncidentMedia(\'' + inc.id + '\')"><i class="fas ' + ((inc.mediaType || '').indexOf('video') === 0 ? 'fa-video' : 'fa-image') + '"></i> Ver anexo</button>' : '';
-    return '<tr><td class="mono text-xs text-slate-400">' + inc.id + '</td>' +
-      '<td class="font-medium" style="color:var(--text-primary)">' + escapeHtml(inc.description) + mediaBadge + '</td>' +
+return '<tr class="cursor-pointer hover:bg-white/5" onclick="openIncidentDetail(\'' + inc.id + '\')">' +
+      '<td class="mono text-xs text-slate-400">' + inc.id + '</td>' +
+      '<td class="font-medium" style="color:var(--text-primary)">' + escapeHtml(inc.description) + ' <button class="btn-ghost text-xs" title="Visualizar" onclick="event.stopPropagation();openIncidentDetail(\'' + inc.id + '\')"><i class="fas fa-eye"></i></button>' + mediaBadge + '</td>' +
       '<td>' + (inc.equipmentName || '—') + '</td>' +
       '<td><span class="badge ' + getSeverityClass(inc.severity) + '">' + inc.severity + '</span></td>' +
       '<td><span class="badge ' + getStatusClass(inc.status) + '">' + inc.status + '</span></td>' +
