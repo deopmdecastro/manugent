@@ -1049,12 +1049,54 @@ app.post('/api/equipment', async (c) => {
       location: body.location ?? null,
       criticality: body.criticality ?? 'normal',
       status: body.status ?? 'active',
+      notes: body.notes ?? null,
     }).select().single()
 
     if (error) throw error
     return c.json({ equipment: data }, 201)
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not create equipment')
+  }
+})
+
+app.put('/api/equipment/:id', async (c) => {
+  try {
+    const db = requireDb()
+    const id = c.req.param('id')
+    const body = await c.req.json()
+    const patch: Record<string, unknown> = {}
+    if (body.name !== undefined) patch.name = body.name
+    if (body.code !== undefined) patch.code = body.code
+    if (body.brand !== undefined) patch.brand = body.brand
+    if (body.model !== undefined) patch.model = body.model
+    if (body.serial !== undefined) patch.serial = body.serial
+    if (body.location !== undefined) patch.location = body.location
+    if (body.criticality !== undefined) patch.criticality = body.criticality
+    if (body.status !== undefined) patch.status = body.status
+    if (body.notes !== undefined) patch.notes = body.notes
+    if (body.clientId !== undefined) patch.client_id = body.clientId
+    if (body.decommissionReason !== undefined) patch.decommission_reason = body.decommissionReason
+    if (body.decommissionedAt !== undefined) patch.decommissioned_at = body.decommissionedAt
+    if (body.decommissionedBy !== undefined) patch.decommissioned_by = body.decommissionedBy
+
+    const { data, error } = await db.from('equipment').update(patch).eq('id', id).select().single()
+    if (error) throw error
+    if (!data) return jsonError(c, 'Equipamento não encontrado', 404)
+    return c.json({ equipment: data })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not update equipment')
+  }
+})
+
+app.delete('/api/equipment/:id', async (c) => {
+  try {
+    const db = requireDb()
+    const id = c.req.param('id')
+    const { error } = await db.from('equipment').delete().eq('id', id)
+    if (error) throw error
+    return c.json({ success: true })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not delete equipment')
   }
 })
 
@@ -1111,6 +1153,10 @@ app.put('/api/buildings/:id', async (c) => {
     if (body.areaM2 !== undefined) patch.area_m2 = body.areaM2
     if (body.clientId !== undefined) patch.client_id = body.clientId
     if (body.zones !== undefined) patch.zones = body.zones
+    if (body.status !== undefined) patch.status = body.status
+    if (body.decommissionReason !== undefined) patch.decommission_reason = body.decommissionReason
+    if (body.decommissionedAt !== undefined) patch.decommissioned_at = body.decommissionedAt
+    if (body.decommissionedBy !== undefined) patch.decommissioned_by = body.decommissionedBy
 
     const { data, error } = await db.from('buildings').update(patch).eq('id', id).select().single()
     if (error) throw error
