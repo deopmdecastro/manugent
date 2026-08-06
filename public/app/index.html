@@ -4156,11 +4156,11 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>ID</th><th>Descrição</th><th>Equipamento</th><th>Severidade</th><th>Estado</th><th>Data</th>
+                <th>ID</th><th>Descrição</th><th>Cliente</th><th>Empresa</th><th>Equipamento</th><th>Severidade</th><th>Estado</th><th>Data</th><th>Ações</th>
               </tr>
             </thead>
             <tbody id="incidents-table-body">
-              <tr><td colspan="6" class="text-center text-slate-500 py-8">Nenhum incidente registado.</td></tr>
+              <tr><td colspan="9" class="text-center text-slate-500 py-8">Nenhum incidente registado.</td></tr>
             </tbody>
           </table>
         </div>
@@ -6404,20 +6404,34 @@
 <div id="modal-new-incident" class="modal-overlay" style="display:none">
   <div class="modal-content">
     <div class="flex items-center justify-between mb-5">
-      <h2 class="text-lg font-semibold">Novo Incidente</h2>
+      <h2 class="text-lg font-semibold" id="incident-modal-title">Novo Incidente</h2>
       <button class="btn-ghost" onclick="closeModal('modal-new-incident')"><i class="fas fa-times"></i></button>
     </div>
     <div class="space-y-4">
       <div><label class="block text-sm mb-2 text-slate-300">Descrição *</label><textarea id="incident-desc" class="input-field" rows="3" placeholder="Descreva o incidente..."></textarea></div>
       <div class="grid grid-cols-2 gap-4">
         <div>
+          <label class="block text-sm mb-2 text-slate-300">Cliente *</label>
+          <select id="incident-client" class="input-field" onchange="populateIncidentBuildingSelect()"><option value="">Selecionar...</option></select>
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Empresa</label>
+          <input type="text" id="incident-empresa-hint" class="input-field" disabled placeholder="—">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Edifício *</label>
+          <select id="incident-building" class="input-field"><option value="">Selecionar...</option></select>
+        </div>
+        <div>
           <label class="block text-sm mb-2 text-slate-300">Equipamento</label>
           <select id="incident-equip" class="input-field"><option value="">Selecionar...</option></select>
         </div>
-        <div>
-          <label class="block text-sm mb-2 text-slate-300">Severidade</label>
-          <select id="incident-severity" class="input-field"><option>Baixa</option><option>Média</option><option>Alta</option><option>Crítica</option></select>
-        </div>
+      </div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Severidade</label>
+        <select id="incident-severity" class="input-field"><option>Baixa</option><option>Média</option><option>Alta</option><option>Crítica</option></select>
       </div>
       <div>
         <label class="block text-sm mb-2 text-slate-300">Imagem ou vídeo</label>
@@ -6425,9 +6439,90 @@
         <div class="text-xs text-slate-500 mt-2">Carregue evidência visual do incidente, como foto do equipamento, alarme ou vídeo curto.</div>
       </div>
     </div>
-    <div class="flex gap-3 mt-6">
+<div class="flex gap-3 mt-6">
       <button class="btn-secondary flex-1" onclick="closeModal('modal-new-incident')">Cancelar</button>
-      <button class="btn-primary flex-1" onclick="createIncident()"><i class="fas fa-exclamation-triangle"></i> Registar</button>
+      <button class="btn-primary flex-1" id="incident-modal-submit-btn" onclick="saveIncident()"><i class="fas fa-exclamation-triangle"></i> Registar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Incident Resolve Modal -->
+<div id="modal-resolve-incident" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-semibold"><i class="fas fa-check-circle text-green-400"></i> Marcar como Resolvido</h2>
+      <button class="btn-ghost" onclick="closeModal('modal-resolve-incident')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div class="text-xs text-slate-500 mono" id="resolve-incident-id">—</div>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Resolução *</label>
+        <textarea id="resolve-incident-notes" class="input-field" rows="4" placeholder="Descreva o que foi feito para resolver o incidente..."></textarea>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-resolve-incident')">Cancelar</button>
+      <button class="btn-primary flex-1" onclick="confirmResolveIncident()"><i class="fas fa-check"></i> Confirmar Resolução</button>
+    </div>
+  </div>
+</div>
+
+<!-- Incident Detail Modal -->
+<div id="modal-incident-detail" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
+      <div>
+        <div class="text-xs text-slate-500 mono mb-1" id="incident-detail-id" title="">INC-000</div>
+        <h2 class="text-xl font-bold" id="incident-detail-title">Detalhe do Incidente</h2>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <select id="incident-detail-status" class="input-field text-sm" style="width:180px" onchange="updateIncidentStatus(this.value)">
+          <option>Aberto</option><option>Em Análise</option><option>Em Resolução</option><option>Resolvido</option><option>Fechado</option>
+        </select>
+        <button class="btn-ghost" title="Editar" onclick="editIncident(APP.currentIncidentId)"><i class="fas fa-pen"></i></button>
+        <button class="btn-ghost" title="Apagar" onclick="deleteIncident(APP.currentIncidentId)"><i class="fas fa-trash"></i></button>
+        <button class="btn-ghost" onclick="closeIncidentDetail()"><i class="fas fa-arrow-left"></i> Voltar</button>
+      </div>
+    </div>
+    <div class="grid md:grid-cols-3 gap-5">
+      <div class="md:col-span-2 space-y-5">
+        <div class="card p-4">
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div><span class="text-slate-500">Cliente:</span> <span id="incident-detail-client" class="font-medium ml-2">—</span></div>
+            <div><span class="text-slate-500">Empresa:</span> <span id="incident-detail-empresa" class="font-medium ml-2">—</span></div>
+            <div><span class="text-slate-500">Equipamento:</span> <span id="incident-detail-equip" class="font-medium ml-2">—</span></div>
+            <div><span class="text-slate-500">Severidade:</span> <span id="incident-detail-severity" class="ml-2">—</span></div>
+            <div><span class="text-slate-500">Estado:</span> <span id="incident-detail-status-badge" class="ml-2">—</span></div>
+            <div><span class="text-slate-500">Data:</span> <span id="incident-detail-date" class="font-medium ml-2">—</span></div>
+          </div>
+          <div class="mt-3 pt-3 border-t border-white/5">
+            <span class="text-slate-500 text-sm">Descrição:</span>
+            <p id="incident-detail-desc" class="text-sm mt-1 text-slate-300">—</p>
+          </div>
+        </div>
+        <div class="card p-4" id="incident-detail-resolution-wrap" style="display:none">
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="font-medium text-sm"><i class="fas fa-check-circle text-green-400"></i> Resolução</h4>
+          </div>
+          <p id="incident-detail-resolution" class="text-sm text-slate-300">—</p>
+        </div>
+        <div class="card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-medium text-sm">Evidência visual</h4>
+            <span class="badge badge-blue"><i class="fas fa-image"></i> Anexo</span>
+          </div>
+          <div id="incident-detail-media-wrap" style="display:none">
+            <img id="incident-detail-media" alt="Evidência do incidente" class="w-full rounded-lg border border-white/10 object-cover" style="max-height:320px">
+          </div>
+          <div id="incident-detail-media-empty" class="text-sm text-slate-500">Sem evidência visual associada.</div>
+        </div>
+      </div>
+      <div class="space-y-4">
+        <div class="card p-4">
+          <h3 class="font-semibold mb-3 text-sm">Detalhes</h3>
+          <div id="incident-detail-meta" class="space-y-2 text-sm text-slate-300"></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -6960,7 +7055,7 @@ function ensurePageBackButtons() {
 }
 
 function isMobileDetailPage(page) {
-  return ['modal-new-ot','modal-ot-detail','modal-new-equip','modal-equip-detail','article-detail'].includes(page);
+  return ['modal-new-ot','modal-ot-detail','modal-new-equip','modal-equip-detail','article-detail','modal-incident-detail'].includes(page);
 }
 
 function isMobileShellPage(page) {
@@ -7398,7 +7493,8 @@ function setupDetailPages() {
     { id: 'modal-new-ot', nav: 'nav-ots' },
     { id: 'modal-ot-detail', nav: 'nav-ots' },
     { id: 'modal-new-equip', nav: 'nav-equipment' },
-    { id: 'modal-equip-detail', nav: 'nav-equipment' }
+    { id: 'modal-equip-detail', nav: 'nav-equipment' },
+    { id: 'modal-incident-detail', nav: 'nav-incidents' }
   ].forEach(function(cfg) {
     var el = document.getElementById(cfg.id);
     if (!el || el.dataset.pageReady === 'true') return;
@@ -7411,7 +7507,7 @@ function setupDetailPages() {
 }
 function showDetailPage(id) {
   setupDetailPages();
-  APP.currentPage = (id === 'modal-ot-detail' || id === 'modal-new-ot') ? 'ots' : (id === 'modal-equip-detail' || id === 'modal-new-equip') ? 'equipment' : APP.currentPage;
+  APP.currentPage = (id === 'modal-ot-detail' || id === 'modal-new-ot') ? 'ots' : (id === 'modal-equip-detail' || id === 'modal-new-equip') ? 'equipment' : (id === 'modal-incident-detail') ? 'incidents' : APP.currentPage;
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
   document.querySelectorAll('.sidebar-item').forEach(function(i) { i.classList.remove('active'); });
   var el = document.getElementById(id);
@@ -9827,15 +9923,28 @@ function mapBackendIncident(inc) {
   var statusMap = { aberto: 'Aberto', em_analise: 'Em Análise', em_resolucao: 'Em Resolução', resolvido: 'Resolvido', fechado: 'Fechado' };
   var photos = Array.isArray(inc.photos) ? inc.photos : (function() { try { return JSON.parse(inc.photos || '[]'); } catch (e) { return []; } })();
   var equip = (APP.equipment || []).find(function(e) { return e.id === inc.equipment_id; });
+  var client = (APP.clients || []).find(function(c) { return c.id === inc.client_id; });
+  var building = (APP.buildings || []).find(function(b) { return b.id === inc.building_id; });
+  var empresaId = client ? (client.empresa_id || client.empresaId) : null;
+  var empresa = empresaId ? (APP.empresas || []).find(function(e) { return e.id === empresaId; }) : null;
   return {
     id: inc.id,
     description: inc.title || inc.description || 'Incidente',
+    clientId: inc.client_id || '',
+    clientName: client ? client.name : '',
+    empresaId: empresaId || '',
+    empresaName: empresa ? empresa.name : '',
+    buildingId: inc.building_id || '',
+    buildingName: building ? building.name : '',
+    equipmentId: inc.equipment_id || '',
     equipmentName: equip ? equip.name : (inc.equipment_id || '—'),
     severity: priorityMap[inc.priority] || inc.priority || 'Média',
     status: statusMap[inc.status] || inc.status || 'Aberto',
     media: photos.length ? photos[0] : '',
     mediaType: photos.length ? 'image' : '',
     mediaName: photos.length ? 'Anexo do incidente' : '',
+    resolutionNotes: inc.resolution_notes || '',
+    resolvedAt: inc.resolved_at || '',
     createdAt: inc.occurred_at || inc.created_at
   };
 }
@@ -10078,6 +10187,10 @@ function syncBackendWorkOrders() {
     // Merge backend incidents
     if (results[23] && results[23].incidents) {
       APP.incidents = results[23].incidents.map(mapBackendIncident);
+      ensureEmpresasLoaded(function() {
+        APP.incidents = results[23].incidents.map(mapBackendIncident);
+        renderIncidents();
+      });
     }
     // Merge backend knowledge articles
     if (results[24] && results[24].articles) {
@@ -11696,6 +11809,13 @@ function populateTechEmpresaSelect(selectedId) {
     .then(function(r) { return r.json(); })
     .then(function(data) { APP.empresas = data.empresas || []; fill(); })
     .catch(function() { fill(); });
+}
+function ensureEmpresasLoaded(cb) {
+  if (APP.empresas && APP.empresas.length) { if (cb) cb(); return; }
+  fetch('/api/empresas', { headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } })
+    .then(function(r) { return r.json(); })
+    .then(function(data) { APP.empresas = data.empresas || []; if (cb) cb(); })
+    .catch(function() { if (cb) cb(); });
 }
 function getSelectedTechEmpresa() {
   var sel = document.getElementById('tech-empresa');
@@ -13337,65 +13457,277 @@ function stripTags(html) {
 }
 
 // ======================== INCIDENTS ========================
+var INCIDENT_SEVERITY_TO_PRIORITY = { 'Baixa':'baixa', 'Média':'media', 'Alta':'alta', 'Crítica':'critica' };
+var INCIDENT_STATUS_TO_BACKEND = { 'Aberto':'aberto', 'Em Análise':'em_analise', 'Em Resolução':'em_resolucao', 'Resolvido':'resolvido', 'Fechado':'fechado' };
+function abbreviateId(id, len) {
+  var s = String(id || '');
+  var n = len || 8;
+  return s.length > n ? s.slice(0, n) + '…' : s;
+}
+function populateIncidentClientSelect(selectedId) {
+  var sel = document.getElementById('incident-client');
+  if (!sel) return;
+  var options = ['<option value="">Selecionar...</option>'];
+  (APP.clients || []).forEach(function(c) {
+    options.push('<option value="' + c.id + '"' + (String(selectedId || '') === String(c.id) ? ' selected' : '') + '>' + escapeHtml(c.name) + '</option>');
+  });
+  sel.innerHTML = options.join('');
+  sel.value = selectedId || '';
+  enhanceSelects();
+  updateIncidentEmpresaHint();
+}
+function updateIncidentEmpresaHint() {
+  var sel = document.getElementById('incident-client');
+  var hint = document.getElementById('incident-empresa-hint');
+  if (!sel || !hint) return;
+  var client = (APP.clients || []).find(function(c) { return c.id === sel.value; });
+  var empresaId = client ? (client.empresa_id || client.empresaId) : null;
+  var empresa = empresaId ? (APP.empresas || []).find(function(e) { return e.id === empresaId; }) : null;
+  hint.value = empresa ? empresa.name : (client ? 'Sem empresa associada' : '—');
+}
+function populateIncidentBuildingSelect(selectedId) {
+  var clientSel = document.getElementById('incident-client');
+  var buildingSel = document.getElementById('incident-building');
+  if (!buildingSel) return;
+  var clientId = clientSel ? clientSel.value : '';
+  var buildings = (APP.buildings || []).filter(function(b) { return !clientId || b.clientId === clientId; });
+  var options = ['<option value="">Selecionar...</option>'];
+  buildings.forEach(function(b) {
+    options.push('<option value="' + b.id + '"' + (String(selectedId || '') === String(b.id) ? ' selected' : '') + '>' + escapeHtml(b.name) + '</option>');
+  });
+  buildingSel.innerHTML = options.join('');
+  buildingSel.value = selectedId || '';
+  enhanceSelects();
+  updateIncidentEmpresaHint();
+}
 function openNewIncidentModal() {
   if (!requirePermission('create', 'incidents', 'registar incidente')) return;
+  APP.editingIncidentId = null;
   populateOTSelects();
+  populateIncidentClientSelect('');
+  populateIncidentBuildingSelect('');
+  document.getElementById('incident-modal-title').textContent = 'Novo Incidente';
+  document.getElementById('incident-modal-submit-btn').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Registar';
   document.getElementById('incident-desc').value = '';
+  document.getElementById('incident-severity').value = 'Média';
   document.getElementById('incident-media-upload').value = '';
   enhanceFileInputs();
   document.getElementById('modal-new-incident').style.display = 'flex';
 }
-async function createIncident() {
-  if (!requirePermission('create', 'incidents', 'registar incidente')) return;
+function editIncident(id) {
+  var inc = (APP.incidents || []).find(function(i) { return i.id === id; });
+  if (!inc) return;
+  if (!requirePermission('edit', 'incidents', 'editar incidente')) return;
+  APP.editingIncidentId = id;
+  populateOTSelects();
+  populateIncidentClientSelect(inc.clientId);
+  populateIncidentBuildingSelect(inc.buildingId);
+  document.getElementById('incident-modal-title').textContent = 'Editar Incidente';
+  document.getElementById('incident-modal-submit-btn').innerHTML = '<i class="fas fa-save"></i> Guardar';
+  document.getElementById('incident-desc').value = inc.description || '';
+  document.getElementById('incident-equip').value = inc.equipmentId || '';
+  document.getElementById('incident-severity').value = inc.severity || 'Média';
+  document.getElementById('incident-media-upload').value = '';
+  enhanceFileInputs();
+  enhanceSelects();
+  document.getElementById('modal-new-incident').style.display = 'flex';
+}
+async function saveIncident() {
+  var editing = APP.editingIncidentId;
+  if (!requirePermission(editing ? 'edit' : 'create', 'incidents', editing ? 'editar incidente' : 'registar incidente')) return;
   var desc = document.getElementById('incident-desc').value.trim();
   if (!desc) { showToast('Descrição é obrigatória.'); return; }
+  var clientId = document.getElementById('incident-client').value;
+  var buildingId = document.getElementById('incident-building').value;
+  if (!clientId) { showToast('Selecione o cliente associado.'); return; }
+  if (!buildingId) { showToast('Selecione o edifício associado.'); return; }
+  var client = (APP.clients || []).find(function(c) { return c.id === clientId; });
   var equipId = document.getElementById('incident-equip').value;
   var equip = APP.equipment.find(function(e) { return e.id === equipId; });
+  var severity = document.getElementById('incident-severity').value;
   var media = await readSingleUpload('incident-media-upload');
-  var incident = {
-    id: generateId('INC'), description: desc,
-    severity: document.getElementById('incident-severity').value,
-    status: 'Aberto',
-    equipmentId: equipId, equipmentName: equip ? equip.name : '—',
-    media: media ? media.dataUrl : '',
-    mediaName: media ? media.name : '',
-    mediaType: media ? (media.type || '') : '',
-    createdAt: new Date().toISOString(),
+  var payload = {
+    title: desc.slice(0, 120),
+    description: desc,
+    clientId: clientId,
+    buildingId: buildingId,
+    equipmentId: equipId || null,
+    priority: INCIDENT_SEVERITY_TO_PRIORITY[severity] || 'media',
   };
-  APP.incidents.push(incident);
-  addNotification({ key:'incident-created-' + incident.id, type:'incident', title:'Novo incidente registado', body: incident.id + ' · ' + incident.severity + ' · ' + incident.equipmentName, targetType:'incident', targetId:incident.id, priority:['Alta','Crítica'].includes(incident.severity) ? 'high' : 'normal' });
-  saveData(); closeModal('modal-new-incident');
-  document.getElementById('incident-desc').value = '';
-  document.getElementById('incident-media-upload').value = '';
-  renderIncidents(); showToast('Incidente registado!');
+  if (media) payload.photos = [media.dataUrl];
+  try {
+    var result = editing
+      ? await apiRequest('/api/incidents/' + editing, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      : await apiRequest('/api/incidents', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    var raw = result.incident;
+    var local = mapBackendIncident(raw);
+    if (!local.equipmentName || local.equipmentName === raw.equipment_id) local.equipmentName = equip ? equip.name : '—';
+    if (media) { local.media = media.dataUrl; local.mediaName = media.name; local.mediaType = media.type || ''; }
+    else if (editing) {
+      var prevInc = (APP.incidents || []).find(function(i) { return i.id === editing; });
+      if (prevInc) { local.media = prevInc.media; local.mediaName = prevInc.mediaName; local.mediaType = prevInc.mediaType; }
+    }
+    var idx = (APP.incidents || []).findIndex(function(i) { return i.id === local.id; });
+    if (idx >= 0) APP.incidents[idx] = local; else APP.incidents.push(local);
+    if (!editing) {
+      addNotification({ key:'incident-created-' + local.id, type:'incident', title:'Novo incidente registado', body: abbreviateId(local.id) + ' · ' + local.severity + ' · ' + local.equipmentName, targetType:'incident', targetId:local.id, priority:['Alta','Crítica'].includes(local.severity) ? 'high' : 'normal' });
+    }
+    APP.editingIncidentId = null;
+    saveData(); closeModal('modal-new-incident');
+    renderIncidents(); showToast(editing ? 'Incidente atualizado!' : 'Incidente registado!');
+  } catch (error) {
+    showToast('Não foi possível guardar o incidente no servidor: ' + (error.message || 'erro desconhecido'));
+  }
 }
 function renderIncidents() {
   var tbody = document.getElementById('incidents-table-body');
   if (!tbody) return;
   var severityFilter = APP.incidentSeverityFilter || '';
   var rows = APP.incidents.filter(function(inc) {
-    if (!matchesSearch(inc, ['id','description','equipmentName','severity','status','mediaName'])) return false;
+    if (!matchesSearch(inc, ['id','description','equipmentName','clientName','empresaName','severity','status','mediaName'])) return false;
     if (severityFilter && inc.severity !== severityFilter) return false;
     return true;
   });
   if (rows.length === 0) {
-    tbody.innerHTML = emptyTableState(6, 'fa-triangle-exclamation', 'Nenhum incidente registado.', 'Adicionar incidente', 'openNewIncidentModal()');
+    tbody.innerHTML = emptyTableState(9, 'fa-triangle-exclamation', 'Nenhum incidente registado.', 'Adicionar incidente', 'openNewIncidentModal()');
     return;
   }
   tbody.innerHTML = rows.slice().reverse().map(function(inc) {
     var mediaBadge = inc.media ? ' <button class="badge badge-blue cursor-pointer" onclick="event.stopPropagation();openIncidentMedia(\'' + inc.id + '\')"><i class="fas ' + ((inc.mediaType || '').indexOf('video') === 0 ? 'fa-video' : 'fa-image') + '"></i> Ver anexo</button>' : '';
-    return '<tr><td class="mono text-xs text-slate-400">' + inc.id + '</td>' +
+    var canEdit = canDo('edit', 'incidents');
+    var canDelete = canDo('delete', 'incidents');
+    var actions = '<div class="flex items-center gap-1" onclick="event.stopPropagation()">' +
+      '<button class="btn-ghost text-xs" title="Visualizar" onclick="openIncidentDetail(\'' + inc.id + '\')"><i class="fas fa-eye"></i></button>' +
+      (canEdit ? '<button class="btn-ghost text-xs" title="Editar" onclick="editIncident(\'' + inc.id + '\')"><i class="fas fa-pen"></i></button>' : '') +
+      (inc.status !== 'Resolvido' && inc.status !== 'Fechado' ? '<button class="btn-ghost text-xs" title="Marcar como resolvido" onclick="openResolveIncidentModal(\'' + inc.id + '\')"><i class="fas fa-check-circle text-green-400"></i></button>' : '') +
+      (canDelete ? '<button class="btn-ghost text-xs" title="Apagar" onclick="deleteIncident(\'' + inc.id + '\')"><i class="fas fa-trash text-red-400"></i></button>' : '') +
+      '</div>';
+    return '<tr class="cursor-pointer hover:bg-white/5" onclick="openIncidentDetail(\'' + inc.id + '\')">' +
+      '<td class="mono text-xs text-slate-400" title="' + escapeHtml(inc.id) + '">' + abbreviateId(inc.id) + '</td>' +
       '<td class="font-medium" style="color:var(--text-primary)">' + escapeHtml(inc.description) + mediaBadge + '</td>' +
+      '<td>' + (escapeHtml(inc.clientName) || '—') + '</td>' +
+      '<td>' + (escapeHtml(inc.empresaName) || '—') + '</td>' +
       '<td>' + (inc.equipmentName || '—') + '</td>' +
       '<td><span class="badge ' + getSeverityClass(inc.severity) + '">' + inc.severity + '</span></td>' +
       '<td><span class="badge ' + getStatusClass(inc.status) + '">' + inc.status + '</span></td>' +
-      '<td class="text-xs">' + new Date(inc.createdAt).toLocaleDateString('pt-PT') + '</td></tr>';
+      '<td class="text-xs">' + new Date(inc.createdAt).toLocaleDateString('pt-PT') + '</td>' +
+      '<td>' + actions + '</td></tr>';
   }).join('');
 }
 function openIncidentMedia(id) {
   var inc = (APP.incidents || []).find(function(i) { return i.id === id; });
   if (!inc || !inc.media) return;
   window.open(inc.media, '_blank');
+}
+function openIncidentDetail(id) {
+  var inc = (APP.incidents || []).find(function(i) { return i.id === id; });
+  if (!inc) return;
+  APP.currentIncidentId = id;
+  document.getElementById('incident-detail-id').textContent = abbreviateId(id, 12);
+  document.getElementById('incident-detail-id').title = id;
+  document.getElementById('incident-detail-title').textContent = inc.description;
+  document.getElementById('incident-detail-client').textContent = inc.clientName || '—';
+  document.getElementById('incident-detail-empresa').textContent = inc.empresaName || '—';
+  document.getElementById('incident-detail-equip').textContent = inc.equipmentName || '—';
+  document.getElementById('incident-detail-severity').innerHTML = '<span class="badge ' + getSeverityClass(inc.severity) + '">' + inc.severity + '</span>';
+  document.getElementById('incident-detail-status-badge').innerHTML = '<span class="badge ' + getStatusClass(inc.status) + '">' + inc.status + '</span>';
+  document.getElementById('incident-detail-date').textContent = inc.createdAt ? new Date(inc.createdAt).toLocaleDateString('pt-PT') : '—';
+  document.getElementById('incident-detail-desc').textContent = inc.description || '—';
+  document.getElementById('incident-detail-status').value = inc.status || 'Aberto';
+  var resWrap = document.getElementById('incident-detail-resolution-wrap');
+  if (inc.resolutionNotes) {
+    resWrap.style.display = 'block';
+    document.getElementById('incident-detail-resolution').textContent = inc.resolutionNotes;
+  } else {
+    resWrap.style.display = 'none';
+  }
+  var mediaWrap = document.getElementById('incident-detail-media-wrap');
+  var mediaEmpty = document.getElementById('incident-detail-media-empty');
+  if (inc.media && (inc.mediaType || '').indexOf('video') !== 0) {
+    document.getElementById('incident-detail-media').src = inc.media;
+    mediaWrap.style.display = 'block'; mediaEmpty.style.display = 'none';
+  } else {
+    mediaWrap.style.display = 'none'; mediaEmpty.style.display = 'block';
+  }
+  document.getElementById('incident-detail-meta').innerHTML = [
+    ['Edifício', inc.buildingName || '—'],
+    ['Registado em', inc.createdAt ? new Date(inc.createdAt).toLocaleString('pt-PT') : '—'],
+    ['Resolvido em', inc.resolvedAt ? new Date(inc.resolvedAt).toLocaleString('pt-PT') : '—']
+  ].map(function(r) { return '<div class="flex justify-between py-1.5 border-b border-white/5"><span class="text-slate-400">' + r[0] + ':</span><span>' + escapeHtml(String(r[1])) + '</span></div>'; }).join('');
+  showDetailPage('modal-incident-detail');
+}
+function closeIncidentDetail() {
+  APP.currentIncidentId = null;
+  showPage('incidents');
+}
+async function updateIncidentStatus(newStatus) {
+  var id = APP.currentIncidentId;
+  var inc = (APP.incidents || []).find(function(i) { return i.id === id; });
+  if (!inc) return;
+  if (newStatus === 'Resolvido') {
+    // Reverte visualmente o select até a resolução ser confirmada no modal.
+    document.getElementById('incident-detail-status').value = inc.status;
+    openResolveIncidentModal(id);
+    return;
+  }
+  if (!requirePermission('edit', 'incidents', 'atualizar estado do incidente')) {
+    document.getElementById('incident-detail-status').value = inc.status;
+    return;
+  }
+  try {
+    var result = await apiRequest('/api/incidents/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: INCIDENT_STATUS_TO_BACKEND[newStatus] || 'aberto' }) });
+    var local = mapBackendIncident(result.incident);
+    local.media = inc.media; local.mediaName = inc.mediaName; local.mediaType = inc.mediaType;
+    var idx = APP.incidents.findIndex(function(i) { return i.id === id; });
+    if (idx >= 0) APP.incidents[idx] = local;
+    saveData(); renderIncidents(); openIncidentDetail(id);
+    showToast('Estado atualizado.');
+  } catch (error) {
+    document.getElementById('incident-detail-status').value = inc.status;
+    showToast('Não foi possível atualizar o estado: ' + (error.message || 'erro desconhecido'));
+  }
+}
+function openResolveIncidentModal(id) {
+  if (!requirePermission('edit', 'incidents', 'resolver incidente')) return;
+  var inc = (APP.incidents || []).find(function(i) { return i.id === id; });
+  if (!inc) return;
+  APP.resolvingIncidentId = id;
+  document.getElementById('resolve-incident-id').textContent = abbreviateId(id, 12) + ' · ' + inc.description;
+  document.getElementById('resolve-incident-notes').value = inc.resolutionNotes || '';
+  document.getElementById('modal-resolve-incident').style.display = 'flex';
+}
+async function confirmResolveIncident() {
+  var id = APP.resolvingIncidentId;
+  var inc = (APP.incidents || []).find(function(i) { return i.id === id; });
+  if (!inc) return;
+  var notes = document.getElementById('resolve-incident-notes').value.trim();
+  if (!notes) { showToast('Descreva a resolução aplicada.'); return; }
+  try {
+    var result = await apiRequest('/api/incidents/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'resolvido', resolutionNotes: notes }) });
+    var local = mapBackendIncident(result.incident);
+    local.media = inc.media; local.mediaName = inc.mediaName; local.mediaType = inc.mediaType;
+    var idx = APP.incidents.findIndex(function(i) { return i.id === id; });
+    if (idx >= 0) APP.incidents[idx] = local;
+    APP.resolvingIncidentId = null;
+    saveData(); closeModal('modal-resolve-incident'); renderIncidents();
+    if (APP.currentIncidentId === id) openIncidentDetail(id);
+    showToast('Incidente marcado como resolvido.');
+  } catch (error) {
+    showToast('Não foi possível resolver o incidente: ' + (error.message || 'erro desconhecido'));
+  }
+}
+async function deleteIncident(id) {
+  if (!requirePermission('delete', 'incidents', 'apagar incidente')) return;
+  if (!confirm('Apagar este incidente? Esta ação não pode ser desfeita.')) return;
+  try {
+    await apiRequest('/api/incidents/' + id, { method: 'DELETE' });
+    APP.incidents = (APP.incidents || []).filter(function(i) { return i.id !== id; });
+    saveData();
+    if (APP.currentIncidentId === id) showPage('incidents');
+    renderIncidents(); showToast('Incidente removido.');
+  } catch (error) {
+    showToast('Não foi possível remover o incidente: ' + (error.message || 'erro desconhecido'));
+  }
 }
 function getSeverityClass(s) {
   return {Crítica:'badge-red',Alta:'badge-yellow',Média:'badge-blue',Baixa:'badge-green'}[s] || 'badge-gray';
@@ -14632,6 +14964,8 @@ function closeModal(id) {
   if (id === 'modal-ot-detail') { showPage('ots'); return; }
   if (id === 'modal-new-equip') { APP.editingEquipId = null; APP.currentEquip = null; APP.pendingEquipmentFiles = []; showPage('equipment'); return; }
   if (id === 'modal-equip-detail') { showPage('equipment'); return; }
+  if (id === 'modal-new-incident') { APP.editingIncidentId = null; }
+  if (id === 'modal-resolve-incident') { APP.resolvingIncidentId = null; }
   if (id === 'modal-new-file') {
     APP.fileReturnContext = '';
     APP.editingFileId = '';

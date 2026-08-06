@@ -1536,13 +1536,91 @@ app.get('/api/incidents', async (c) => {
   try {
     const db = requireDb()
     const buildingId = c.req.query('buildingId')
+    const clientId = c.req.query('clientId')
     let query = db.from('incidents').select('*').order('occurred_at', { ascending: false })
     if (buildingId) query = query.eq('building_id', buildingId)
+    if (clientId) query = query.eq('client_id', clientId)
     const { data, error } = await query
     if (error) throw error
     return c.json({ incidents: data || [] })
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not fetch incidents')
+  }
+})
+
+app.post('/api/incidents', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json()
+    if (!body.title && !body.description) return jsonError(c, 'title/description é obrigatório')
+    if (!body.clientId) return jsonError(c, 'clientId é obrigatório')
+    if (!body.buildingId) return jsonError(c, 'buildingId é obrigatório')
+
+    const { data, error } = await db.from('incidents').insert({
+      client_id: body.clientId,
+      building_id: body.buildingId,
+      equipment_id: body.equipmentId ?? null,
+      type: body.type ?? 'outro',
+      title: body.title || (body.description || '').slice(0, 120),
+      description: body.description ?? null,
+      status: body.status ?? 'aberto',
+      priority: body.priority ?? 'media',
+      reported_by: body.reportedBy ?? null,
+      assigned_to: body.assignedTo ?? null,
+      photos: body.photos ?? [],
+    }).select().single()
+
+    if (error) throw error
+    return c.json({ incident: data }, 201)
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not create incident')
+  }
+})
+
+app.patch('/api/incidents/:id', async (c) => {
+  try {
+    const db = requireDb()
+    const id = c.req.param('id')
+    const body = await c.req.json()
+    const patch: Record<string, unknown> = {}
+    if (body.title !== undefined) patch.title = body.title
+    if (body.description !== undefined) patch.description = body.description
+    if (body.status !== undefined) patch.status = body.status
+    if (body.priority !== undefined) patch.priority = body.priority
+    if (body.type !== undefined) patch.type = body.type
+    if (body.clientId !== undefined) patch.client_id = body.clientId
+    if (body.buildingId !== undefined) patch.building_id = body.buildingId
+    if (body.equipmentId !== undefined) patch.equipment_id = body.equipmentId
+    if (body.assignedTo !== undefined) patch.assigned_to = body.assignedTo
+    if (body.photos !== undefined) patch.photos = body.photos
+    if (body.resolutionNotes !== undefined) patch.resolution_notes = body.resolutionNotes
+    if (body.resolvedBy !== undefined) patch.resolved_by = body.resolvedBy
+    // Marcar como resolvido regista automaticamente a data de resolução;
+    // sair do estado resolvido/fechado limpa a data.
+    if (body.status === 'resolvido' || body.status === 'fechado') {
+      patch.resolved_at = new Date().toISOString()
+    } else if (body.status !== undefined) {
+      patch.resolved_at = null
+    }
+
+    const { data, error } = await db.from('incidents').update(patch).eq('id', id).select().single()
+    if (error) throw error
+    if (!data) return jsonError(c, 'Incidente não encontrado', 404)
+    return c.json({ incident: data })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not update incident')
+  }
+})
+
+app.delete('/api/incidents/:id', async (c) => {
+  try {
+    const db = requireDb()
+    const id = c.req.param('id')
+    const { error } = await db.from('incidents').delete().eq('id', id)
+    if (error) throw error
+    return c.json({ success: true })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not delete incident')
   }
 })
 
