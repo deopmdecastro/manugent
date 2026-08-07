@@ -1100,6 +1100,8 @@
       max-height: 90vh; overflow-y: auto;
     }
     .modal-lg { max-width: 900px; }
+    .hover-highlight { transition: background-color .15s ease; border-radius: 8px; }
+    .hover-highlight:hover { background-color: rgba(255,255,255,0.04); }
     .modal-xl { max-width: 1100px; }
     #modal-new-file {
       z-index: 1110;
@@ -6487,6 +6489,46 @@
     <div class="flex gap-3 mt-6">
       <button class="btn-secondary flex-1" onclick="closeModal('modal-new-empresa')">Cancelar</button>
       <button class="btn-primary flex-1" onclick="saveEmpresa()"><i class="fas fa-check"></i> Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edição rápida de Cliente a partir da Visão Geral da Empresa (consome PUT /api/clients/:id) -->
+<div id="modal-overview-client-edit" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-semibold">Editar Cliente</h2>
+      <button class="btn-ghost" onclick="closeModal('modal-overview-client-edit')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div><label class="block text-sm mb-2 text-slate-300">Nome *</label><input type="text" id="overview-client-name" class="input-field"></div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-sm mb-2 text-slate-300">Email</label><input type="email" id="overview-client-email" class="input-field"></div>
+        <div><label class="block text-sm mb-2 text-slate-300">Telefone</label><input type="text" id="overview-client-phone" class="input-field"></div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-sm mb-2 text-slate-300">NIF</label><input type="text" id="overview-client-tax-id" class="input-field"></div>
+        <div><label class="block text-sm mb-2 text-slate-300">Setor</label><input type="text" id="overview-client-sector" class="input-field"></div>
+      </div>
+      <div class="flex items-center gap-2"><input type="checkbox" id="overview-client-active"><label for="overview-client-active" class="text-sm text-slate-300">Cliente ativo</label></div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-overview-client-edit')">Cancelar</button>
+      <button class="btn-primary flex-1" onclick="saveOverviewClient()"><i class="fas fa-check"></i> Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Explorador de pastas a partir da Visão Geral da Empresa (consome GET /api/folders/:id/documents) -->
+<div id="modal-overview-folder" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-2">
+      <h2 class="text-lg font-semibold"><i class="fas fa-folder-open text-amber-400"></i> <span id="overview-folder-name">Pasta</span></h2>
+      <button class="btn-ghost" onclick="closeModal('modal-overview-folder')"><i class="fas fa-times"></i></button>
+    </div>
+    <button type="button" class="btn-ghost text-xs mb-3" id="overview-folder-back-btn" style="display:none" onclick="popOverviewFolder()"><i class="fas fa-arrow-left"></i> Voltar</button>
+    <div id="overview-folder-body" class="space-y-1 text-sm max-h-96 overflow-y-auto">
+      <div class="text-slate-500 text-sm">A carregar…</div>
     </div>
   </div>
 </div>
@@ -12820,6 +12862,10 @@ async function createTechnician() {
     document.getElementById('tech-photo-upload').value = '';
     APP.editingTechId = null;
     renderTechnicians(); populateOTSelects(); showToast('Colaborador guardado!');
+    // Se este colaborador foi editado a partir da Visão Geral da Empresa ou da
+    // tabela de Colaboradores da Empresa, atualiza também essas vistas.
+    if (APP.currentPage === 'empresa-overview' && APP.viewingEmpresaOverviewId) viewEmpresaOverview(APP.viewingEmpresaOverviewId);
+    if (APP.currentPage === 'empresa-colaboradores' && APP.viewingEmpresaId) renderEmpresaColaboradoresTable();
   } catch (error) {
     showToast('Não foi possível guardar o colaborador no servidor: ' + (error.message || 'erro desconhecido'), 'error');
   }
@@ -13018,15 +13064,26 @@ function renderEmpresaOverview(data) {
   var body = document.getElementById('empresa-overview-body');
   titleEl.textContent = emp.name || 'Empresa';
 
+  // Guarda os dados desta visita para os cliques (editar cliente/colaborador,
+  // abrir pasta) funcionarem sem ter de voltar a ir à API para o essencial.
+  APP.empresas = APP.empresas || [];
+  if (!APP.empresas.some(function(e) { return e.id === emp.id; })) APP.empresas.push(emp);
+  APP.empresaOverviewClients = data.clients || [];
+  APP.empresaOverviewCollaborators = data.collaborators || [];
+  APP.empresaOverviewFolders = data.folders || [];
+
   var statsHtml = '<div class="grid grid-cols-2 md:grid-cols-4 gap-3">' +
     ['clients::Clientes::fa-city', 'collaborators::Colaboradores::fa-users', 'folders::Pastas::fa-folder', 'documents::Documentos::fa-file'].map(function(spec) {
       var parts = spec.split('::');
-      return '<div class="card p-3 text-center"><i class="fas ' + parts[2] + ' text-indigo-400 mb-1"></i>' +
+      return '<div class="card p-3 text-center">' +
+        '<i class="fas ' + parts[2] + ' text-indigo-400 mb-1"></i>' +
         '<div class="text-xl font-semibold">' + (stats[parts[0]] || 0) + '</div>' +
         '<div class="text-xs text-slate-500">' + parts[1] + '</div></div>';
     }).join('') + '</div>';
 
-  var infoHtml = '<div class="card p-4"><h3 class="font-semibold text-sm mb-3">Dados da empresa</h3>' +
+  var infoHtml = '<div class="card p-4 cursor-pointer hover-highlight" onclick="openEditEmpresaModal(\'' + emp.id + '\')" title="Clique para editar os dados da empresa">' +
+    '<div class="flex items-center justify-between mb-3"><h3 class="font-semibold text-sm">Dados da empresa</h3>' +
+    '<button class="btn-secondary entity-icon-action" title="Editar empresa" onclick="event.stopPropagation(); openEditEmpresaModal(\'' + emp.id + '\')"><i class="fas fa-pen"></i></button></div>' +
     '<div class="grid md:grid-cols-2 gap-2 text-sm text-slate-300">' +
     (emp.tax_id ? '<div><i class="fas fa-id-card text-slate-500"></i> ' + escapeHtml(emp.tax_id) + '</div>' : '') +
     (emp.email ? '<div><i class="fas fa-envelope text-slate-500"></i> ' + escapeHtml(emp.email) + '</div>' : '') +
@@ -13040,21 +13097,24 @@ function renderEmpresaOverview(data) {
   var clients = data.clients || [];
   var clientsHtml = '<div class="card p-4"><h3 class="font-semibold text-sm mb-3">Clientes (' + clients.length + ')</h3>' +
     (clients.length ? '<div class="space-y-1 text-sm max-h-48 overflow-y-auto">' + clients.map(function(cl) {
-      return '<div class="flex items-center justify-between border-b border-slate-800/60 py-1"><span>' + escapeHtml(cl.name) + '</span>' +
+      return '<div class="flex items-center justify-between border-b border-slate-800/60 py-1.5 cursor-pointer hover-highlight" onclick="openOverviewClientEdit(\'' + cl.id + '\')" title="Clique para editar este cliente">' +
+        '<span><i class="fas fa-pen text-xs text-slate-600 mr-1"></i>' + escapeHtml(cl.name) + '</span>' +
         (cl.active === false ? '<span class="badge badge-red text-xs">Inativo</span>' : '<span class="badge badge-green text-xs">Ativo</span>') + '</div>';
     }).join('') + '</div>' : '<div class="text-slate-500 text-sm">Sem clientes associados.</div>') + '</div>';
 
   var collabs = data.collaborators || [];
   var collabsHtml = '<div class="card p-4"><h3 class="font-semibold text-sm mb-3">Colaboradores (' + collabs.length + ')</h3>' +
     (collabs.length ? '<div class="space-y-1 text-sm max-h-48 overflow-y-auto">' + collabs.map(function(u) {
-      return '<div class="flex items-center justify-between border-b border-slate-800/60 py-1"><span>' + escapeHtml(u.name) + '</span><span class="badge badge-purple text-xs">' + escapeHtml(u.role || '') + '</span></div>';
+      return '<div class="flex items-center justify-between border-b border-slate-800/60 py-1.5 cursor-pointer hover-highlight" onclick="openOverviewCollaboratorEdit(\'' + u.id + '\')" title="Clique para editar este colaborador">' +
+        '<span><i class="fas fa-pen text-xs text-slate-600 mr-1"></i>' + escapeHtml(u.name) + '</span><span class="badge badge-purple text-xs">' + escapeHtml(u.role || '') + '</span></div>';
     }).join('') + '</div>' : '<div class="text-slate-500 text-sm">Sem colaboradores associados.</div>') + '</div>';
 
-  var folders = data.folders || [];
-  var foldersHtml = '<div class="card p-4"><h3 class="font-semibold text-sm mb-3">Pastas (' + folders.length + ')</h3>' +
-    (folders.length ? '<div class="space-y-1 text-sm max-h-48 overflow-y-auto">' + folders.slice(0, 40).map(function(f) {
-      return '<div class="flex items-center gap-2 border-b border-slate-800/60 py-1"><i class="fas fa-folder text-amber-400"></i> ' + escapeHtml(f.name) + '</div>';
-    }).join('') + (folders.length > 40 ? '<div class="text-xs text-slate-500 pt-1">+ ' + (folders.length - 40) + ' pastas…</div>' : '') + '</div>' : '<div class="text-slate-500 text-sm">Sem estrutura de pastas.</div>') + '</div>';
+  var folders = (data.folders || []).filter(function(f) { return !f.parent_id; });
+  var foldersHtml = '<div class="card p-4"><h3 class="font-semibold text-sm mb-3">Pastas (' + (data.folders || []).length + ')</h3>' +
+    (folders.length ? '<div class="space-y-1 text-sm max-h-64 overflow-y-auto">' + folders.map(function(f) {
+      return '<div class="flex items-center gap-2 border-b border-slate-800/60 py-1.5 cursor-pointer hover-highlight" onclick="openOverviewFolder(\'' + f.id + '\',\'' + escapeHtml(f.name) + '\')" title="Clique para ver o conteúdo desta pasta">' +
+        '<i class="fas fa-folder text-amber-400"></i> ' + escapeHtml(f.name) + '</div>';
+    }).join('') + '</div>' : '<div class="text-slate-500 text-sm">Sem estrutura de pastas.</div>') + '</div>';
 
   body.innerHTML = statsHtml + infoHtml +
     '<div class="grid md:grid-cols-2 gap-4">' + clientsHtml + collabsHtml + '</div>' +
@@ -13063,6 +13123,91 @@ function renderEmpresaOverview(data) {
     '<button class="btn-secondary flex-1" onclick="openEditEmpresaModal(\'' + emp.id + '\')"><i class="fas fa-pen"></i> Editar empresa</button>' +
     '<button class="btn-secondary flex-1" onclick="viewEmpresaColaboradores(\'' + emp.id + '\',\'' + escapeHtml(emp.name) + '\')"><i class="fas fa-users-gear"></i> Gerir colaboradores</button>' +
     '</div>';
+}
+// Edição rápida de um cliente diretamente a partir da Visão Geral da Empresa.
+// Não depende da lista local (nem sempre carregada, sobretudo para o
+// SuperAdmin) — usa sempre os dados já devolvidos por /api/empresas/:id/overview.
+function openOverviewClientEdit(clientId) {
+  var cl = (APP.empresaOverviewClients || []).find(function(x) { return x.id === clientId; });
+  if (!cl) return;
+  APP.editingOverviewClientId = clientId;
+  document.getElementById('overview-client-name').value = cl.name || '';
+  document.getElementById('overview-client-email').value = cl.email || '';
+  document.getElementById('overview-client-phone').value = cl.phone || '';
+  document.getElementById('overview-client-tax-id').value = cl.tax_id || '';
+  document.getElementById('overview-client-sector').value = cl.sector || '';
+  document.getElementById('overview-client-active').checked = cl.active !== false;
+  document.getElementById('modal-overview-client-edit').style.display = 'flex';
+}
+async function saveOverviewClient() {
+  var id = APP.editingOverviewClientId;
+  if (!id) return;
+  var name = document.getElementById('overview-client-name').value.trim();
+  if (!name) { showToast('Nome é obrigatório.', 'error'); return; }
+  var payload = {
+    name: name,
+    email: document.getElementById('overview-client-email').value.trim(),
+    phone: document.getElementById('overview-client-phone').value.trim(),
+    taxId: document.getElementById('overview-client-tax-id').value.trim(),
+    sector: document.getElementById('overview-client-sector').value.trim(),
+    active: document.getElementById('overview-client-active').checked,
+  };
+  try {
+    await apiRequest('/api/clients/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    closeModal('modal-overview-client-edit');
+    showToast('Cliente atualizado.');
+    if (APP.viewingEmpresaOverviewId) viewEmpresaOverview(APP.viewingEmpresaOverviewId);
+  } catch (error) {
+    showToast('Não foi possível guardar o cliente: ' + (error.message || 'erro desconhecido'), 'error');
+  }
+}
+// Edição de um colaborador diretamente a partir da Visão Geral da Empresa —
+// reutiliza o modal e a lógica já existentes na gestão de colaboradores da empresa.
+function openOverviewCollaboratorEdit(userId) {
+  APP.viewingEmpresaId = APP.viewingEmpresaOverviewId;
+  APP.viewingEmpresaCollaborators = APP.empresaOverviewCollaborators;
+  openEditEmpresaCollaboratorRow(userId);
+}
+// Explorador simples de pastas (com histórico para "Voltar") a partir da
+// Visão Geral da Empresa — consome GET /api/folders/:id/documents.
+function openOverviewFolder(folderId, folderName) {
+  APP.overviewFolderStack = [];
+  loadOverviewFolder(folderId, folderName);
+  document.getElementById('modal-overview-folder').style.display = 'flex';
+}
+function popOverviewFolder() {
+  var prev = (APP.overviewFolderStack || []).pop();
+  if (prev) loadOverviewFolder(prev.id, prev.name, true);
+}
+function loadOverviewFolder(folderId, folderName, isBack) {
+  if (!isBack && APP.overviewCurrentFolder) {
+    APP.overviewFolderStack = APP.overviewFolderStack || [];
+    APP.overviewFolderStack.push(APP.overviewCurrentFolder);
+  }
+  APP.overviewCurrentFolder = { id: folderId, name: folderName };
+  document.getElementById('overview-folder-name').textContent = folderName || 'Pasta';
+  document.getElementById('overview-folder-back-btn').style.display = (APP.overviewFolderStack || []).length ? 'inline-flex' : 'none';
+  var bodyEl = document.getElementById('overview-folder-body');
+  bodyEl.innerHTML = '<div class="text-slate-500 text-sm">A carregar…</div>';
+  apiRequest('/api/folders/' + folderId + '/documents').then(function(data) {
+    var subfolders = data.subfolders || [];
+    var documents = data.documents || [];
+    if (!subfolders.length && !documents.length) {
+      bodyEl.innerHTML = '<div class="text-slate-500 text-sm">Pasta vazia.</div>';
+      return;
+    }
+    bodyEl.innerHTML =
+      subfolders.map(function(f) {
+        return '<div class="flex items-center gap-2 border-b border-slate-800/60 py-1.5 cursor-pointer hover-highlight" onclick="loadOverviewFolder(\'' + f.id + '\',\'' + escapeHtml(f.name) + '\')"><i class="fas fa-folder text-amber-400"></i> ' + escapeHtml(f.name) + '</div>';
+      }).join('') +
+      documents.map(function(d) {
+        return '<div class="flex items-center justify-between gap-2 border-b border-slate-800/60 py-1.5">' +
+          '<a href="' + escapeHtml(d.url || '#') + '" target="_blank" class="truncate flex items-center gap-2"><i class="fas fa-file-lines text-purple-400"></i> ' + escapeHtml(d.name) + '</a>' +
+          '<span class="badge badge-gray text-xs">' + escapeHtml(d.type || '') + '</span></div>';
+      }).join('');
+  }).catch(function(error) {
+    bodyEl.innerHTML = '<div class="text-red-400 text-sm">Erro ao carregar pasta: ' + escapeHtml(error.message || 'erro desconhecido') + '</div>';
+  });
 }
 function viewEmpresaColaboradores(empresaId, empresaName) {
   APP.viewingEmpresaId = empresaId;
@@ -13121,7 +13266,7 @@ function openEditEmpresaCollaboratorRow(userId) {
   document.getElementById('tech-availability').value = 'Disponível';
   document.getElementById('tech-photo-upload').value = '';
   populateTechEmpresaSelect(APP.viewingEmpresaId);
-  APP.editingTechId = null;
+  APP.editingTechId = userId;
   enhanceFileInputs();
   document.getElementById('modal-new-tech').style.display = 'flex';
 }
