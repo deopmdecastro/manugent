@@ -5852,6 +5852,8 @@
             <div><span class="text-slate-500">Técnico:</span> <span id="ot-detail-tech" class="font-medium ml-2">—</span></div>
             <div><span class="text-slate-500">Data:</span> <span id="ot-detail-date" class="font-medium ml-2">—</span></div>
             <div><span class="text-slate-500">Local:</span> <span id="ot-detail-location" class="font-medium ml-2">—</span></div>
+            <div><span class="text-slate-500">Cliente:</span> <span id="ot-detail-client" class="font-medium ml-2">—</span></div>
+            <div><span class="text-slate-500">Empresa:</span> <span id="ot-detail-empresa" class="font-medium ml-2">—</span></div>
           </div>
           <div class="mt-3 pt-3 border-t border-white/5">
             <span class="text-slate-500 text-sm">Descrição:</span>
@@ -11000,23 +11002,17 @@ function dropOTOnKanban(event, status) {
   if (status === 'Concluída' && !ot.report) ot.report = generateAutoReport(ot);
   saveData(); updateDashboard(); renderOTs(); showToast('OT movida para ' + status + '.');
 }
-// Uma OT com estado "Aberta" já está atribuída/despachada — para quem
-// executa o trabalho (técnico/engenheiro) não faz sentido um passo manual
-// extra de "Iniciar": ao abrir o detalhe já deve estar a contar o tempo,
-// ficando só as opções de Pausar ou Fechar. Só se aplica quando ainda não há
-// ninguém a contar tempo nesta OT, para não reiniciar um cronómetro já ativo.
-function autoStartOpenOTIfNeeded(ot) {
-  if (!ot || ot.status !== 'Aberta') return false;
-  if (!['tecnico', 'engenheiro'].includes(getUserRole())) return false;
-  if (getActiveTimeLogs(ot).length) return false;
-  workOrderTimeAction('start');
-  return true;
-}
+// Uma OT "Aberta" está atribuída/despachada mas o trabalho em si ainda não
+// começou — quem executa (técnico/engenheiro) deve continuar a carregar em
+// "Iniciar" manualmente para passar a "Em Curso" e só a partir daí conta-se
+// tempo. Isto aplica-se a OTs e, do mesmo modo, a trabalhos em "Em Curso":
+// uma OT que já está "Em Curso" ao ser aberta mantém o cronómetro a correr
+// (renderOTTimeControls/updateOTTimeDisplay tratam disso sem passo extra),
+// mas nunca se arranca automaticamente uma OT que ainda está "Aberta".
 function openOTDetail(id) {
   var ot = APP.ots.find(function(o) { return o.id === id; });
   if (!ot) return;
   APP.currentOT = ot;
-  autoStartOpenOTIfNeeded(ot);
   ot.nfcTag = ot.nfcTag || ('NFC-OT-' + ot.id);
   document.getElementById('ot-detail-id').textContent = ot.id;
   document.getElementById('ot-detail-title').textContent = ot.title;
@@ -11028,6 +11024,8 @@ function openOTDetail(id) {
   document.getElementById('ot-detail-tech').textContent = ot.technicianName || '—';
   document.getElementById('ot-detail-date').textContent = ot.date ? new Date(ot.date).toLocaleString('pt-PT') : '—';
   document.getElementById('ot-detail-location').textContent = ot.location || '—';
+  document.getElementById('ot-detail-client').textContent = ot.clientName || '—';
+  document.getElementById('ot-detail-empresa').textContent = ot.empresaName || '—';
   document.getElementById('ot-detail-desc').textContent = ot.description || '—';
   renderWorkInstallationDetail(ot);
   renderDetailImage('ot-detail-image-wrap', 'ot-detail-image', ot.image);
