@@ -9324,6 +9324,7 @@ function populateBuildingClientSelect() {
   select.innerHTML = (APP.clients || []).map(function(c) {
     return '<option value="' + c.id + '">' + escapeHtml(c.name) + '</option>';
   }).join('');
+  syncEnhancedSelect(select);
 }
 async function createBuilding() {
   if (!requirePermission('create', 'buildings', 'criar edifício')) return;
@@ -15313,6 +15314,7 @@ function populateBuildingSquadSelect() {
   sel.innerHTML = '<option value="">Sem squad associada</option>' + (APP.teams || []).map(function(t) {
     return '<option value="' + t.id + '">' + escapeHtml(t.name) + '</option>';
   }).join('');
+  syncEnhancedSelect(sel);
 }
 // ── Distrito → Concelho → Freguesia (localidade da zona técnica) ──
 // PT_DIVISIONS é a lista completa de distritos/regiões autónomas, concelhos
@@ -15330,6 +15332,9 @@ function populateZoneDistritoSelect() {
   concelhoSel.disabled = true;
   freguesiaSel.innerHTML = '<option value="">Freguesia</option>';
   freguesiaSel.disabled = true;
+  syncEnhancedSelect(sel);
+  syncEnhancedSelect(concelhoSel);
+  syncEnhancedSelect(freguesiaSel);
 }
 function onZoneDistritoChange() {
   var distritoIdx = document.getElementById('building-zone-distrito').value;
@@ -15340,6 +15345,8 @@ function onZoneDistritoChange() {
   if (distritoIdx === '') {
     concelhoSel.innerHTML = '<option value="">Concelho</option>';
     concelhoSel.disabled = true;
+    syncEnhancedSelect(concelhoSel);
+    syncEnhancedSelect(freguesiaSel);
     return;
   }
   var distrito = PT_DIVISIONS[distritoIdx];
@@ -15347,6 +15354,8 @@ function onZoneDistritoChange() {
     return '<option value="' + i + '">' + escapeHtml(c.n) + '</option>';
   }).join('');
   concelhoSel.disabled = false;
+  syncEnhancedSelect(concelhoSel);
+  syncEnhancedSelect(freguesiaSel);
 }
 function onZoneConcelhoChange() {
   var distritoIdx = document.getElementById('building-zone-distrito').value;
@@ -15355,6 +15364,7 @@ function onZoneConcelhoChange() {
   if (distritoIdx === '' || concelhoIdx === '') {
     freguesiaSel.innerHTML = '<option value="">Freguesia</option>';
     freguesiaSel.disabled = true;
+    syncEnhancedSelect(freguesiaSel);
     return;
   }
   var concelho = PT_DIVISIONS[distritoIdx].c[concelhoIdx];
@@ -15362,6 +15372,7 @@ function onZoneConcelhoChange() {
     return '<option value="' + escapeHtml(f) + '">' + escapeHtml(f) + '</option>';
   }).join('');
   freguesiaSel.disabled = false;
+  syncEnhancedSelect(freguesiaSel);
 }
 async function addZoneToForm() {
   var name = document.getElementById('building-zone-name').value.trim();
