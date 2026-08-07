@@ -1,8 +1,8 @@
--- 020_approvals_and_chat.sql
+-- 021_approvals_and_chat.sql
 -- Adiciona: fluxo de aprovação/início de Pedidos e Obras (maintenance_requests);
 -- chat por escopo (Pedido/Obra ou Empresa), público ou privado.
 --
--- Mirrors supabase/migrations/20260806090000_approvals_and_chat.sql
+-- Mirrors supabase/migrations/20260807010000_approvals_and_chat.sql
 
 -- ── 1. Aprovação de Pedidos/Obras ───────────────────────────────────────────
 -- Regra: quando um cliente ou um técnico abre um pedido, um responsável

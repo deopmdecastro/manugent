@@ -93,7 +93,13 @@ BEGIN
   RETURN v_client_root_id;
 END;
 $$;
-GRANT EXECUTE ON FUNCTION create_client_folder_structure(uuid, uuid) TO anon, authenticated;
+DO $do$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon')
+     AND EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+    EXECUTE 'GRANT EXECUTE ON FUNCTION create_client_folder_structure(uuid, uuid) TO anon, authenticated';
+  END IF;
+END $do$;
 
 -- ── 4. Nova RPC: create_building_folder_structure ────────────────────────────
 
@@ -147,7 +153,13 @@ BEGIN
   RETURN v_building_root_id;
 END;
 $$;
-GRANT EXECUTE ON FUNCTION create_building_folder_structure(uuid, uuid, uuid, text) TO anon, authenticated;
+DO $do$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon')
+     AND EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+    EXECUTE 'GRANT EXECUTE ON FUNCTION create_building_folder_structure(uuid, uuid, uuid, text) TO anon, authenticated';
+  END IF;
+END $do$;
 
 -- ── 5. get_empresa_folder_tree — incluir sort_order das novas pastas de edifício ──
 
@@ -197,7 +209,13 @@ BEGIN
   ORDER BY sort_order ASC, f.name ASC;
 END;
 $$;
-GRANT EXECUTE ON FUNCTION get_empresa_folder_tree(uuid) TO anon, authenticated;
+DO $do$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon')
+     AND EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+    EXECUTE 'GRANT EXECUTE ON FUNCTION get_empresa_folder_tree(uuid) TO anon, authenticated';
+  END IF;
+END $do$;
 
 -- ── 6. Backfill: aplicar a nova pasta "Edifícios" e criar pastas para edifícios já existentes ──
 
