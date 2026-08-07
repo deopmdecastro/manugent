@@ -98,6 +98,7 @@ const N = {
   ratings: Number(process.env.SEED_RATINGS || 600),
   floorsPerBuilding: [2, 6],
   areasPerFloor: [2, 5],
+  zonesPerBuilding: [0, 3],
   buildingAssignmentsPerBuilding: [2, 5],
   incidents: Number(process.env.SEED_INCIDENTS || 220),
   knowledgeArticles: Number(process.env.SEED_KNOWLEDGE_ARTICLES || 90),
@@ -124,6 +125,11 @@ const PART_CATALOG = ['Filtro de ar', 'Correia de transmissão', 'Compressor', '
   'Contactor', 'Sensor de temperatura', 'Motor elétrico', 'Placa de circuito', 'Junta vedante', 'Cabo elétrico',
   'Lâmpada de emergência', 'Bomba de circulação', 'Termóstato', 'Fusível']
 const BUILDING_TYPES = ['industrial', 'comercial', 'residencial', 'saude', 'escritorio']
+const ZONE_NAMES = ['Central Térmica', 'Sala de Quadros Elétricos', 'Posto de Transformação', 'Central de Bombagem',
+  'Sala de Geradores', 'Central de Deteção de Incêndio', 'Cave Técnica', 'Terraço AVAC', 'Casa das Máquinas dos Elevadores',
+  'Central de Bombagem de Incêndio', 'Sala de Comando', 'Depósito de Água', 'Central de Ar Comprimido', 'Subestação Elétrica']
+const ZONE_DECOMMISSION_REASONS = ['Zona desativada após remodelação.', 'Equipamentos removidos, zona sem utilização.',
+  'Fusão com zona técnica adjacente.', 'Encerrada por obras no edifício.']
 const CHECKLIST_NAMES = ['Checklist AVAC Mensal', 'Checklist Elétrico Trimestral', 'Checklist Elevadores',
   'Checklist Segurança Contra Incêndio', 'Checklist Refrigeração', 'Checklist Hidráulico', 'Ronda Geral de Instalações']
 const TESTIMONIAL_ROLES = ['Diretor de Manutenção', 'Gestor de Instalações', 'Técnico Responsável', 'Diretor Geral', 'Facility Manager']
@@ -404,13 +410,34 @@ async function main() {
           address: `Rua ${pick(['do Comércio', 'da Indústria', 'das Flores', 'Central'])}, ${int(1, 500)}`,
           city: pick(CITIES), type: pick(BUILDING_TYPES), area_m2: int(200, 15000),
         }
+        // Zonas técnicas — guardadas como JSON em buildings.zones (sem tabela própria,
+        // ver formulário de edifício em public/app/index.html). Cada zona pode ter
+        // uma squad responsável e, ocasionalmente, já estar dada de baixa.
+        const zoneCount = int(...N.zonesPerBuilding)
+        const zoneNames = pickMany(ZONE_NAMES, Math.min(zoneCount, ZONE_NAMES.length))
+        b.zonesData = zoneNames.map(name => {
+          const squadId = chance(0.7) ? pick(teamIds) : ''
+          const squadName = squadId ? teamNames[teamIds.indexOf(squadId)] || '' : ''
+          const zone = {
+            id: `ZONE-${randomUUID().slice(0, 8).toUpperCase()}`, name, squadId, squadName,
+            localidade: `${b.city} · Piso ${int(-1, 3)}`, status: 'ativa',
+            photo: '', photoName: '', plan: '', planName: '',
+          }
+          if (chance(0.15)) {
+            zone.status = 'baixa'
+            zone.decommissionReason = pick(ZONE_DECOMMISSION_REASONS)
+            zone.decommissionedAt = daysAgo(int(5, 400))
+          }
+          return zone
+        })
         buildings.push(b)
         buildingsByClient[c.id].push(b.id)
       }
     }
-    await bulkInsert(client, 'buildings', ['id', 'client_id', 'name', 'address', 'city', 'type', 'area_m2'],
-      buildings.map(b => [b.id, b.client_id, b.name, b.address, b.city, b.type, b.area_m2]))
-    console.log(`  ✓ ${buildings.length} edifícios`)
+    await bulkInsert(client, 'buildings', ['id', 'client_id', 'name', 'address', 'city', 'type', 'area_m2', 'zones'],
+      buildings.map(b => [b.id, b.client_id, b.name, b.address, b.city, b.type, b.area_m2, JSON.stringify(b.zonesData)]))
+    const totalZones = buildings.reduce((sum, b) => sum + b.zonesData.length, 0)
+    console.log(`  ✓ ${buildings.length} edifícios (${totalZones} zonas técnicas)`)
 
     // ---- Pisos e Áreas ---------------------------------------------------------------
     const floors = []
