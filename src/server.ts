@@ -1596,6 +1596,143 @@ app.get('/api/maintenance-requests/:id/history', async (c) => {
   }
 })
 
+app.get('/api/maintenance-requests/:id', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.from('maintenance_requests').select('*').eq('id', c.req.param('id')).single()
+    if (error) throw error
+    if (!data) return jsonError(c, 'Pedido not found', 404)
+    return c.json({ request: data })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch request')
+  }
+})
+
+// ── Routes: Aprovação e início de Pedidos/Obras ─────────────────────────────
+// Regra de negócio: quando um cliente ou um técnico abre um pedido, um
+// responsável (admin/superadmin/gestor/supervisor) tem de o aprovar antes de
+// avançar. Exceção: se foi o próprio técnico que abriu o pedido, ele pode
+// aprová-lo e iniciá-lo sem depender de terceiros.
+
+const REQUEST_APPROVER_ROLES = ['admin', 'superadmin', 'gestor', 'supervisor']
+const REQUEST_TECHNICIAN_ROLES = ['technician', 'tecnico']
+
+async function loadRequestApprovalActor(
+  db: ReturnType<typeof requireDb>,
+  requestId: string,
+  userId: string | null | undefined
+) {
+  const { data: request, error: requestError } = await db
+    .from('maintenance_requests')
+    .select('*')
+    .eq('id', requestId)
+    .single()
+  if (requestError) throw requestError
+  if (!request) return { request: null as null, canApprove: false, isSelfApprovingTechnician: false }
+
+  let actorRole: string | null = null
+  if (userId) {
+    const { data: userRow } = await db.from('users').select('id, role').eq('id', userId).single()
+    actorRole = (userRow as { role?: string } | null)?.role ?? null
+  }
+
+  const isRequester = !!userId && request.requested_by === userId
+  const isSelfApprovingTechnician = isRequester && !!actorRole && REQUEST_TECHNICIAN_ROLES.includes(actorRole)
+  const isResponsible = !!actorRole && REQUEST_APPROVER_ROLES.includes(actorRole)
+  const canApprove = isSelfApprovingTechnician || isResponsible
+
+  return { request, canApprove, isSelfApprovingTechnician }
+}
+
+app.post('/api/maintenance-requests/:id/approve', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json().catch(() => ({}))
+    const userId = body.userId ?? null
+    const { request, canApprove } = await loadRequestApprovalActor(db, c.req.param('id'), userId)
+    if (!request) return jsonError(c, 'Pedido not found', 404)
+    if (!canApprove) {
+      return jsonError(c, 'Só um responsável (admin/gestor/supervisor) pode aprovar este pedido — exceto se foi o próprio técnico a abri-lo.', 403)
+    }
+
+    const { data, error } = await db.rpc('approve_maintenance_request', {
+      p_request_id: c.req.param('id'),
+      p_user_id: userId,
+      p_note: body.note ?? null,
+    })
+    if (error) throw error
+    if ((data as Record<string, unknown>)?.error) return jsonError(c, String((data as Record<string, unknown>).error), 404)
+    return c.json({ request: data })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not approve request')
+  }
+})
+
+app.post('/api/maintenance-requests/:id/reject', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json().catch(() => ({}))
+    const userId = body.userId ?? null
+    const { request, canApprove } = await loadRequestApprovalActor(db, c.req.param('id'), userId)
+    if (!request) return jsonError(c, 'Pedido not found', 404)
+    if (!canApprove) {
+      return jsonError(c, 'Só um responsável (admin/gestor/supervisor) pode rejeitar este pedido — exceto se foi o próprio técnico a abri-lo.', 403)
+    }
+
+    const { data, error } = await db.rpc('reject_maintenance_request', {
+      p_request_id: c.req.param('id'),
+      p_user_id: userId,
+      p_note: body.note ?? null,
+    })
+    if (error) throw error
+    if ((data as Record<string, unknown>)?.error) return jsonError(c, String((data as Record<string, unknown>).error), 404)
+    return c.json({ request: data })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not reject request')
+  }
+})
+
+// Iniciar um Pedido/Obra já aprovado. Se foi o técnico requerente a abrir o
+// pedido e ainda não estiver aprovado, aprova e inicia numa única chamada.
+app.post('/api/maintenance-requests/:id/start', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json().catch(() => ({}))
+    const userId = body.userId ?? null
+    const { request, canApprove, isSelfApprovingTechnician } = await loadRequestApprovalActor(db, c.req.param('id'), userId)
+    if (!request) return jsonError(c, 'Pedido not found', 404)
+
+    if (request.approval_status !== 'aprovado') {
+      if (isSelfApprovingTechnician) {
+        const approveResult = await db.rpc('approve_maintenance_request', {
+          p_request_id: c.req.param('id'),
+          p_user_id: userId,
+          p_note: body.note ?? 'Auto-aprovado pelo técnico requerente ao iniciar.',
+        })
+        if (approveResult.error) throw approveResult.error
+      } else {
+        return jsonError(
+          c,
+          canApprove
+            ? 'Aprova o pedido antes de o iniciar.'
+            : 'Este pedido ainda não foi aprovado por um responsável.',
+          403
+        )
+      }
+    }
+
+    const { data, error } = await db.rpc('start_maintenance_request', {
+      p_request_id: c.req.param('id'),
+      p_user_id: userId,
+    })
+    if (error) throw error
+    if ((data as Record<string, unknown>)?.error) return jsonError(c, String((data as Record<string, unknown>).error), 404)
+    return c.json({ request: data })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not start request')
+  }
+})
+
 // ── Routes: Motivos de Pausa (OT / Pedido / Obra) ───────────────────────────
 
 app.get('/api/pause-reasons', async (c) => {
@@ -1634,6 +1771,183 @@ app.delete('/api/pause-reasons/:id', async (c) => {
     return c.json({ success: true })
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not remove pause reason')
+  }
+})
+
+// ── Routes: Chat ─────────────────────────────────────────────────────────
+// Chat por escopo — "maintenance_request" (Pedido/Obra) ou "empresa" — cada
+// um público (visível a todos com acesso ao escopo) ou privado (só membros
+// explicitamente adicionados ao canal).
+
+const CHAT_SCOPE_TYPES = ['maintenance_request', 'empresa']
+
+// Lista os canais visíveis a um utilizador para um dado escopo: o canal
+// público (se existir) mais os canais privados de que é membro.
+app.get('/api/chat/channels', async (c) => {
+  try {
+    const db = requireDb()
+    const scopeType = assertOption(c.req.query('scopeType'), CHAT_SCOPE_TYPES, 'scopeType')
+    const scopeId = c.req.query('scopeId')
+    const userId = c.req.query('userId')
+    if (!scopeId) return jsonError(c, 'scopeId é obrigatório')
+
+    const { data: channels, error } = await db
+      .from('chat_channels')
+      .select('*')
+      .eq('scope_type', scopeType)
+      .eq('scope_id', scopeId)
+      .order('created_at', { ascending: true })
+    if (error) throw error
+
+    const channelList = (channels || []) as Record<string, unknown>[]
+    let visible = channelList.filter((ch) => !ch.is_private)
+    if (userId) {
+      const privateChannels = channelList.filter((ch) => ch.is_private)
+      if (privateChannels.length) {
+        // O adaptador Postgres standalone não suporta `.in(...)`, por isso
+        // verificamos a associação a cada canal privado individualmente.
+        const memberFlags = await Promise.all(
+          privateChannels.map((ch: Record<string, unknown>) =>
+            db.from('chat_channel_members').select('user_id').eq('channel_id', ch.id).eq('user_id', userId).maybeSingle()
+          )
+        )
+        visible = visible.concat(privateChannels.filter((_ch: Record<string, unknown>, idx: number) => !!memberFlags[idx].data))
+      }
+    }
+
+    return c.json({ channels: visible })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch chat channels')
+  }
+})
+
+// Cria (ou devolve, se já existir) o canal público de um escopo, ou cria um
+// canal privado com uma lista fechada de membros.
+app.post('/api/chat/channels', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json()
+    const scopeType = assertOption(body.scopeType, CHAT_SCOPE_TYPES, 'scopeType')
+    if (!body.scopeId) return jsonError(c, 'scopeId é obrigatório')
+    const isPrivate = !!body.isPrivate
+
+    if (!isPrivate) {
+      const { data: existing } = await db
+        .from('chat_channels')
+        .select('*')
+        .eq('scope_type', scopeType)
+        .eq('scope_id', body.scopeId)
+        .eq('is_private', false)
+        .maybeSingle()
+      if (existing) return c.json({ channel: existing })
+    }
+
+    const { data: channel, error } = await db.from('chat_channels').insert({
+      scope_type: scopeType,
+      scope_id: body.scopeId,
+      name: body.name ?? null,
+      is_private: isPrivate,
+      created_by: body.userId ?? null,
+    }).select().single()
+    if (error) throw error
+
+    const memberIds: string[] = Array.isArray(body.memberIds) ? body.memberIds : []
+    if (isPrivate && body.userId && !memberIds.includes(body.userId)) memberIds.push(body.userId)
+    if (isPrivate && memberIds.length) {
+      for (const memberId of memberIds) {
+        await db.from('chat_channel_members').insert({ channel_id: channel.id, user_id: memberId })
+      }
+    }
+
+    return c.json({ channel }, 201)
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not create chat channel')
+  }
+})
+
+app.post('/api/chat/channels/:id/members', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json()
+    const memberIds: string[] = Array.isArray(body.memberIds) ? body.memberIds : (body.userId ? [body.userId] : [])
+    if (!memberIds.length) return jsonError(c, 'memberIds é obrigatório')
+    for (const memberId of memberIds) {
+      const { data: existing } = await db
+        .from('chat_channel_members')
+        .select('user_id')
+        .eq('channel_id', c.req.param('id'))
+        .eq('user_id', memberId)
+        .maybeSingle()
+      if (!existing) await db.from('chat_channel_members').insert({ channel_id: c.req.param('id'), user_id: memberId })
+    }
+    return c.json({ success: true })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not add chat members')
+  }
+})
+
+app.get('/api/chat/channels/:id/messages', async (c) => {
+  try {
+    const db = requireDb()
+    const limit = Math.min(Number(c.req.query('limit')) || 100, 200)
+    const { data, error } = await db
+      .from('chat_messages')
+      .select('*')
+      .eq('channel_id', c.req.param('id'))
+      .order('created_at', { ascending: true })
+      .limit(limit)
+    if (error) throw error
+    return c.json({ messages: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch chat messages')
+  }
+})
+
+app.post('/api/chat/channels/:id/messages', async (c) => {
+  try {
+    const db = requireDb()
+    const body = await c.req.json()
+    if (!body.body || !String(body.body).trim()) return jsonError(c, 'body é obrigatório')
+
+    // Canais privados só aceitam mensagens de membros.
+    const { data: channel, error: channelError } = await db
+      .from('chat_channels')
+      .select('*')
+      .eq('id', c.req.param('id'))
+      .single()
+    if (channelError) throw channelError
+    if (!channel) return jsonError(c, 'Canal not found', 404)
+    if (channel.is_private && body.userId) {
+      const { data: membership } = await db
+        .from('chat_channel_members')
+        .select('user_id')
+        .eq('channel_id', c.req.param('id'))
+        .eq('user_id', body.userId)
+        .maybeSingle()
+      if (!membership) return jsonError(c, 'Não és membro deste canal privado.', 403)
+    }
+
+    let userName: string | null = body.userName ?? null
+    let userRole: string | null = body.userRole ?? null
+    if (body.userId && (!userName || !userRole)) {
+      const { data: userRow } = await db.from('users').select('name, role').eq('id', body.userId).maybeSingle()
+      if (userRow) {
+        userName = userName ?? (userRow as Record<string, unknown>).name as string
+        userRole = userRole ?? (userRow as Record<string, unknown>).role as string
+      }
+    }
+
+    const { data, error } = await db.from('chat_messages').insert({
+      channel_id: c.req.param('id'),
+      user_id: body.userId ?? null,
+      user_name: userName,
+      user_role: userRole,
+      body: String(body.body).trim(),
+    }).select().single()
+    if (error) throw error
+    return c.json({ message: data }, 201)
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not send chat message')
   }
 })
 

@@ -3364,6 +3364,12 @@
       <div class="sidebar-item" onclick="showPage('incidents')" id="nav-incidents">
         <i class="fas fa-exclamation-triangle"></i> Incidentes
       </div>
+      <div class="sidebar-item" onclick="showPage('requests')" id="nav-requests">
+        <i class="fas fa-clipboard-list"></i> Pedidos/Obras
+      </div>
+      <div class="sidebar-item" onclick="showPage('chat')" id="nav-chat">
+        <i class="fas fa-comments"></i> Chat
+      </div>
       <div class="mt-4 mb-1 px-2 text-xs text-slate-600 uppercase tracking-wider">Comercial</div>
       <div class="sidebar-item" onclick="showPage('materials')" id="nav-materials">
         <i class="fas fa-boxes-stacked"></i> Material
@@ -4190,6 +4196,140 @@
               <tr><td colspan="9" class="text-center text-slate-500 py-8">Nenhum incidente registado.</td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- PEDIDOS / OBRAS -->
+      <div id="page-requests" class="page fade-in">
+        <div class="flex items-center justify-between mb-6 page-header">
+          <div>
+            <h1 class="mono">Pedidos/Obras</h1>
+            <p>Pedidos de manutenção e obras — aprovação, execução, pausas e histórico</p>
+          </div>
+        </div>
+        <div class="card overflow-hidden">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th><th>Título</th><th>Cliente</th><th>Prioridade</th><th>Estado</th><th>Aprovação</th><th>Data</th><th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="requests-table-body">
+              <tr><td colspan="8" class="text-center text-slate-500 py-8">Nenhum pedido registado.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pedido/Obra Detail -->
+      <div id="modal-request-detail" class="modal-overlay" style="display:none">
+        <div class="modal-content">
+          <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
+            <div>
+              <div class="text-xs text-slate-500 mono mb-1" id="request-detail-id" title="">PED-000</div>
+              <h2 class="text-xl font-bold" id="request-detail-title">Detalhe do Pedido</h2>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap" id="request-detail-actions">
+              <button class="btn-ghost" onclick="closeRequestDetail()"><i class="fas fa-arrow-left"></i> Voltar</button>
+            </div>
+          </div>
+          <div class="grid md:grid-cols-3 gap-5">
+            <div class="md:col-span-2 space-y-5">
+              <div class="card p-4">
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                  <div><span class="text-slate-500">Cliente:</span> <span id="request-detail-client" class="font-medium ml-2">—</span></div>
+                  <div><span class="text-slate-500">Equipamento:</span> <span id="request-detail-equip" class="font-medium ml-2">—</span></div>
+                  <div><span class="text-slate-500">Prioridade:</span> <span id="request-detail-priority" class="ml-2">—</span></div>
+                  <div><span class="text-slate-500">Estado:</span> <span id="request-detail-status-badge" class="ml-2">—</span></div>
+                  <div><span class="text-slate-500">Aprovação:</span> <span id="request-detail-approval-badge" class="ml-2">—</span></div>
+                  <div><span class="text-slate-500">Data:</span> <span id="request-detail-date" class="font-medium ml-2">—</span></div>
+                </div>
+                <div class="mt-3 pt-3 border-t border-white/5">
+                  <span class="text-slate-500 text-sm">Descrição:</span>
+                  <p id="request-detail-desc" class="text-sm mt-1 text-slate-300">—</p>
+                </div>
+              </div>
+              <div class="card p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <h4 class="font-medium text-sm"><i class="fas fa-history text-blue-400"></i> Histórico</h4>
+                </div>
+                <div id="request-detail-history" class="space-y-2 text-sm text-slate-300">
+                  <p class="text-slate-500">A carregar…</p>
+                </div>
+              </div>
+            </div>
+            <div class="space-y-4">
+              <div class="card p-4">
+                <h3 class="font-semibold mb-3 text-sm">Detalhes</h3>
+                <div id="request-detail-meta" class="space-y-2 text-sm text-slate-300"></div>
+              </div>
+              <div class="card p-4">
+                <h3 class="font-semibold mb-3 text-sm"><i class="fas fa-comments text-emerald-400"></i> Chat do Pedido</h3>
+                <div id="request-chat-widget"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal: pausar pedido/obra -->
+      <div id="modal-pause-request" class="modal-overlay" style="display:none">
+        <div class="modal-content" style="max-width:420px">
+          <h3 class="font-semibold mb-4">Pausar Pedido</h3>
+          <div class="space-y-3">
+            <div>
+              <label class="text-sm text-slate-400">Motivo</label>
+              <select id="pause-request-reason" class="input-field w-full"></select>
+            </div>
+            <div>
+              <label class="text-sm text-slate-400">Nota (opcional)</label>
+              <textarea id="pause-request-note" class="input-field w-full" rows="2"></textarea>
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 mt-5">
+            <button class="btn-ghost" onclick="document.getElementById('modal-pause-request').style.display='none'">Cancelar</button>
+            <button class="btn-primary" onclick="confirmPauseRequest()">Confirmar Pausa</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHAT (público por Pedido/Obra ou por Empresa; suporta canais privados) -->
+      <div id="page-chat" class="page fade-in">
+        <div class="flex items-center justify-between mb-6 page-header">
+          <div>
+            <h1 class="mono">Chat</h1>
+            <p>Comunicação da equipa — por Pedido/Obra ou canal geral da Empresa</p>
+          </div>
+        </div>
+        <div class="grid md:grid-cols-3 gap-5" style="min-height:520px">
+          <div class="card p-3 md:col-span-1">
+            <div class="flex items-center justify-between mb-2 px-1">
+              <h4 class="font-medium text-sm">Canais</h4>
+              <button class="btn-ghost btn-sm" title="Novo canal privado" onclick="openNewChatChannelModal()"><i class="fas fa-lock"></i></button>
+            </div>
+            <div id="chat-channel-list" class="space-y-1"><p class="text-slate-500 text-sm px-1">A carregar…</p></div>
+          </div>
+          <div class="card p-0 md:col-span-2 flex flex-col" style="min-height:520px">
+            <div id="chat-main-widget" class="flex-1"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal: novo canal de chat privado -->
+      <div id="modal-new-chat-channel" class="modal-overlay" style="display:none">
+        <div class="modal-content" style="max-width:420px">
+          <h3 class="font-semibold mb-4">Novo Canal Privado</h3>
+          <div class="space-y-3">
+            <div>
+              <label class="text-sm text-slate-400">Nome do canal</label>
+              <input type="text" id="new-chat-channel-name" class="input-field w-full" placeholder="Ex.: Equipa Norte">
+            </div>
+            <p class="text-xs text-slate-500">Só tu (e quem adicionares depois) vêem este canal. Fica ligado ao escopo atual (empresa).</p>
+          </div>
+          <div class="flex justify-end gap-2 mt-5">
+            <button class="btn-ghost" onclick="document.getElementById('modal-new-chat-channel').style.display='none'">Cancelar</button>
+            <button class="btn-primary" onclick="confirmNewChatChannel()">Criar</button>
+          </div>
         </div>
       </div>
 
@@ -7159,7 +7299,7 @@ function showApp() {
   setTimeout(function() {
     renderOTs(); renderEquipment(); renderClients();
     renderBuildings(); renderTechnicians(); renderKnowledge(); renderFiles(); renderIncidents(); renderChecklists();
-    renderMaterials(); renderPurchases(); renderQuotes();
+    renderMaterials(); renderPurchases(); renderQuotes(); renderMaintenanceRequests();
     ensureOperationalNotifications();
     enhanceFileInputs();
     enhanceSelects();
@@ -7300,6 +7440,8 @@ function showPage(page) {
   if (page === 'materials') renderMaterials();
   if (page === 'purchases') renderPurchases();
   if (page === 'quotes') renderQuotes();
+  if (page === 'requests') renderMaintenanceRequests();
+  if (page === 'chat') openChatScope('empresa', currentEmpresaScopeId());
   if (page === 'calendar') renderCalendar();
   if (page === 'ai-assistant') checkAIStatus();
   if (page === 'notifications') renderNotifications();
@@ -7349,7 +7491,7 @@ function ensurePageBackButtons() {
 }
 
 function isMobileDetailPage(page) {
-  return ['modal-new-ot','modal-ot-detail','modal-new-equip','modal-equip-detail','article-detail','modal-incident-detail','modal-material-detail'].includes(page);
+  return ['modal-new-ot','modal-ot-detail','modal-new-equip','modal-equip-detail','article-detail','modal-incident-detail','modal-material-detail','modal-request-detail'].includes(page);
 }
 
 function isMobileShellPage(page) {
@@ -7789,7 +7931,8 @@ function setupDetailPages() {
     { id: 'modal-new-equip', nav: 'nav-equipment' },
     { id: 'modal-equip-detail', nav: 'nav-equipment' },
     { id: 'modal-incident-detail', nav: 'nav-incidents' },
-    { id: 'modal-material-detail', nav: 'nav-materials' }
+    { id: 'modal-material-detail', nav: 'nav-materials' },
+    { id: 'modal-request-detail', nav: 'nav-requests' }
   ].forEach(function(cfg) {
     var el = document.getElementById(cfg.id);
     if (!el || el.dataset.pageReady === 'true') return;
@@ -7802,7 +7945,7 @@ function setupDetailPages() {
 }
 function showDetailPage(id) {
   setupDetailPages();
-  APP.currentPage = (id === 'modal-ot-detail' || id === 'modal-new-ot') ? 'ots' : (id === 'modal-equip-detail' || id === 'modal-new-equip') ? 'equipment' : (id === 'modal-incident-detail') ? 'incidents' : (id === 'modal-material-detail') ? 'materials' : APP.currentPage;
+  APP.currentPage = (id === 'modal-ot-detail' || id === 'modal-new-ot') ? 'ots' : (id === 'modal-equip-detail' || id === 'modal-new-equip') ? 'equipment' : (id === 'modal-incident-detail') ? 'incidents' : (id === 'modal-material-detail') ? 'materials' : (id === 'modal-request-detail') ? 'requests' : APP.currentPage;
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
   document.querySelectorAll('.sidebar-item').forEach(function(i) { i.classList.remove('active'); });
   var el = document.getElementById(id);
@@ -8043,13 +8186,13 @@ function mergeBackendCollaborators(users) {
   });
 }
 var PAGE_PERMISSIONS = {
-  superadmin: ['dashboard','notifications','ots','equipment','clients','buildings','technicians','users','knowledge','files','ai-assistant','calendar','checklists','incidents','materials','purchases','quotes','settings','superadmin','empresas'],
-  admin: ['dashboard','notifications','ots','equipment','clients','buildings','technicians','users','knowledge','files','ai-assistant','calendar','checklists','incidents','materials','purchases','quotes','settings'],
-  gestor: ['dashboard','notifications','ots','equipment','clients','buildings','technicians','knowledge','files','ai-assistant','calendar','checklists','incidents','materials','purchases','quotes','settings'],
-  tecnico: ['dashboard','notifications','ots','equipment','knowledge','files','ai-assistant','calendar','checklists','incidents','materials','settings'],
-  engenheiro: ['dashboard','notifications','ots','equipment','knowledge','files','ai-assistant','calendar','checklists','incidents','materials','settings'],
+  superadmin: ['dashboard','notifications','ots','equipment','clients','buildings','technicians','users','knowledge','files','ai-assistant','calendar','checklists','incidents','requests','chat','materials','purchases','quotes','settings','superadmin','empresas'],
+  admin: ['dashboard','notifications','ots','equipment','clients','buildings','technicians','users','knowledge','files','ai-assistant','calendar','checklists','incidents','requests','chat','materials','purchases','quotes','settings'],
+  gestor: ['dashboard','notifications','ots','equipment','clients','buildings','technicians','knowledge','files','ai-assistant','calendar','checklists','incidents','requests','chat','materials','purchases','quotes','settings'],
+  tecnico: ['dashboard','notifications','ots','equipment','knowledge','files','ai-assistant','calendar','checklists','incidents','requests','chat','materials','settings'],
+  engenheiro: ['dashboard','notifications','ots','equipment','knowledge','files','ai-assistant','calendar','checklists','incidents','requests','chat','materials','settings'],
   financeiro: ['dashboard','notifications','ots','equipment','clients','buildings','materials','purchases','quotes','files','ai-assistant','calendar','settings'],
-  cliente: ['dashboard','notifications','ots','equipment','files','ai-assistant','calendar','quotes','settings']
+  cliente: ['dashboard','notifications','ots','equipment','files','ai-assistant','calendar','quotes','requests','chat','settings']
 };
 var ACTION_PERMISSIONS = {
   superadmin: ['*'],
@@ -8166,7 +8309,7 @@ function getDefaultPageForRole() {
   return pages[0] || 'dashboard';
 }
 function applyPermissions() {
-  var pages = ['dashboard','ots','equipment','clients','buildings','technicians','users','knowledge','files','ai-assistant','calendar','checklists','incidents','materials','purchases','quotes','settings','superadmin','empresas'];
+  var pages = ['dashboard','ots','equipment','clients','buildings','technicians','users','knowledge','files','ai-assistant','calendar','checklists','incidents','requests','chat','materials','purchases','quotes','settings','superadmin','empresas'];
   pages.forEach(function(page) {
     var nav = document.getElementById('nav-' + page);
     if (nav) nav.style.display = canAccessPage(page) ? 'flex' : 'none';
@@ -9674,6 +9817,368 @@ function renderQuotes() {
     return '<tr><td class="mono">' + escapeHtml(d.id) + '</td><td><span class="badge ' + badge + '">' + escapeHtml(d.type) + '</span></td><td>' + escapeHtml(d.source || 'Documento comercial') + '</td><td class="mono">' + formatCurrency(Number(d.value || 0)) + '</td></tr>';
   }).join('');
 }
+// ======================== PEDIDOS / OBRAS ========================
+var REQUEST_STATUS_LABELS = {
+  aberto: 'Aberto', em_analise: 'Em Análise', atribuido: 'Atribuído',
+  em_execucao: 'Em Execução', pausado: 'Pausado', concluido: 'Concluído', cancelado: 'Cancelado'
+};
+var REQUEST_STATUS_CLASSES = {
+  aberto: 'badge-yellow', em_analise: 'badge-gray', atribuido: 'badge-blue',
+  em_execucao: 'badge-blue', pausado: 'badge-yellow', concluido: 'badge-green', cancelado: 'badge-gray'
+};
+var REQUEST_APPROVAL_LABELS = { pendente: 'Pendente', aprovado: 'Aprovado', rejeitado: 'Rejeitado' };
+var REQUEST_APPROVAL_CLASSES = { pendente: 'badge-yellow', aprovado: 'badge-green', rejeitado: 'badge-red' };
+
+function currentUserId() {
+  return APP.user ? APP.user.id : null;
+}
+function currentEmpresaScopeId() {
+  return APP.user && APP.user.empresa_id ? String(APP.user.empresa_id) : (APP.user ? String(APP.user.id) : 'geral');
+}
+function requestClientName(req) {
+  var c = (APP.clients || []).find(function(x) { return x.id === req.client_id; });
+  return c ? c.name : '—';
+}
+function requestEquipmentName(req) {
+  if (!req.equipment_id) return '—';
+  var e = (APP.equipment || []).find(function(x) { return x.id === req.equipment_id; });
+  return e ? (e.name || e.code || '—') : '—';
+}
+function renderMaintenanceRequests() {
+  var tbody = document.getElementById('requests-table-body');
+  if (!tbody) return;
+  var rows = APP.maintenanceRequests || [];
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-slate-500 py-8">Nenhum pedido registado.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.slice().reverse().map(function(r) {
+    var statusLabel = REQUEST_STATUS_LABELS[r.status] || r.status;
+    var statusClass = REQUEST_STATUS_CLASSES[r.status] || 'badge-gray';
+    var approvalLabel = REQUEST_APPROVAL_LABELS[r.approval_status] || 'Pendente';
+    var approvalClass = REQUEST_APPROVAL_CLASSES[r.approval_status] || 'badge-yellow';
+    var date = r.created_at ? new Date(r.created_at).toLocaleDateString('pt-PT') : '—';
+    return '<tr style="cursor:pointer" onclick="openRequestDetail(\'' + r.id + '\')">' +
+      '<td class="mono" title="' + escapeHtml(r.id) + '">' + escapeHtml(abbreviateId(r.id, 10)) + '</td>' +
+      '<td>' + escapeHtml(r.title || '—') + '</td>' +
+      '<td>' + escapeHtml(requestClientName(r)) + '</td>' +
+      '<td>' + escapeHtml(r.priority || 'media') + '</td>' +
+      '<td><span class="badge ' + statusClass + '">' + statusLabel + '</span></td>' +
+      '<td><span class="badge ' + approvalClass + '">' + approvalLabel + '</span></td>' +
+      '<td>' + date + '</td>' +
+      '<td><button class="btn-ghost btn-sm" onclick="event.stopPropagation();openRequestDetail(\'' + r.id + '\')" title="Ver"><i class="fas fa-eye"></i></button></td>' +
+      '</tr>';
+  }).join('');
+}
+
+function requestActionButtons(req) {
+  var role = getUserRole();
+  var uid = currentUserId();
+  var isRequesterTechnician = req.requested_by && uid && req.requested_by === uid && (role === 'tecnico' || role === 'engenheiro');
+  var isResponsible = ['admin', 'superadmin', 'gestor'].includes(role);
+  var canApprove = req.approval_status === 'pendente' && (isRequesterTechnician || isResponsible);
+  var canStart = req.approval_status === 'aprovado' && req.status !== 'em_execucao' && req.status !== 'concluido' && req.status !== 'cancelado';
+  var canPause = req.status === 'em_execucao';
+  var canResume = req.status === 'pausado';
+  var html = '';
+  if (canApprove) {
+    html += '<button class="btn-primary btn-sm" onclick="approveRequest(\'' + req.id + '\')"><i class="fas fa-check"></i> Aprovar' + (isRequesterTechnician ? ' e Iniciar' : '') + '</button>';
+    html += '<button class="btn-ghost btn-sm" onclick="rejectRequest(\'' + req.id + '\')"><i class="fas fa-times"></i> Rejeitar</button>';
+  }
+  if (canStart && !isRequesterTechnician) {
+    html += '<button class="btn-primary btn-sm" onclick="startRequest(\'' + req.id + '\')"><i class="fas fa-play"></i> Iniciar</button>';
+  }
+  if (canPause) {
+    html += '<button class="btn-ghost btn-sm" onclick="openPauseRequestModal(\'' + req.id + '\')"><i class="fas fa-pause"></i> Pausar</button>';
+  }
+  if (canResume) {
+    html += '<button class="btn-primary btn-sm" onclick="resumeRequest(\'' + req.id + '\')"><i class="fas fa-play"></i> Retomar</button>';
+  }
+  html += '<button class="btn-ghost" onclick="closeRequestDetail()"><i class="fas fa-arrow-left"></i> Voltar</button>';
+  return html;
+}
+
+async function openRequestDetail(id) {
+  var req = (APP.maintenanceRequests || []).find(function(r) { return r.id === id; });
+  if (!req) return;
+  APP.currentRequestId = id;
+  document.getElementById('request-detail-id').textContent = abbreviateId(id, 12);
+  document.getElementById('request-detail-id').title = id;
+  document.getElementById('request-detail-title').textContent = req.title || 'Pedido';
+  document.getElementById('request-detail-client').textContent = requestClientName(req);
+  document.getElementById('request-detail-equip').textContent = requestEquipmentName(req);
+  document.getElementById('request-detail-priority').textContent = req.priority || 'media';
+  document.getElementById('request-detail-status-badge').innerHTML = '<span class="badge ' + (REQUEST_STATUS_CLASSES[req.status] || 'badge-gray') + '">' + (REQUEST_STATUS_LABELS[req.status] || req.status) + '</span>';
+  document.getElementById('request-detail-approval-badge').innerHTML = '<span class="badge ' + (REQUEST_APPROVAL_CLASSES[req.approval_status] || 'badge-yellow') + '">' + (REQUEST_APPROVAL_LABELS[req.approval_status] || 'Pendente') + '</span>';
+  document.getElementById('request-detail-date').textContent = req.created_at ? new Date(req.created_at).toLocaleString('pt-PT') : '—';
+  document.getElementById('request-detail-desc').textContent = req.description || '—';
+  document.getElementById('request-detail-meta').innerHTML = [
+    ['Motivo pausa', req.pause_note || '—'],
+    ['Aprovado por', req.approved_by || '—'],
+    ['Iniciado em', req.started_at ? new Date(req.started_at).toLocaleString('pt-PT') : '—'],
+    ['Vencimento', req.due_at ? new Date(req.due_at).toLocaleString('pt-PT') : '—']
+  ].map(function(r) { return '<div class="flex justify-between py-1.5 border-b border-white/5"><span class="text-slate-400">' + r[0] + ':</span><span>' + escapeHtml(String(r[1])) + '</span></div>'; }).join('');
+  document.getElementById('request-detail-actions').innerHTML = requestActionButtons(req);
+  showDetailPage('modal-request-detail');
+  loadRequestHistory(id);
+  openChatScope('maintenance_request', id, 'request-chat-widget');
+}
+function closeRequestDetail() {
+  stopChatPolling();
+  APP.currentRequestId = null;
+  showPage('requests');
+}
+
+async function loadRequestHistory(id) {
+  var el = document.getElementById('request-detail-history');
+  if (!el) return;
+  el.innerHTML = '<p class="text-slate-500">A carregar…</p>';
+  try {
+    var result = await apiRequest('/api/maintenance-requests/' + id + '/history');
+    var events = (result && result.history) || [];
+    if (!events.length) { el.innerHTML = '<p class="text-slate-500">Sem eventos registados.</p>'; return; }
+    el.innerHTML = events.map(function(ev) {
+      var when = ev.created_at ? new Date(ev.created_at).toLocaleString('pt-PT') : '—';
+      return '<div class="flex justify-between border-b border-white/5 pb-1.5">' +
+        '<span>' + escapeHtml(ev.label || ev.event_type || 'Evento') + (ev.detail ? ' — ' + escapeHtml(ev.detail) : '') + '</span>' +
+        '<span class="text-slate-500 text-xs">' + escapeHtml(ev.user_name || '') + ' · ' + when + '</span></div>';
+    }).join('');
+  } catch (error) {
+    el.innerHTML = '<p class="text-slate-500">Não foi possível carregar o histórico.</p>';
+  }
+}
+
+async function approveRequest(id) {
+  try {
+    await apiRequest('/api/maintenance-requests/' + id + '/approve', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: currentUserId() })
+    });
+    showToast('Pedido aprovado.');
+    await refreshRequestAndReopen(id);
+  } catch (error) {
+    showToast('Não foi possível aprovar: ' + (error.message || 'erro desconhecido'));
+  }
+}
+async function rejectRequest(id) {
+  try {
+    await apiRequest('/api/maintenance-requests/' + id + '/reject', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: currentUserId() })
+    });
+    showToast('Pedido rejeitado.');
+    await refreshRequestAndReopen(id);
+  } catch (error) {
+    showToast('Não foi possível rejeitar: ' + (error.message || 'erro desconhecido'));
+  }
+}
+async function startRequest(id) {
+  try {
+    await apiRequest('/api/maintenance-requests/' + id + '/start', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: currentUserId() })
+    });
+    showToast('Pedido iniciado.');
+    await refreshRequestAndReopen(id);
+  } catch (error) {
+    showToast('Não foi possível iniciar: ' + (error.message || 'erro desconhecido'));
+  }
+}
+async function resumeRequest(id) {
+  try {
+    await apiRequest('/api/maintenance-requests/' + id + '/resume', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: currentUserId() })
+    });
+    showToast('Pedido retomado.');
+    await refreshRequestAndReopen(id);
+  } catch (error) {
+    showToast('Não foi possível retomar: ' + (error.message || 'erro desconhecido'));
+  }
+}
+function openPauseRequestModal(id) {
+  APP.pausingRequestId = id;
+  var sel = document.getElementById('pause-request-reason');
+  var reasons = APP.pauseReasons || [];
+  sel.innerHTML = reasons.map(function(r) { return '<option value="' + r.id + '">' + escapeHtml(r.label) + '</option>'; }).join('');
+  document.getElementById('pause-request-note').value = '';
+  document.getElementById('modal-pause-request').style.display = 'flex';
+}
+async function confirmPauseRequest() {
+  var id = APP.pausingRequestId;
+  var reasonId = document.getElementById('pause-request-reason').value;
+  var note = document.getElementById('pause-request-note').value;
+  try {
+    await apiRequest('/api/maintenance-requests/' + id + '/pause', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reasonId: reasonId, note: note, userId: currentUserId() })
+    });
+    document.getElementById('modal-pause-request').style.display = 'none';
+    showToast('Pedido pausado.');
+    await refreshRequestAndReopen(id);
+  } catch (error) {
+    showToast('Não foi possível pausar: ' + (error.message || 'erro desconhecido'));
+  }
+}
+async function refreshRequestAndReopen(id) {
+  try {
+    var result = await apiRequest('/api/maintenance-requests/' + id);
+    if (result && result.request) {
+      var idx = (APP.maintenanceRequests || []).findIndex(function(r) { return r.id === id; });
+      if (idx >= 0) APP.maintenanceRequests[idx] = result.request; else (APP.maintenanceRequests = APP.maintenanceRequests || []).push(result.request);
+    }
+  } catch (error) { /* mantém dados locais se a chamada falhar */ }
+  renderMaintenanceRequests();
+  if (APP.currentRequestId === id) openRequestDetail(id);
+}
+
+// Carrega motivos de pausa partilhados (OT / Pedido / Obra), usados também
+// pelo modal de pausa das OTs.
+async function loadPauseReasonsIfNeeded() {
+  if (APP.pauseReasons && APP.pauseReasons.length) return APP.pauseReasons;
+  try {
+    var result = await apiRequest('/api/pause-reasons');
+    APP.pauseReasons = (result && result.reasons) || [];
+  } catch (error) {
+    APP.pauseReasons = [];
+  }
+  return APP.pauseReasons;
+}
+
+// ======================== CHAT ========================
+// Chat por escopo: "maintenance_request" (Pedido/Obra) ou "empresa" (canal
+// geral). Cada escopo tem um canal público automático; qualquer utilizador
+// pode ainda criar canais privados dentro do mesmo escopo.
+APP.chat = APP.chat || { scopeType: null, scopeId: null, channels: [], activeChannelId: null, pollTimer: null };
+
+function stopChatPolling() {
+  if (APP.chat.pollTimer) { clearInterval(APP.chat.pollTimer); APP.chat.pollTimer = null; }
+}
+
+async function openChatScope(scopeType, scopeId, widgetContainerId) {
+  stopChatPolling();
+  APP.chat.scopeType = scopeType;
+  APP.chat.scopeId = scopeId;
+  APP.chat.widgetContainerId = widgetContainerId || null;
+  await loadPauseReasonsIfNeeded();
+  await ensurePublicChatChannel(scopeType, scopeId);
+  await refreshChatChannelList();
+}
+
+async function ensurePublicChatChannel(scopeType, scopeId) {
+  try {
+    await apiRequest('/api/chat/channels', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scopeType: scopeType, scopeId: scopeId, isPrivate: false, userId: currentUserId() })
+    });
+  } catch (error) { /* pode já existir — ignorar */ }
+}
+
+async function refreshChatChannelList() {
+  try {
+    var qs = '?scopeType=' + encodeURIComponent(APP.chat.scopeType) + '&scopeId=' + encodeURIComponent(APP.chat.scopeId) + (currentUserId() ? '&userId=' + encodeURIComponent(currentUserId()) : '');
+    var result = await apiRequest('/api/chat/channels' + qs);
+    APP.chat.channels = (result && result.channels) || [];
+  } catch (error) {
+    APP.chat.channels = [];
+  }
+  renderChatChannelList();
+  var publicChannel = APP.chat.channels.find(function(ch) { return !ch.is_private; });
+  var target = APP.chat.channels.find(function(ch) { return ch.id === APP.chat.activeChannelId; }) || publicChannel || APP.chat.channels[0];
+  if (target) openChatChannel(target.id);
+  else renderChatWidget(null, []);
+}
+
+function renderChatChannelList() {
+  // Lista lateral (página Chat) — na vista de Pedido, o widget é embutido e não usa esta lista.
+  var list = document.getElementById('chat-channel-list');
+  if (!list) return;
+  if (!APP.chat.channels.length) { list.innerHTML = '<p class="text-slate-500 text-sm px-1">Sem canais.</p>'; return; }
+  list.innerHTML = APP.chat.channels.map(function(ch) {
+    var active = ch.id === APP.chat.activeChannelId ? ' style="background:rgba(99,102,241,.15)"' : '';
+    var icon = ch.is_private ? 'fa-lock' : 'fa-hashtag';
+    var name = ch.name || (ch.is_private ? 'Privado' : 'Geral');
+    return '<div class="sidebar-item" style="border-radius:8px"' + active + ' onclick="openChatChannel(\'' + ch.id + '\')"><i class="fas ' + icon + '"></i> ' + escapeHtml(name) + '</div>';
+  }).join('');
+}
+
+async function openChatChannel(channelId) {
+  APP.chat.activeChannelId = channelId;
+  renderChatChannelList();
+  await loadChatMessages(channelId);
+  stopChatPolling();
+  APP.chat.pollTimer = setInterval(function() { loadChatMessages(channelId, true); }, 4000);
+}
+
+async function loadChatMessages(channelId, silent) {
+  try {
+    var result = await apiRequest('/api/chat/channels/' + channelId + '/messages');
+    renderChatWidget(channelId, (result && result.messages) || []);
+  } catch (error) {
+    if (!silent) renderChatWidget(channelId, []);
+  }
+}
+
+function renderChatWidget(channelId, messages) {
+  var containerId = APP.chat.widgetContainerId || 'chat-main-widget';
+  var container = document.getElementById(containerId);
+  if (!container) return;
+  var bodyHtml = messages.map(function(m) {
+    var mine = m.user_id && currentUserId() && m.user_id === currentUserId();
+    var when = m.created_at ? new Date(m.created_at).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }) : '';
+    return '<div style="margin-bottom:8px">' +
+      '<div class="text-xs text-slate-500">' + escapeHtml(m.user_name || 'Utilizador') + ' · ' + when + '</div>' +
+      '<div class="text-sm' + (mine ? ' font-medium' : '') + '" style="background:rgba(255,255,255,.04);padding:6px 10px;border-radius:8px;display:inline-block;max-width:100%">' + escapeHtml(m.body) + '</div>' +
+      '</div>';
+  }).join('');
+  container.innerHTML =
+    '<div id="chat-messages-' + containerId + '" style="max-height:340px;overflow-y:auto;padding:10px">' + (bodyHtml || '<p class="text-slate-500 text-sm">Sem mensagens ainda. Diz olá!</p>') + '</div>' +
+    '<div style="display:flex;gap:8px;padding:10px;border-top:1px solid rgba(255,255,255,.06)">' +
+    '<input type="text" class="input-field" style="flex:1" id="chat-input-' + containerId + '" placeholder="Escrever mensagem…" onkeydown="if(event.key===\'Enter\'){sendChatMessage(\'' + containerId + '\')}">' +
+    '<button class="btn-primary" onclick="sendChatMessage(\'' + containerId + '\')"><i class="fas fa-paper-plane"></i></button>' +
+    '</div>';
+  var scrollEl = document.getElementById('chat-messages-' + containerId);
+  if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
+}
+
+async function sendChatMessage(containerId) {
+  var input = document.getElementById('chat-input-' + containerId);
+  if (!input || !input.value.trim()) return;
+  var text = input.value.trim();
+  input.value = '';
+  var channelId = APP.chat.activeChannelId;
+  if (!channelId) { showToast('Nenhum canal de chat ativo.'); return; }
+  try {
+    await apiRequest('/api/chat/channels/' + channelId + '/messages', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: currentUserId(), userName: APP.user ? APP.user.name : 'Utilizador', userRole: getUserRole(), body: text })
+    });
+    loadChatMessages(channelId);
+  } catch (error) {
+    showToast('Não foi possível enviar a mensagem: ' + (error.message || 'erro desconhecido'));
+  }
+}
+
+function openNewChatChannelModal() {
+  document.getElementById('new-chat-channel-name').value = '';
+  document.getElementById('modal-new-chat-channel').style.display = 'flex';
+}
+async function confirmNewChatChannel() {
+  var name = document.getElementById('new-chat-channel-name').value.trim() || 'Privado';
+  try {
+    var result = await apiRequest('/api/chat/channels', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scopeType: APP.chat.scopeType, scopeId: APP.chat.scopeId, isPrivate: true, name: name, userId: currentUserId() })
+    });
+    document.getElementById('modal-new-chat-channel').style.display = 'none';
+    showToast('Canal privado criado.');
+    await refreshChatChannelList();
+    if (result && result.channel) openChatChannel(result.channel.id);
+  } catch (error) {
+    showToast('Não foi possível criar o canal: ' + (error.message || 'erro desconhecido'));
+  }
+}
+
 function populateCommercialModalSelects() {
   var materialSel = document.getElementById('purchase-material');
   if (materialSel) {
@@ -11006,6 +11511,7 @@ function syncBackendWorkOrders() {
     // Merge backend maintenance requests
     if (results[13] && results[13].requests) {
       APP.maintenanceRequests = results[13].requests;
+      renderMaintenanceRequests();
     }
     // Merge backend preventive plans
     if (results[14] && results[14].plans) {
