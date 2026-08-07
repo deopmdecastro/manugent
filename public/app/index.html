@@ -17187,7 +17187,14 @@ document.addEventListener('keydown', function(event) {
   clickPrimaryModalAction(modal);
 });
 window.addEventListener('resize', function() { closeEnhancedSelects(); });
-document.addEventListener('scroll', function() { closeEnhancedSelects(); }, true);
+document.addEventListener('scroll', function(event) {
+  // Scrolling inside the dropdown's own option list (or its trigger) must not
+  // close it — only closes when the scroll happens elsewhere on the page
+  // (e.g. scrolling the modal/page behind an open select).
+  var target = event.target;
+  if (target && target.nodeType === 1 && target.closest && target.closest('.select-enhanced')) return;
+  closeEnhancedSelects();
+}, true);
 function enhanceFileInputs() {
   document.querySelectorAll('input[type="file"].input-field').forEach(function(input) {
     input.classList.add('upload-hidden');
