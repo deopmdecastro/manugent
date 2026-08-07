@@ -11000,10 +11000,23 @@ function dropOTOnKanban(event, status) {
   if (status === 'Concluída' && !ot.report) ot.report = generateAutoReport(ot);
   saveData(); updateDashboard(); renderOTs(); showToast('OT movida para ' + status + '.');
 }
+// Uma OT com estado "Aberta" já está atribuída/despachada — para quem
+// executa o trabalho (técnico/engenheiro) não faz sentido um passo manual
+// extra de "Iniciar": ao abrir o detalhe já deve estar a contar o tempo,
+// ficando só as opções de Pausar ou Fechar. Só se aplica quando ainda não há
+// ninguém a contar tempo nesta OT, para não reiniciar um cronómetro já ativo.
+function autoStartOpenOTIfNeeded(ot) {
+  if (!ot || ot.status !== 'Aberta') return false;
+  if (!['tecnico', 'engenheiro'].includes(getUserRole())) return false;
+  if (getActiveTimeLogs(ot).length) return false;
+  workOrderTimeAction('start');
+  return true;
+}
 function openOTDetail(id) {
   var ot = APP.ots.find(function(o) { return o.id === id; });
   if (!ot) return;
   APP.currentOT = ot;
+  autoStartOpenOTIfNeeded(ot);
   ot.nfcTag = ot.nfcTag || ('NFC-OT-' + ot.id);
   document.getElementById('ot-detail-id').textContent = ot.id;
   document.getElementById('ot-detail-title').textContent = ot.title;
@@ -11228,6 +11241,13 @@ function getOTOrigin(ot) {
   return ['Preventiva','Inspeção','Ronda','Checklist','Preditiva','Obras/Instalações'].includes(ot.type) ? 'scheduled' : 'request';
 }
 function mapBackendOT(ot) {
+  // As OTs já vêm associadas a Cliente/Edifício/Empresa/Responsável desde o
+  // seed (client_id/building_id/supervisor_id em work_orders) — usa sempre
+  // o que vier do backend, com fallback a uma pesquisa local por clientId
+  // caso a API ainda não tenha sido atualizada.
+  var client = ot.clientId ? (APP.clients || []).find(function(c) { return c.id === ot.clientId; }) : null;
+  var empresaId = ot.empresaId || (client ? (client.empresa_id || client.empresaId) : null);
+  var empresa = empresaId ? (APP.empresas || []).find(function(e) { return e.id === empresaId; }) : null;
   return {
     id: ot.id,
     backendId: ot.id,
@@ -11240,12 +11260,18 @@ function mapBackendOT(ot) {
     equipmentId: ot.equipmentId,
     equipmentName: ot.equipmentName,
     clientId: ot.clientId,
-    clientName: ot.clientName,
-    technicianId: APP.demoTechnicianId,
-    technicianName: APP.demoTechnicianId ? 'Técnico Demo' : '',
+    clientName: ot.clientName || (client ? client.name : ''),
+    buildingId: ot.buildingId || '',
+    buildingName: ot.buildingName || '',
+    empresaId: empresaId || '',
+    empresaName: ot.empresaName || (empresa ? empresa.name : ''),
+    teamId: ot.teamId || '',
+    teamName: ot.teamName || '',
+    technicianId: ot.supervisorId || APP.demoTechnicianId || '',
+    technicianName: ot.supervisorName || (ot.teamName ? 'Equipa ' + ot.teamName : '') || (APP.demoTechnicianId ? 'Técnico Demo' : 'Sem técnico atribuído'),
     date: ot.scheduledFor || ot.createdAt,
     description: ot.description,
-    location: '',
+    location: ot.buildingName || '',
     tasks: [],
     materials: [],
     timeLogs: [],

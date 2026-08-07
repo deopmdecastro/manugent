@@ -247,6 +247,9 @@ function mapWorkOrder(row: Record<string, unknown>) {
     equipmentName: row.equipment_name,
     buildingName: row.building_name,
     teamName: row.team_name,
+    supervisorName: row.supervisor_name,
+    empresaId: row.empresa_id,
+    empresaName: row.empresa_name,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
