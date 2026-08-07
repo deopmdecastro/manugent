@@ -9394,7 +9394,7 @@ async function deleteBuilding(id) {
 }
 // ── Dar baixa (desativação) de equipamentos e edifícios ──────────────────────
 function openDecommissionModal(kind, id) {
-  if (!requirePermission('edit', kind === 'equipment' ? 'equipment' : kind === 'material' ? 'materials' : 'buildings', 'dar baixa')) return;
+  if (!requirePermission('edit', kind === 'equipment' ? 'equipment' : kind === 'material' ? 'materials' : kind === 'client' ? 'clients' : 'buildings', 'dar baixa')) return;
   var label = '';
   if (kind === 'equipment') {
     var eq = (APP.equipment || []).find(function(e) { return e.id === id; });
@@ -9408,6 +9408,10 @@ function openDecommissionModal(kind, id) {
     var mat = (APP.stockMaterials || []).find(function(x) { return x.id === id; });
     if (!mat) return;
     label = 'Material: <strong>' + escapeHtml(mat.name) + '</strong> (' + abbreviateId(id, 12) + ')';
+  } else if (kind === 'client') {
+    var cl = (APP.clients || []).find(function(x) { return x.id === id; });
+    if (!cl) return;
+    label = 'Cliente: <strong>' + escapeHtml(cl.name) + '</strong> (' + abbreviateId(id, 12) + ')';
   } else {
     return;
   }
@@ -9451,6 +9455,15 @@ async function confirmDecommission() {
       });
       mat.status = 'baixa'; mat.decommissionReason = reason; mat.decommissionedAt = now;
       renderMaterials();
+    } else if (target.kind === 'client') {
+      var cl = (APP.clients || []).find(function(x) { return x.id === target.id; });
+      if (!cl) return;
+      await apiRequest('/api/clients/' + target.id, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'baixa', decommissionReason: reason, decommissionedAt: now })
+      });
+      cl.status = 'baixa'; cl.decommissionReason = reason; cl.decommissionedAt = now;
+      renderClients();
     }
     APP.decommissionTarget = null;
     saveData(); closeModal('modal-decommission');
@@ -11444,8 +11457,13 @@ function syncBackendWorkOrders() {
     if (results[4] && results[4].clients) {
       results[4].clients.forEach(function(c) {
         var existing = APP.clients.find(function(x) { return x.id === c.id; });
-        if (existing) Object.assign(existing, c);
-        else APP.clients.push(c);
+        var normalized = {
+          status: c.status || (existing ? existing.status : 'ativo'),
+          decommissionReason: c.decommission_reason || (existing ? existing.decommissionReason : ''),
+          decommissionedAt: c.decommissioned_at || (existing ? existing.decommissionedAt : '')
+        };
+        if (existing) Object.assign(existing, c, normalized);
+        else APP.clients.push(Object.assign({}, c, normalized));
       });
     }
     // Merge backend equipment into local state
@@ -13239,9 +13257,13 @@ function renderClients() {
     return '<div class="card entity-card p-5">' +
       (c.image ? '<img src="' + escapeHtml(c.image) + '" alt="' + escapeHtml(c.name) + '" class="entity-card-cover">' : '') +
       '<div class="flex items-start gap-3"><div class="entity-avatar">' + escapeHtml(initial) + '</div>' +
-      '<div class="min-w-0 flex-1"><div class="font-semibold text-lg truncate">' + escapeHtml(c.name) + '</div><div class="text-xs text-slate-400 mt-1">' + escapeHtml(c.contract || 'Sem contrato') + '</div></div></div>' +
+      '<div class="min-w-0 flex-1"><div class="font-semibold text-lg truncate">' + escapeHtml(c.name) +
+      (c.status === 'baixa' ? ' <span class="badge badge-gray text-xs" title="' + escapeHtml(c.decommissionReason || '') + '">Baixa</span>' : '') +
+      '</div><div class="text-xs text-slate-400 mt-1">' + escapeHtml(c.contract || 'Sem contrato') + '</div></div></div>' +
       '<div class="entity-meta">' + (c.email ? '<div><i class="fas fa-envelope"></i><span class="truncate">' + escapeHtml(c.email) + '</span></div>' : '') + (c.phone ? '<div><i class="fas fa-phone"></i><span>' + escapeHtml(c.phone) + '</span></div>' : '') + (c.address ? '<div><i class="fas fa-location-dot"></i><span class="truncate">' + escapeHtml(c.address) + '</span></div>' : '') + '</div>' +
-      '<div class="entity-actions justify-end"><button class="btn-secondary entity-icon-action" title="Editar cliente" onclick="openEditClientModal(\'' + c.id + '\')"><i class="fas fa-pen"></i></button>' +
+      '<div class="entity-actions justify-end">' +
+      (c.status !== 'baixa' ? '<button class="btn-secondary entity-icon-action" title="Dar baixa" onclick="openDecommissionModal(\'client\',\'' + c.id + '\')"><i class="fas fa-power-off text-orange-400"></i></button>' : '') +
+      '<button class="btn-secondary entity-icon-action" title="Editar cliente" onclick="openEditClientModal(\'' + c.id + '\')"><i class="fas fa-pen"></i></button>' +
       '<button class="btn-secondary entity-icon-action entity-danger-action" title="Apagar cliente" onclick="deleteClient(\'' + c.id + '\')"><i class="fas fa-trash"></i></button></div></div>';
   }).join('');
 }

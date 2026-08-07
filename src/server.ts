@@ -1071,7 +1071,7 @@ app.put('/api/clients/:id', async (c) => {
   try {
     const db = requireDb()
     const id = c.req.param('id')
-    const body = await c.req.json() as { name?: string; email?: string; phone?: string; taxId?: string; sector?: string; active?: boolean }
+    const body = await c.req.json() as { name?: string; email?: string; phone?: string; taxId?: string; sector?: string; active?: boolean; status?: string; decommissionReason?: string; decommissionedAt?: string; decommissionedBy?: string }
     const patch: Record<string, unknown> = {}
     if (body.name !== undefined) patch.name = body.name
     if (body.email !== undefined) patch.email = body.email
@@ -1079,6 +1079,10 @@ app.put('/api/clients/:id', async (c) => {
     if (body.taxId !== undefined) patch.tax_id = body.taxId
     if (body.sector !== undefined) patch.sector = body.sector
     if (body.active !== undefined) patch.active = body.active
+    if (body.status !== undefined) patch.status = body.status
+    if (body.decommissionReason !== undefined) patch.decommission_reason = body.decommissionReason
+    if (body.decommissionedAt !== undefined) patch.decommissioned_at = body.decommissionedAt
+    if (body.decommissionedBy !== undefined) patch.decommissioned_by = body.decommissionedBy
     const { data, error } = await db.from('clients').update(patch).eq('id', id).select().single()
     if (error) throw error
     if (!data) return jsonError(c, 'Cliente não encontrado.', 404)
