@@ -1185,10 +1185,24 @@ app.post('/api/buildings', async (c) => {
       city: body.city ?? null,
       type: body.type ?? 'industrial',
       area_m2: body.areaM2 ?? null,
+      description: body.description ?? null,
       zones: body.zones ?? null,
     }).select().single()
 
     if (error) throw error
+
+    // Cria automaticamente Cliente/Edifícios/{Nome}/{Fotos,Plantas,Documentos}.
+    // Só na criação (não em cada PUT), tal como já acontece para empresas/clientes.
+    const { data: client } = await db.from('clients').select('empresa_id').eq('id', body.clientId).maybeSingle() as { data: { empresa_id: string | null } | null }
+    if (client?.empresa_id) {
+      await db.rpc('create_building_folder_structure', {
+        p_building_id: data.id,
+        p_client_id: body.clientId,
+        p_empresa_id: client.empresa_id,
+        p_building_name: body.name,
+      }).then(() => {}, () => {})
+    }
+
     return c.json({ building: data }, 201)
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not create building')
@@ -1206,6 +1220,7 @@ app.put('/api/buildings/:id', async (c) => {
     if (body.city !== undefined) patch.city = body.city
     if (body.type !== undefined) patch.type = body.type
     if (body.areaM2 !== undefined) patch.area_m2 = body.areaM2
+    if (body.description !== undefined) patch.description = body.description
     if (body.clientId !== undefined) patch.client_id = body.clientId
     if (body.zones !== undefined) patch.zones = body.zones
     if (body.status !== undefined) patch.status = body.status
@@ -1231,6 +1246,104 @@ app.delete('/api/buildings/:id', async (c) => {
     return c.json({ success: true })
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not delete building')
+  }
+})
+
+// ── Fotos, plantas e documentos de um edifício ────────────────────────────────
+// Guardados na pasta Cliente/Edifícios/{Nome}/{Fotos,Plantas,Documentos},
+// criada automaticamente por create_building_folder_structure() no POST acima.
+// A regra de negócio (CHECK em documents.type) só aceita:
+// 'manual' | 'garantia' | 'relatorio' | 'contrato' | 'fatura' | 'certificado' | 'foto' | 'planta'.
+const BUILDING_DOC_TYPES = ['foto', 'planta', 'manual', 'garantia', 'relatorio', 'contrato', 'fatura', 'certificado'] as const
+const BUILDING_DOC_FOLDER_TYPE: Record<string, string> = {
+  foto: 'edificio_fotos',
+  planta: 'edificio_plantas',
+}
+
+app.get('/api/buildings/:id/documents', async (c) => {
+  try {
+    const db = requireDb()
+    const { data, error } = await db.from('documents')
+      .select('*')
+      .eq('entity_type', 'building')
+      .eq('entity_id', c.req.param('id'))
+      .order('uploaded_at', { ascending: false })
+    if (error) throw error
+    return c.json({ documents: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch building documents')
+  }
+})
+
+app.post('/api/buildings/:id/documents', async (c) => {
+  const auth = requireGestorOrHigher(c)
+  if (!auth.ok) return c.json({ error: auth.message }, auth.status)
+
+  try {
+    const db = requireDb()
+    const buildingId = c.req.param('id')
+    const body = await c.req.json() as { name?: string; type?: string; url?: string; sizeKb?: number }
+    if (!body.name?.trim()) return jsonError(c, 'name é obrigatório', 400)
+    if (!body.url) return jsonError(c, 'url é obrigatório', 400)
+    const docType = (body.type || 'foto').trim()
+    if (!BUILDING_DOC_TYPES.includes(docType as typeof BUILDING_DOC_TYPES[number])) {
+      return jsonError(c, 'type inválido. Valores aceites: ' + BUILDING_DOC_TYPES.join(', '), 400)
+    }
+
+    const { data: building } = await db.from('buildings').select('client_id, name').eq('id', buildingId).maybeSingle() as { data: { client_id: string; name: string } | null }
+    if (!building) return jsonError(c, 'Edifício não encontrado.', 404)
+    const { data: client } = await db.from('clients').select('empresa_id').eq('id', building.client_id).maybeSingle() as { data: { empresa_id: string | null } | null }
+
+    // Resolve (ou cria, se ainda não existir) a pasta Fotos/Plantas deste edifício.
+    let folderId: string | null = null
+    const wantedFolderType = BUILDING_DOC_FOLDER_TYPE[docType]
+    if (wantedFolderType && client?.empresa_id) {
+      const rootId = await db.rpc('create_building_folder_structure', {
+        p_building_id: buildingId,
+        p_client_id: building.client_id,
+        p_empresa_id: client.empresa_id,
+        p_building_name: building.name,
+      }).then((r: { data: unknown }) => r.data as string, () => null)
+      if (rootId) {
+        const { data: folder } = await db.from('folders')
+          .select('id')
+          .eq('parent_id', rootId)
+          .eq('folder_type', wantedFolderType)
+          .maybeSingle()
+        folderId = (folder as { id: string } | null)?.id ?? null
+      }
+    }
+
+    const { data, error } = await db.from('documents').insert({
+      name: body.name.trim(),
+      type: docType,
+      folder_id: folderId,
+      entity_type: 'building',
+      entity_id: buildingId,
+      empresa_id: client?.empresa_id ?? null,
+      client_id: building.client_id,
+      uploaded_by: auth.user.id,
+      size_kb: body.sizeKb ?? 0,
+      url: body.url,
+    }).select().single()
+    if (error) throw error
+    return c.json({ document: data }, 201)
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not upload building document')
+  }
+})
+
+app.delete('/api/documents/:id', async (c) => {
+  const auth = requireGestorOrHigher(c)
+  if (!auth.ok) return c.json({ error: auth.message }, auth.status)
+
+  try {
+    const db = requireDb()
+    const { error } = await db.from('documents').delete().eq('id', c.req.param('id'))
+    if (error) throw error
+    return c.json({ success: true })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not delete document')
   }
 })
 

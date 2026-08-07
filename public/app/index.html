@@ -6313,30 +6313,62 @@
 
 <!-- New Building Modal -->
 <div id="modal-new-building" class="modal-overlay" style="display:none">
-  <div class="modal-content">
+  <div class="modal-content modal-lg">
     <div class="flex items-start justify-between gap-4 mb-5">
       <div>
         <h2 class="text-lg font-semibold" id="building-modal-title">Novo Edifício / Instalação</h2>
-        <p class="text-sm text-slate-400 mt-1">Associe uma instalação a um cliente e organize as zonas técnicas.</p>
+        <p class="text-sm text-slate-400 mt-1">Associe uma instalação a um cliente, adicione fotos, plantas e organize as zonas técnicas.</p>
       </div>
       <button class="btn-ghost" onclick="closeModal('modal-new-building')"><i class="fas fa-times"></i></button>
     </div>
     <div class="space-y-4">
-      <div>
-        <label class="block text-sm mb-2 text-slate-300">Nome do edifício / instalação *</label>
-        <input type="text" id="building-name" class="input-field" placeholder="Ex: Sede Lisboa, Nave A, Sala UPS">
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Nome do edifício / instalação *</label>
+          <input type="text" id="building-name" class="input-field" placeholder="Ex: Sede Lisboa, Nave A, Sala UPS">
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Cliente associado *</label>
+          <select id="building-client" class="input-field"></select>
+        </div>
+      </div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Tipo de instalação</label>
+          <select id="building-type" class="input-field">
+            <option value="industrial">Industrial</option>
+            <option value="comercial">Comercial</option>
+            <option value="residencial">Residencial</option>
+            <option value="saude">Saúde</option>
+            <option value="escritorio">Escritório</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Área (m²)</label>
+          <input type="number" min="0" step="1" id="building-area" class="input-field" placeholder="Ex: 1200">
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Morada / localização</label>
+          <input type="text" id="building-address" class="input-field" placeholder="Rua, cidade, piso ou zona">
+        </div>
       </div>
       <div>
-        <label class="block text-sm mb-2 text-slate-300">Cliente associado *</label>
-        <select id="building-client" class="input-field"></select>
+        <label class="block text-sm mb-2 text-slate-300">Descrição / notas</label>
+        <textarea id="building-description" class="input-field" rows="2" placeholder="Observações gerais sobre a instalação (acessos, horários, particularidades técnicas...)"></textarea>
       </div>
-      <div>
-        <label class="block text-sm mb-2 text-slate-300">Imagem do edifício</label>
-        <input type="file" id="building-image-upload" class="input-field" accept="image/*">
-      </div>
-      <div>
-        <label class="block text-sm mb-2 text-slate-300">Morada / localização</label>
-        <input type="text" id="building-address" class="input-field" placeholder="Rua, cidade, piso ou zona">
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Fotos do edifício</label>
+          <input type="file" id="building-photos-upload" class="input-field" accept="image/*" multiple>
+          <p class="text-xs text-slate-500 mt-1">Pode selecionar várias fotos. Guardadas em Cliente → Edifícios → {{Edifício}} → Fotos.</p>
+          <div id="building-photos-existing" class="grid grid-cols-4 gap-2 mt-2"></div>
+        </div>
+        <div>
+          <label class="block text-sm mb-2 text-slate-300">Plantas do edifício</label>
+          <input type="file" id="building-plans-upload" class="input-field" accept="image/*,.pdf" multiple>
+          <p class="text-xs text-slate-500 mt-1">Imagens ou PDF. Guardadas em Cliente → Edifícios → {{Edifício}} → Plantas.</p>
+          <div id="building-plans-existing" class="space-y-1 mt-2"></div>
+        </div>
       </div>
       <div>
         <label class="block text-sm mb-2 text-slate-300">Zonas técnicas do edifício</label>
@@ -6345,6 +6377,16 @@
             <input type="text" id="building-zone-name" class="input-field" placeholder="Nome da zona (ex: Piso 0)">
             <select id="building-zone-squad" class="input-field"></select>
             <input type="text" id="building-zone-localidade" class="input-field" placeholder="Localidade">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs mb-1 text-slate-500">Foto da zona (opcional)</label>
+              <input type="file" id="building-zone-photo" class="input-field" accept="image/*">
+            </div>
+            <div>
+              <label class="block text-xs mb-1 text-slate-500">Planta da zona (opcional)</label>
+              <input type="file" id="building-zone-plan" class="input-field" accept="image/*,.pdf">
+            </div>
           </div>
           <button type="button" class="btn-secondary w-full text-sm" onclick="addZoneToForm()"><i class="fas fa-plus"></i> Adicionar zona</button>
           <div id="building-zones-list" class="mt-2"></div>
@@ -8999,7 +9041,13 @@ function openNewBuildingModal() {
   populateBuildingSquadSelect();
   document.getElementById('building-name').value = '';
   document.getElementById('building-address').value = '';
-  document.getElementById('building-image-upload').value = '';
+  document.getElementById('building-type').value = 'industrial';
+  document.getElementById('building-area').value = '';
+  document.getElementById('building-description').value = '';
+  document.getElementById('building-photos-upload').value = '';
+  document.getElementById('building-plans-upload').value = '';
+  document.getElementById('building-photos-existing').innerHTML = '';
+  document.getElementById('building-plans-existing').innerHTML = '';
   APP.buildingFormZones = [];
   renderBuildingZoneFormList();
   var firstClient = (APP.clients || [])[0];
@@ -9023,12 +9071,52 @@ function openEditBuildingModal(id) {
   document.getElementById('building-name').value = b.name || '';
   document.getElementById('building-client').value = b.clientId || '';
   document.getElementById('building-address').value = b.address || '';
-  document.getElementById('building-image-upload').value = '';
+  document.getElementById('building-type').value = b.type || 'industrial';
+  document.getElementById('building-area').value = b.areaM2 || '';
+  document.getElementById('building-description').value = b.description || '';
+  document.getElementById('building-photos-upload').value = '';
+  document.getElementById('building-plans-upload').value = '';
+  document.getElementById('building-photos-existing').innerHTML = '<div class="text-xs text-slate-500 col-span-4">A carregar fotos…</div>';
+  document.getElementById('building-plans-existing').innerHTML = '<div class="text-xs text-slate-500">A carregar plantas…</div>';
   APP.buildingFormZones = parseBuildingZones(b.zones).slice();
   renderBuildingZoneFormList();
   enhanceFileInputs();
   syncEnhancedSelect(document.getElementById('building-client'));
   document.getElementById('modal-new-building').style.display = 'flex';
+  loadBuildingDocumentsIntoModal(id);
+}
+// Consome a API para mostrar, no próprio modal, as fotos/plantas já guardadas
+// deste edifício (GET /api/buildings/:id/documents), com opção de remover.
+function loadBuildingDocumentsIntoModal(buildingId) {
+  apiRequest('/api/buildings/' + buildingId + '/documents').then(function(data) {
+    if (APP.editingBuildingId !== buildingId) return; // modal já mudou de edifício/fechou
+    var docs = data.documents || [];
+    APP.editingBuildingDocuments = docs;
+    var photos = docs.filter(function(d) { return d.type === 'foto'; });
+    var plans = docs.filter(function(d) { return d.type === 'planta'; });
+    var photosEl = document.getElementById('building-photos-existing');
+    var plansEl = document.getElementById('building-plans-existing');
+    photosEl.innerHTML = photos.length ? photos.map(function(d) {
+      return '<div class="relative group"><img src="' + escapeHtml(d.url) + '" class="w-full h-16 object-cover rounded-lg border border-white/10" title="' + escapeHtml(d.name) + '">' +
+        '<button type="button" class="btn-ghost entity-icon-action entity-danger-action" style="position:absolute;top:2px;right:2px;padding:2px 6px" title="Remover foto" onclick="deleteBuildingDocument(\'' + d.id + '\')"><i class="fas fa-trash text-xs"></i></button></div>';
+    }).join('') : '<div class="text-xs text-slate-500 col-span-4">Sem fotos guardadas.</div>';
+    plansEl.innerHTML = plans.length ? plans.map(function(d) {
+      return '<div class="flex items-center justify-between gap-2 p-2 rounded-lg border border-white/10 text-sm"><a href="' + escapeHtml(d.url) + '" target="_blank" class="truncate"><i class="fas fa-file-lines text-purple-400"></i> ' + escapeHtml(d.name) + '</a>' +
+        '<button type="button" class="btn-ghost entity-icon-action entity-danger-action" title="Remover planta" onclick="deleteBuildingDocument(\'' + d.id + '\')"><i class="fas fa-trash text-xs"></i></button></div>';
+    }).join('') : '<div class="text-xs text-slate-500">Sem plantas guardadas.</div>';
+  }).catch(function() {
+    document.getElementById('building-photos-existing').innerHTML = '<div class="text-xs text-red-400 col-span-4">Erro ao carregar fotos.</div>';
+    document.getElementById('building-plans-existing').innerHTML = '<div class="text-xs text-red-400">Erro ao carregar plantas.</div>';
+  });
+}
+function deleteBuildingDocument(documentId) {
+  if (!confirm('Remover este ficheiro do edifício?')) return;
+  apiRequest('/api/documents/' + documentId, { method: 'DELETE' }).then(function() {
+    showToast('Ficheiro removido.');
+    if (APP.editingBuildingId) loadBuildingDocumentsIntoModal(APP.editingBuildingId);
+  }).catch(function(error) {
+    showToast(error.message || 'Erro ao remover ficheiro.', 'error');
+  });
 }
 function populateBuildingClientSelect() {
   var select = document.getElementById('building-client');
@@ -9045,12 +9133,21 @@ async function createBuilding() {
   var client = (APP.clients || []).find(function(c) { return c.id === clientId; });
   if (!client) { showToast('Selecione um cliente associado.', 'error'); return; }
   var address = document.getElementById('building-address').value.trim();
+  var type = document.getElementById('building-type').value || 'industrial';
+  var areaValue = document.getElementById('building-area').value;
+  var areaM2 = areaValue !== '' ? Number(areaValue) : null;
+  var description = document.getElementById('building-description').value.trim();
   var zones = serializeBuildingZones(APP.buildingFormZones);
-  var image = await readSingleUpload('building-image-upload');
+  var newPhotos = await readMultipleUploads('building-photos-upload');
+  var newPlans = await readMultipleUploads('building-plans-upload');
   APP.buildings = APP.buildings || [];
   var editingId = APP.editingBuildingId;
   var existing = editingId ? APP.buildings.find(function(x) { return x.id === editingId; }) : null;
-  var payload = { name: name, clientId: client.id, address: address, zones: zones };
+  var payload = { name: name, clientId: client.id, address: address, type: type, areaM2: areaM2, description: description, zones: zones };
+  var submitBtn = document.getElementById('building-submit-btn');
+  var originalBtnHtml = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A guardar...';
   try {
     var result = editingId
       ? await apiRequest('/api/buildings/' + editingId, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
@@ -9059,19 +9156,42 @@ async function createBuilding() {
     var local = {
       id: b.id, clientId: b.client_id, clientName: client.name, name: b.name,
       address: b.address || '', zones: b.zones || zones, areaM2: b.area_m2, type: b.type,
+      description: b.description || '',
       status: b.status || (existing ? existing.status : 'ativo'),
       decommissionReason: b.decommission_reason || (existing ? existing.decommissionReason : ''),
       decommissionedAt: b.decommissioned_at || (existing ? existing.decommissionedAt : ''),
-      image: image ? image.dataUrl : (existing ? existing.image : ''), imageName: image ? image.name : (existing ? existing.imageName : ''),
+      image: existing ? existing.image : '', imageName: existing ? existing.imageName : '',
       createdAt: b.created_at, updatedAt: new Date().toISOString()
     };
     var idx = APP.buildings.findIndex(function(x) { return x.id === b.id; });
     if (idx >= 0) APP.buildings[idx] = local; else APP.buildings.push(local);
+
+    // Envia as novas fotos/plantas para a API — ficam guardadas na pasta
+    // automática Cliente → Edifícios → {Edifício} → Fotos/Plantas.
+    if (newPhotos.length || newPlans.length) {
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A enviar ficheiros...';
+      var uploadTasks = newPhotos.map(function(file) {
+        return apiRequest('/api/buildings/' + b.id + '/documents', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: file.name, type: 'foto', url: file.dataUrl, sizeKb: Math.round(file.size / 1024) })
+        }).catch(function() { return null; });
+      }).concat(newPlans.map(function(file) {
+        return apiRequest('/api/buildings/' + b.id + '/documents', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: file.name, type: 'planta', url: file.dataUrl, sizeKb: Math.round(file.size / 1024) })
+        }).catch(function() { return null; });
+      }));
+      await Promise.all(uploadTasks);
+    }
+
     APP.editingBuildingId = null;
     APP.buildingFormZones = [];
     saveData(); closeModal('modal-new-building'); renderBuildings(); populateOTSelects(); showToast('Edifício guardado.');
   } catch (error) {
     showToast('Não foi possível guardar o edifício no servidor: ' + (error.message || 'erro desconhecido'), 'error');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalBtnHtml;
   }
 }
 async function deleteBuilding(id) {
@@ -14465,7 +14585,9 @@ function renderBuildingZoneFormList() {
   el.innerHTML = zones.map(function(z, idx) {
     var baixa = z.status === 'baixa';
     return '<div class="flex items-center justify-between gap-2 py-2 border-b border-white/5">' +
-      '<div class="min-w-0"><div class="text-sm truncate">' + escapeHtml(z.name) + (baixa ? ' <span class="badge badge-gray text-xs">Baixa</span>' : '') + '</div>' +
+      (z.photo ? '<img src="' + escapeHtml(z.photo) + '" class="w-9 h-9 rounded-lg object-cover border border-white/10 flex-shrink-0">' : '<div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background:rgba(255,255,255,0.04)"><i class="fas fa-map-location-dot text-slate-600 text-xs"></i></div>') +
+      '<div class="min-w-0 flex-1"><div class="text-sm truncate">' + escapeHtml(z.name) + (baixa ? ' <span class="badge badge-gray text-xs">Baixa</span>' : '') +
+      (z.plan ? ' <i class="fas fa-file-lines text-purple-400 text-xs" title="Tem planta anexada"></i>' : '') + '</div>' +
       '<div class="text-xs text-slate-500 truncate">' + (z.squadName ? '<i class="fas fa-people-group"></i> ' + escapeHtml(z.squadName) + ' · ' : '') + (z.localidade ? escapeHtml(z.localidade) : 'Sem localidade') + '</div></div>' +
       '<div class="flex items-center gap-1">' +
       (!baixa ? '<button type="button" class="btn-ghost text-xs" title="Dar baixa à zona" onclick="decommissionZoneInForm(' + idx + ')"><i class="fas fa-power-off text-orange-400"></i></button>' : '') +
@@ -14480,17 +14602,29 @@ function populateBuildingSquadSelect() {
     return '<option value="' + t.id + '">' + escapeHtml(t.name) + '</option>';
   }).join('');
 }
-function addZoneToForm() {
+async function addZoneToForm() {
   var name = document.getElementById('building-zone-name').value.trim();
   if (!name) { showToast('Indique o nome da zona.'); return; }
   var squadId = document.getElementById('building-zone-squad').value;
   var squad = (APP.teams || []).find(function(t) { return t.id === squadId; });
   var localidade = document.getElementById('building-zone-localidade').value.trim();
+  // Foto/planta da zona guardadas embutidas (base64) na própria zona — as
+  // zonas técnicas vivem como JSON em buildings.zones, sem tabela própria,
+  // por isso não passam pela API de documentos (essa é só para o edifício).
+  var photoFile = await readSingleUpload('building-zone-photo');
+  var planFile = await readSingleUpload('building-zone-plan');
   APP.buildingFormZones = APP.buildingFormZones || [];
-  APP.buildingFormZones.push({ id: generateId('ZONE'), name: name, squadId: squadId || '', squadName: squad ? squad.name : '', localidade: localidade, status: 'ativa' });
+  APP.buildingFormZones.push({
+    id: generateId('ZONE'), name: name, squadId: squadId || '', squadName: squad ? squad.name : '',
+    localidade: localidade, status: 'ativa',
+    photo: photoFile ? photoFile.dataUrl : '', photoName: photoFile ? photoFile.name : '',
+    plan: planFile ? planFile.dataUrl : '', planName: planFile ? planFile.name : ''
+  });
   document.getElementById('building-zone-name').value = '';
   document.getElementById('building-zone-localidade').value = '';
   document.getElementById('building-zone-squad').value = '';
+  document.getElementById('building-zone-photo').value = '';
+  document.getElementById('building-zone-plan').value = '';
   renderBuildingZoneFormList();
 }
 function removeZoneFromForm(idx) {
