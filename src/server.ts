@@ -1064,6 +1064,38 @@ app.post('/api/clients', async (c) => {
   }
 })
 
+app.put('/api/clients/:id', async (c) => {
+  try {
+    const db = requireDb()
+    const id = c.req.param('id')
+    const body = await c.req.json() as { name?: string; email?: string; phone?: string; taxId?: string; sector?: string; active?: boolean }
+    const patch: Record<string, unknown> = {}
+    if (body.name !== undefined) patch.name = body.name
+    if (body.email !== undefined) patch.email = body.email
+    if (body.phone !== undefined) patch.phone = body.phone
+    if (body.taxId !== undefined) patch.tax_id = body.taxId
+    if (body.sector !== undefined) patch.sector = body.sector
+    if (body.active !== undefined) patch.active = body.active
+    const { data, error } = await db.from('clients').update(patch).eq('id', id).select().single()
+    if (error) throw error
+    if (!data) return jsonError(c, 'Cliente não encontrado.', 404)
+    return c.json({ client: data })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not update client')
+  }
+})
+
+app.delete('/api/clients/:id', async (c) => {
+  try {
+    const db = requireDb()
+    const { error } = await db.from('clients').delete().eq('id', c.req.param('id'))
+    if (error) throw error
+    return c.json({ success: true })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not delete client')
+  }
+})
+
 app.get('/api/equipment', async (c) => {
   try {
     const db = requireDb()
@@ -1749,6 +1781,29 @@ app.get('/api/folders', async (c) => {
     return c.json({ folders: data || [] })
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Could not fetch folders')
+  }
+})
+
+app.get('/api/folders/:id/documents', async (c) => {
+  try {
+    const db = requireDb()
+    const id = c.req.param('id')
+    const [folderRes, subfoldersRes, documentsRes] = await Promise.all([
+      db.from('folders').select('*').eq('id', id).maybeSingle(),
+      db.from('folders').select('id, name, folder_type').eq('parent_id', id).order('name', { ascending: true }),
+      db.from('documents').select('*').eq('folder_id', id).order('uploaded_at', { ascending: false }),
+    ])
+    if (folderRes.error) throw folderRes.error
+    if (!folderRes.data) return jsonError(c, 'Pasta não encontrada.', 404)
+    if (subfoldersRes.error) throw subfoldersRes.error
+    if (documentsRes.error) throw documentsRes.error
+    return c.json({
+      folder: folderRes.data,
+      subfolders: subfoldersRes.data || [],
+      documents: documentsRes.data || [],
+    })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch folder documents')
   }
 })
 
