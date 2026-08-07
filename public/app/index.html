@@ -3897,6 +3897,20 @@
         </div>
       </div>
 
+      <!-- VISÃO GERAL DE UMA EMPRESA (página, substitui o antigo modal) -->
+      <div id="page-empresa-overview" class="page fade-in">
+        <div class="flex items-center justify-between mb-6 page-header">
+          <div>
+            <button class="btn-ghost mb-2" onclick="showPage('empresas')"><i class="fas fa-arrow-left"></i> Voltar a Empresas</button>
+            <h1 class="mono" id="empresa-overview-page-title">Empresa</h1>
+            <p id="empresa-overview-page-subtitle">Visão geral completa — clientes, colaboradores, pastas e ficheiros.</p>
+          </div>
+        </div>
+        <div id="empresa-overview-body" class="space-y-5">
+          <div class="text-slate-500 text-sm">A carregar…</div>
+        </div>
+      </div>
+
       <!-- CONHECIMENTO -->
       <div id="page-knowledge" class="page fade-in">
         <div class="flex items-center justify-between mb-6 page-header">
@@ -6431,22 +6445,6 @@
     <div class="flex gap-3 mt-6">
       <button class="btn-secondary flex-1" onclick="closeModal('modal-new-empresa')">Cancelar</button>
       <button class="btn-primary flex-1" onclick="saveEmpresa()"><i class="fas fa-check"></i> Guardar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Empresa Overview Modal (SuperAdmin — mini-gestão direta) -->
-<div id="modal-empresa-overview" class="modal-overlay" style="display:none">
-  <div class="modal-content modal-lg">
-    <div class="flex items-center justify-between mb-5">
-      <div>
-        <h2 class="text-lg font-semibold" id="empresa-overview-name">Empresa</h2>
-        <p class="text-sm text-slate-500 mt-1">Visão geral completa — clientes, colaboradores, pastas e ficheiros.</p>
-      </div>
-      <button class="btn-ghost" onclick="closeModal('modal-empresa-overview')"><i class="fas fa-times"></i></button>
-    </div>
-    <div id="empresa-overview-body" class="space-y-5">
-      <div class="text-slate-500 text-sm">A carregar…</div>
     </div>
   </div>
 </div>
@@ -12871,14 +12869,21 @@ async function deleteEmpresa(id) {
   }
 }
 
-// Mini-gestão direta de uma empresa para o SuperAdmin: dados, clientes,
-// colaboradores, pastas e documentos, tudo numa só visão (botão "Ver").
+// Visão geral direta de uma empresa para o SuperAdmin: dados, clientes,
+// colaboradores, pastas e documentos, tudo numa só página (botão "Ver").
 function viewEmpresaOverview(empresaId) {
+  APP.viewingEmpresaOverviewId = empresaId;
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  var pageEl = document.getElementById('page-empresa-overview');
+  if (pageEl) pageEl.classList.add('active');
+  APP.currentPage = 'empresa-overview';
   var body = document.getElementById('empresa-overview-body');
-  var titleEl = document.getElementById('empresa-overview-name');
-  document.getElementById('modal-empresa-overview').style.display = 'flex';
+  var titleEl = document.getElementById('empresa-overview-page-title');
+  var subtitleEl = document.getElementById('empresa-overview-page-subtitle');
   titleEl.textContent = 'A carregar…';
+  subtitleEl.textContent = 'Visão geral completa — clientes, colaboradores, pastas e ficheiros.';
   body.innerHTML = '<div class="text-slate-500 text-sm">A carregar…</div>';
+  ensurePageBackButtons();
   apiRequest('/api/empresas/' + empresaId + '/overview').then(function(data) {
     renderEmpresaOverview(data);
   }).catch(function(error) {
@@ -12889,7 +12894,7 @@ function viewEmpresaOverview(empresaId) {
 function renderEmpresaOverview(data) {
   var emp = data.empresa || {};
   var stats = data.stats || {};
-  var titleEl = document.getElementById('empresa-overview-name');
+  var titleEl = document.getElementById('empresa-overview-page-title');
   var body = document.getElementById('empresa-overview-body');
   titleEl.textContent = emp.name || 'Empresa';
 
@@ -12935,8 +12940,8 @@ function renderEmpresaOverview(data) {
     '<div class="grid md:grid-cols-2 gap-4">' + clientsHtml + collabsHtml + '</div>' +
     foldersHtml +
     '<div class="flex gap-3 pt-2">' +
-    '<button class="btn-secondary flex-1" onclick="closeModal(\'modal-empresa-overview\'); openEditEmpresaModal(\'' + emp.id + '\')"><i class="fas fa-pen"></i> Editar empresa</button>' +
-    '<button class="btn-secondary flex-1" onclick="closeModal(\'modal-empresa-overview\'); viewEmpresaColaboradores(\'' + emp.id + '\',\'' + escapeHtml(emp.name) + '\')"><i class="fas fa-users-gear"></i> Gerir colaboradores</button>' +
+    '<button class="btn-secondary flex-1" onclick="openEditEmpresaModal(\'' + emp.id + '\')"><i class="fas fa-pen"></i> Editar empresa</button>' +
+    '<button class="btn-secondary flex-1" onclick="viewEmpresaColaboradores(\'' + emp.id + '\',\'' + escapeHtml(emp.name) + '\')"><i class="fas fa-users-gear"></i> Gerir colaboradores</button>' +
     '</div>';
 }
 function viewEmpresaColaboradores(empresaId, empresaName) {
