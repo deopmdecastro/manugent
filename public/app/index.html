@@ -1460,8 +1460,8 @@
     }
 
     .task-row {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: 10px; padding: 14px 16px; margin-bottom: 8px;
+      background: var(--bg-card-solid); border: 1px solid var(--border);
+      border-radius: 8px; padding: 14px 16px; margin-bottom: 8px;
       transition: all 0.2s;
     }
     .task-row:hover { border-color: var(--border-light); }
@@ -1653,14 +1653,18 @@
     }
     .cal-priority-legend-item .dot { border-radius: 50%; flex-shrink: 0; height: 8px; width: 8px; }
     .cal-view-tabs {
+      background: var(--bg-card-solid);
+      border: 1px solid var(--border);
+      border-radius: 10px;
       display: inline-flex;
-      gap: 8px;
+      gap: 4px;
+      padding: 4px;
     }
     .cal-view-tab {
       align-items: center;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--hairline-b);
-      border-radius: 999px;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
       color: var(--text-secondary);
       cursor: pointer;
       display: inline-flex;
@@ -1668,13 +1672,13 @@
       font-weight: 700;
       gap: 9px;
       padding: 7px 16px 7px 7px;
-      transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+      transition: background 0.18s ease, color 0.18s ease;
       white-space: nowrap;
     }
     .cal-view-tab .cal-tab-icon {
       align-items: center;
       background: rgba(255,255,255,0.07);
-      border-radius: 8px;
+      border-radius: 6px;
       color: var(--text-secondary);
       display: inline-flex;
       flex-shrink: 0;
@@ -1687,7 +1691,6 @@
     .cal-view-tab:hover { color: var(--text-primary); }
     .cal-view-tab.active {
       background: linear-gradient(135deg, #7c3aed, #6d28d9);
-      border-color: transparent;
       color: #fff;
       box-shadow: 0 6px 16px rgba(124,58,237,0.32);
     }
