@@ -13751,9 +13751,13 @@ async function confirmDismissTech() {
     });
     if (!res.ok) { var err = await res.json().catch(function() { return {}; }); throw new Error(err.error || 'Erro ao demitir colaborador.'); }
     APP.technicians = APP.technicians.filter(function(t) { return t.id !== id; });
+    if (APP.viewingEmpresaCollaborators) {
+      APP.viewingEmpresaCollaborators = APP.viewingEmpresaCollaborators.filter(function(c) { return c.id !== id; });
+    }
     saveData();
     closeModal('modal-dismiss-tech');
     renderTechnicians();
+    if (APP.viewingEmpresaId) renderEmpresaColaboradoresTable();
     populateOTSelects();
     showToast('Colaborador demitido. Credenciais banidas automaticamente.');
   } catch (error) {
@@ -14129,6 +14133,7 @@ function renderEmpresaColaboradoresTable() {
           '<td class="p-3"><span class="badge ' + (statusColors[c.status] || 'badge-gray') + ' text-xs">' + escapeHtml(c.status || 'active') + '</span></td>' +
           '<td class="p-3 text-right">' +
             '<button class="btn-secondary entity-icon-action" title="Editar" onclick="openEditEmpresaCollaboratorRow(\'' + c.id + '\')"><i class="fas fa-pen"></i></button> ' +
+            '<button class="btn-secondary entity-icon-action entity-danger-action" title="Demitir colaborador" onclick="openDismissEmpresaCollaboratorRow(\'' + c.id + '\')"><i class="fas fa-user-slash"></i></button> ' +
             '<button class="btn-secondary entity-icon-action entity-danger-action" title="Remover da empresa" onclick="removeCollaboratorFromEmpresa(\'' + c.id + '\')"><i class="fas fa-user-minus"></i></button>' +
           '</td></tr>';
       }).join('');
@@ -14154,8 +14159,16 @@ function openEditEmpresaCollaboratorRow(userId) {
   enhanceFileInputs();
   document.getElementById('modal-new-tech').style.display = 'flex';
 }
-async function removeCollaboratorFromEmpresa(userId) {
-  if (!confirm('Remover este colaborador da empresa?')) return;
+function openDismissEmpresaCollaboratorRow(userId) {
+  var c = (APP.viewingEmpresaCollaborators || []).find(function(x) { return x.id === userId; });
+  if (!c) return;
+  if (!requirePermission('delete', 'technicians', 'demitir colaborador')) return;
+  APP.dismissingTechId = userId;
+  document.getElementById('dismiss-tech-name').textContent = c.name || '—';
+  document.getElementById('dismiss-tech-reason').value = '';
+  document.getElementById('modal-dismiss-tech').style.display = 'flex';
+}
+async function removeCollaboratorFromEmpresa(userId) {  if (!confirm('Remover este colaborador da empresa?')) return;
   try {
     var res = await fetch('/api/empresas/' + APP.viewingEmpresaId + '/collaborators/' + userId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } });
     if (!res.ok) { var err = await res.json().catch(function() { return {}; }); throw new Error(err.error || 'Erro ao remover colaborador.'); }
