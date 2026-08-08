@@ -51,11 +51,27 @@ export function levenshteinDistance(a: string, b: string): number {
   return matrix[blen]
 }
 
+// ── Normalização sem acentos (para tolerar "sao joao" == "São João") ──────
+
+export function stripDiacritics(input: string): string {
+  return input
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+}
+
+export function normalizeForSearch(input: string): string {
+  return stripDiacritics(input)
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 // ── Normalised Score ───────────────────────────────────────────────────────
 
 export function fuzzyScore(query: string, target: string): number {
-  const q = query.toLowerCase().trim()
-  const t = target.toLowerCase().trim()
+  const q = normalizeForSearch(query)
+  const t = normalizeForSearch(target)
 
   if (q === t) return 1.0
   if (t.includes(q)) return 0.95
@@ -113,7 +129,7 @@ export function fuzzySearch<T>(
       results.push({
         item,
         score,
-        distance: levenshteinDistance(query.toLowerCase(), key.toLowerCase()),
+        distance: levenshteinDistance(normalizeForSearch(query), normalizeForSearch(key)),
       })
     }
   }
@@ -412,4 +428,105 @@ export function findBestMatch<T extends SearchableEntity>(
   field: keyof T = 'name' as keyof T
 ): DisambiguationResult<T> {
   return disambiguate(query, entities, (item) => String(item[field] ?? ''))
+}
+
+// ── Motor de busca multi-campo (endereços, IDs, palavras-chave, etc.) ─────
+// Pensado para o "motor de busca global": cada registo tem vários campos
+// (nome, endereço, cidade, distrito, código, etc.), cada um com um peso, e
+// a query pode ter várias palavras que precisam de aparecer em qualquer
+// campo, em qualquer ordem, com tolerância a erros/acentos.
+
+export interface WeightedField {
+  value: string | null | undefined
+  weight?: number // default 1
+}
+
+export interface MultiFieldResult<T> {
+  item: T
+  score: number
+  matchedFields: string[]
+}
+
+/**
+ * Divide a query em tokens e verifica, para cada token, se aparece (exato,
+ * como prefixo, ou por fuzzy match) em algum dos campos fornecidos. Cada
+ * campo contribui com o seu peso ao score final. Devolve 0 se nenhum token
+ * tiver correspondência mínima aceitável — bom para IDs curtos ("OT-102"),
+ * localidades ("vila nova de gaia"), técnicos ("joao"), etc.
+ */
+export function multiFieldScore(
+  query: string,
+  fields: Record<string, WeightedField>
+): { score: number; matchedFields: string[] } {
+  const qNorm = normalizeForSearch(query)
+  if (!qNorm) return { score: 0, matchedFields: [] }
+  const tokens = qNorm.split(' ').filter(Boolean)
+
+  let total = 0
+  let maxPossible = 0
+  const matchedFields: string[] = []
+
+  for (const [fieldName, field] of Object.entries(fields)) {
+    const weight = field.weight ?? 1
+    maxPossible += weight
+    const raw = field.value
+    if (!raw) continue
+    const fNorm = normalizeForSearch(String(raw))
+    if (!fNorm) continue
+
+    // Correspondência exacta da query completa neste campo — pontuação máxima.
+    if (fNorm === qNorm) {
+      total += weight * 1.0
+      matchedFields.push(fieldName)
+      continue
+    }
+    if (fNorm.includes(qNorm)) {
+      total += weight * 0.95
+      matchedFields.push(fieldName)
+      continue
+    }
+
+    // Verifica token a token (para queries com várias palavras, por
+    // exemplo "compressor linha 3" ou "joao vila nova de gaia").
+    let tokenHits = 0
+    for (const tok of tokens) {
+      if (fNorm.includes(tok)) {
+        tokenHits += 1
+      } else {
+        // fuzzy: aceita pequenos erros de escrita por token
+        const words = fNorm.split(' ')
+        const best = Math.max(...words.map(w => 1 - levenshteinDistance(tok, w) / Math.max(tok.length, w.length, 1)))
+        if (best >= 0.72) tokenHits += best
+      }
+    }
+    if (tokenHits > 0) {
+      const ratio = tokenHits / tokens.length
+      total += weight * ratio * 0.85
+      matchedFields.push(fieldName)
+    }
+  }
+
+  const score = maxPossible > 0 ? Math.min(1, total / maxPossible) : 0
+  return { score, matchedFields }
+}
+
+/**
+ * Busca multi-campo sobre uma lista de itens, cada um mapeado para os seus
+ * campos pesquisáveis (com pesos). Ordena por score e devolve os melhores.
+ */
+export function multiFieldSearch<T>(
+  query: string,
+  items: T[],
+  fieldsFn: (item: T) => Record<string, WeightedField>,
+  threshold = 0.15,
+  maxResults = 20
+): MultiFieldResult<T>[] {
+  const results: MultiFieldResult<T>[] = []
+  for (const item of items) {
+    const { score, matchedFields } = multiFieldScore(query, fieldsFn(item))
+    if (score >= threshold) {
+      results.push({ item, score, matchedFields })
+    }
+  }
+  return results.sort((a, b) => b.score - a.score).slice(0, maxResults)
 }

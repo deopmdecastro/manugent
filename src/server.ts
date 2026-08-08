@@ -12,6 +12,7 @@ import { logger } from 'hono/logger'
 import { createClient } from '@supabase/supabase-js'
 import jwt from 'jsonwebtoken'
 import { fuzzySearch, disambiguate, processWithCorrections, buildNLPContextPrefix } from './lib/fuzzy-search.js'
+import { lookupDistrito, matchDistrito, concelhosDoDistrito } from './lib/pt-geo.js'
 import { createPgClient } from './lib/pg-adapter.js'
 
 // ── Configuration ───────────────────────────────────────────────────────────
@@ -547,6 +548,7 @@ function buildContextMessage(context: Record<string, unknown>): string {
   }
 
   lines.push('\nDICA: Use GET /api/fuzzy/:entity?q=QUERY para pesquisar equipamentos, tecnicos, clientes ou OTs com tolerancia a erros ortograficos.')
+  lines.push('DICA: Use GET /api/search/global?q=QUERY para uma busca unica e robusta sobre edificios, enderecos, distritos/concelhos, zonas, clientes, equipamentos, IDs de OT, tecnicos e palavras-chave em achados/relatorios — tolerante a acentos, maiusculas e erros de escrita.')
   lines.push('DICA: OTs, pedidos/obras e equipamentos têm NFC, QR e código de barras associados — GET /api/work-orders/:id/history ou /api/maintenance-requests/:id/history devolvem o histórico completo, incluindo leituras NFC/QR/código de barras e pausas com motivo (GET /api/pause-reasons para a lista de motivos).')
   return lines.join('\n')
 }
@@ -874,6 +876,101 @@ app.get('/api/fuzzy/:entity', async (c) => {
     })
   } catch (error) {
     return jsonError(c, error instanceof Error ? error.message : 'Fuzzy search failed')
+  }
+})
+
+// ── Routes: Global Search Engine ────────────────────────────────────────────
+// Motor de busca único e robusto sobre: edifícios, endereços, localidades,
+// distritos/concelhos, zonas técnicas, clientes, equipamentos, IDs de OT,
+// palavras-chave (descrições/achados/relatórios) e nomes de técnicos.
+// Tolerante a acentos, maiúsculas e pequenos erros de escrita.
+
+const RESULT_TYPE_LABELS: Record<string, string> = {
+  building: 'Edifício',
+  client: 'Cliente',
+  equipment: 'Equipamento',
+  work_order: 'Ordem de Trabalho',
+  technician: 'Técnico',
+  finding: 'Achado / Palavra-chave',
+  intervention_report: 'Relatório de Intervenção',
+}
+
+app.get('/api/search/global', async (c) => {
+  try {
+    const db = requireDb()
+    const query = (c.req.query('q') || '').trim()
+    const limit = Math.min(Number(c.req.query('limit') || '30'), 100)
+    const typesFilter = (c.req.query('types') || '').split(',').map(t => t.trim()).filter(Boolean)
+
+    if (!query) return jsonError(c, 'Query string ?q= é obrigatória')
+
+    // 1) Ranking principal via RPC (trigram similarity, sem acentos, multi-tabela)
+    const { data, error } = await db.rpc('search_global', { p_query: query, p_limit: limit })
+    if (error) throw error
+
+    let results: Array<{ result_type: string; id: string; title: string; subtitle: string; context: string; score: number }> = data || []
+
+    // 2) Enriquecimento geográfico: se a query corresponder a um distrito
+    // conhecido (ex.: "Porto", "Braga"), inclui também edifícios cujo
+    // concelho/cidade pertença a esse distrito, mesmo que a coluna
+    // `distrito` ainda não esteja preenchida nesse registo.
+    const distrito = matchDistrito(query)
+    if (distrito) {
+      const concelhos = concelhosDoDistrito(distrito)
+      const orFilter = concelhos.map(nome => `concelho.ilike."${nome}",city.ilike."${nome}"`).join(',')
+      const { data: byDistrito } = await db
+        .from('buildings')
+        .select('id, name, address, city, distrito, concelho, zones')
+        .or(orFilter)
+        .limit(limit)
+
+      for (const b of (byDistrito || []) as Record<string, unknown>[]) {
+        const id = String(b.id)
+        if (results.some(r => r.result_type === 'building' && r.id === id)) continue
+        results.push({
+          result_type: 'building',
+          id,
+          title: String(b.name),
+          subtitle: `${b.address || ''}${b.city ? ' — ' + b.city : ''}`,
+          context: `Distrito de ${distrito}${b.concelho ? ' / ' + b.concelho : ''}${b.zones ? ' — zonas: ' + b.zones : ''}`,
+          score: 0.85,
+        })
+      }
+    }
+
+    // 3) Filtro opcional por tipo de entidade (?types=building,equipment,...)
+    if (typesFilter.length > 0) {
+      results = results.filter(r => typesFilter.includes(r.result_type))
+    }
+
+    results.sort((a, b) => b.score - a.score)
+    results = results.slice(0, limit)
+
+    // 4) Sugestão de correção ortográfica (reaproveita o NLP de comandos)
+    const nlp = processWithCorrections(query)
+
+    // 5) Agrupa por tipo, para facilitar a apresentação em UI (abas/secções)
+    const grouped: Record<string, typeof results> = {}
+    for (const r of results) {
+      grouped[r.result_type] = grouped[r.result_type] || []
+      grouped[r.result_type].push(r)
+    }
+
+    return c.json({
+      query,
+      total: results.length,
+      results: results.map(r => ({ ...r, typeLabel: RESULT_TYPE_LABELS[r.result_type] || r.result_type })),
+      groups: Object.fromEntries(
+        Object.entries(grouped).map(([type, items]) => [
+          type,
+          { label: RESULT_TYPE_LABELS[type] || type, items },
+        ])
+      ),
+      matchedDistrito: distrito,
+      spellSuggestion: nlp.wasCorrected ? nlp.corrections : [],
+    })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Global search failed')
   }
 })
 
@@ -1217,11 +1314,19 @@ app.post('/api/buildings', async (c) => {
     if (!body.name) return jsonError(c, 'name é obrigatório')
     if (!body.clientId) return jsonError(c, 'clientId é obrigatório')
 
+    // Auto-preenche `distrito` a partir de `concelho` (ou, na sua falta,
+    // `city`, já que em Portugal a cidade-sede é frequentemente o próprio
+    // concelho) sempre que o utilizador não o indique explicitamente.
+    const concelho: string | null = body.concelho ?? null
+    const distrito: string | null = body.distrito ?? lookupDistrito(concelho) ?? lookupDistrito(body.city) ?? null
+
     const { data, error } = await db.from('buildings').insert({
       client_id: body.clientId,
       name: body.name,
       address: body.address ?? null,
       city: body.city ?? null,
+      distrito,
+      concelho,
       type: body.type ?? 'industrial',
       area_m2: body.areaM2 ?? null,
       description: body.description ?? null,
@@ -1257,6 +1362,12 @@ app.put('/api/buildings/:id', async (c) => {
     if (body.name !== undefined) patch.name = body.name
     if (body.address !== undefined) patch.address = body.address
     if (body.city !== undefined) patch.city = body.city
+    if (body.concelho !== undefined) patch.concelho = body.concelho
+    if (body.distrito !== undefined) {
+      patch.distrito = body.distrito
+    } else if (body.concelho !== undefined || body.city !== undefined) {
+      patch.distrito = lookupDistrito(body.concelho) ?? lookupDistrito(body.city) ?? null
+    }
     if (body.type !== undefined) patch.type = body.type
     if (body.areaM2 !== undefined) patch.area_m2 = body.areaM2
     if (body.description !== undefined) patch.description = body.description
