@@ -1559,51 +1559,99 @@
       border-radius: 6px;
       color: #dbeafe;
       font-size: 11px;
-      line-height: 1.25;
+      line-height: 1.3;
       margin-top: 4px;
       overflow: hidden;
-      padding: 4px 6px;
+      padding: 3px 6px;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .calendar-job.priority-urgente,
-    .calendar-job.priority-alta { border-left-color: #f87171; }
+    .calendar-job .cal-job-time { color: var(--text-muted); font-variant-numeric: tabular-nums; margin-right: 4px; }
+    .calendar-job.priority-crítica,
+    .calendar-job.priority-urgente { border-left-color: #f87171; }
+    .calendar-job.priority-alta { border-left-color: #fb923c; }
     .calendar-job.priority-média { border-left-color: #60a5fa; }
     .calendar-job.priority-baixa { border-left-color: #34d399; }
+    .calendar-job.priority-informativa,
+    .calendar-job.priority- { border-left-color: #94a3b8; }
     .calendar-more {
       color: var(--text-muted);
       font-size: 10px;
       margin-top: 4px;
     }
-    .cal-view-tabs {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--hairline-b);
-      border-radius: 10px;
+    .calendar-layout {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+      align-items: start;
+    }
+    @media (max-width: 1100px) {
+      .calendar-layout { grid-template-columns: 1fr; }
+    }
+    .cal-priority-legend {
+      align-items: center;
+      border-top: 1px solid var(--hairline-a);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 16px;
+      padding-top: 14px;
+    }
+    .cal-priority-legend-label {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .cal-priority-legend-item {
+      align-items: center;
+      color: var(--text-secondary);
       display: inline-flex;
-      gap: 2px;
-      padding: 3px;
+      font-size: 12px;
+      gap: 6px;
+    }
+    .cal-priority-legend-item .dot { border-radius: 50%; flex-shrink: 0; height: 8px; width: 8px; }
+    .cal-view-tabs {
+      display: inline-flex;
+      gap: 8px;
     }
     .cal-view-tab {
-      background: transparent;
-      border: none;
-      border-radius: 7px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--hairline-b);
+      border-radius: 999px;
       color: var(--text-secondary);
       cursor: pointer;
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 600;
-      padding: 7px 14px;
-      transition: background 0.18s ease, color 0.18s ease;
+      padding: 8px 16px;
+      transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+      white-space: nowrap;
     }
     .cal-view-tab:hover { color: var(--text-primary); }
     .cal-view-tab.active {
-      background: linear-gradient(135deg, rgba(124,58,237,0.5), rgba(56,189,248,0.28));
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      border-color: transparent;
       color: #fff;
+      box-shadow: 0 6px 16px rgba(124,58,237,0.32);
+    }
+    .team-day-panel-header {
+      align-items: flex-start;
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .team-day-panel-date {
+      align-items: center;
+      color: var(--text-secondary);
+      display: flex;
+      font-size: 12.5px;
+      gap: 6px;
+      margin-top: 4px;
     }
     .team-day-summary {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 16px;
+      gap: 8px;
+      margin-bottom: 14px;
     }
     .team-day-summary-chip {
       align-items: center;
@@ -1611,25 +1659,35 @@
       border: 1px solid var(--hairline-b);
       border-radius: 999px;
       display: inline-flex;
-      font-size: 12px;
+      font-size: 11.5px;
       gap: 6px;
-      padding: 5px 12px;
+      padding: 4px 10px;
     }
     .team-day-summary-chip .dot { border-radius: 50%; height: 7px; width: 7px; flex-shrink: 0; }
-    .team-day-card {
-      background: rgba(255,255,255,0.025);
-      border: 1px solid var(--hairline-b);
-      border-radius: 12px;
-      margin-bottom: 10px;
-      overflow: hidden;
-      transition: border-color 0.18s ease;
+    .team-day-table-head {
+      color: var(--text-muted);
+      display: grid;
+      font-size: 11px;
+      font-weight: 700;
+      grid-template-columns: 1fr 100px 1.4fr;
+      gap: 10px;
+      letter-spacing: 0.02em;
+      padding: 0 6px 8px;
+      text-transform: uppercase;
     }
-    .team-day-card:hover { border-color: rgba(129,140,248,0.32); }
-    .team-day-card-header {
+    .team-day-row {
+      border-top: 1px solid var(--hairline-a);
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 1fr 100px 1.4fr;
+      padding: 12px 6px;
+    }
+    .team-day-row:hover { background: rgba(255,255,255,0.02); }
+    .team-day-who {
       align-items: center;
       display: flex;
-      gap: 12px;
-      padding: 12px 14px;
+      gap: 10px;
+      min-width: 0;
     }
     .team-day-avatar {
       align-items: center;
@@ -1639,50 +1697,33 @@
       color: #c4b5fd;
       display: flex;
       flex-shrink: 0;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
-      height: 38px;
+      height: 34px;
       justify-content: center;
-      width: 38px;
+      width: 34px;
     }
-    .team-day-jobs {
-      border-top: 1px solid var(--hairline-a);
-      padding: 4px 14px 10px 64px;
+    .team-day-who-name { font-size: 13px; font-weight: 600; line-height: 1.2; }
+    .team-day-who-role { color: var(--text-muted); font-size: 11px; }
+    .team-day-status { align-items: flex-start; display: flex; }
+    .team-day-jobs-list { font-size: 12px; min-width: 0; }
+    .team-day-job-item {
+      cursor: pointer;
+      margin-bottom: 6px;
+      padding-left: 12px;
+      position: relative;
     }
-    .team-day-job {
-      align-items: center;
-      border-bottom: 1px dashed var(--hairline-a);
-      display: flex;
-      gap: 10px;
-      justify-content: space-between;
-      padding: 8px 0;
-    }
-    .team-day-job:last-child { border-bottom: none; }
-    .team-day-job-time {
+    .team-day-job-item:last-child { margin-bottom: 0; }
+    .team-day-job-item::before {
       color: var(--text-muted);
-      flex-shrink: 0;
-      font-size: 11px;
-      font-variant-numeric: tabular-nums;
-      width: 42px;
+      content: '•';
+      left: 0;
+      position: absolute;
     }
-    .team-day-job-loc {
-      color: var(--text-secondary);
-      font-size: 11px;
-      margin-top: 2px;
-    }
-    .team-day-empty {
-      color: var(--text-muted);
-      font-size: 12px;
-      padding: 0 14px 12px 64px;
-    }
-    .team-day-off {
-      align-items: center;
-      color: var(--text-muted);
-      display: flex;
-      font-size: 12px;
-      gap: 6px;
-      padding: 0 14px 12px 64px;
-    }
+    .team-day-job-item:hover .team-day-job-title { color: #c4b5fd; }
+    .team-day-job-title { color: var(--text-primary); font-weight: 500; transition: color 0.15s ease; }
+    .team-day-job-loc { color: var(--text-muted); font-size: 11px; margin-top: 1px; }
+    .team-day-note { color: var(--text-muted); font-size: 12px; padding-top: 4px; }
 
 
     .auth-card {
@@ -4274,34 +4315,52 @@
           </div>
           <button class="btn-primary" onclick="openNewOTModal()"><i class="fas fa-plus"></i> Agendar</button>
         </div>
-        <div class="card p-5">
-          <div class="flex items-center justify-between mb-5">
-            <button class="btn-ghost" onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
-            <h2 class="font-semibold text-lg" id="calendar-title">Junho 2026</h2>
-            <button class="btn-ghost" onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
-          </div>
-          <div class="grid grid-cols-7 gap-1 mb-2">
-            <div class="text-center text-xs text-slate-500 py-2">Dom</div>
-            <div class="text-center text-xs text-slate-500 py-2">Seg</div>
-            <div class="text-center text-xs text-slate-500 py-2">Ter</div>
-            <div class="text-center text-xs text-slate-500 py-2">Qua</div>
-            <div class="text-center text-xs text-slate-500 py-2">Qui</div>
-            <div class="text-center text-xs text-slate-500 py-2">Sex</div>
-            <div class="text-center text-xs text-slate-500 py-2">Sáb</div>
-          </div>
-          <div class="grid grid-cols-7 gap-1" id="calendar-grid"></div>
-        </div>
-        <div class="card p-5 mt-5">
-          <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
-            <h3 class="font-semibold" id="calendar-panel-title">Trabalhos do dia</h3>
-            <div class="cal-view-tabs">
-              <button type="button" class="cal-view-tab active" id="cal-view-tab-day" onclick="switchCalendarView('day')"><i class="fas fa-list-ul"></i> Trabalhos do dia</button>
-              <button type="button" class="cal-view-tab" id="cal-view-tab-team" onclick="switchCalendarView('team')"><i class="fas fa-users"></i> Equipa do dia</button>
+        <div class="calendar-layout">
+          <div class="card p-5">
+            <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
+              <h2 class="font-semibold text-lg">Calendário</h2>
+              <div class="cal-view-tabs">
+                <button type="button" class="cal-view-tab active" id="cal-view-tab-day" onclick="switchCalendarView('day')"><i class="fas fa-list-ul"></i> Trabalhos do dia</button>
+                <button type="button" class="cal-view-tab" id="cal-view-tab-team" onclick="switchCalendarView('team')"><i class="fas fa-users"></i> Equipa do dia</button>
+              </div>
+            </div>
+            <div class="flex items-center justify-between mb-5">
+              <button class="btn-ghost" onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+              <h2 class="font-semibold text-lg" id="calendar-title">Junho 2026</h2>
+              <button class="btn-ghost" onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+            </div>
+            <div class="grid grid-cols-7 gap-1 mb-2">
+              <div class="text-center text-xs text-slate-500 py-2">Dom</div>
+              <div class="text-center text-xs text-slate-500 py-2">Seg</div>
+              <div class="text-center text-xs text-slate-500 py-2">Ter</div>
+              <div class="text-center text-xs text-slate-500 py-2">Qua</div>
+              <div class="text-center text-xs text-slate-500 py-2">Qui</div>
+              <div class="text-center text-xs text-slate-500 py-2">Sex</div>
+              <div class="text-center text-xs text-slate-500 py-2">Sáb</div>
+            </div>
+            <div class="grid grid-cols-7 gap-1" id="calendar-grid"></div>
+            <div class="cal-priority-legend">
+              <span class="cal-priority-legend-label">Prioridade:</span>
+              <span class="cal-priority-legend-item"><span class="dot" style="background:#f87171"></span>Crítica</span>
+              <span class="cal-priority-legend-item"><span class="dot" style="background:#fb923c"></span>Alta</span>
+              <span class="cal-priority-legend-item"><span class="dot" style="background:#60a5fa"></span>Média</span>
+              <span class="cal-priority-legend-item"><span class="dot" style="background:#34d399"></span>Baixa</span>
+              <span class="cal-priority-legend-item"><span class="dot" style="background:#94a3b8"></span>Informativa</span>
             </div>
           </div>
-          <div id="upcoming-interventions"><p class="text-slate-500 text-sm">Nenhuma intervenção agendada.</p></div>
+          <div class="card p-5">
+            <div class="team-day-panel-header">
+              <div>
+                <h3 class="font-semibold" id="calendar-panel-title">Trabalhos do dia</h3>
+                <div class="team-day-panel-date"><i class="fas fa-calendar-day"></i><span id="calendar-panel-date"></span></div>
+              </div>
+              <button class="btn-primary" style="white-space:nowrap" onclick="openNewOTModal()"><i class="fas fa-plus"></i> Novo trabalho</button>
+            </div>
+            <div id="upcoming-interventions"><p class="text-slate-500 text-sm">Nenhuma intervenção agendada.</p></div>
+          </div>
         </div>
       </div>
+
 
 
       <!-- CHECKLISTS -->
@@ -6729,7 +6788,7 @@
       </div>
       <div>
         <label class="block text-sm mb-2 text-slate-300">Disponibilidade</label>
-        <select id="tech-availability" class="input-field"><option>Disponível</option><option>Em campo</option><option>Em férias</option><option>Indisponível</option></select>
+        <select id="tech-availability" class="input-field"><option>Disponível</option><option>A trabalhar</option><option>Férias</option><option>Folga</option><option>Doença</option><option>Indisponível</option></select>
       </div>
       <div>
         <label class="block text-sm mb-2 text-slate-300">Empresa</label>
@@ -11661,6 +11720,7 @@ function syncBackendWorkOrders() {
           phone: t.phone || '', teamId: t.team_id, teamName: t.team_name || '',
           empresa_id: t.empresa_id, empresaName: t.empresa_name || '',
           specialty: t.specialty || 'Geral', availability: t.availability || 'Disponível',
+          statusNote: t.status_note || '', statusUntil: t.status_until || '',
           rating: t.rating, completedOrders: t.completed_orders, activeOrders: t.active_orders,
           photo: t.avatar_url || '', createdAt: t.created_at
         };
@@ -13597,7 +13657,7 @@ function renderTechnicians() {
     el.innerHTML = emptyGridState('fa-hard-hat', 'Nenhum colaborador registado.', 'Adicionar colaborador', 'openNewTechModal()');
     return;
   }
-  var availColors = {'Disponível':'badge-green','Em campo':'badge-blue','Em férias':'badge-yellow','Indisponível':'badge-red'};
+  var availColors = {'Disponível':'badge-green','A trabalhar':'badge-blue','Férias':'badge-yellow','Indisponível':'badge-gray','Folga':'badge-gray','Doença':'badge-red'};
   el.innerHTML = rows.map(function(t) {
     var otCount = APP.ots.filter(function(o) { return o.technicianId === t.id && ['Aberta','Em andamento'].includes(o.status); }).length;
     var initial = (t.name || 'C').charAt(0).toUpperCase();
@@ -15976,6 +16036,23 @@ function changeMonth(dir) {
   renderCalendar();
 }
 
+// Normaliza a prioridade da OT para uma das 5 categorias da legenda.
+function calendarPriorityMeta(p) {
+  var key = String(p || '').toLowerCase();
+  if (key === 'urgente' || key === 'crítica' || key === 'critica') return { cls: 'crítica', badge: 'badge-red', color: '#f87171', label: 'Crítica' };
+  if (key === 'alta') return { cls: 'alta', badge: 'badge-orange', color: '#fb923c', label: 'Alta' };
+  if (key === 'média' || key === 'media') return { cls: 'média', badge: 'badge-blue', color: '#60a5fa', label: 'Média' };
+  if (key === 'baixa') return { cls: 'baixa', badge: 'badge-green', color: '#34d399', label: 'Baixa' };
+  return { cls: 'informativa', badge: 'badge-gray', color: '#94a3b8', label: 'Informativa' };
+}
+var CALENDAR_PRIORITY_RANK = { 'crítica': 0, 'alta': 1, 'média': 2, 'baixa': 3, 'informativa': 4 };
+
+function calendarJobTime(o) {
+  var dt = new Date(o.date);
+  if (isNaN(dt.getTime())) return '';
+  return String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
+}
+
 function renderCalendar() {
   var d = APP.calendarDate || new Date();
   var year = d.getFullYear();
@@ -15991,12 +16068,17 @@ function renderCalendar() {
   for (var i = 0; i < firstDay; i++) html += '<div></div>';
   for (var day = 1; day <= daysInMonth; day++) {
     var dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
-    var jobs = (APP.ots || []).filter(function(o) { return o.date && String(o.date).slice(0, 10) === dateStr; });
+    var jobs = (APP.ots || []).filter(function(o) { return o.date && String(o.date).slice(0, 10) === dateStr; })
+      .sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
     var isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
     html += '<div class="calendar-day ' + (isToday ? 'today ' : '') + (selected === dateStr ? 'selected' : '') + '" onclick="selectCalendarDay(\'' + dateStr + '\')">' +
       '<div class="calendar-day-number"><span>' + day + '</span>' + (jobs.length ? '<span class="badge badge-blue">' + jobs.length + '</span>' : '') + '</div>' +
-      jobs.slice(0, 2).map(function(o) { return '<div class="calendar-job priority-' + (o.priority||'').toLowerCase() + '" title="' + escapeHtml(o.title || '') + '">' + escapeHtml(o.title || o.id) + '</div>'; }).join('') +
-      (jobs.length > 2 ? '<div class="calendar-more">+' + (jobs.length - 2) + ' trabalho(s)</div>' : '') + '</div>';
+      jobs.slice(0, 2).map(function(o) {
+        var meta = calendarPriorityMeta(o.priority);
+        var time = calendarJobTime(o);
+        return '<div class="calendar-job priority-' + meta.cls + '" title="' + escapeHtml(o.title || '') + '">' + (time ? '<span class="cal-job-time">' + time + '</span>' : '') + escapeHtml(o.title || o.id) + '</div>';
+      }).join('') +
+      (jobs.length > 2 ? '<div class="calendar-more">+' + (jobs.length - 2) + ' mais</div>' : '') + '</div>';
   }
   var grid = document.getElementById('calendar-grid');
   if (grid) grid.innerHTML = html;
@@ -16010,15 +16092,19 @@ function selectCalendarDay(dateStr) {
 
 function switchCalendarView(view) {
   APP.calendarView = view;
-  var tabDay = document.getElementById('cal-view-tab-day');
-  var tabTeam = document.getElementById('cal-view-tab-team');
-  if (tabDay) tabDay.classList.toggle('active', view === 'day');
-  if (tabTeam) tabTeam.classList.toggle('active', view === 'team');
   renderCalendarDayPanel(APP.selectedCalendarDate || new Date().toISOString().slice(0, 10));
 }
 
 function renderUpcomingInterventions() {
   renderCalendarDayPanel(APP.selectedCalendarDate || new Date().toISOString().slice(0, 10));
+}
+
+function calendarDayLabel(dateStr) {
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-PT', { weekday:'long', day:'2-digit', month:'long' });
+}
+
+function calendarDayLabelLong(dateStr) {
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-PT', { day:'2-digit', month:'long', year:'numeric' });
 }
 
 function renderCalendarDayPanel(dateStr) {
@@ -16027,12 +16113,10 @@ function renderCalendarDayPanel(dateStr) {
   var view = APP.calendarView || 'day';
   if (tabDay) tabDay.classList.toggle('active', view === 'day');
   if (tabTeam) tabTeam.classList.toggle('active', view === 'team');
+  var dateEl = document.getElementById('calendar-panel-date');
+  if (dateEl) dateEl.textContent = calendarDayLabelLong(dateStr);
   if (view === 'team') renderTeamDayRoster(dateStr);
   else renderCalendarDayJobs(dateStr);
-}
-
-function calendarDayLabel(dateStr) {
-  return new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-PT', { weekday:'long', day:'2-digit', month:'long' });
 }
 
 function renderCalendarDayJobs(dateStr) {
@@ -16041,29 +16125,43 @@ function renderCalendarDayJobs(dateStr) {
   if (!el || !dateStr) return;
   var rows = (APP.ots || []).filter(function(o) { return o.date && String(o.date).slice(0, 10) === dateStr; })
     .sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
-  var label = calendarDayLabel(dateStr);
-  if (panelTitle) panelTitle.textContent = 'Trabalhos de ' + label;
+  if (panelTitle) panelTitle.textContent = 'Trabalhos do dia';
   if (!rows.length) {
-    el.innerHTML = '<div class="empty-state compact"><i class="fas fa-calendar-day"></i><p>Sem trabalhos em ' + escapeHtml(label) + '.</p><button class="btn-primary" onclick="openNewOTModal()"><i class="fas fa-plus"></i> Agendar</button></div>';
+    el.innerHTML = '<div class="empty-state compact"><i class="fas fa-calendar-day"></i><p>Sem trabalhos em ' + escapeHtml(calendarDayLabel(dateStr)) + '.</p><button class="btn-primary" onclick="openNewOTModal()"><i class="fas fa-plus"></i> Agendar</button></div>';
     return;
   }
   el.innerHTML = rows.map(function(o) {
-    return '<div class="task-row cursor-pointer" onclick="openOTDetail(\'' + o.id + '\')"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="font-semibold text-slate-100">' + escapeHtml(o.title || o.id) + '</div><div class="text-xs text-slate-500 mt-1">' + formatDateTime(o.date) + ' - ' + escapeHtml(o.technicianName || 'Sem técnico') + ' - ' + escapeHtml(o.buildingName || o.equipmentName || o.location || 'Sem local') + '</div></div><span class="badge ' + getStatusClass(o.status) + '">' + escapeHtml(o.status || 'Aberta') + '</span></div></div>';
+    var meta = calendarPriorityMeta(o.priority);
+    return '<div class="task-row cursor-pointer" onclick="openOTDetail(\'' + o.id + '\')" style="border-left:2px solid ' + meta.color + '"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="font-semibold text-slate-100">' + escapeHtml(o.title || o.id) + '</div><div class="text-xs text-slate-500 mt-1">' + formatDateTime(o.date) + ' · ' + escapeHtml(o.technicianName || 'Sem técnico') + ' · ' + escapeHtml(o.buildingName || o.equipmentName || o.location || 'Sem local') + '</div></div><span class="badge ' + getStatusClass(o.status) + '">' + escapeHtml(o.status || 'Aberta') + '</span></div></div>';
   }).join('');
 }
 
 // Estados de disponibilidade que impedem trabalho nesse dia (mostram o motivo em vez de OTs)
 var CALENDAR_OFF_STATUSES = {
-  'Em férias': { icon: 'fa-umbrella-beach', color: '#fbbf24', label: 'Em férias' },
-  'Indisponível': { icon: 'fa-user-clock', color: '#f87171', label: 'Indisponível / baixa' }
+  'Férias': { icon: 'fa-umbrella-beach', badge: 'badge-yellow' },
+  'Indisponível': { icon: 'fa-user-clock', badge: 'badge-gray' },
+  'Folga': { icon: 'fa-mug-hot', badge: 'badge-gray' },
+  'Doença': { icon: 'fa-briefcase-medical', badge: 'badge-red' }
 };
+
+function calendarTechNote(t) {
+  if (t.availability === 'Férias' && t.statusUntil) {
+    var dt = new Date(t.statusUntil + 'T00:00:00');
+    var label = isNaN(dt.getTime()) ? t.statusUntil : dt.toLocaleDateString('pt-PT');
+    return 'Retorno: ' + label;
+  }
+  if (t.statusNote) return t.statusNote;
+  if (t.availability === 'Folga') return 'Dia de folga';
+  if (t.availability === 'Indisponível') return 'Indisponível';
+  if (t.availability === 'Doença') return 'Atestado médico';
+  return '';
+}
 
 function renderTeamDayRoster(dateStr) {
   var el = document.getElementById('upcoming-interventions');
   var panelTitle = document.getElementById('calendar-panel-title');
   if (!el || !dateStr) return;
-  var label = calendarDayLabel(dateStr);
-  if (panelTitle) panelTitle.textContent = 'Equipa de ' + label;
+  if (panelTitle) panelTitle.textContent = 'Equipa do dia';
 
   var techs = (APP.technicians || []).slice().sort(function(a, b) { return (a.name || '').localeCompare(b.name || ''); });
   if (!techs.length) {
@@ -16082,42 +16180,53 @@ function renderTeamDayRoster(dateStr) {
   });
 
   var countWorking = 0, countOff = 0, countFree = 0;
-  var availColors = { 'Disponível':'badge-green', 'Em campo':'badge-blue', 'Em férias':'badge-yellow', 'Indisponível':'badge-red' };
 
-  var cardsHtml = techs.map(function(t) {
+  var rowsHtml = techs.map(function(t) {
     var jobs = jobsByTech[t.id] || [];
     var offInfo = CALENDAR_OFF_STATUSES[t.availability];
     var initial = (t.name || 'C').charAt(0).toUpperCase();
-    if (jobs.length) countWorking++; else if (offInfo) countOff++; else countFree++;
+    var roleLabel = normalizeRole ? getRoleLabel(normalizeRole(t.role || 'tecnico')) : (t.role || 'Técnico');
 
-    var body;
+    var statusBadge;
     if (jobs.length) {
-      body = '<div class="team-day-jobs">' + jobs.map(function(o) {
-        var loc = o.buildingName || o.clientName || o.equipmentName || o.location || 'Sem local definido';
-        var time = '';
-        var dt = new Date(o.date);
-        if (!isNaN(dt.getTime())) time = String(dt.getHours()).padStart(2,'0') + ':' + String(dt.getMinutes()).padStart(2,'0');
-        return '<div class="team-day-job cursor-pointer" onclick="openOTDetail(\'' + o.id + '\')">' +
-          '<div class="team-day-job-time">' + (time || '—') + '</div>' +
-          '<div class="flex-1 min-w-0"><div class="text-sm font-medium truncate">' + escapeHtml(o.title || o.id) + '</div>' +
-          '<div class="team-day-job-loc"><i class="fas fa-location-dot mr-1"></i>' + escapeHtml(loc) + '</div></div>' +
-          '<span class="badge ' + getStatusClass(o.status) + ' text-xs flex-shrink-0">' + escapeHtml(o.status || 'Aberta') + '</span>' +
-          '</div>';
-      }).join('') + '</div>';
+      countWorking++;
+      // Cor do badge "A trabalhar" reflete a prioridade mais alta do dia
+      var worstRank = 4, worstMeta = calendarPriorityMeta('');
+      jobs.forEach(function(o) {
+        var meta = calendarPriorityMeta(o.priority);
+        var rank = CALENDAR_PRIORITY_RANK[meta.cls];
+        if (rank < worstRank) { worstRank = rank; worstMeta = meta; }
+      });
+      statusBadge = '<span class="badge ' + worstMeta.badge + ' text-xs"><i class="fas fa-circle" style="font-size:5px"></i> A trabalhar</span>';
     } else if (offInfo) {
-      body = '<div class="team-day-off"><i class="fas ' + offInfo.icon + '" style="color:' + offInfo.color + '"></i> ' + offInfo.label + ' — sem trabalhos atribuídos neste dia.</div>';
+      countOff++;
+      statusBadge = '<span class="badge ' + offInfo.badge + ' text-xs"><i class="fas ' + offInfo.icon + '"></i> ' + escapeHtml(t.availability) + '</span>';
     } else {
-      body = '<div class="team-day-empty"><i class="fas fa-circle-check mr-1" style="color:#34d399"></i>Sem trabalhos agendados para este dia.</div>';
+      countFree++;
+      statusBadge = '<span class="badge badge-green text-xs"><i class="fas fa-circle" style="font-size:5px"></i> Disponível</span>';
     }
 
-    return '<div class="team-day-card">' +
-      '<div class="team-day-card-header">' +
+    var jobsCol;
+    if (jobs.length) {
+      jobsCol = '<div class="team-day-jobs-list">' + jobs.map(function(o) {
+        var loc = o.buildingName || o.clientName || o.equipmentName || o.location || 'Sem local definido';
+        return '<div class="team-day-job-item" onclick="openOTDetail(\'' + o.id + '\')">' +
+          '<span class="team-day-job-title">' + escapeHtml(o.title || o.id) + '</span>' +
+          '<div class="team-day-job-loc">' + escapeHtml(loc) + '</div></div>';
+      }).join('') + '</div>';
+    } else {
+      var note = calendarTechNote(t);
+      jobsCol = note ? '<div class="team-day-note">' + escapeHtml(note) + '</div>' : '<div class="team-day-note">Sem trabalhos agendados.</div>';
+    }
+
+    return '<div class="team-day-row">' +
+      '<div class="team-day-who">' +
       (t.photo ? '<img src="' + escapeHtml(t.photo) + '" alt="' + escapeHtml(t.name) + '" class="team-day-avatar object-cover p-0">' : '<div class="team-day-avatar">' + escapeHtml(initial) + '</div>') +
-      '<div class="min-w-0 flex-1"><div class="font-semibold truncate">' + escapeHtml(t.name || '—') + '</div>' +
-      '<div class="text-xs text-slate-500 truncate">' + escapeHtml(t.specialty || 'Geral') + (t.teamName ? ' · ' + escapeHtml(t.teamName) : '') + '</div></div>' +
-      '<span class="badge ' + (availColors[t.availability] || 'badge-gray') + ' text-xs flex-shrink-0">' + escapeHtml(t.availability || '—') + '</span>' +
-      (jobs.length ? '<span class="badge badge-purple text-xs flex-shrink-0">' + jobs.length + ' trab.</span>' : '') +
-      '</div>' + body + '</div>';
+      '<div class="min-w-0"><div class="team-day-who-name truncate">' + escapeHtml(t.name || '—') + '</div>' +
+      '<div class="team-day-who-role truncate">' + escapeHtml(roleLabel || 'Técnico') + '</div></div></div>' +
+      '<div class="team-day-status">' + statusBadge + '</div>' +
+      jobsCol +
+      '</div>';
   }).join('');
 
   var summaryHtml = '<div class="team-day-summary">' +
@@ -16126,7 +16235,9 @@ function renderTeamDayRoster(dateStr) {
     '<span class="team-day-summary-chip"><span class="dot" style="background:#f87171"></span>' + countOff + ' ausentes/férias</span>' +
     '</div>';
 
-  el.innerHTML = summaryHtml + cardsHtml;
+  var headHtml = '<div class="team-day-table-head"><span>Colaborador</span><span>Estado</span><span>Trabalhos / Local</span></div>';
+
+  el.innerHTML = summaryHtml + headHtml + rowsHtml;
 }
 
 // ======================== AI ASSISTANT ========================
@@ -17649,7 +17760,7 @@ function renderGlobalFilterFields(page) {
     return '<div class="grid md:grid-cols-3 gap-3">' +
       '<div><label class="block text-sm mb-2 text-slate-300">Função</label><select id="filter-tech-role" class="input-field">' + filterOpt('', 'Todas', APP.techRoleFilter) + COLLABORATOR_ROLE_OPTIONS.map(function(r) { return filterOpt(r[0], r[1], APP.techRoleFilter); }).join('') + '</select></div>' +
       '<div><label class="block text-sm mb-2 text-slate-300">Especialidade</label><select id="filter-tech-specialty" class="input-field">' + filterOpt('', 'Todas', APP.techSpecialtyFilter) + ['Elétrico','Mecânico','AVAC','Automação','Geral'].map(function(s) { return filterOpt(s, s, APP.techSpecialtyFilter); }).join('') + '</select></div>' +
-      '<div><label class="block text-sm mb-2 text-slate-300">Disponibilidade</label><select id="filter-tech-availability" class="input-field">' + filterOpt('', 'Todas', APP.techAvailabilityFilter) + ['Disponível','Em campo','Em férias','Indisponível'].map(function(s) { return filterOpt(s, s, APP.techAvailabilityFilter); }).join('') + '</select></div></div>';
+      '<div><label class="block text-sm mb-2 text-slate-300">Disponibilidade</label><select id="filter-tech-availability" class="input-field">' + filterOpt('', 'Todas', APP.techAvailabilityFilter) + ['Disponível','A trabalhar','Férias','Folga','Doença','Indisponível'].map(function(s) { return filterOpt(s, s, APP.techAvailabilityFilter); }).join('') + '</select></div></div>';
   }
   if (page === 'users') {
     return '<div><label class="block text-sm mb-2 text-slate-300">Perfil</label><select id="filter-user-role" class="input-field">' + filterOpt('', 'Todos', APP.userRoleFilter) + [['superadmin','SuperAdmin'],['admin','Admin'],['gestor','Gestor'],['tecnico','Técnico'],['cliente','Cliente']].map(function(r) { return filterOpt(r[0], r[1], APP.userRoleFilter); }).join('') + '</select></div>';
