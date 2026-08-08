@@ -2759,6 +2759,65 @@ app.delete('/api/technicians/:id', async (c) => {
   }
 })
 
+// Demitir colaborador: bane automaticamente as credenciais (login passa a
+// ser recusado, mesmo mecanismo de users.status usado para blocked/banned)
+// e regista uma linha no histórico de demissões. Acessível a Gestor, Admin
+// e SuperAdmin; Gestor/Admin só podem demitir colaboradores da sua empresa.
+app.post('/api/technicians/:id/dismiss', async (c) => {
+  const auth = requireGestorOrHigher(c)
+  if (!auth.ok) return c.json({ error: auth.message }, auth.status)
+
+  const id = c.req.param('id')
+  if (id === auth.user.id) {
+    return c.json({ error: 'Não pode demitir-se a si próprio.' }, 400)
+  }
+  const body = await c.req.json().catch(() => ({})) as { reason?: string }
+
+  try {
+    const db = requireDb()
+
+    if (auth.empresaId) {
+      const { data: targetRow, error: targetError } = await db
+        .from('users')
+        .select('empresa_id')
+        .eq('id', id)
+        .single()
+      if (targetError) throw targetError
+      const target = targetRow as { empresa_id?: string } | null
+      if (!target || String(target.empresa_id || '') !== String(auth.empresaId)) {
+        return c.json({ error: 'Só pode demitir colaboradores da sua empresa.' }, 403)
+      }
+    }
+
+    const { data, error } = await db.rpc('dismiss_collaborator', {
+      p_actor_id: auth.user.id,
+      p_user_id: id,
+      p_reason: body.reason || null,
+    })
+    if (error) throw error
+    const dismissal = Array.isArray(data) ? data[0] : data
+    return c.json({ dismissal })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Não foi possível demitir o colaborador.')
+  }
+})
+
+// Histórico de demissões: Gestor/Admin veem apenas a sua empresa,
+// SuperAdmin vê todas.
+app.get('/api/dismissals', async (c) => {
+  const auth = requireGestorOrHigher(c)
+  if (!auth.ok) return c.json({ error: auth.message }, auth.status)
+
+  try {
+    const db = requireDb()
+    const { data, error } = await db.rpc('get_dismissals', { p_empresa_id: auth.empresaId })
+    if (error) throw error
+    return c.json({ dismissals: data || [] })
+  } catch (error) {
+    return jsonError(c, error instanceof Error ? error.message : 'Could not fetch dismissals')
+  }
+})
+
 // ── Routes: Empresas (provider companies) ─────────────────────────────────────
 
 app.get('/api/empresas', async (c) => {

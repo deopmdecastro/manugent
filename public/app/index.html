@@ -4023,7 +4023,10 @@
             <h1 class="mono">Colaboradores</h1>
             <p>Gestão da equipa — técnicos, engenheiros, financeiros, gestores</p>
           </div>
-          <button class="btn-primary" onclick="openNewTechModal()"><i class="fas fa-plus"></i> Novo Colaborador</button>
+          <div class="flex gap-2">
+            <button class="btn-secondary" onclick="openDismissalHistory()"><i class="fas fa-clock-rotate-left"></i> Histórico de demissões</button>
+            <button class="btn-primary" onclick="openNewTechModal()"><i class="fas fa-plus"></i> Novo Colaborador</button>
+          </div>
         </div>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="technicians-grid">
           <div class="card p-8 text-center text-slate-500" style="grid-column:1/-1">
@@ -6799,6 +6802,55 @@
     <div class="flex gap-3 mt-6">
       <button class="btn-secondary flex-1" onclick="closeModal('modal-new-tech')">Cancelar</button>
       <button class="btn-primary flex-1" onclick="createTechnician()" id="tech-submit-btn"><i class="fas fa-plus"></i> Adicionar colaborador</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Demitir Colaborador — bane automaticamente as credenciais e regista no histórico -->
+<div id="modal-dismiss-tech" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-semibold text-red-400"><i class="fas fa-user-slash"></i> Demitir Colaborador</h2>
+      <button class="btn-ghost" onclick="closeModal('modal-dismiss-tech')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-4">
+      <p class="text-sm text-slate-300">Vai demitir <strong id="dismiss-tech-name" class="text-slate-100">—</strong>. As credenciais desta conta são banidas automaticamente — deixa de conseguir iniciar sessão — e o colaborador é removido da lista ativa. Esta ação fica registada no histórico de demissões.</p>
+      <div>
+        <label class="block text-sm mb-2 text-slate-300">Motivo da demissão</label>
+        <textarea id="dismiss-tech-reason" class="input-field" rows="3" placeholder="Ex: Fim de contrato, incumprimento de regras internas, iniciativa do colaborador…"></textarea>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button class="btn-secondary flex-1" onclick="closeModal('modal-dismiss-tech')">Cancelar</button>
+      <button class="btn-primary flex-1" style="background:#dc2626;border-color:#dc2626" onclick="confirmDismissTech()"><i class="fas fa-user-slash"></i> Confirmar demissão</button>
+    </div>
+  </div>
+</div>
+
+<!-- Histórico de Demissões -->
+<div id="modal-dismissal-history" class="modal-overlay" style="display:none">
+  <div class="modal-content modal-lg">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-semibold"><i class="fas fa-clock-rotate-left"></i> Histórico de Demissões</h2>
+      <button class="btn-ghost" onclick="closeModal('modal-dismissal-history')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="card p-0 overflow-x-auto" style="max-height:60vh;overflow-y:auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-slate-400 border-b border-white/10">
+            <th class="p-3">Colaborador</th>
+            <th class="p-3">Função</th>
+            <th class="p-3">Empresa</th>
+            <th class="p-3">Motivo</th>
+            <th class="p-3">Demitido por</th>
+            <th class="p-3">Data</th>
+          </tr>
+        </thead>
+        <tbody id="dismissal-history-tbody">
+          <tr><td colspan="6" class="p-8 text-center text-slate-500">A carregar…</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -13672,8 +13724,75 @@ function renderTechnicians() {
       (t.empresaName ? '<div><i class="fas fa-building-circle-check"></i><span class="truncate">' + escapeHtml(t.empresaName) + '</span></div>' : '') +
       (t.teamName ? '<div><i class="fas fa-users"></i><span>' + escapeHtml(t.teamName) + '</span></div>' : '') +
       '<div><i class="fas fa-wrench"></i><span>' + otCount + ' OT(s) ativas</span></div></div>' +
-      '<div class="entity-actions justify-end"><button class="btn-secondary entity-icon-action" title="Editar colaborador" onclick="openEditTechModal(\'' + t.id + '\')"><i class="fas fa-pen"></i></button><button class="btn-secondary entity-icon-action entity-danger-action" title="Apagar colaborador" onclick="deleteTech(\'' + t.id + '\')"><i class="fas fa-trash"></i></button></div></div>';
+      '<div class="entity-actions justify-end"><button class="btn-secondary entity-icon-action" title="Editar colaborador" onclick="openEditTechModal(\'' + t.id + '\')"><i class="fas fa-pen"></i></button><button class="btn-secondary entity-icon-action entity-danger-action" title="Demitir colaborador" onclick="openDismissTechModal(\'' + t.id + '\')"><i class="fas fa-user-slash"></i></button><button class="btn-secondary entity-icon-action entity-danger-action" title="Apagar colaborador" onclick="deleteTech(\'' + t.id + '\')"><i class="fas fa-trash"></i></button></div></div>';
   }).join('');
+}
+function openDismissTechModal(id) {
+  if (!requirePermission('delete', 'technicians', 'demitir colaborador')) return;
+  var t = (APP.technicians || []).find(function(x) { return x.id === id; });
+  if (!t) return;
+  APP.dismissingTechId = id;
+  document.getElementById('dismiss-tech-name').textContent = t.name || '—';
+  document.getElementById('dismiss-tech-reason').value = '';
+  document.getElementById('modal-dismiss-tech').style.display = 'flex';
+}
+async function confirmDismissTech() {
+  var id = APP.dismissingTechId;
+  if (!id) return;
+  var reason = (document.getElementById('dismiss-tech-reason').value || '').trim();
+  var btn = document.querySelector('#modal-dismiss-tech .btn-primary');
+  var originalHtml = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A demitir…'; }
+  try {
+    var res = await fetch('/api/technicians/' + id + '/dismiss', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (APP.authToken || '') },
+      body: JSON.stringify({ reason: reason })
+    });
+    if (!res.ok) { var err = await res.json().catch(function() { return {}; }); throw new Error(err.error || 'Erro ao demitir colaborador.'); }
+    APP.technicians = APP.technicians.filter(function(t) { return t.id !== id; });
+    saveData();
+    closeModal('modal-dismiss-tech');
+    renderTechnicians();
+    populateOTSelects();
+    showToast('Colaborador demitido. Credenciais banidas automaticamente.');
+  } catch (error) {
+    showToast('Não foi possível demitir o colaborador: ' + (error.message || 'erro desconhecido'), 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
+  }
+}
+function openDismissalHistory() {
+  document.getElementById('modal-dismissal-history').style.display = 'flex';
+  renderDismissalHistory();
+}
+function renderDismissalHistory() {
+  var tbody = document.getElementById('dismissal-history-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-500">A carregar…</td></tr>';
+  fetch('/api/dismissals', { headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } })
+    .then(function(r) {
+      if (!r.ok) return r.json().catch(function() { return {}; }).then(function(err) { throw new Error(err.error || 'Erro ' + r.status); });
+      return r.json();
+    })
+    .then(function(data) {
+    var rows = data.dismissals || [];
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-500">Ainda não há demissões registadas.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(function(d) {
+      return '<tr class="border-b border-white/5">' +
+        '<td class="p-3 font-medium">' + escapeHtml(d.user_name || '—') + (d.user_email ? '<div class="text-xs text-slate-500">' + escapeHtml(d.user_email) + '</div>' : '') + '</td>' +
+        '<td class="p-3"><span class="badge ' + getRoleBadgeClass(normalizeRole(d.user_role || 'tecnico')) + ' text-xs">' + escapeHtml(getRoleLabel(normalizeRole(d.user_role || 'tecnico'))) + '</span></td>' +
+        '<td class="p-3 text-slate-400">' + escapeHtml(d.empresa_name || '—') + '</td>' +
+        '<td class="p-3 text-slate-400">' + escapeHtml(d.reason || '—') + '</td>' +
+        '<td class="p-3 text-slate-400">' + escapeHtml(d.dismissed_by_name || '—') + '</td>' +
+        '<td class="p-3 text-slate-500 text-xs">' + formatDateTime(d.dismissed_at) + '</td></tr>';
+    }).join('');
+  }).catch(function(error) {
+    tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-red-400">Erro ao carregar histórico: ' + escapeHtml(error.message || 'erro desconhecido') + '</td></tr>';
+  });
 }
 async function deleteTech(id) {
   if (!requirePermission('delete', 'technicians', 'apagar colaborador')) return;
