@@ -1106,6 +1106,17 @@
       max-height: 90vh; overflow-y: auto;
     }
     .modal-lg { max-width: 900px; }
+    .confirm-action-modal { text-align: center; padding: 32px 28px 24px; }
+    .confirm-action-icon-wrap { position: relative; width: 64px; height: 64px; margin: 0 auto 18px; }
+    .confirm-action-icon { width: 64px; height: 64px; border-radius: 50%; display: block; box-shadow: 0 6px 24px rgba(124,58,237,0.35); }
+    .confirm-action-icon-badge {
+      position: absolute; bottom: -4px; right: -4px; width: 26px; height: 26px;
+      border-radius: 50%; background: var(--accent-red); border: 3px solid #121224;
+      display: flex; align-items: center; justify-content: center; font-size: 11px; color: #fff;
+    }
+    .confirm-action-icon-badge.fa-question-circle { background: var(--accent-purple); }
+    .confirm-action-title { font-size: 17px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+    .confirm-action-message { font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 22px; }
     .hover-highlight { transition: background-color .15s ease; border-radius: 8px; }
     .hover-highlight:hover { background-color: rgba(255,255,255,0.04); }
     .modal-xl { max-width: 1100px; }
@@ -4612,12 +4623,17 @@
             <div class="mono text-sm text-slate-100 flex-1" id="managed-user-pass-preview">—</div>
             <button class="btn-secondary btn-action text-xs" onclick="generateManagedUserPassword()"><i class="fas fa-rotate"></i> Gerar outra</button>
           </div>
-          <div class="flex justify-end mb-5">
-            <button class="btn-primary" onclick="createManagedUser()"><i class="fas fa-user-plus"></i> Criar utilizador</button>
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <div class="text-xs text-purple-300 flex items-center gap-2" id="managed-user-edit-banner" style="display:none">
+              <i class="fas fa-pen"></i> A editar utilizador — <span id="managed-user-edit-name" class="font-semibold"></span>
+              <button class="btn-ghost text-xs" onclick="cancelEditManagedUser()"><i class="fas fa-times"></i> Cancelar</button>
+            </div>
+            <div></div>
+            <button class="btn-primary" id="managed-user-submit-btn" onclick="createManagedUser()"><i class="fas fa-user-plus"></i> Criar utilizador</button>
           </div>
           <div class="card overflow-hidden">
             <table class="data-table">
-              <thead><tr><th>Utilizador</th><th>Perfil</th><th>Senha</th><th>Criado em</th><th></th></tr></thead>
+              <thead><tr><th>Utilizador</th><th>Perfil</th><th>Senha</th><th>Criado em</th><th>Ações</th></tr></thead>
               <tbody id="managed-users-table"></tbody>
             </table>
           </div>
@@ -5409,6 +5425,22 @@
 </div>
 
 <!-- ======================== MODALS ======================== -->
+
+<!-- Confirm Action Modal (branded, replaces native confirm()) -->
+<div id="modal-confirm-action" class="modal-overlay" style="display:none; z-index:1200">
+  <div class="modal-content confirm-action-modal" style="max-width:400px">
+    <div class="confirm-action-icon-wrap">
+      <img src="assets/icon_manugent.png" alt="ManuGent" class="confirm-action-icon">
+      <i class="fas fa-exclamation-triangle confirm-action-icon-badge" id="confirm-action-icon-badge"></i>
+    </div>
+    <h2 class="confirm-action-title" id="confirm-action-title">Confirmar ação</h2>
+    <p class="confirm-action-message" id="confirm-action-message">—</p>
+    <div class="flex gap-3">
+      <button class="btn-secondary flex-1" onclick="closeConfirmModal()">Cancelar</button>
+      <button class="btn-danger flex-1" id="confirm-action-btn" onclick="runConfirmAction()">Confirmar</button>
+    </div>
+  </div>
+</div>
 
 <!-- New File Modal -->
 <div id="modal-new-file" class="modal-overlay" style="display:none">
@@ -8325,13 +8357,61 @@ function createManagedUser() {
   var email = document.getElementById('managed-user-email').value.trim().toLowerCase();
   var pass = document.getElementById('managed-user-pass-preview').textContent.trim();
   var role = document.getElementById('managed-user-role').value;
-  if (!name || !email || !pass || pass === '—') { showToast('Preencha nome e email.'); return; }
+  if (!name || !email) { showToast('Preencha nome e email.'); return; }
   APP.users = APP.users || [];
+  var editingEmail = APP.editingManagedUserEmail;
+  if (editingEmail) {
+    var existing = APP.users.find(function(u) { return u.email === editingEmail; });
+    if (!existing) { showToast('Utilizador não encontrado.'); cancelEditManagedUser(); return; }
+    if (email !== editingEmail && APP.users.some(function(u) { return u.email === email; })) { showToast('Já existe uma conta com este email.'); return; }
+    existing.name = name;
+    existing.email = email;
+    existing.role = role;
+    saveData(); renderManagedUsers(); showToast('Utilizador atualizado.');
+    cancelEditManagedUser();
+    return;
+  }
+  if (!pass || pass === '—') { showToast('Preencha nome e email.'); return; }
   if (APP.users.some(function(u) { return u.email === email; })) { showToast('Já existe uma conta com este email.'); return; }
   APP.users.push({ name: name, email: email, password: pass, role: role, createdAt: new Date().toISOString(), passwordUpdatedAt: new Date().toISOString() });
   ['managed-user-name','managed-user-email'].forEach(function(id) { document.getElementById(id).value = ''; });
   saveData(); renderManagedUsers(); showToast('Utilizador criado. Senha inicial: ' + pass);
   generateManagedUserPassword(false);
+}
+function editManagedUser(email) {
+  if (!isAdminRole(getUserRole())) { showToast('Apenas Admin ou SuperAdmin podem editar contas.'); return; }
+  var user = (APP.users || []).find(function(u) { return u.email === email; });
+  if (!user) return;
+  APP.editingManagedUserEmail = email;
+  document.getElementById('managed-user-name').value = user.name || '';
+  document.getElementById('managed-user-email').value = user.email || '';
+  document.getElementById('managed-user-role').value = normalizeRole(user.role) || 'gestor';
+  syncEnhancedSelect(document.getElementById('managed-user-role'));
+  var banner = document.getElementById('managed-user-edit-banner');
+  var nameEl = document.getElementById('managed-user-edit-name');
+  var btn = document.getElementById('managed-user-submit-btn');
+  if (banner) banner.style.display = 'flex';
+  if (nameEl) nameEl.textContent = user.name || user.email;
+  if (btn) btn.innerHTML = '<i class="fas fa-save"></i> Guardar alterações';
+  document.getElementById('managed-user-name').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function cancelEditManagedUser() {
+  APP.editingManagedUserEmail = null;
+  ['managed-user-name','managed-user-email'].forEach(function(id) { document.getElementById(id).value = ''; });
+  var banner = document.getElementById('managed-user-edit-banner');
+  var btn = document.getElementById('managed-user-submit-btn');
+  if (banner) banner.style.display = 'none';
+  if (btn) btn.innerHTML = '<i class="fas fa-user-plus"></i> Criar utilizador';
+}
+function deleteManagedUser(email) {
+  if (!isAdminRole(getUserRole())) { showToast('Apenas Admin ou SuperAdmin podem remover contas.'); return; }
+  var user = (APP.users || []).find(function(u) { return u.email === email; });
+  if (!user) return;
+  showConfirmModal('Remover o utilizador "' + (user.name || user.email) + '"?', function() {
+    APP.users = (APP.users || []).filter(function(u) { return u.email !== email; });
+    if (APP.editingManagedUserEmail === email) cancelEditManagedUser();
+    saveData(); renderManagedUsers(); showToast('Utilizador removido.');
+  }, { title: 'Remover utilizador' });
 }
 function renderManagedUsers() {
   var card = document.getElementById('admin-users-card');
@@ -8349,11 +8429,16 @@ function renderManagedUsers() {
     return;
   }
   tbody.innerHTML = users.map(function(u) {
+    var safeEmail = u.email.replace(/'/g, "\\'");
     return '<tr><td><div class="font-medium text-slate-100">' + escapeHtml(u.name) + '</div><div class="text-xs text-slate-500">' + escapeHtml(u.email) + '</div></td>' +
       '<td><span class="badge ' + getRoleBadgeClass(u.role) + '">' + getRoleLabel(u.role) + '</span></td>' +
       '<td><span class="mono text-xs text-slate-300">' + escapeHtml(u.password || '—') + '</span></td>' +
       '<td class="text-slate-400 text-xs">' + (u.createdAt ? new Date(u.createdAt).toLocaleDateString('pt-PT') : 'Seed') + '</td>' +
-      '<td><button class="btn-secondary btn-action text-xs" onclick="resetManagedUserPassword(\'' + u.email.replace(/'/g, "\\'") + '\')"><i class="fas fa-key"></i> Alterar senha</button></td></tr>';
+      '<td><div class="flex items-center gap-2">' +
+      '<button class="btn-secondary btn-action text-xs" title="Alterar senha" onclick="resetManagedUserPassword(\'' + safeEmail + '\')"><i class="fas fa-key"></i></button>' +
+      '<button class="btn-secondary entity-icon-action" title="Editar utilizador" onclick="editManagedUser(\'' + safeEmail + '\')"><i class="fas fa-pen"></i></button>' +
+      '<button class="btn-secondary entity-icon-action entity-danger-action" title="Remover utilizador" onclick="deleteManagedUser(\'' + safeEmail + '\')"><i class="fas fa-trash"></i></button>' +
+      '</div></td></tr>';
   }).join('');
 }
 function generateManagedUserPassword(showFeedback) {
@@ -9560,13 +9645,14 @@ function loadBuildingDocumentsIntoModal(buildingId) {
   });
 }
 function deleteBuildingDocument(documentId) {
-  if (!confirm('Remover este ficheiro do edifício?')) return;
-  apiRequest('/api/documents/' + documentId, { method: 'DELETE' }).then(function() {
-    showToast('Ficheiro removido.');
-    if (APP.editingBuildingId) loadBuildingDocumentsIntoModal(APP.editingBuildingId);
-  }).catch(function(error) {
-    showToast(error.message || 'Erro ao remover ficheiro.', 'error');
-  });
+  showConfirmModal('Remover este ficheiro do edifício?', function() {
+    apiRequest('/api/documents/' + documentId, { method: 'DELETE' }).then(function() {
+      showToast('Ficheiro removido.');
+      if (APP.editingBuildingId) loadBuildingDocumentsIntoModal(APP.editingBuildingId);
+    }).catch(function(error) {
+      showToast(error.message || 'Erro ao remover ficheiro.', 'error');
+    });
+  }, { title: 'Remover ficheiro' });
 }
 function populateBuildingClientSelect() {
   var select = document.getElementById('building-client');
@@ -9647,14 +9733,15 @@ async function createBuilding() {
 }
 async function deleteBuilding(id) {
   if (!requirePermission('delete', 'buildings', 'apagar edifício')) return;
-  if (!confirm('Remover este edifício?')) return;
-  try {
-    await apiRequest('/api/buildings/' + id, { method: 'DELETE' });
-    APP.buildings = (APP.buildings || []).filter(function(b) { return b.id !== id; });
-    saveData(); renderBuildings(); populateOTSelects(); showToast('Edifício removido.');
-  } catch (error) {
-    showToast('Não foi possível remover o edifício no servidor: ' + (error.message || 'erro desconhecido'), 'error');
-  }
+  showConfirmModal('Remover este edifício?', async function() {
+    try {
+      await apiRequest('/api/buildings/' + id, { method: 'DELETE' });
+      APP.buildings = (APP.buildings || []).filter(function(b) { return b.id !== id; });
+      saveData(); renderBuildings(); populateOTSelects(); showToast('Edifício removido.');
+    } catch (error) {
+      showToast('Não foi possível remover o edifício no servidor: ' + (error.message || 'erro desconhecido'), 'error');
+    }
+  }, { title: 'Remover edifício' });
 }
 // ── Dar baixa (desativação) de equipamentos e edifícios ──────────────────────
 function openDecommissionModal(kind, id) {
@@ -9922,15 +10009,16 @@ function closeMaterialDetail() {
 }
 async function deleteMaterial(id) {
   if (!requirePermission('delete', 'materials', 'apagar material')) return;
-  if (!confirm('Remover este material do stock?')) return;
-  try {
-    await apiRequest('/api/parts/' + id, { method: 'DELETE' });
-    APP.stockMaterials = (APP.stockMaterials || []).filter(function(m) { return m.id !== id; });
-    if (APP.currentMaterialId === id) closeMaterialDetail();
-    saveData(); renderMaterials(); renderCommercialWidgets(); showToast('Material removido.');
-  } catch (error) {
-    showToast('Não foi possível remover o material no servidor: ' + (error.message || 'erro desconhecido'), 'error');
-  }
+  showConfirmModal('Remover este material do stock?', async function() {
+    try {
+      await apiRequest('/api/parts/' + id, { method: 'DELETE' });
+      APP.stockMaterials = (APP.stockMaterials || []).filter(function(m) { return m.id !== id; });
+      if (APP.currentMaterialId === id) closeMaterialDetail();
+      saveData(); renderMaterials(); renderCommercialWidgets(); showToast('Material removido.');
+    } catch (error) {
+      showToast('Não foi possível remover o material no servidor: ' + (error.message || 'erro desconhecido'), 'error');
+    }
+  }, { title: 'Remover material' });
 }
 function getPurchaseStatusClass(s) {
   return { 'Rascunho':'badge-gray', 'Aprovação':'badge-yellow', 'Aprovada':'badge-blue', 'Encomendada':'badge-blue', 'Recebida':'badge-green', 'Cancelada':'badge-red' }[s] || 'badge-gray';
@@ -10068,15 +10156,16 @@ async function confirmReceivePurchase() {
 }
 async function deletePurchase(id) {
   if (!requirePermission('delete', 'purchases', 'apagar pedido de compra')) return;
-  if (!confirm('Apagar este pedido de compra? Esta ação não pode ser desfeita.')) return;
-  try {
-    await apiRequest('/api/purchase-orders/' + id, { method: 'DELETE' });
-    APP.purchases = (APP.purchases || []).filter(function(x) { return x.id !== id; });
-    saveData(); renderCommercialWidgets(); renderPurchases();
-    showToast('Pedido de compra removido.');
-  } catch (error) {
-    showToast('Não foi possível remover o pedido de compra: ' + (error.message || 'erro desconhecido'));
-  }
+  showConfirmModal('Apagar este pedido de compra? Esta ação não pode ser desfeita.', async function() {
+    try {
+      await apiRequest('/api/purchase-orders/' + id, { method: 'DELETE' });
+      APP.purchases = (APP.purchases || []).filter(function(x) { return x.id !== id; });
+      saveData(); renderCommercialWidgets(); renderPurchases();
+      showToast('Pedido de compra removido.');
+    } catch (error) {
+      showToast('Não foi possível remover o pedido de compra: ' + (error.message || 'erro desconhecido'));
+    }
+  }, { title: 'Apagar pedido de compra' });
 }
 function renderQuotes() {
   var tbody = document.getElementById('quotes-table-body');
@@ -13134,32 +13223,33 @@ async function deleteEquipment(id) {
   if (!requirePermission('delete', 'equipment', 'apagar equipamento')) return;
   var equip = APP.equipment.find(function(e) { return e.id === id; });
   if (!equip) return;
-  if (!confirm('Remover este equipamento?')) return;
-  try {
-    await apiRequest('/api/equipment/' + id, { method: 'DELETE' });
-  } catch (error) {
-    showToast('Não foi possível remover no servidor, a remover apenas localmente: ' + (error.message || 'erro desconhecido'), 'error');
-  }
-  APP.equipment = APP.equipment.filter(function(e) { return e.id !== id; });
-  (APP.ots || []).forEach(function(ot) {
-    if (ot.equipmentId === id) {
-      ot.equipmentId = '';
-      ot.equipmentName = '—';
+  showConfirmModal('Remover este equipamento?', async function() {
+    try {
+      await apiRequest('/api/equipment/' + id, { method: 'DELETE' });
+    } catch (error) {
+      showToast('Não foi possível remover no servidor, a remover apenas localmente: ' + (error.message || 'erro desconhecido'), 'error');
     }
-  });
-  (APP.files || []).forEach(function(file) {
-    if (file.equipmentId === id) {
-      file.equipmentId = '';
-      file.equipmentName = '';
-    }
-  });
-  if (APP.currentEquip && APP.currentEquip.id === id) APP.currentEquip = null;
-  saveData();
-  updateDashboard();
-  renderEquipment();
-  renderOTs();
-  populateOTSelects();
-  showToast('Equipamento removido.');
+    APP.equipment = APP.equipment.filter(function(e) { return e.id !== id; });
+    (APP.ots || []).forEach(function(ot) {
+      if (ot.equipmentId === id) {
+        ot.equipmentId = '';
+        ot.equipmentName = '—';
+      }
+    });
+    (APP.files || []).forEach(function(file) {
+      if (file.equipmentId === id) {
+        file.equipmentId = '';
+        file.equipmentName = '';
+      }
+    });
+    if (APP.currentEquip && APP.currentEquip.id === id) APP.currentEquip = null;
+    saveData();
+    updateDashboard();
+    renderEquipment();
+    renderOTs();
+    populateOTSelects();
+    showToast('Equipamento removido.');
+  }, { title: 'Remover equipamento' });
 }
 function openEquipDetail(id) {
   var eq = APP.equipment.find(function(e) { return e.id === id; });
@@ -13557,9 +13647,10 @@ function openOTFromBuilding(id) {
 }
 function deleteClient(id) {
   if (!requirePermission('delete', 'clients', 'apagar cliente')) return;
-  if (!confirm('Remover este cliente?')) return;
-  APP.clients = APP.clients.filter(function(c) { return c.id !== id; });
-  saveData(); renderClients();
+  showConfirmModal('Remover este cliente?', function() {
+    APP.clients = APP.clients.filter(function(c) { return c.id !== id; });
+    saveData(); renderClients();
+  }, { title: 'Remover cliente' });
 }
 
 // ======================== COLABORADORES ========================
@@ -13800,14 +13891,15 @@ function renderDismissalHistory() {
 }
 async function deleteTech(id) {
   if (!requirePermission('delete', 'technicians', 'apagar colaborador')) return;
-  if (!confirm('Remover este colaborador?')) return;
-  try {
-    await apiRequest('/api/technicians/' + id, { method: 'DELETE' });
-    APP.technicians = APP.technicians.filter(function(t) { return t.id !== id; });
-    saveData(); renderTechnicians(); populateOTSelects(); showToast('Colaborador removido.');
-  } catch (error) {
-    showToast('Não foi possível remover o colaborador no servidor: ' + (error.message || 'erro desconhecido'), 'error');
-  }
+  showConfirmModal('Remover este colaborador?', async function() {
+    try {
+      await apiRequest('/api/technicians/' + id, { method: 'DELETE' });
+      APP.technicians = APP.technicians.filter(function(t) { return t.id !== id; });
+      saveData(); renderTechnicians(); populateOTSelects(); showToast('Colaborador removido.');
+    } catch (error) {
+      showToast('Não foi possível remover o colaborador no servidor: ' + (error.message || 'erro desconhecido'), 'error');
+    }
+  }, { title: 'Remover colaborador' });
 }
 
 // ======================== EMPRESAS ========================
@@ -13912,15 +14004,16 @@ async function saveEmpresa() {
 }
 
 async function deleteEmpresa(id) {
-  if (!confirm('Apagar esta empresa? Os colaboradores associados ficarão sem empresa.')) return;
-  try {
-    var res = await fetch('/api/empresas/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } });
-    if (!res.ok) throw new Error('Erro ao apagar empresa.');
-    renderEmpresas();
-    showToast('Empresa apagada.');
-  } catch (e) {
-    showToast(e.message || 'Erro ao apagar empresa.');
-  }
+  showConfirmModal('Apagar esta empresa? Os colaboradores associados ficarão sem empresa.', async function() {
+    try {
+      var res = await fetch('/api/empresas/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } });
+      if (!res.ok) throw new Error('Erro ao apagar empresa.');
+      renderEmpresas();
+      showToast('Empresa apagada.');
+    } catch (e) {
+      showToast(e.message || 'Erro ao apagar empresa.');
+    }
+  }, { title: 'Apagar empresa' });
 }
 
 // Visão geral direta de uma empresa para o SuperAdmin: dados, clientes,
@@ -14168,15 +14261,17 @@ function openDismissEmpresaCollaboratorRow(userId) {
   document.getElementById('dismiss-tech-reason').value = '';
   document.getElementById('modal-dismiss-tech').style.display = 'flex';
 }
-async function removeCollaboratorFromEmpresa(userId) {  if (!confirm('Remover este colaborador da empresa?')) return;
-  try {
-    var res = await fetch('/api/empresas/' + APP.viewingEmpresaId + '/collaborators/' + userId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } });
-    if (!res.ok) { var err = await res.json().catch(function() { return {}; }); throw new Error(err.error || 'Erro ao remover colaborador.'); }
-    showToast('Colaborador removido da empresa.');
-    renderEmpresaColaboradoresTable();
-  } catch (e) {
-    showToast(e.message || 'Erro ao remover colaborador.');
-  }
+async function removeCollaboratorFromEmpresa(userId) {
+  showConfirmModal('Remover este colaborador da empresa?', async function() {
+    try {
+      var res = await fetch('/api/empresas/' + APP.viewingEmpresaId + '/collaborators/' + userId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } });
+      if (!res.ok) { var err = await res.json().catch(function() { return {}; }); throw new Error(err.error || 'Erro ao remover colaborador.'); }
+      showToast('Colaborador removido da empresa.');
+      renderEmpresaColaboradoresTable();
+    } catch (e) {
+      showToast(e.message || 'Erro ao remover colaborador.');
+    }
+  }, { title: 'Remover colaborador da empresa' });
 }
 
 // ======================== KNOWLEDGE ========================
@@ -14937,15 +15032,16 @@ function deleteFileRecord(id) {
   if (!requirePermission('delete', 'files', 'eliminar ficheiro')) return;
   var f = (APP.files || []).find(function(file) { return file.id === id; });
   if (!f) return;
-  if (!confirm('Eliminar o ficheiro "' + (f.name || id) + '"?')) return;
-  APP.files = (APP.files || []).filter(function(file) { return file.id !== id; });
-  if (APP.currentFile && APP.currentFile.id === id) {
-    APP.currentFile = null;
-    closeModal('modal-file-detail');
-  }
-  saveData();
-  renderFiles();
-  showToast('Ficheiro eliminado.');
+  showConfirmModal('Eliminar o ficheiro "' + (f.name || id) + '"?', function() {
+    APP.files = (APP.files || []).filter(function(file) { return file.id !== id; });
+    if (APP.currentFile && APP.currentFile.id === id) {
+      APP.currentFile = null;
+      closeModal('modal-file-detail');
+    }
+    saveData();
+    renderFiles();
+    showToast('Ficheiro eliminado.');
+  }, { title: 'Eliminar ficheiro' });
 }
 function renderFileMetrics() {
   var files = APP.files || [];
@@ -15568,22 +15664,22 @@ function smartDropFiles(event, entityType, entityContext) {
  * Elimina um anexo da API.
  */
 function deleteApiAttachment(attachmentId, entityType, entityId, listElId, entityContext) {
-  if (!confirm('Eliminar este ficheiro permanentemente?')) return;
+  showConfirmModal('Eliminar este ficheiro permanentemente?', function() {
+    var authToken = sessionStorage.getItem('manugent.token') || '';
+    var headers = {};
+    if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
 
-  var authToken = sessionStorage.getItem('manugent.token') || '';
-  var headers = {};
-  if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
-
-  fetch('/api/attachments/' + attachmentId, { method: 'DELETE', headers: headers })
-    .then(function(res) {
-      if (!res.ok) throw new Error('Erro ao eliminar');
-      var item = document.querySelector('[data-att-id="' + attachmentId + '"]');
-      if (item) item.remove();
-      showToast('Ficheiro eliminado.');
-    })
-    .catch(function(err) {
-      showToast('Erro: ' + err.message);
-    });
+    fetch('/api/attachments/' + attachmentId, { method: 'DELETE', headers: headers })
+      .then(function(res) {
+        if (!res.ok) throw new Error('Erro ao eliminar');
+        var item = document.querySelector('[data-att-id="' + attachmentId + '"]');
+        if (item) item.remove();
+        showToast('Ficheiro eliminado.');
+      })
+      .catch(function(err) {
+        showToast('Erro: ' + err.message);
+      });
+  }, { title: 'Eliminar ficheiro' });
 }
 function getPermissionText(permission) {
   return {'all':'Todos','users':'Utilizadores selecionados','teams':'Equipas selecionadas','restricted':'Restrito ao gestor'}[permission] || permission;
@@ -16009,16 +16105,17 @@ async function confirmResolveIncident() {
 }
 async function deleteIncident(id) {
   if (!requirePermission('delete', 'incidents', 'apagar incidente')) return;
-  if (!confirm('Apagar este incidente? Esta ação não pode ser desfeita.')) return;
-  try {
-    await apiRequest('/api/incidents/' + id, { method: 'DELETE' });
-    APP.incidents = (APP.incidents || []).filter(function(i) { return i.id !== id; });
-    saveData();
-    if (APP.currentIncidentId === id) showPage('incidents');
-    renderIncidents(); showToast('Incidente removido.');
-  } catch (error) {
-    showToast('Não foi possível remover o incidente: ' + (error.message || 'erro desconhecido'));
-  }
+  showConfirmModal('Apagar este incidente? Esta ação não pode ser desfeita.', async function() {
+    try {
+      await apiRequest('/api/incidents/' + id, { method: 'DELETE' });
+      APP.incidents = (APP.incidents || []).filter(function(i) { return i.id !== id; });
+      saveData();
+      if (APP.currentIncidentId === id) showPage('incidents');
+      renderIncidents(); showToast('Incidente removido.');
+    } catch (error) {
+      showToast('Não foi possível remover o incidente: ' + (error.message || 'erro desconhecido'));
+    }
+  }, { title: 'Apagar incidente' });
 }
 function getSeverityClass(s) {
   return {Crítica:'badge-red',Alta:'badge-yellow',Média:'badge-blue',Baixa:'badge-green'}[s] || 'badge-gray';
@@ -17381,6 +17478,38 @@ function closeModal(id) {
   }
   document.getElementById(id).style.display = 'none';
 }
+var CONFIRM_MODAL_STATE = { onConfirm: null };
+function showConfirmModal(message, onConfirm, opts) {
+  opts = opts || {};
+  var modal = document.getElementById('modal-confirm-action');
+  if (!modal) { if (window.confirm(message)) { if (typeof onConfirm === 'function') onConfirm(); } return; }
+  var titleEl = document.getElementById('confirm-action-title');
+  var msgEl = document.getElementById('confirm-action-message');
+  var btn = document.getElementById('confirm-action-btn');
+  var badge = document.getElementById('confirm-action-icon-badge');
+  var isDanger = opts.danger !== false;
+  if (titleEl) titleEl.textContent = opts.title || 'Confirmar ação';
+  if (msgEl) msgEl.textContent = message;
+  if (btn) {
+    btn.textContent = opts.confirmText || (isDanger ? 'Confirmar' : 'Continuar');
+    btn.className = (isDanger ? 'btn-danger' : 'btn-primary') + ' flex-1';
+  }
+  if (badge) {
+    badge.className = 'fas ' + (isDanger ? 'fa-exclamation-triangle' : 'fa-question-circle') + ' confirm-action-icon-badge';
+  }
+  CONFIRM_MODAL_STATE.onConfirm = typeof onConfirm === 'function' ? onConfirm : null;
+  modal.style.display = 'flex';
+}
+function closeConfirmModal() {
+  var modal = document.getElementById('modal-confirm-action');
+  if (modal) modal.style.display = 'none';
+  CONFIRM_MODAL_STATE.onConfirm = null;
+}
+function runConfirmAction() {
+  var cb = CONFIRM_MODAL_STATE.onConfirm;
+  closeConfirmModal();
+  if (typeof cb === 'function') cb();
+}
 function getTopOpenModal() {
   var modals = Array.prototype.slice.call(document.querySelectorAll('.modal-overlay'));
   return modals.reverse().find(function(modal) {
@@ -18423,13 +18552,14 @@ function loadSAUsersFromBackend() {
 }
 
 function deleteSAUser(id, source) {
-  if (!confirm('Tem a certeza que pretende remover este utilizador?')) return;
-  if (source === 'local') {
-    APP.users = (APP.users || []).filter(function(u) { return u.email !== id; });
-    saveData(); renderSuperAdminUsers(); showToast('Utilizador local removido.');
-  } else {
-    showToast('Remoção de utilizadores backend requer acesso direto à base de dados.', 'warn');
-  }
+  showConfirmModal('Tem a certeza que pretende remover este utilizador?', function() {
+    if (source === 'local') {
+      APP.users = (APP.users || []).filter(function(u) { return u.email !== id; });
+      saveData(); renderSuperAdminUsers(); showToast('Utilizador local removido.');
+    } else {
+      showToast('Remoção de utilizadores backend requer acesso direto à base de dados.', 'warn');
+    }
+  }, { title: 'Remover utilizador' });
 }
 
 // ── User status (block / ban / reactivate) ──
@@ -19037,13 +19167,14 @@ function toggleSABlogStatus(id, currentStatus) {
 }
 
 function deleteSABlog(id) {
-  if (!confirm('Eliminar este artigo? Esta ação não pode ser revertida.')) return;
-  fetch('/api/admin/blog/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (data.ok) { showToast('Artigo eliminado.'); loadSABlog(); }
-      else showToast('Erro: ' + (data.error || 'desconhecido'));
-    }).catch(function() { showToast('Erro de rede.'); });
+  showConfirmModal('Eliminar este artigo? Esta ação não pode ser revertida.', function() {
+    fetch('/api/admin/blog/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.ok) { showToast('Artigo eliminado.'); loadSABlog(); }
+        else showToast('Erro: ' + (data.error || 'desconhecido'));
+      }).catch(function() { showToast('Erro de rede.'); });
+  }, { title: 'Eliminar artigo' });
 }
 
 function openSABlogComments(postId) {
@@ -19082,12 +19213,13 @@ function approveSAComment(postId, commentId) {
 }
 
 function deleteSAComment(postId, commentId) {
-  if (!confirm('Eliminar comentário?')) return;
-  fetch('/api/admin/blog/' + postId + '/comments/' + commentId, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (APP.authToken || '') },
-    body: JSON.stringify({ deleted: true, status: 'deleted' })
-  }).then(function() { showToast('Comentário eliminado.'); loadSABlog(); closeModal('modal-sa-blog-comments'); }).catch(function() { showToast('Erro.'); });
+  showConfirmModal('Eliminar comentário?', function() {
+    fetch('/api/admin/blog/' + postId + '/comments/' + commentId, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (APP.authToken || '') },
+      body: JSON.stringify({ deleted: true, status: 'deleted' })
+    }).then(function() { showToast('Comentário eliminado.'); loadSABlog(); closeModal('modal-sa-blog-comments'); }).catch(function() { showToast('Erro.'); });
+  }, { title: 'Eliminar comentário' });
 }
 
 // ═══════════════════════════════════════════════════════
@@ -19199,12 +19331,13 @@ function toggleSATestimonialFeatured(id, current) {
 }
 
 function deleteSATestimonial(id) {
-  if (!confirm('Eliminar este testemunho?')) return;
-  fetch('/api/admin/testimonials/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (data.ok) { showToast('Testemunho eliminado.'); loadSATestimonials(); }
-    }).catch(function() { showToast('Erro.'); });
+  showConfirmModal('Eliminar este testemunho?', function() {
+    fetch('/api/admin/testimonials/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + (APP.authToken || '') } })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.ok) { showToast('Testemunho eliminado.'); loadSATestimonials(); }
+      }).catch(function() { showToast('Erro.'); });
+  }, { title: 'Eliminar testemunho' });
 }
 
 // ═══════════════════════════════════════════════════════
@@ -19331,29 +19464,30 @@ function previewSABackup() {
 
 function restoreSABackup() {
   if (!SA_BACKUP_DATA) { showToast('Selecione um ficheiro de backup válido.'); return; }
-  if (!confirm('Restaurar backup? Os dados de configuração atuais serão substituídos.')) return;
-  var resultEl = document.getElementById('sa-backup-restore-result');
-  if (resultEl) resultEl.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> A restaurar...';
-  fetch('/api/admin/backup/restore', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (APP.authToken || '') },
-    body: JSON.stringify(SA_BACKUP_DATA)
-  }).then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (data.ok) {
-        if (resultEl) resultEl.innerHTML = '<span class="text-emerald-400"><i class="fas fa-check-circle"></i> Restauro completo: ' + (data.restored || []).join(', ') + '</span>';
-        showToast('✅ Backup restaurado com sucesso!');
-        // Reload affected tabs
-        if (SA_STATE) SA_STATE.loadedTabs = {};
-      } else {
-        var errMsg = (data.errors || []).join(', ') || data.error || 'Erro desconhecido';
-        if (resultEl) resultEl.innerHTML = '<span class="text-red-400"><i class="fas fa-times-circle"></i> Erro: ' + escapeHtml(errMsg) + '</span>';
-        showToast('Erro no restauro: ' + errMsg);
-      }
-    })
-    .catch(function() {
-      if (resultEl) resultEl.innerHTML = '<span class="text-red-400"><i class="fas fa-times-circle"></i> Erro de rede.</span>';
-    });
+  showConfirmModal('Restaurar backup? Os dados de configuração atuais serão substituídos.', function() {
+    var resultEl = document.getElementById('sa-backup-restore-result');
+    if (resultEl) resultEl.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> A restaurar...';
+    fetch('/api/admin/backup/restore', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (APP.authToken || '') },
+      body: JSON.stringify(SA_BACKUP_DATA)
+    }).then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.ok) {
+          if (resultEl) resultEl.innerHTML = '<span class="text-emerald-400"><i class="fas fa-check-circle"></i> Restauro completo: ' + (data.restored || []).join(', ') + '</span>';
+          showToast('✅ Backup restaurado com sucesso!');
+          // Reload affected tabs
+          if (SA_STATE) SA_STATE.loadedTabs = {};
+        } else {
+          var errMsg = (data.errors || []).join(', ') || data.error || 'Erro desconhecido';
+          if (resultEl) resultEl.innerHTML = '<span class="text-red-400"><i class="fas fa-times-circle"></i> Erro: ' + escapeHtml(errMsg) + '</span>';
+          showToast('Erro no restauro: ' + errMsg);
+        }
+      })
+      .catch(function() {
+        if (resultEl) resultEl.innerHTML = '<span class="text-red-400"><i class="fas fa-times-circle"></i> Erro de rede.</span>';
+      });
+  }, { title: 'Restaurar backup', confirmText: 'Restaurar' });
 }
 
 </script>
