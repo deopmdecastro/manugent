@@ -1459,12 +1459,17 @@
       margin-top: 2px;
     }
 
+    #upcoming-interventions {
+      max-height: 560px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
     .task-row {
-      background: var(--bg-card-solid); border: 1px solid var(--border);
-      border-radius: 8px; padding: 14px 16px; margin-bottom: 8px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 16px; margin-bottom: 8px;
       transition: all 0.2s;
     }
-    .task-row:hover { border-color: var(--border-light); }
+    .task-row:hover { border-color: var(--hairline-d); background: var(--bg-card-hover); }
 
     .wiki-card {
       background: var(--bg-card); border: 1px solid var(--border);
