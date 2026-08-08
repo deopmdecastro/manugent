@@ -11933,9 +11933,16 @@ function syncBackendWorkOrders() {
         return { id: d.id, name: d.name, type: d.type || 'Ficheiro', folderId: d.folder_id || '', ref: d.url || '', description: '', createdAt: d.uploaded_at };
       });
     }
-    // Merge backend folders
+    // Merge backend folders (estrutura por empresa/cliente vinda das RPCs create_empresa_folder_structure / create_client_folder_structure)
     if (results[17] && results[17].folders) {
-      APP.folders = results[17].folders;
+      APP.fileFolders = results[17].folders.map(function(f) {
+        return {
+          id: f.id, name: f.name, parentId: f.parent_id || '',
+          folderType: f.folder_type || 'generic',
+          empresaId: f.empresa_id || null, clientId: f.client_id || null,
+          createdAt: f.created_at
+        };
+      });
     }
     // Merge backend contracts
     if (results[18] && results[18].contracts) {
@@ -11990,7 +11997,7 @@ function syncBackendWorkOrders() {
     saveData();
     updateDashboard(); renderOTs(); renderEquipment(); renderClients(); renderManagedUsers(); renderTechnicians();
     renderBuildings(); renderMaterials(); renderPurchases(); renderQuotes(); renderIncidents();
-    renderKnowledge(); renderChecklists(); renderCalendar();
+    renderKnowledge(); renderChecklists(); renderCalendar(); renderFiles();
     renderSystemStatusBar({ backendDetail: 'Online — ' + (((results[0] && results[0].workOrders) || []).length + ((results[1] && results[1].workOrders) || []).length) + ' OTs sincronizadas' });
   }).catch(function() {
     APP.backendOnline = false;
