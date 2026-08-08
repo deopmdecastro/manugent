@@ -7475,7 +7475,6 @@ window.onload = function() {
   if (APP.user) { showApp(); }
   else { document.body.classList.add('app-ready'); redirectToReactRoute('/login'); return; }
   initSampleData();
-  ensureWorkInstallationExamples();
   setupMascotModels();
   syncBackendWorkOrders();
   renderCalendar();
@@ -18026,56 +18025,6 @@ function initSampleData() {
     ];
   }
 }
-function ensureWorkInstallationExamples() {
-  APP.ots = APP.ots || [];
-  if (APP.ots.some(function(o) { return o.type === 'Obras/Instalações' && o.sampleWorkInstallation; })) return;
-  var baseDate = Date.now() + 86400000 * 2;
-  var tech = APP.technicians && APP.technicians[0] ? APP.technicians[0] : null;
-  var eq = APP.equipment && APP.equipment[0] ? APP.equipment[0] : null;
-  var examples = [
-    { kind:'Instalação elétrica', title:'Obra - Novo quadro elétrico da sala UPS', desc:'Instalação de quadro dedicado, proteções, cablagem e testes de carga.' },
-    { kind:'Instalação AVAC', title:'Instalação - Unidade AVAC da sala técnica', desc:'Montagem de unidade, drenagem, alimentação elétrica e ensaio funcional.' },
-    { kind:'Instalação de equipamento', title:'Instalação - UPS Galaxy VS apoio produção', desc:'Preparação de base, colocação do equipamento, ligações e parametrização inicial.' },
-    { kind:'Obra civil de suporte', title:'Obra civil - Base técnica para gerador', desc:'Execução de base, passagem técnica e preparação de zona de manutenção.' },
-    { kind:'Comissionamento', title:'Comissionamento - Gerador e ATS', desc:'Validação de arranque, transferência automática, alarmes e relatório de aceitação.' },
-    { kind:'Ampliação / remodelação', title:'Remodelação - Expansão da sala técnica', desc:'Alteração por fases da infraestrutura existente com mínima interrupção operacional.' }
-  ];
-  examples.forEach(function(item, index) {
-    APP.ots.push({
-      id: 'OT-OBRA-' + String(index + 1).padStart(3, '0'),
-      title: item.title,
-      type: 'Obras/Instalações',
-      workKind: item.kind,
-      workPhase: index < 2 ? 'Planeamento' : index < 4 ? 'Execução' : 'Comissionamento',
-      workSteps: getWorkInstallationSteps(item.kind),
-      origin: 'scheduled',
-      priority: index === 0 || index === 4 ? 'Alta' : 'Média',
-      status: index === 5 ? 'Aberta' : 'Agendada',
-      equipmentId: eq ? eq.id : '',
-      equipmentName: eq ? eq.name : '—',
-      technicianId: tech ? tech.id : '',
-      technicianName: tech ? tech.name : '—',
-      date: new Date(baseDate + index * 86400000).toISOString().slice(0,16),
-      description: item.desc,
-      location: eq ? eq.location : 'Instalação do cliente',
-      image: '',
-      imageName: '',
-      nfcTag: 'NFC-OT-OBRA-' + String(index + 1).padStart(3, '0'),
-      tasks: getWorkInstallationSteps(item.kind).map(function(step) {
-        return { description: step.name, type: 'check', done: false, state: null, help: 'Validar evidência, segurança e documentação desta etapa.' };
-      }),
-      materials: [],
-      timeLogs: [],
-      comments: [],
-      report: '',
-      activity: [{ text:'Exemplo de Obras/Instalações criado', time:new Date().toLocaleString('pt-PT') }],
-      sampleWorkInstallation: true,
-      createdAt: new Date().toISOString()
-    });
-  });
-  saveData();
-}
-
 // ======================== SUPERADMIN ========================
 
 var SA_STATE = {
