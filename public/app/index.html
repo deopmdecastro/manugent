@@ -1527,7 +1527,7 @@
       border: 1px solid rgba(129,140,248,0.12);
       border-radius: 10px;
       cursor: pointer;
-      min-height: 92px;
+      min-height: 128px;
       padding: 8px;
       transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
     }
@@ -1566,26 +1566,56 @@
     }
     .cal-day-dot { border-radius: 50%; flex-shrink: 0; height: 7px; width: 7px; }
     .calendar-job {
-      background: rgba(99,102,241,0.16);
-      border-left: 2px solid rgba(129,140,248,0.6);
-      border-radius: 6px;
-      color: #dbeafe;
-      font-size: 11px;
-      line-height: 1.3;
-      margin-top: 4px;
-      overflow: hidden;
-      padding: 3px 6px;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      background: rgba(148,163,184,0.14);
+      border-radius: 8px;
+      color: #f1f5f9;
+      cursor: pointer;
+      margin-top: 6px;
+      padding: 6px 8px;
+      transition: transform 0.12s ease, background 0.12s ease;
     }
-    .calendar-job .cal-job-time { color: var(--text-muted); font-variant-numeric: tabular-nums; margin-right: 4px; }
+    .calendar-job:hover { transform: translateY(-1px); }
+    .cal-job-time-row {
+      align-items: center;
+      display: flex;
+      font-size: 11px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      gap: 5px;
+      margin-bottom: 3px;
+    }
+    .cal-job-time-row .cal-job-dot { border-radius: 50%; flex-shrink: 0; height: 6px; width: 6px; }
+    .calendar-job-title {
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      display: -webkit-box;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.28;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     .calendar-job.priority-crítica,
-    .calendar-job.priority-urgente { border-left-color: #f87171; }
-    .calendar-job.priority-alta { border-left-color: #fb923c; }
-    .calendar-job.priority-média { border-left-color: #60a5fa; }
-    .calendar-job.priority-baixa { border-left-color: #34d399; }
+    .calendar-job.priority-urgente { background: rgba(248,113,113,0.16); }
+    .calendar-job.priority-crítica .cal-job-time-row,
+    .calendar-job.priority-urgente .cal-job-time-row { color: #f87171; }
+    .calendar-job.priority-crítica .cal-job-dot,
+    .calendar-job.priority-urgente .cal-job-dot { background: #f87171; }
+    .calendar-job.priority-alta { background: rgba(251,146,60,0.16); }
+    .calendar-job.priority-alta .cal-job-time-row { color: #fb923c; }
+    .calendar-job.priority-alta .cal-job-dot { background: #fb923c; }
+    .calendar-job.priority-média { background: rgba(96,165,250,0.16); }
+    .calendar-job.priority-média .cal-job-time-row { color: #60a5fa; }
+    .calendar-job.priority-média .cal-job-dot { background: #60a5fa; }
+    .calendar-job.priority-baixa { background: rgba(52,211,153,0.16); }
+    .calendar-job.priority-baixa .cal-job-time-row { color: #34d399; }
+    .calendar-job.priority-baixa .cal-job-dot { background: #34d399; }
     .calendar-job.priority-informativa,
-    .calendar-job.priority- { border-left-color: #94a3b8; }
+    .calendar-job.priority- { background: rgba(148,163,184,0.16); }
+    .calendar-job.priority-informativa .cal-job-time-row,
+    .calendar-job.priority- .cal-job-time-row { color: #94a3b8; }
+    .calendar-job.priority-informativa .cal-job-dot,
+    .calendar-job.priority- .cal-job-dot { background: #94a3b8; }
     .calendar-more {
       color: var(--text-muted);
       font-size: 10px;
@@ -1627,16 +1657,32 @@
       gap: 8px;
     }
     .cal-view-tab {
+      align-items: center;
       background: rgba(255,255,255,0.04);
       border: 1px solid var(--hairline-b);
       border-radius: 999px;
       color: var(--text-secondary);
       cursor: pointer;
-      font-size: 12.5px;
-      font-weight: 600;
-      padding: 8px 16px;
+      display: inline-flex;
+      font-size: 13px;
+      font-weight: 700;
+      gap: 9px;
+      padding: 7px 16px 7px 7px;
       transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
       white-space: nowrap;
+    }
+    .cal-view-tab .cal-tab-icon {
+      align-items: center;
+      background: rgba(255,255,255,0.07);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      display: inline-flex;
+      flex-shrink: 0;
+      font-size: 12px;
+      height: 26px;
+      justify-content: center;
+      transition: background 0.18s ease, color 0.18s ease;
+      width: 26px;
     }
     .cal-view-tab:hover { color: var(--text-primary); }
     .cal-view-tab.active {
@@ -1645,6 +1691,7 @@
       color: #fff;
       box-shadow: 0 6px 16px rgba(124,58,237,0.32);
     }
+    .cal-view-tab.active .cal-tab-icon { background: rgba(255,255,255,0.22); color: #fff; }
     .team-day-panel-header {
       align-items: flex-start;
       display: flex;
@@ -4328,8 +4375,8 @@
             <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
               <h2 class="font-semibold text-lg">Calendário</h2>
               <div class="cal-view-tabs">
-                <button type="button" class="cal-view-tab active" id="cal-view-tab-day" onclick="switchCalendarView('day')"><i class="fas fa-list-ul"></i> Trabalhos do dia</button>
-                <button type="button" class="cal-view-tab" id="cal-view-tab-team" onclick="switchCalendarView('team')"><i class="fas fa-users"></i> Equipa do dia</button>
+                <button type="button" class="cal-view-tab active" id="cal-view-tab-day" onclick="switchCalendarView('day')"><span class="cal-tab-icon"><i class="fas fa-list-check"></i></span> Trabalhos do dia</button>
+                <button type="button" class="cal-view-tab" id="cal-view-tab-team" onclick="switchCalendarView('team')"><span class="cal-tab-icon"><i class="fas fa-users"></i></span> Equipa do dia</button>
               </div>
             </div>
             <div class="flex items-center justify-between mb-5">
@@ -16305,7 +16352,9 @@ function renderCalendar() {
       jobs.slice(0, 2).map(function(o) {
         var meta = calendarPriorityMeta(o.priority);
         var time = calendarJobTime(o);
-        return '<div class="calendar-job priority-' + meta.cls + '" title="' + escapeHtml(o.title || '') + '">' + (time ? '<span class="cal-job-time">' + time + '</span>' : '') + escapeHtml(o.title || o.id) + '</div>';
+        return '<div class="calendar-job priority-' + meta.cls + '" title="' + escapeHtml(o.title || '') + '">' +
+          '<div class="cal-job-time-row">' + (time ? '<span>' + time + '</span>' : '') + '<span class="cal-job-dot"></span></div>' +
+          '<div class="calendar-job-title">' + escapeHtml(o.title || o.id) + '</div></div>';
       }).join('') +
       (jobs.length > 2 ? '<div class="calendar-more">+' + (jobs.length - 2) + ' mais</div>' : '') + '</div>';
   }
