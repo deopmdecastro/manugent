@@ -260,4 +260,11 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION search_global(text, integer) TO anon, authenticated;
+-- Grants (condicional — standalone Docker não tem roles anon/authenticated)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon')
+     AND EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+    EXECUTE 'GRANT EXECUTE ON FUNCTION search_global(text, integer) TO anon, authenticated';
+  END IF;
+END $$;
