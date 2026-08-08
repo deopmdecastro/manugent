@@ -1564,6 +1564,7 @@
       justify-content: space-between;
       margin-bottom: 6px;
     }
+    .cal-day-dot { border-radius: 50%; flex-shrink: 0; height: 7px; width: 7px; }
     .calendar-job {
       background: rgba(99,102,241,0.16);
       border-left: 2px solid rgba(129,140,248,0.6);
@@ -4322,13 +4323,6 @@
 
       <!-- CALENDÁRIO -->
       <div id="page-calendar" class="page fade-in">
-        <div class="flex items-center justify-between mb-6 page-header">
-          <div>
-            <h1 class="mono">Calendário</h1>
-            <p>Planeamento e agendamento de intervenções</p>
-          </div>
-          <button class="btn-primary" onclick="openNewOTModal()"><i class="fas fa-plus"></i> Agendar</button>
-        </div>
         <div class="calendar-layout">
           <div class="card p-5">
             <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
@@ -16307,7 +16301,7 @@ function renderCalendar() {
       .sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
     var isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
     html += '<div class="calendar-day ' + (isToday ? 'today ' : '') + (selected === dateStr ? 'selected' : '') + '" onclick="selectCalendarDay(\'' + dateStr + '\')">' +
-      '<div class="calendar-day-number"><span>' + day + '</span>' + (jobs.length ? '<span class="badge badge-blue">' + jobs.length + '</span>' : '') + '</div>' +
+      '<div class="calendar-day-number"><span>' + day + '</span>' + (jobs.length ? '<span class="cal-day-dot" style="background:' + calendarPriorityMeta(jobs[0].priority).color + '"></span>' : '') + '</div>' +
       jobs.slice(0, 2).map(function(o) {
         var meta = calendarPriorityMeta(o.priority);
         var time = calendarJobTime(o);
